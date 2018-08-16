@@ -44,7 +44,7 @@ class JTComponent {
 
         std::vector<unsigned int> nodes;
         std::vector<unsigned int> separator;
-        std::shared_ptr<JTComponent> parent;
+        std::weak_ptr<JTComponent> parent;
         std::vector<std::shared_ptr<JTComponent>> childrens;
 
 };

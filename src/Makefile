@@ -12,17 +12,13 @@ OBJECTS_SSUR=$(SOURCES_SSUR:.cpp=.o)
 SOURCES_SSUR_DEBUG=global.cpp utils.cpp distr.cpp junction_tree.cpp SSUR_Chain.cpp drive_SSUR.cpp
 OBJECTS_SSUR_DEBUG=$(SOURCES_SSUR_DEBUG:.cpp=.o)
 
-SOURCES_JT=global.cpp utils.cpp distr.cpp junction_tree.cpp drive_JT.cpp
-OBJECTS_JT=$(SOURCES_JT:.cpp=.o)
-
-
 all: $(SOURCES_HESS) $(SOURCES_SSUR) HESS SSUR
 
 $(OBJECTS_HESS): EXTRA_FLAGS := -O3
 
 $(OBJECTS_SSUR): EXTRA_FLAGS := -O3
 
-$(OBJECTS_SSUR): EXTRA_FLAGS :=
+$(OBJECTS_SSUR_DEBUG): EXTRA_FLAGS :=
 
 HESS: $(OBJECTS_HESS)
 	@echo [Linking and producing executable]:
@@ -35,10 +31,6 @@ SSUR: $(OBJECTS_SSUR)
 SSUR_DEBUG: $(OBJECTS_SSUR_DEBUG)
 	@echo [Linking and producing executable]:
 	$(CC) $(OBJECTS_SSUR_DEBUG) -o SSUR_Reg $(LDFLAGS) -ggdb3
-
-
-JT: $(OBJECTS_JT)
-	$(CC) $(OBJECTS_JT) -o JT_example $(LDFLAGS) -ggdb3
 
 %.o: %.cpp
 	@echo [Compiling]: $<

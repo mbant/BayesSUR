@@ -19,7 +19,7 @@ JTComponent::JTComponent( )
 {
     nodes = std::vector<unsigned int>(0);
     separator = std::vector<unsigned int>(0);
-    parent = nullptr;
+    // parent = nullptr;
     childrens = std::vector<std::shared_ptr<JTComponent>>(0);
 }
 
@@ -27,7 +27,7 @@ JTComponent::JTComponent( const std::vector<unsigned int>& nodes_)
 {
     this->setNodes(nodes_);
     separator = std::vector<unsigned int>(0);
-    parent = nullptr;
+    // parent = nullptr;
     childrens = std::vector<std::shared_ptr<JTComponent>>(0);
 }
 
@@ -35,7 +35,7 @@ JTComponent::JTComponent( const std::vector<unsigned int>& nodes_ , const std::v
 {
     this->setNodes(nodes_);
     this->setSeparator(separator_);
-    parent = nullptr;
+    // parent = nullptr;
     childrens = std::vector<std::shared_ptr<JTComponent>>(0);
 }
 
@@ -67,7 +67,7 @@ std::vector<unsigned int> JTComponent::getSeparator() const
 
 std::shared_ptr<JTComponent> JTComponent::getParent() const
 {
-    return parent;
+    return parent.lock();
 }
 
 std::vector<std::shared_ptr<JTComponent>> JTComponent::getChildrens() const
@@ -140,7 +140,7 @@ void JTComponent::print() const
         std::cout << " " << i;
     std::cout << std::endl;
 
-    std::cout << "  Its Parent is @ " << parent << " and its Children are @:";
+    std::cout << "  Its Parent is @ " << parent.lock() << " and its Children are @:";
     for( auto i : childrens )
         std::cout << " " << i;
     std::cout << std::endl << std::endl;
