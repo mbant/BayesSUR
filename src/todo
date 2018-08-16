@@ -1,0 +1,74 @@
+zinkinj@yahoo.com
+
+8) REFACTOR CODE
+
+        -------------------------------------------
+                TODO
+
+        - write the ESS class that owns a vector of SSUR_Chain that is able to perform global moves
+
+        - write the drive file that instance the SSUR_ESS class and then run the whole sampler
+
+        -------------------------------------------
+
+
+1) Multiple chains might help, so FIX that
+
+9) Multiple edge moves might help in graph mixing!
+
+
+
+
+DONE 5) why do I need a temperature limit given a if the prior is not tempered? 
+TODO CONFIRM EQUATIONS
+
+DONE 6) move tau, has a gamma prior and the likelihood is that IW prior on R
+DONE    is it conjugate? prob not right? what's the posterior / MH ratio?
+TODO    adaptive proposal? another parameter to be kept though...will be resolved via refactoring!
+
+DONE 4) try with updating only a subset of R in the sampler now that it works 
+        [ IT ACTUALLY SEEMS LIKE UPDATING EVERYTHING IS BETTER FOR MIXING, at least all of R ]
+
+DONE 3) Implement the hyperprior on omega
+        the double random doens't really work well, even though is able to share nicely info, but 
+                for some reasons kills the graph mixing a bit
+        maybe use a hotspot factorisation? THIS WORKS BUT IT'S TERRIBLE IN HIGH DIMENSION FOR SOME REASON?
+
+-------------------------------------
+
+2) Write some of the paper for a change or it'll drive you crazy
+
+- start by introducing gibbs sampler, which is inefficient
+- the reparam helps in updating only a few coeffs at a time, connected with the new proposed gamma/graph
+- Beta given the order pi, random function of the graph
+
+
+
+--------------------------------------
+
+Maybe another strategy is to keep the covariances of each prime as parameters, rather than sigmas and rhos
+then if we could compute the cholesky as cholesky of smaller matrices to make so that the cost is less than s^3 we 
+could go back and forth this way we don't loose meaning for parameters and the acc rate would possibly be higher
+
+there's no way of computing the smaller cholesky though, so this is not ideal as it's O(s^3) 
+every iteration to go back and forth between parameterizations
+
+[PRIOR ON R MAKES A BIG DIFFERENCE? maybe try non-diagonal? see poit above on hyperpriors]
+
+--------------------------------------
+
+- Write paper 
+
+- simulation examples
+
+--------------------------------------
+
+Write down a proper SMC rather than this IS.
+
+Indep 1 and 2 could be the starting distributions, then rename sampleBetaR to stepBetaR (and decide order! maybe both again!) 
+and use them to regenerate the particles!
+
+Note that for tempered chains the distributions are actually slightly different! :/  [see update omega for example]
+how do I deal with that? (i mean tempered chains and tempered SMC, I 'll need to rederive everything ?
+    NO, this should still be a product of all these distr, and hence I should be able to 'temper' each and one of them)
+
