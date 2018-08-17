@@ -10,8 +10,7 @@
 #include "utils.h"
 #include "distr.h"
 
-#include "junction_tree.h"
-#include "SSUR_Chain.h"
+#include "ESS_Sampler.h"
 
 extern omp_lock_t RNGlock; //defined in global.h
 extern std::vector<std::mt19937_64> rng;
@@ -23,7 +22,6 @@ int main(int argc, char *  argv[])
 	unsigned int nIter = 10; // default number of iterations
 	unsigned int s=1,p=1;      // might read them from a meta-data file, but for the moment is easier like this..
 	unsigned int nChains = 1;
-	unsigned int M = 20;
 
 	std::string inFile = "data.txt";
 	std::string outFilePath = "";
@@ -57,23 +55,6 @@ int main(int argc, char *  argv[])
 			if (na+1==argc) break; // in case it's last, break
 			++na; // otherwise augment counter
 		}
-		else if ( 0 == strcmp(argv[na],"--M") )
-		{
-			M = std::stoi(argv[++na]); // use the next
-			if (na+1==argc) break; // in case it's last, break
-			++na; // otherwise augment counter
-		}
-		/* DEPRECATED, ALWAYS INITIALISE WITH A SEQUENCE AT RANDOM, MOREOVER I NEED MULTIPLE ENGINES NOW.. */
-		// else if ( 0 == strcmp(argv[na],"--seed") )
-		// {
-		// 	seed = atoi(argv[++na]); // use the next
-		// 	if( seed < 0 )
-		// 	{
-		// 		seed = std::time(NULL);
-		// 	}
-		// 	if (na+1==argc) break; // in case it's last, break
-		// 	++na; // otherwise augment counter
-		// }
 		else if ( 0 == strcmp(argv[na],"--inFile") )
 		{
 			inFile = ""+std::string(argv[++na]); // use the next
@@ -108,12 +89,12 @@ int main(int argc, char *  argv[])
 	rng.reserve(nThreads);  // reserve the correct space for the vector of rng engines
 	std::seed_seq seedSeq;	// and declare the seedSequence
 	std::vector<unsigned int> seedInit(8);
-	long long int seed = r();
+	long long int seed = std::chrono::system_clock::now().time_since_epoch().count();
 
 	// seed all the engines
 	for(unsigned int i=0; i<nThreads; ++i)
 	{
-		rng[i].seed(seed + i*(1000*(p*s*3+s*s)*M*nIter)); // 1000 rng per (p*s*3+s*s) variables each loop .. is this...ok? is random better?
+		rng[i] = std::mt19937_64(seed + i*(1000*(p*s*3+s*s)*nIter) );
 	}
 
 	// ############
@@ -140,7 +121,7 @@ int main(int argc, char *  argv[])
 		inFile.erase(inFile.begin(),inFile.begin()+slash+1);
 		slash = inFile.find("/");
 	}
-	inFile.erase(inFile.end()-4,inFile.end());  // remomve the .txt from inFile
+	inFile.erase(inFile.end()-4,inFile.end());  // remomve the .txt from inFile !
 
 
 	// clear the content of previous files
@@ -160,17 +141,17 @@ int main(int argc, char *  argv[])
 	// ****************************************
 	std::cout << "Initialising the MCMC Chain " << std::endl;
 
-	SSUR_Chain chain( Y, X , 1. );
+	ESS_Sampler sampler( Y, X , nChains , "SSUR");
 
 	// ****************************************
 
 	// INIT THE FILE OUTPUT
 	// Output to file the current state
-	arma::umat gamma_out = chain.getGamma(); // out var for the gammas
-	arma::umat g_out = arma::umat( chain.getGAdjMat() ); // out var for G
+	arma::umat gamma_out = sampler[0] -> getGamma(); // out var for the gammas
+	arma::umat g_out = arma::umat( sampler[0] -> getGAdjMat() ); // out var for G
 
-	arma::mat beta_out = chain.getBeta(); // out var for the betas
-	arma::mat sigmaRho_out = chain.getSigmaRho(); // out var for the sigmas and rhos
+	arma::mat beta_out = sampler[0] -> getBeta(); // out var for the betas
+	arma::mat sigmaRho_out = sampler[0] -> getSigmaRho(); // out var for the sigmas and rhos
 
 	gammaOutFile.open( outFilePath+inFile+"_SSUR_gamma_out.txt" , std::ios_base::trunc);
 	gammaOutFile << (arma::conv_to<arma::mat>::from(gamma_out)) << std::flush;
@@ -180,15 +161,15 @@ int main(int argc, char *  argv[])
 	gOutFile << ( arma::conv_to<arma::mat>::from(g_out) ) << std::flush;   // this might be quite long...
 	gOutFile.close();
 
-	logPOutFile << 	chain.getLogPTau() << " " <<
-					chain.getLogPEta() <<  " " <<
-					chain.getLogPJT() <<  " " <<
-					chain.getLogPSigmaRho() <<  " " <<
-					chain.getLogPO() <<  " " <<
-					chain.getLogPPi() <<  " " <<
-					chain.getLogPGamma() <<  " " <<
-					chain.getLogPW() <<  " " <<
-					chain.getLogPBeta() <<  " " <<
+	logPOutFile << 	sampler[0] -> getLogPTau() << " " <<
+					sampler[0] -> getLogPEta() <<  " " <<
+					sampler[0] -> getLogPJT() <<  " " <<
+					sampler[0] -> getLogPSigmaRho() <<  " " <<
+					sampler[0] -> getLogPO() <<  " " <<
+					sampler[0] -> getLogPPi() <<  " " <<
+					sampler[0] -> getLogPGamma() <<  " " <<
+					sampler[0] -> getLogPW() <<  " " <<
+					sampler[0] -> getLogPBeta() <<  " " <<
 				std::endl << std::flush;
 					
 
@@ -205,12 +186,7 @@ int main(int argc, char *  argv[])
 	for(unsigned int i=1; i < nIter ; ++i)
 	{
 
-        // #pragma omp parallel for num_threads(nThreads)
-        // for(unsigned int m=0; m<nChains ; ++m)
-        // {
-				chain.step();
-
-        // } // end parallel updates
+		sampler.step();
 		
 		// #################### END LOCAL MOVES
 
@@ -218,17 +194,17 @@ int main(int argc, char *  argv[])
 		// *** end Global move's section
 
 		// UPDATE OUTPUT STATE
-		gamma_out += chain.getGamma(); // the result of the whole procedure is now my new mcmc point, so add that up
-		g_out += arma::umat( chain.getGAdjMat() );
+		gamma_out += sampler[0] -> getGamma(); // the result of the whole procedure is now my new mcmc point, so add that up
+		g_out += arma::umat( sampler[0] -> getGAdjMat() );
 
-		beta_out += chain.getBeta();
-		sigmaRho_out += chain.getSigmaRho();
+		beta_out += sampler[0] -> getBeta();
+		sigmaRho_out += sampler[0] -> getSigmaRho();
 
 		// Print something on how the chain is going
 		if( (i+1) % tick == 0 )
 		{
 
-			std::cout << " Running iteration " << i+1 << " ... local Acc Rate: ~ gamma: " << Utils::round( chain.getGammaAccRate() , 3 ) << " -- JT: " << Utils::round( chain.getJTAccRate() , 3 ) << std::endl; 
+			std::cout << " Running iteration " << i+1 << " ... local Acc Rate: ~ gamma: " << Utils::round( sampler[0] -> getGammaAccRate() , 3 ) << " -- JT: " << Utils::round( sampler[0] -> getJTAccRate() , 3 ) << std::endl; 
 			// if( nChains > 1 )
 				// std::cout << "\033[A" << "\033[105C" << " - global Acc Rate ~ " << 1 << std::endl;;
 
@@ -244,15 +220,15 @@ int main(int argc, char *  argv[])
 				gOutFile << ( arma::conv_to<arma::mat>::from(g_out) )/((double)i+1.0) << std::flush;   // this might be quite long...
 				gOutFile.close();
 
-				logPOutFile << 	chain.getLogPTau() << " " <<
-								chain.getLogPEta() <<  " " <<
-								chain.getLogPJT() <<  " " <<
-								chain.getLogPSigmaRho() <<  " " <<
-								chain.getLogPO() <<  " " <<
-								chain.getLogPPi() <<  " " <<
-								chain.getLogPGamma() <<  " " <<
-								chain.getLogPW() <<  " " <<
-								chain.getLogPBeta() <<  " " <<
+				logPOutFile << 	sampler[0] -> getLogPTau() << " " <<
+								sampler[0] -> getLogPEta() <<  " " <<
+								sampler[0] -> getLogPJT() <<  " " <<
+								sampler[0] -> getLogPSigmaRho() <<  " " <<
+								sampler[0] -> getLogPO() <<  " " <<
+								sampler[0] -> getLogPPi() <<  " " <<
+								sampler[0] -> getLogPGamma() <<  " " <<
+								sampler[0] -> getLogPW() <<  " " <<
+								sampler[0] -> getLogPBeta() <<  " " <<
 							std::endl << std::flush;
 			}
 
@@ -273,15 +249,15 @@ int main(int argc, char *  argv[])
 	gOutFile << ( arma::conv_to<arma::mat>::from(g_out) )/((double)nIter+1.0) << std::flush;   // this might be quite long...
 	gOutFile.close();
 
-	logPOutFile << 	chain.getLogPTau() << " " <<
-					chain.getLogPEta() <<  " " <<
-					chain.getLogPJT() <<  " " <<
-					chain.getLogPSigmaRho() <<  " " <<
-					chain.getLogPO() <<  " " <<
-					chain.getLogPPi() <<  " " <<
-					chain.getLogPGamma() <<  " " <<
-					chain.getLogPW() <<  " " <<
-					chain.getLogPBeta() <<  " " <<
+	logPOutFile << 	sampler[0] -> getLogPTau() << " " <<
+					sampler[0] -> getLogPEta() <<  " " <<
+					sampler[0] -> getLogPJT() <<  " " <<
+					sampler[0] -> getLogPSigmaRho() <<  " " <<
+					sampler[0] -> getLogPO() <<  " " <<
+					sampler[0] -> getLogPPi() <<  " " <<
+					sampler[0] -> getLogPGamma() <<  " " <<
+					sampler[0] -> getLogPW() <<  " " <<
+					sampler[0] -> getLogPBeta() <<  " " <<
 				std::endl << std::flush;
 
 	// ----
@@ -293,12 +269,12 @@ int main(int argc, char *  argv[])
 	// -----
 
 	std::cout << "Saved to :   "+outFilePath+inFile+"_SSUR_****_out.txt" << std::endl;
-	std::cout << "Final tau : " << chain.getTau() << "    w/ proposal variance: " << chain.getVarTauProposal() << std::endl;
-	std::cout << "Final eta : " << chain.getEta() <<  std::endl;
-	std::cout << "Final o : " << chain.getO().t() << "       w/ proposal variance: " << chain.getVarOProposal() << std::endl;  
-	std::cout << "Final pi : " << chain.getPi().t() << "       w/ proposal variance: " << chain.getVarPiProposal() << std::endl;
-	std::cout << "  -- Average Omega : " << arma::accu( chain.getO() * chain.getPi().t() )/((double)p*s) <<  std::endl;
-	std::cout << "Final w : " << chain.getW() <<  std::endl << std::endl ;
+	std::cout << "Final tau : " << sampler[0] -> getTau() << "    w/ proposal variance: " << sampler[0] -> getVarTauProposal() << std::endl;
+	std::cout << "Final eta : " << sampler[0] -> getEta() <<  std::endl;
+	std::cout << "Final o : " << sampler[0] -> getO().t() << "       w/ proposal variance: " << sampler[0] -> getVarOProposal() << std::endl;  
+	std::cout << "Final pi : " << sampler[0] -> getPi().t() << "       w/ proposal variance: " << sampler[0] -> getVarPiProposal() << std::endl;
+	std::cout << "  -- Average Omega : " << arma::accu( sampler[0] -> getO() * sampler[0] -> getPi().t() )/((double)p*s) <<  std::endl;
+	std::cout << "Final w : " << sampler[0] -> getW() <<  std::endl << std::endl ;
 
 	// Exit
 

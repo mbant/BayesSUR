@@ -10,7 +10,8 @@
 #ifndef SSUR_CHAIN_H
 #define SSUR_CHAIN_H
 
-class SSUR_Chain { 
+class SSUR_Chain
+{ 
 
     public:
 
@@ -36,6 +37,9 @@ class SSUR_Chain {
         // *******************************
         // Getters and Setters
         // *******************************
+        // getters for big objects (arma::mat, JunctionTree, ...) will return references
+        // so the client must be carefull with what it does with it
+
 
         // data
         std::shared_ptr<arma::mat> getY() const;
@@ -44,23 +48,23 @@ class SSUR_Chain {
         // data are best set together as we need to confirm dimension matching
         void setData( std::shared_ptr<arma::mat> , std::shared_ptr<arma::mat> );
 
-        arma::mat getXtX() const;
+        arma::mat& getXtX();
         unsigned int getN() const;
         unsigned int getP() const;
         unsigned int getS() const;
         // no setters as they are linked to the data
 
         // usefull quantities to keep track of
-        arma::umat getVSMask() const;
+        arma::umat& getVSMask();
         void setVSMask( arma::umat );
 
-        arma::mat getXB() const;
+        arma::mat& getXB();
         void setXB( arma::mat );
         
-        arma::mat getU() const;
+        arma::mat& getU();
         void setU( arma::mat );
 
-        arma::mat getRhoU() const;
+        arma::mat& getRhoU();
         void setRhoU( arma::mat );
 
         // MCMC related tuning parameters
@@ -77,22 +81,22 @@ class SSUR_Chain {
         unsigned int getNUpdatesBandit() const;
         void setNUpdatesBandit( unsigned int );
 
-        arma::mat getBanditZeta() const;
+        arma::mat& getBanditZeta();
         void setBanditZeta( arma::mat );
         
-        arma::mat getBanditAlpha() const;
+        arma::mat& getBanditAlpha();
         void setBanditAlpha( arma::mat );
 
-        arma::mat getBanditBeta() const;
+        arma::mat& getBanditBeta();
         void setBanditBeta( arma::mat );
         
-        arma::vec getBanditMismatch() const;
+        arma::vec& getBanditMismatch();
         void setBanditMismatch( arma::vec );
 
-        arma::vec getBanditNormalisedMismatch() const;
+        arma::vec& getBanditNormalisedMismatch();
         void setBanditNormalisedMismatch( arma::vec );
         
-        arma::vec getBanditNormalisedMismatchBackwards() const;
+        arma::vec& getBanditNormalisedMismatchBackwards();
         void setBanditNormalisedMismatchBackwards( arma::vec );
         
         // Parameter states etc
@@ -100,6 +104,7 @@ class SSUR_Chain {
         // TAU
         double getTau() const;
         void setTau( double );
+        void setTau( double , double );
         
         double getTauA() const;
         void setTauA( double );
@@ -119,6 +124,7 @@ class SSUR_Chain {
         // ETA
         double getEta() const;
         void setEta( double );
+        void setEta( double , double );
         
         double getEtaA() const;
         void setEtaA( double );
@@ -130,9 +136,10 @@ class SSUR_Chain {
         // no setter for this, dedicated setter below
 
         // JT
-        JunctionTree getJT() const;
+        JunctionTree& getJT();
         arma::sp_umat getGAdjMat() const;
         void setJT( JunctionTree& );
+        void setJT( JunctionTree& , double );
 
         unsigned int getNUpdatesJT() const;
         void setNUpdatesJT( unsigned int );
@@ -144,8 +151,9 @@ class SSUR_Chain {
         // no setter for this, dedicated setter below
 
         // sigmas and rhos
-        arma::mat getSigmaRho() const;
-        void getSigmaRho( arma::mat& );
+        arma::mat& getSigmaRho();
+        void setSigmaRho( arma::mat& );
+        void setSigmaRho( arma::mat& , double );
 
         double getNu() const; 
         void setNu( double ); 
@@ -154,8 +162,9 @@ class SSUR_Chain {
         // no setter for this, dedicated setter below
 
         // o_k
-        arma::vec getO() const;
+        arma::vec& getO();
         void setO( arma::vec& );
+        void setO( arma::vec& , double );
 
         double getOA() const;
         void setOA( double );
@@ -173,8 +182,9 @@ class SSUR_Chain {
         // no setter for this, dedicated setter below
 
         // pi_j
-        arma::vec getPi() const;
+        arma::vec& getPi();
         void setPi( arma::vec& );
+        void setPi( arma::vec& , double );
 
         double getPiA() const;
         void setPiA( double );
@@ -192,11 +202,12 @@ class SSUR_Chain {
         // no setter for this, dedicated setter below
 
         // GAMMA (bandit defined above)
-        arma::umat getGamma() const;
-        void getGamma( arma::umat& );
+        arma::umat& getGamma();
+        void setGamma( arma::umat& );
+        void setGamma( arma::umat& , double );
         
-        unsigned int getNnUpdatesMC3() const;
-        void setNnUpdatesMC3( unsigned int );
+        unsigned int getNUpdatesMC3() const;
+        void setNUpdatesMC3( unsigned int );
         
         double getGammaAccRate() const;
         // no setter for this, is updated internally
@@ -207,6 +218,7 @@ class SSUR_Chain {
         // W
         double getW() const;
         void setW( double );
+        void setW( double , double );
 
         double getWA() const;
         void setWA( double );
@@ -218,15 +230,21 @@ class SSUR_Chain {
         // no setter for this, dedicated setter below
 
         // BETA
-        arma::mat getBeta() const;
+        arma::mat& getBeta();
         void setBeta( arma::mat& );
+        void setBeta( arma::mat& , double );
 
         double getLogPBeta() const;
         // no setter for this, dedicated setter below
 
         // LOG-LIKELIHOOD FOR THE SSUR MODEL
         double getLogLikelihood() const;
-        // no setter for this, dedicated setter below
+        // setter for this because of exchange operators and stuffs
+        void setLogLikelihood( double );
+
+        // log prior and log posterior
+        double getJointLogPrior() const;
+        double getJointLogPosterior() const;
 
         // ******************************
         // Init Methods
@@ -396,6 +414,27 @@ class SSUR_Chain {
         // through public methods but this as a baseline is good to have.
 
         // *******************************
+        // Global operators between two chains
+        // *******************************
+        // asuming nu and other fixed hyperparameters are the same across chains, woudn;t make sense otherwise
+        void swapTau( std::shared_ptr<SSUR_Chain>& );
+        void swapEta( std::shared_ptr<SSUR_Chain>& );
+        void swapJT( std::shared_ptr<SSUR_Chain>& );
+        void swapSigmaRho( std::shared_ptr<SSUR_Chain>& );
+        void swapO( std::shared_ptr<SSUR_Chain>& );
+        void swapPi( std::shared_ptr<SSUR_Chain>& );
+        void swapGamma( std::shared_ptr<SSUR_Chain>& );
+        void swapW( std::shared_ptr<SSUR_Chain>& );
+        void swapBeta( std::shared_ptr<SSUR_Chain>& );
+        
+        void exchangeGamma_step( std::shared_ptr<SSUR_Chain>& );
+        void exchangeJT_step( std::shared_ptr<SSUR_Chain>& );
+
+        void uniform_crossOver_step( std::shared_ptr<SSUR_Chain>& );
+        void adapt_crossOver_step( std::shared_ptr<SSUR_Chain>& );
+        void block_crossOver_step( std::shared_ptr<SSUR_Chain>& , arma::mat& , double );
+
+        // *******************************
         // Other Methods
         // *******************************
 
@@ -545,5 +584,9 @@ class SSUR_Chain {
         double log_likelihood;
 
 };
+
+void swapAll( std::shared_ptr<SSUR_Chain>& );
+void exchangeAll_step( std::shared_ptr<SSUR_Chain>& , std::shared_ptr<SSUR_Chain>& );
+void allExchangeAll_step( std::vector<std::shared_ptr<SSUR_Chain>>& chain );
 
 #endif

@@ -20,6 +20,10 @@ int main(int argc, char *  argv[])
 
 	omp_init_lock(&RNGlock);  // RNG lock for the parallel part
 
+	omp_set_lock(&RNGlock);
+    // one thread at a time stuff
+    omp_unset_lock(&RNGlock);
+
 	unsigned int nIter = 10; // default number of iterations
 	unsigned int s=1,p=1;      // might read them from a meta-data file, but for the moment is easier like this..
 	unsigned int nChains = 1;

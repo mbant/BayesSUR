@@ -6,36 +6,25 @@ LDFLAGS= -larmadillo -lpthread -llapack -lopenblas -fopenmp
 SOURCES_HESS=global.cpp utils.cpp distr.cpp HESS.cpp drive_HESS.cpp
 OBJECTS_HESS=$(SOURCES_HESS:.cpp=.o)
 
-SOURCES_SSUR=global.cpp utils.cpp distr.cpp junction_tree.cpp SSUR_Chain.cpp drive_SSUR.cpp
+SOURCES_SSUR=global.cpp utils.cpp distr.cpp junction_tree.cpp SSUR_Chain.cpp ESS_Sampler.cpp drive_SSUR.cpp
 OBJECTS_SSUR=$(SOURCES_SSUR:.cpp=.o)
-
-SOURCES_SSUR_DEBUG=global.cpp utils.cpp distr.cpp junction_tree.cpp SSUR_Chain.cpp drive_SSUR.cpp
-OBJECTS_SSUR_DEBUG=$(SOURCES_SSUR_DEBUG:.cpp=.o)
 
 all: $(SOURCES_HESS) $(SOURCES_SSUR) HESS SSUR
 
-$(OBJECTS_HESS): EXTRA_FLAGS := -O3
-
-$(OBJECTS_SSUR): EXTRA_FLAGS := -O3
-
-$(OBJECTS_SSUR_DEBUG): EXTRA_FLAGS :=
-
+HESS: OPTIM_FLAGS := -O3
 HESS: $(OBJECTS_HESS)
 	@echo [Linking and producing executable]:
 	$(CC) $(OBJECTS_HESS) -o HESS_Reg $(LDFLAGS)
 
+SSUR: OPTIM_FLAGS := -O3
 SSUR: $(OBJECTS_SSUR)
 	@echo [Linking and producing executable]:
 	$(CC) $(OBJECTS_SSUR) -o SSUR_Reg $(LDFLAGS)
-	
-SSUR_DEBUG: $(OBJECTS_SSUR_DEBUG)
-	@echo [Linking and producing executable]:
-	$(CC) $(OBJECTS_SSUR_DEBUG) -o SSUR_Reg $(LDFLAGS) -ggdb3
 
 %.o: %.cpp
 	@echo [Compiling]: $<
-	$(CC) $(CFLAGS) $(EXTRA_FLAGS) -o $@ -c $<	
-	
+	$(CC) $(CFLAGS) $(OPTIM_FLAGS) -o $@ -c $<
+
 clean:
 	rm *.o
 	rm *_Reg
