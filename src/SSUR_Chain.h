@@ -416,7 +416,7 @@ class SSUR_Chain
         // *******************************
         // Global operators between two chains
         // *******************************
-        // asuming nu and other fixed hyperparameters are the same across chains, woudn;t make sense otherwise
+        // assuming nu and other fixed hyperparameters are the same across chains, woudn;t make sense otherwise
         void swapTau( std::shared_ptr<SSUR_Chain>& );
         void swapEta( std::shared_ptr<SSUR_Chain>& );
         void swapJT( std::shared_ptr<SSUR_Chain>& );
@@ -427,12 +427,12 @@ class SSUR_Chain
         void swapW( std::shared_ptr<SSUR_Chain>& );
         void swapBeta( std::shared_ptr<SSUR_Chain>& );
         
-        void exchangeGamma_step( std::shared_ptr<SSUR_Chain>& );
-        void exchangeJT_step( std::shared_ptr<SSUR_Chain>& );
+        int exchangeGamma_step( std::shared_ptr<SSUR_Chain>& );
+        int exchangeJT_step( std::shared_ptr<SSUR_Chain>& );
 
-        void uniform_crossOver_step( std::shared_ptr<SSUR_Chain>& );
-        void adapt_crossOver_step( std::shared_ptr<SSUR_Chain>& );
-        void block_crossOver_step( std::shared_ptr<SSUR_Chain>& , arma::mat& , double );
+        int uniform_crossOver_step( std::shared_ptr<SSUR_Chain>& );
+        int adapt_crossOver_step( std::shared_ptr<SSUR_Chain>& );
+        int block_crossOver_step( std::shared_ptr<SSUR_Chain>& , arma::mat& , double );
 
         // *******************************
         // Other Methods
@@ -586,7 +586,7 @@ class SSUR_Chain
 };
 
 void swapAll( std::shared_ptr<SSUR_Chain>& );
-void exchangeAll_step( std::shared_ptr<SSUR_Chain>& , std::shared_ptr<SSUR_Chain>& );
-void allExchangeAll_step( std::vector<std::shared_ptr<SSUR_Chain>>& chain );
+int exchangeAll_step( std::shared_ptr<SSUR_Chain>& , std::shared_ptr<SSUR_Chain>& );
+int allExchangeAll_step( std::vector<std::shared_ptr<SSUR_Chain>>& chain );
 
 #endif

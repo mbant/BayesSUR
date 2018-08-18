@@ -38,9 +38,13 @@ class ESS_Sampler{
 
         void globalStep();
 
+        // Temperature ladder update and getter for the acceptance rate of global updates
+        double getGlobalAccRate() const;
+
         void updateTemperatures(); // we will need extra tracking of the global acceptance rate of the moves
 
     private:
+
         unsigned int nChains;
 
         // Pointer to chains -  
@@ -54,6 +58,8 @@ class ESS_Sampler{
         arma::mat corrMatX;
         // should also put here the ones for adapt_XO
 
+        unsigned int updateCounter; // how often do we update the temperatures?
+        unsigned int global_proposal_count, global_acc_count;
 
 };
 

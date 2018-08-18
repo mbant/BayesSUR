@@ -383,15 +383,15 @@ double SSUR_Chain::getLogPPi() const{ return logP_pi ; }
 
 // GAMMA
 arma::umat& SSUR_Chain::getGamma(){ return gamma ; }
-void SSUR_Chain::setGamma( arma::umat& gamma_ )
+void SSUR_Chain::setGamma( arma::umat& externalGamma )
 {
-    gamma = gamma_ ; 
+    gamma = externalGamma ; 
     logPGamma();
 }
 
-void SSUR_Chain::setGamma( arma::umat& gamma_ , double logP_gamma_ )
+void SSUR_Chain::setGamma( arma::umat& externalGamma , double logP_gamma_ )
 {
-    gamma = gamma_ ; 
+    gamma = externalGamma ; 
     logP_gamma = logP_gamma_ ;
 }
 
@@ -853,7 +853,7 @@ double SSUR_Chain::logPPi( arma::vec& pi_ )
 }
 
 // GAMMA
-double SSUR_Chain::logPGamma( const arma::umat& gamma_ , const arma::vec& o_ , const arma::vec& pi_ )
+double SSUR_Chain::logPGamma( const arma::umat& externalGamma , const arma::vec& o_ , const arma::vec& pi_ )
 {
     double logP = 0.;
     for(unsigned int j=0; j<p; ++j)
@@ -863,7 +863,7 @@ double SSUR_Chain::logPGamma( const arma::umat& gamma_ , const arma::vec& o_ , c
             if( ( o_(k) * pi_(j) ) > 1 )
                 return -std::numeric_limits<double>::infinity();
 
-            logP += Distributions::logPDFBernoulli( gamma_(j,k), o_(k) * pi_(j) );
+            logP += Distributions::logPDFBernoulli( externalGamma(j,k), o_(k) * pi_(j) );
         }
     }
     return logP;
@@ -875,9 +875,9 @@ double SSUR_Chain::logPGamma( )
     return logP_gamma;
 }
 
-double SSUR_Chain::logPGamma( const arma::umat& gamma_ )
+double SSUR_Chain::logPGamma( const arma::umat& externalGamma )
 {
-    return logPGamma( gamma_ , o , pi );
+    return logPGamma( externalGamma , o , pi );
 }
 
 // W
@@ -898,12 +898,12 @@ double SSUR_Chain::logPW( double w_ )
 }
 
 // BETA
-double SSUR_Chain::logPBeta( const arma::mat&  externalBeta , const arma::umat& gamma_ , double w_ )
+double SSUR_Chain::logPBeta( const arma::mat&  externalBeta , const arma::umat& externalGamma , double w_ )
 {
     arma::uvec VS_IN_j;
     arma::uvec singleIdx_j(1);
 
-    arma::umat mask = createVSMask( gamma_ );
+    arma::umat mask = createVSMask( externalGamma );
 
     double logP = 0.;
 
@@ -982,14 +982,14 @@ double SSUR_Chain::logLikelihood( const arma::umat&  externalGammaMask , const a
 }                                  
 
 double SSUR_Chain::logLikelihood( arma::umat&  externalGammaMask , arma::mat& externalXB , arma::mat& externalU , arma::mat& externalRhoU , //gammaMask,XB,U,rhoU
-                        const arma::mat&  externalBeta , const arma::umat& gamma_ , // beta , gamma 
+                        const arma::mat&  externalBeta , const arma::umat& externalGamma , // beta , gamma 
                         const arma::mat&  externalSigmaRho , const JunctionTree& externalJT ) // sigmaRho, jt
 {
-     externalGammaMask = createVSMask(gamma_);
+    externalGammaMask = createVSMask(externalGamma);
     arma::uvec singleIdx_k(1), VS_IN_k;
 
     createQuantities(  externalGammaMask , externalXB , externalU , externalRhoU ,
-                      gamma_ ,  externalBeta ,  externalSigmaRho , externalJT );
+                      externalGamma ,  externalBeta ,  externalSigmaRho , externalJT );
 
     double logP = 0.;
     #pragma omp parallel for default(shared) reduction(+:logP)
@@ -1945,10 +1945,13 @@ void SSUR_Chain::step()
     // Update HyperParameters
     stepTau();
     stepEta();
-    stepO();
-    stepPi();
     stepW();
-
+    
+    for( auto i=0; i<5; ++i){
+        stepOneO();
+        stepOnePi();
+    }
+    
     // Update JT
     stepJT();
 
@@ -2034,20 +2037,6 @@ void SSUR_Chain::updateProposalVariances()
 // *******************************
 // asuming nu and other fixed hyperparameters are the same across chains, woudn;t make sense otherwise I think 
 
-void swapAll( std::shared_ptr<SSUR_Chain>& thisChain , std::shared_ptr<SSUR_Chain>& thatChain )
-{
-    double swapTemp = thisChain -> getTemperature();
-    thisChain -> setTemperature( thatChain -> getTemperature() );
-    thatChain -> setTemperature( swapTemp );
-
-    // std::shared_ptr<SSUR_Chain> swapChain = thisChain;
-    // thisChain = thatChain;
-    // thatChain = swapChain;
-
-    std::swap ( thisChain , thatChain );
-
-}
-
 void SSUR_Chain::swapTau( std::shared_ptr<SSUR_Chain>& that )
 {
     double par = this->getTau();
@@ -2119,20 +2108,20 @@ void SSUR_Chain::swapBeta( std::shared_ptr<SSUR_Chain>& that )
     that->setBeta( par );
 }
 
-void SSUR_Chain::exchangeGamma_step( std::shared_ptr<SSUR_Chain>& that )
+int SSUR_Chain::exchangeGamma_step( std::shared_ptr<SSUR_Chain>& that )
 {
     // I'm exchanging the gammas AND the betas. So gammaMask, XB and U will follow and we will have to re-compute rhoU for both chains
     arma::umat swapGammaMask;
     arma::mat swapXB , swapU;
 
-    arma::mat rhoU_1 = createRhoU( that->getU() , this->getSigmaRho() , this->getJT() );
-    arma::mat rhoU_2 = createRhoU( this->getU() , that->getSigmaRho() , that->getJT() );
+    arma::mat rhoU_1 = this->createRhoU( that->getU() , this->getSigmaRho() , this->getJT() );
+    arma::mat rhoU_2 = that->createRhoU( this->getU() , that->getSigmaRho() , that->getJT() );
 
     double logLik_1 = this->logLikelihood( that->getVSMask() , that->getXB() , that->getU() , rhoU_1 , this->getSigmaRho() );   // note that this and that lik are
     double logLik_2 = that->logLikelihood( this->getVSMask() , this->getXB() , this->getU() , rhoU_2 , that->getSigmaRho() ); // important because of temperature
 
-    double logPExchange = logLik_1 + logLik_2 -
-                        this->getLogLikelihood() - that->getLogLikelihood();
+    double logPExchange = ( logLik_1 + logLik_2 ) -
+                        ( this->getLogLikelihood() + that->getLogLikelihood() );
  
     if( Distributions::randLogU01() < logPExchange )
     {
@@ -2158,21 +2147,24 @@ void SSUR_Chain::exchangeGamma_step( std::shared_ptr<SSUR_Chain>& that )
 
         this->setLogLikelihood( logLik_1 );
         that->setLogLikelihood( logLik_2 );
-    }
+
+        return 1;
+    }else
+        return 0;
 }
 
-void SSUR_Chain::exchangeJT_step( std::shared_ptr<SSUR_Chain>& that )
+int SSUR_Chain::exchangeJT_step( std::shared_ptr<SSUR_Chain>& that )
 {
     // I'm exchanging the JT, sigmas and rhos.
     // So gammaMask, XB and U will stay the same and we will have to to re-compute rhoU for both chains
-    arma::mat rhoU_1 = createRhoU( this->getU() , that->getSigmaRho() , that->getJT() );
-    arma::mat rhoU_2 = createRhoU( that->getU() , this->getSigmaRho() , this->getJT() );
+    arma::mat rhoU_1 = this->createRhoU( this->getU() , that->getSigmaRho() , that->getJT() );
+    arma::mat rhoU_2 = that->createRhoU( that->getU() , this->getSigmaRho() , this->getJT() );
 
     double logLik_1 = this->logLikelihood( this->getVSMask() , this->getXB() , this->getU() , rhoU_1 , that->getSigmaRho() ); // note that this and that lik are
     double logLik_2 = that->logLikelihood( that->getVSMask() , that->getXB() , that->getU() , rhoU_2 , this->getSigmaRho() );   // important because of temperature
 
-    double logPExchange = logLik_1 + logLik_2 -
-                        this->getLogLikelihood() - that->getLogLikelihood();
+    double logPExchange = ( logLik_1 + logLik_2 ) -
+                        ( this->getLogLikelihood() + that->getLogLikelihood() );
  
     if( Distributions::randLogU01() < logPExchange )
     {
@@ -2186,10 +2178,13 @@ void SSUR_Chain::exchangeJT_step( std::shared_ptr<SSUR_Chain>& that )
 
         this->setLogLikelihood( logLik_1 );
         that->setLogLikelihood( logLik_2 );
-    }
+        
+        return 1;
+    }else
+        return 0;
 }
 
-void SSUR_Chain::adapt_crossOver_step( std::shared_ptr<SSUR_Chain>& that )
+int SSUR_Chain::adapt_crossOver_step( std::shared_ptr<SSUR_Chain>& that )
 {
     double pCrossOver;
 
@@ -2242,8 +2237,8 @@ void SSUR_Chain::adapt_crossOver_step( std::shared_ptr<SSUR_Chain>& that )
 
     // Propose betas that go with the new crossed-over states
     std::vector<arma::mat> betaXO(2); 
-    betaXO[0] = arma::mat(p+1,s);
-    betaXO[1] = arma::mat(p+1,s);  // memory is NOT initialised here
+    betaXO[0] = this->getBeta();
+    betaXO[1] = that->getBeta();
 
     std::vector<arma::umat> gammaMask_XO(2);
     gammaMask_XO[0] = createVSMask(gammaXO[0]);
@@ -2260,25 +2255,25 @@ void SSUR_Chain::adapt_crossOver_step( std::shared_ptr<SSUR_Chain>& that )
     rhoU_XO[1] = arma::mat( that->getRhoU() ); 
 
     // propose for the first new chain
-    pCrossOver -= sampleBetaGivenSigmaRho( betaXO[0] , this->getSigmaRho() , this->getJT() , 
+    pCrossOver -= this->sampleBetaGivenSigmaRho( betaXO[0] , this->getSigmaRho() , this->getJT() , 
                                 gammaMask_XO[0] , XB_XO[0] , U_XO[0] , rhoU_XO[0] );
 
-    pCrossOver += logPBetaGivenSigmaRho( this->getBeta() , this->getSigmaRho() , this->getJT() , 
+    pCrossOver += this->logPBetaGivenSigmaRho( this->getBeta() , this->getSigmaRho() , this->getJT() , 
                                 this->getVSMask() , XB_XO[0] , U_XO[0] , rhoU_XO[0] );
 
     // propose for the second new chain  
-    pCrossOver -= sampleBetaGivenSigmaRho( betaXO[1] , that->getSigmaRho() , that->getJT() , 
+    pCrossOver -= that->sampleBetaGivenSigmaRho( betaXO[1] , that->getSigmaRho() , that->getJT() , 
                                 gammaMask_XO[1] , XB_XO[1] , U_XO[1] , rhoU_XO[1] );
 
-    pCrossOver += logPBetaGivenSigmaRho( that->getBeta() , that->getSigmaRho() , that->getJT() , 
+    pCrossOver += that->logPBetaGivenSigmaRho( that->getBeta() , that->getSigmaRho() , that->getJT() , 
                                 that->getVSMask() , XB_XO[1] , U_XO[1] , rhoU_XO[1] );
 
     // log Posterior of the new chains
     double logLikFirst = this->logLikelihood( gammaMask_XO[0] , XB_XO[0] , U_XO[0] , rhoU_XO[0] , this->getSigmaRho() );
     double logLikSecond = that->logLikelihood( gammaMask_XO[1] , XB_XO[1] , U_XO[1] , rhoU_XO[1] , that->getSigmaRho() );
 
-    double logPBetaFirst = this->logPBeta( betaXO[0] );  // this and that are important for temperature and hyperparameters
-    double logPBetaSecond = that->logPBeta( betaXO[1] );
+    double logPBetaFirst = this->logPBetaMask( betaXO[0] , gammaMask_XO[0] , this->getW() );  // this and that are important for temperature and hyperparameters
+    double logPBetaSecond = that->logPBetaMask( betaXO[1] , gammaMask_XO[1] , that->getW() );
     
     double logPGammaFirst = this->logPGamma( gammaXO[0] );
     double logPGammaSecond = that->logPGamma( gammaXO[1] );
@@ -2314,12 +2309,14 @@ void SSUR_Chain::adapt_crossOver_step( std::shared_ptr<SSUR_Chain>& that )
 
         that->setLogLikelihood( logLikSecond );
 
-    } // end CrossOver
+        return 1;
+    }else
+        return 0;
                 
 
 }
 
-void SSUR_Chain::uniform_crossOver_step( std::shared_ptr<SSUR_Chain>& that )
+int SSUR_Chain::uniform_crossOver_step( std::shared_ptr<SSUR_Chain>& that )
 {
     double pCrossOver;
 
@@ -2347,8 +2344,8 @@ void SSUR_Chain::uniform_crossOver_step( std::shared_ptr<SSUR_Chain>& that )
 
     // Propose betas that go with the new crossed-over states
     std::vector<arma::mat> betaXO(2); 
-    betaXO[0] = arma::mat(p+1,s);
-    betaXO[1] = arma::mat(p+1,s);  // memory is NOT initialised here, only use is through XB
+    betaXO[0] = this->getBeta();
+    betaXO[1] = that->getBeta();
 
     std::vector<arma::umat> gammaMask_XO(2);
     gammaMask_XO[0] = createVSMask(gammaXO[0]);
@@ -2365,25 +2362,25 @@ void SSUR_Chain::uniform_crossOver_step( std::shared_ptr<SSUR_Chain>& that )
     rhoU_XO[1] = arma::mat( that->getRhoU() ); 
 
     // propose for the first new chain
-    pCrossOver -= sampleBetaGivenSigmaRho( betaXO[0] , this->getSigmaRho() , this->getJT() , 
+    pCrossOver -= this->sampleBetaGivenSigmaRho( betaXO[0] , this->getSigmaRho() , this->getJT() , 
                                 gammaMask_XO[0] , XB_XO[0] , U_XO[0] , rhoU_XO[0] );
 
-    pCrossOver += logPBetaGivenSigmaRho( this->getBeta() , this->getSigmaRho() , this->getJT() , 
+    pCrossOver += this->logPBetaGivenSigmaRho( this->getBeta() , this->getSigmaRho() , this->getJT() , 
                                 this->getVSMask() , XB_XO[0] , U_XO[0] , rhoU_XO[0] );
 
     // propose for the second new chain  
-    pCrossOver -= sampleBetaGivenSigmaRho( betaXO[1] , that->getSigmaRho() , that->getJT() , 
+    pCrossOver -= that->sampleBetaGivenSigmaRho( betaXO[1] , that->getSigmaRho() , that->getJT() , 
                                 gammaMask_XO[1] , XB_XO[1] , U_XO[1] , rhoU_XO[1] );
 
-    pCrossOver += logPBetaGivenSigmaRho( that->getBeta() , that->getSigmaRho() , that->getJT() , 
+    pCrossOver += that->logPBetaGivenSigmaRho( that->getBeta() , that->getSigmaRho() , that->getJT() , 
                                 that->getVSMask() , XB_XO[1] , U_XO[1] , rhoU_XO[1] );
 
     // log Posterior of the new chains
     double logLikFirst = this->logLikelihood( gammaMask_XO[0] , XB_XO[0] , U_XO[0] , rhoU_XO[0] , this->getSigmaRho() );
     double logLikSecond = that->logLikelihood( gammaMask_XO[1] , XB_XO[1] , U_XO[1] , rhoU_XO[1] , that->getSigmaRho() );
 
-    double logPBetaFirst = this->logPBeta( betaXO[0] );  // this and that are important for temperature and hyperparameters
-    double logPBetaSecond = that->logPBeta( betaXO[1] );
+    double logPBetaFirst = this->logPBetaMask( betaXO[0] , gammaMask_XO[0] , this->getW() );  // this and that are important for temperature and hyperparameters
+    double logPBetaSecond = that->logPBetaMask( betaXO[1] , gammaMask_XO[1] , that->getW() );
     
     double logPGammaFirst = this->logPGamma( gammaXO[0] );
     double logPGammaSecond = that->logPGamma( gammaXO[1] );
@@ -2419,12 +2416,14 @@ void SSUR_Chain::uniform_crossOver_step( std::shared_ptr<SSUR_Chain>& that )
 
         that->setLogLikelihood( logLikSecond );
 
-    } // end CrossOver
+        return 1;
+    }else
+        return 0;
                 
 
 }
 
-void SSUR_Chain::block_crossOver_step( std::shared_ptr<SSUR_Chain>& that , arma::mat& corrMatX , double threshold )
+int SSUR_Chain::block_crossOver_step( std::shared_ptr<SSUR_Chain>& that , arma::mat& corrMatX , double threshold )
 {
     double pCrossOver;
 
@@ -2451,8 +2450,8 @@ void SSUR_Chain::block_crossOver_step( std::shared_ptr<SSUR_Chain>& that , arma:
 
     // Propose betas that go with the new crossed-over states
     std::vector<arma::mat> betaXO(2); 
-    betaXO[0] = arma::mat(p+1,s);
-    betaXO[1] = arma::mat(p+1,s);  // memory is NOT initialised here, only use is through XB
+    betaXO[0] = this->getBeta();
+    betaXO[1] = that->getBeta();
 
     std::vector<arma::umat> gammaMask_XO(2);
     gammaMask_XO[0] = createVSMask(gammaXO[0]);
@@ -2469,25 +2468,25 @@ void SSUR_Chain::block_crossOver_step( std::shared_ptr<SSUR_Chain>& that , arma:
     rhoU_XO[1] = arma::mat( that->getRhoU() ); 
 
     // propose for the first new chain
-    pCrossOver -= sampleBetaGivenSigmaRho( betaXO[0] , this->getSigmaRho() , this->getJT() , 
+    pCrossOver -= this->sampleBetaGivenSigmaRho( betaXO[0] , this->getSigmaRho() , this->getJT() , 
                                 gammaMask_XO[0] , XB_XO[0] , U_XO[0] , rhoU_XO[0] );
 
-    pCrossOver += logPBetaGivenSigmaRho( this->getBeta() , this->getSigmaRho() , this->getJT() , 
+    pCrossOver += this->logPBetaGivenSigmaRho( this->getBeta() , this->getSigmaRho() , this->getJT() , 
                                 this->getVSMask() , XB_XO[0] , U_XO[0] , rhoU_XO[0] );
 
     // propose for the second new chain  
-    pCrossOver -= sampleBetaGivenSigmaRho( betaXO[1] , that->getSigmaRho() , that->getJT() , 
+    pCrossOver -= that->sampleBetaGivenSigmaRho( betaXO[1] , that->getSigmaRho() , that->getJT() , 
                                 gammaMask_XO[1] , XB_XO[1] , U_XO[1] , rhoU_XO[1] );
 
-    pCrossOver += logPBetaGivenSigmaRho( that->getBeta() , that->getSigmaRho() , that->getJT() , 
+    pCrossOver += that->logPBetaGivenSigmaRho( that->getBeta() , that->getSigmaRho() , that->getJT() , 
                                 that->getVSMask() , XB_XO[1] , U_XO[1] , rhoU_XO[1] );
 
     // log Posterior of the new chains
     double logLikFirst = this->logLikelihood( gammaMask_XO[0] , XB_XO[0] , U_XO[0] , rhoU_XO[0] , this->getSigmaRho() );
     double logLikSecond = that->logLikelihood( gammaMask_XO[1] , XB_XO[1] , U_XO[1] , rhoU_XO[1] , that->getSigmaRho() );
 
-    double logPBetaFirst = this->logPBeta( betaXO[0] );  // this and that are important for temperature and hyperparameters
-    double logPBetaSecond = that->logPBeta( betaXO[1] );
+    double logPBetaFirst = this->logPBetaMask( betaXO[0] , gammaMask_XO[0] , this->getW() );  // this and that are important for temperature and hyperparameters
+    double logPBetaSecond = that->logPBetaMask( betaXO[1] , gammaMask_XO[1] , that->getW() );
     
     double logPGammaFirst = this->logPGamma( gammaXO[0] );
     double logPGammaSecond = that->logPGamma( gammaXO[1] );
@@ -2523,29 +2522,84 @@ void SSUR_Chain::block_crossOver_step( std::shared_ptr<SSUR_Chain>& that , arma:
 
         that->setLogLikelihood( logLikSecond );
 
-    } // end CrossOver
-                
+        return 1;
+    }else
+        return 0;                
 
 }
 
 // NB, these are functions on the SSUR_Chain objects, but not a memeber, thus not callable from one object
-void exchangeAll_step( std::shared_ptr<SSUR_Chain>& thisChain , std::shared_ptr<SSUR_Chain>& thatChain )
+void swapAll( std::shared_ptr<SSUR_Chain>& thisChain , std::shared_ptr<SSUR_Chain>& thatChain )
 {
 
-    double logPExchange = thisChain->getLogLikelihood() * thisChain->getTemperature() / thatChain->getTemperature() - +
-                        thatChain->getLogLikelihood() * thatChain->getTemperature() / thisChain->getTemperature() -
-					thisChain->getLogLikelihood() - thatChain->getLogLikelihood();
+    // POINTER SWAP
+    std::swap ( thisChain , thatChain );
+
+    double swapTemp = thisChain -> getTemperature();
+    thisChain -> setTemperature( thatChain -> getTemperature() );
+    thatChain -> setTemperature( swapTemp );
+
+    // // HARD SWAP
+    // // swap quantities
+    // arma::umat swapGammaMask;
+    // arma::mat swapMat;
+
+    // swapGammaMask = thisChain->getVSMask() ;
+    // thisChain->setVSMask( thatChain->getVSMask() );
+    // thatChain->setVSMask( swapGammaMask );
+    
+    // swapMat = thisChain->getXB();
+    // thisChain->setXB( thatChain->getXB() );
+    // thatChain->setXB( swapMat );
+    
+    // swapMat = thisChain->getU();
+    // thisChain->setU( thatChain->getU() );
+    // thatChain->setU( swapMat );
+
+    // swapMat = thisChain->getU();
+    // thisChain->setRhoU( thatChain->getRhoU() );
+    // thatChain->setRhoU( swapMat );
+
+    // // parameters and priors
+    // thisChain->swapTau( thatChain );
+    // thisChain->swapEta( thatChain );
+    
+    // thisChain->swapJT( thatChain );
+    // thisChain->swapSigmaRho( thatChain );
+
+    // thisChain->swapO( thatChain );
+    // thisChain->swapPi( thatChain );
+
+    // thisChain->swapGamma( thatChain );
+    // thisChain->swapBeta( thatChain );
+
+    // // recompute likelihood
+    // thisChain->logLikelihood();
+    // thatChain->logLikelihood();
+
+}
+
+
+int exchangeAll_step( std::shared_ptr<SSUR_Chain>& thisChain , std::shared_ptr<SSUR_Chain>& thatChain )
+{
+
+    double logPExchange = ( thisChain->getLogLikelihood() * thisChain->getTemperature() -
+                            thatChain->getLogLikelihood() * thatChain->getTemperature() ) * 
+					( 1. / thatChain->getTemperature() - 1. / thisChain->getTemperature() );
                     //  no priors because that is not tempered so it cancels out
 
     if( Distributions::randLogU01() < logPExchange )
     {
         // Swap all the states
         swapAll( thisChain , thatChain );
-    }
+
+        return 1;
+    }else
+        return 0;
 }
 
 
-void allExchangeAll_step( std::vector<std::shared_ptr<SSUR_Chain>>& chain )
+int allExchangeAll_step( std::vector<std::shared_ptr<SSUR_Chain>>& chain )
 {
 
     unsigned int nChains = chain.size();
@@ -2578,10 +2632,10 @@ void allExchangeAll_step( std::vector<std::shared_ptr<SSUR_Chain>>& chain )
         secondChain  = indexTable(tabIndex,1);
 
         // Swap probability
-        pExchange(tabIndex) = chain[firstChain]->getLogLikelihood() * chain[firstChain]->getTemperature() / chain[secondChain]->getTemperature() - +
-                        chain[secondChain]->getLogLikelihood() * chain[secondChain]->getTemperature() / chain[firstChain]->getTemperature() -
-					chain[firstChain]->getLogLikelihood() - chain[secondChain]->getLogLikelihood();
-
+        pExchange(tabIndex) = ( chain[firstChain]->getLogLikelihood() * chain[firstChain]->getTemperature() -
+                            chain[secondChain]->getLogLikelihood() * chain[secondChain]->getTemperature() ) * 
+					( 1. / chain[secondChain]->getTemperature() - 1. / chain[firstChain]->getTemperature() );
+                    //  no priors because that is not tempered so it cancels out
     }
 
     // normalise and cumulate the weights
@@ -2604,7 +2658,9 @@ void allExchangeAll_step( std::vector<std::shared_ptr<SSUR_Chain>>& chain )
 
         swapAll( chain[firstChain] , chain[secondChain] );
 
-    }
+        return 1;
+    }else
+        return 0;
 
 }
 // end NB
@@ -2745,10 +2801,10 @@ void SSUR_Chain::updateRhoU()
 }
 
 void SSUR_Chain::createQuantities( arma::umat&  externalGammaMask , arma::mat& externalXB , arma::mat& externalU , arma::mat& externalRhoU ,
-                                    const arma::umat& gamma_ , const arma::mat&  externalBeta ,
+                                    const arma::umat& externalGamma , const arma::mat&  externalBeta ,
                                     const arma::mat&  externalSigmaRho , const JunctionTree& externalJT )
 {
-     externalGammaMask = createVSMask( gamma_ );
+     externalGammaMask = createVSMask( externalGamma );
     externalXB = createXB(  externalGammaMask ,  externalBeta );
     externalU = createU( externalXB );
     externalRhoU = createRhoU( externalU ,  externalSigmaRho , externalJT );

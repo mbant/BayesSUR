@@ -204,10 +204,13 @@ int main(int argc, char *  argv[])
 		if( (i+1) % tick == 0 )
 		{
 
-			std::cout << " Running iteration " << i+1 << " ... local Acc Rate: ~ gamma: " << Utils::round( sampler[0] -> getGammaAccRate() , 3 ) << " -- JT: " << Utils::round( sampler[0] -> getJTAccRate() , 3 ) << std::endl; 
-			// if( nChains > 1 )
-				// std::cout << "\033[A" << "\033[105C" << " - global Acc Rate ~ " << 1 << std::endl;;
-
+			std::cout << " Running iteration " << i+1 << " ... local Acc Rate: ~ gamma: " << Utils::round( sampler[0] -> getGammaAccRate() , 3 ) 
+					<< " -- JT: " << Utils::round( sampler[0] -> getJTAccRate() , 3 ) ;
+			if( nChains > 1)
+				std::cout << " -- Global: " << Utils::round( sampler.getGlobalAccRate() , 3 ) << std::endl; 
+			else
+				std::cout << std::endl;
+				
 			// Output to files every now and then
 			if( (i+1) % (tick*10) == 0 )
 			{
@@ -274,7 +277,8 @@ int main(int argc, char *  argv[])
 	std::cout << "Final o : " << sampler[0] -> getO().t() << "       w/ proposal variance: " << sampler[0] -> getVarOProposal() << std::endl;  
 	std::cout << "Final pi : " << sampler[0] -> getPi().t() << "       w/ proposal variance: " << sampler[0] -> getVarPiProposal() << std::endl;
 	std::cout << "  -- Average Omega : " << arma::accu( sampler[0] -> getO() * sampler[0] -> getPi().t() )/((double)p*s) <<  std::endl;
-	std::cout << "Final w : " << sampler[0] -> getW() <<  std::endl << std::endl ;
+	std::cout << "Final w : " << sampler[0] -> getW() <<  std::endl;
+	std::cout << "Final temperature ratio : " << sampler[1]->getTemperature() <<  std::endl << std::endl ;
 
 	// Exit
 
