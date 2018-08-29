@@ -327,6 +327,43 @@ namespace Distributions{
 	    return population(samples);
 	}
 
+	std::vector<unsigned int> randSampleWithoutReplacement
+	(
+	    unsigned int populationSize,    // size of set sampling from
+	    const std::vector<unsigned int>& population, // population to draw from
+	    unsigned int sampleSize        // size of each sample
+	) // output, sample is a zero-offset indices to selected items, output is the subsampled populaiton.
+	{
+		std::vector<unsigned int> samplesIndexes(sampleSize);
+
+	    int t = 0; // total input records dealt with
+	    unsigned int m = 0; // number of items selected so far
+	    double u;
+
+	    while (m < sampleSize)
+	    {
+	        u = randU01(); // call a uniform(0,1) random number generator
+
+	        if ( (populationSize - t)*u >= sampleSize - m )
+	        {
+	            t++;
+	        }
+	        else
+	        {
+	            samplesIndexes[m] = t;
+	            t++; m++;
+	        }
+	    }
+
+		std::vector<unsigned int> res(sampleSize);
+		m = 0;
+		for( auto i : samplesIndexes )
+		{
+			res[m++] = population[i];
+		}
+		
+	    return res;
+	}
 
 	// IMPLEMENTATION FROM Efraimidistr and Spirakis 2006
 	// (probably efficient when n is close to N rather than in our case, but is there a better alternative?)

@@ -3,28 +3,27 @@ CFLAGS= -c -Wall -std=c++11 -fopenmp
 LDFLAGS= -larmadillo -lpthread -llapack -lopenblas -fopenmp
 #LDFLAGS= -larmadillo -lpthread -llapack -lnvblas -fopenmp
 
-SOURCES_HESS=global.cpp utils.cpp distr.cpp HESS.cpp drive_HESS.cpp
-OBJECTS_HESS=$(SOURCES_HESS:.cpp=.o)
+SOURCES_BVS=global.cpp utils.cpp distr.cpp junction_tree.cpp HESS_Chain.cpp SSUR_Chain.cpp ESS_Sampler.h drive.cpp 
+#ESS_Atom.h interface only
+OBJECTS_BVS=$(SOURCES_BVS:.cpp=.o)
 
-SOURCES_SSUR=global.cpp utils.cpp distr.cpp junction_tree.cpp SSUR_Chain.cpp ESS_Sampler.cpp drive_SSUR.cpp
-OBJECTS_SSUR=$(SOURCES_SSUR:.cpp=.o)
+all:$(SOURCES_BVS) BVS
 
-all: $(SOURCES_HESS) $(SOURCES_SSUR) HESS SSUR
-
-HESS: OPTIM_FLAGS := -O3
-HESS: $(OBJECTS_HESS)
+BVS: OPTIM_FLAGS := -O3
+BVS: $(OBJECTS_BVS)
 	@echo [Linking and producing executable]:
-	$(CC) $(OBJECTS_HESS) -o HESS_Reg $(LDFLAGS)
-
-SSUR: OPTIM_FLAGS := -O3
-SSUR: $(OBJECTS_SSUR)
+	$(CC) $(OBJECTS_BVS) -o BVS_Reg $(LDFLAGS)
+	
+BVS_DEBUG: $(OBJECTS_BVS)
 	@echo [Linking and producing executable]:
-	$(CC) $(OBJECTS_SSUR) -o SSUR_Reg $(LDFLAGS)
+	$(CC) $(OBJECTS_BVS) -o BVS_DEBUG_Reg $(LDFLAGS) -ggdb3
 
 %.o: %.cpp
 	@echo [Compiling]: $<
-	$(CC) $(CFLAGS) $(OPTIM_FLAGS) -o $@ -c $<
+	$(CC) $(CFLAGS) $(OPTIM_FLAGS) -o $@ -c $<	
+	
 
-clean:
-	rm *.o
-	rm *_Reg
+clean: 
+	@echo [Cleaning: ]
+	rm *.o 
+	rm *_Reg 

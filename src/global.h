@@ -1,4 +1,3 @@
-
 #ifndef GLOBAL
 #define GLOBAL
 

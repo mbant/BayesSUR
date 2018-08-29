@@ -30,9 +30,16 @@ class JTComponent {
         std::shared_ptr<JTComponent> getParent() const;
         std::vector<std::shared_ptr<JTComponent>> getChildrens() const;
 
-        void add1Node( unsigned int );
-        void add1Separator( unsigned int );
+        void add1Node( const unsigned int );
+        void addNodes( const std::vector<unsigned int>& );
+
+        void clearSeparator();
+        void add1Separator( const unsigned int );
+        void addSeparators( const std::vector<unsigned int>& );
+        
         void add1Children( const std::shared_ptr<JTComponent>& );
+        void addChildrens( const std::vector<std::shared_ptr<JTComponent>>& );
+        
         void setNodes( const std::vector<unsigned int>& );
         void setSeparator( const std::vector<unsigned int>& );
         void setChildrens( const std::vector<std::shared_ptr<JTComponent>>& );
@@ -77,8 +84,12 @@ class JunctionTree {
         std::pair<bool,double> propose_single_edge_update( );
         std::pair<bool,double> propose_single_edge_update( arma::uvec& );
 
-        void print() const;
+        std::pair<bool,double> propose_multiple_edge_update( );
 
+        void swapParentChild( std::shared_ptr<JTComponent>& parent , std::shared_ptr<JTComponent>& child );
+        void randomJTPermutation();
+
+        void print() const;
         // for usability reasons I will have these as public
         // (i.e. I want to use directly the list::insert and other methods)
         std::deque<std::shared_ptr<JTComponent>> perfectCliqueSequence;

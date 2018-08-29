@@ -3,23 +3,29 @@
 #include <string>
 #include <memory>
 
+#include "distr.h"
+
+#include "ESS_Atom.h"
 #include "SSUR_Chain.h"
+#include "HESS_Chain.h"
 
 #ifndef ESS_SAMPLER_H
 #define ESS_SAMPLER_H
 
+template<typename T>  //  the template here should be a class derived from ESS_Atom
 class ESS_Sampler{
 
     public:
         
         // Constructor - nChains and type of MCMC
-        ESS_Sampler( arma::mat& , arma::mat& , unsigned int , std::string );
+        ESS_Sampler( arma::mat& Y_ , arma::mat& X_ , unsigned int nChains_ , double temperatureRatio );
+        ESS_Sampler( arma::mat& Y_ , arma::mat& X_ , unsigned int nChains_ ) : ESS_Sampler( Y_ , X_ , nChains_ , 1.2 ){}
         
         // this gets one of the chains from the vector
-        std::shared_ptr<SSUR_Chain>& operator[]( unsigned int );
+        std::shared_ptr<T>& operator[]( unsigned int );
 
         // this gets the whole vector if useful for some reason
-        std::vector<std::shared_ptr<SSUR_Chain>>& getChains();
+        std::vector<std::shared_ptr<T>>& getChains();
         
         // this creates a new chain with the global type
         // void addChain();
@@ -38,6 +44,10 @@ class ESS_Sampler{
 
         void globalStep();
 
+        int allExchangeAll_step();
+        void swapAll( std::shared_ptr<T>& thisChain , std::shared_ptr<T>& thatChain );
+
+
         // Temperature ladder update and getter for the acceptance rate of global updates
         double getGlobalAccRate() const;
 
@@ -49,18 +59,16 @@ class ESS_Sampler{
 
         // Pointer to chains -  
         // we use pointers so that the client can ask for the original object and manipulate them as he wish
-        std::vector<std::shared_ptr<SSUR_Chain>> chain;
+        std::vector<std::shared_ptr<T>> chain;
 
         // Chain type
         std::string chainType;
-
-        // extra parameters for global moves
-        arma::mat corrMatX;
-        // should also put here the ones for adapt_XO
 
         unsigned int updateCounter; // how often do we update the temperatures?
         unsigned int global_proposal_count, global_acc_count;
 
 };
+
+#include "ESS_Sampler.cpp"
 
 #endif

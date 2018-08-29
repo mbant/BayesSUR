@@ -2,7 +2,7 @@
 #define DISTR
 
 #include <armadillo>
-#include <cmath>
+#include <tgmath.h>
 #include <boost/math/special_functions/erf.hpp> // can I do this?
 #include <random>
 
@@ -61,6 +61,13 @@ namespace Distributions{
 	(
 	    unsigned int populationSize,    // size of set sampling from
 	    const arma::uvec& population, // population to draw from
+	    unsigned int sampleSize        // size of each sample
+	); // output, sample is a zero-offset indices to selected items, output is the subsampled populaiton.
+
+	std::vector<unsigned int> randSampleWithoutReplacement
+	(
+	    unsigned int populationSize,    // size of set sampling from
+	    const std::vector<unsigned int>& population, // population to draw from
 	    unsigned int sampleSize        // size of each sample
 	); // output, sample is a zero-offset indices to selected items, output is the subsampled populaiton.
 

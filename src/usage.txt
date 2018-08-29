@@ -1,9 +1,6 @@
-./[ALGORITHM]_Reg [--method X]--nIter X [--M 20] --inFile path/to/[inFileName].txt --outFile [outFileName] --nOutcomes X --nPredictors X [--sdProposal 0.02] [--seed X]
+./[ALGORITHM]_Reg [--method X]--nIter X --inFile path/to/[inFileName].txt --outFile [outFileName] --nOutcomes X --nPredictors X
 
 EXAMPLES:
 
-./SSUR_Reg --inFile ../Data/data_test.txt --outFilePath ../Data/ --nOutcomes 10 --nPredictors 20  --nChains 1 --nIter 200
-
-./HESS_Reg --inFile ../Data/data_test.txt --outFilePath ../Data/ --nOutcomes 10 --nPredictors 20 --nChains 1 --deltaTempRatio 10 --method 1 --nIter  200
-
-
+./BVS_Reg --method SSUR --inFile ../Data/data_test.txt --outFilePath ../Data/ --nOutcomes 10 --nPredictors 20  --nChains 1 --nIter 200
+./BVS_Reg --method HESS --inFile ../Data/data_test.txt --outFilePath ../Data/ --nOutcomes 10 --nPredictors 20  --nChains 1 --nIter 200

@@ -15,6 +15,11 @@ update PEO and update AdjMat both are global functions now, so wildly inefficien
 as we migt be updating them only locally. Still...
 */
 
+/*
+Nodes and Separator sets are SORTED, mainly to help STL algorithms to serach for inclusions and stuff..
+*/
+
+
 JTComponent::JTComponent( )
 {
     nodes = std::vector<unsigned int>(0);
@@ -84,6 +89,17 @@ void JTComponent::add1Node( const unsigned int node_)
     }
 }
 
+void JTComponent::addNodes( const std::vector<unsigned int>& nodes_)
+{
+    for( auto i : nodes_ )
+    {
+        if(std::find(nodes.begin(), nodes.end(), i) == nodes.end()) // if it's not there
+            nodes.push_back(i);
+    }
+    std::sort(nodes.begin(), nodes.end());
+}
+
+
 void JTComponent::add1Separator( const unsigned int sep_)
 {
     if(std::find(separator.begin(), separator.end(), sep_) == separator.end())
@@ -93,11 +109,32 @@ void JTComponent::add1Separator( const unsigned int sep_)
     }
 }
 
+void JTComponent::addSeparators( const std::vector<unsigned int>& seps_)
+{
+    for( auto i : seps_ )
+    {
+        if(std::find(separator.begin(), separator.end(), i) == separator.end()) // if it's not there
+            separator.push_back(i);
+    }
+    std::sort(separator.begin(), separator.end());
+}
+
+
 void JTComponent::add1Children( const std::shared_ptr<JTComponent>& otherJTComponentPTR)
 {
     if(std::find(childrens.begin(), childrens.end(), otherJTComponentPTR) == childrens.end())
         childrens.push_back( otherJTComponentPTR );
     // else do nothing as it is a duplicate
+}
+
+void JTComponent::addChildrens( const std::vector<std::shared_ptr<JTComponent>>& otherJTComponentPTRs )
+{
+    for( auto i : otherJTComponentPTRs )
+    {
+        if(std::find(childrens.begin(), childrens.end(), i) == childrens.end())
+            childrens.push_back( i );
+        // else do nothing as it is a duplicate
+    }
 }
 
 
@@ -121,6 +158,11 @@ void JTComponent::setChildrens( const  std::vector<std::shared_ptr<JTComponent>>
     // remove duplicates from c
     childrens = c;
     childrens.erase( std::unique( childrens.begin(), childrens.end() ), childrens.end() );
+}
+
+void JTComponent::clearSeparator()
+{
+    separator.clear();
 }
 
 void JTComponent::setParent( const std::shared_ptr<JTComponent>& otherJTComponentPTR )
@@ -529,7 +571,7 @@ std::pair<bool,double> JunctionTree::propose_single_edge_update( arma::uvec& upd
                     setNeighbour = i->getNodes();
                     if(std::find(setNeighbour.begin(), setNeighbour.end(), x) == setNeighbour.end()) // if x is NOT in there
                     {
-                        if(std::find(setNeighbour.begin(), setNeighbour.end(), y) != setNeighbour.end()) // if y is NOT in there either
+                        if(std::find(setNeighbour.begin(), setNeighbour.end(), y) == setNeighbour.end()) // if y is NOT in there either
                         {
                             ++countN;
                         
@@ -540,42 +582,25 @@ std::pair<bool,double> JunctionTree::propose_single_edge_update( arma::uvec& upd
 
                 logP -= countN * log(2); // backward probability addition
                 logP -= log(numComponents-1) - log(2) + ( log( Cx->getNodes().size() ) + log( Cx->getNodes().size()-1 ) ); // backward probability (-1 because we reduce the # component by 1)
-                // ****
-    if( !std::isfinite( logP ) )
-    {
-        std::cout << "log(numComponents-1) - log(2) + ( log( Cx->getNodes().size() ) + log( Cx->getNodes().size()-1 ) )" << std::endl;
-        std::cout <<  log(numComponents-1) << " "<< log( Cx->getNodes().size() ) << " " << log( Cx->getNodes().size()-1 ) << std::endl;
-        std::cin>>countN;
-    } 
 
             }else if( setCxlS.size() > 1 && setCylS.size() == 1 ) // b)
             {
 
                 // std::cout << " Type b) " << std::flush;
+
                 Cy->add1Node(x);
                 Cy->add1Separator(x);
 
                 logP -= log(numComponents) - log(2) + ( log( Cx->getNodes().size() ) + log( Cx->getNodes().size()-1 ) ); // backward probability
-    if( !std::isfinite( logP ) )
-    {
-        std::cout << "Blog(numComponents) - log(2) + ( log( Cx->getNodes().size() ) + log( Cx->getNodes().size()-1 ) )" << std::endl;
-        std::cout <<  log(numComponents) << " " << log( Cx->getNodes().size() ) <<" "<< log( Cx->getNodes().size()-1 ) << std::endl;
-        std::cin>>countN;
-    } 
 
             }else if( setCxlS.size() == 1 && setCylS.size() > 1 ) //c)
             {
                 // std::cout << " Type c) " << std::flush;
+
                 Cx->add1Node(y);
                 Cy->add1Separator(y); // remember the separator is always the one from the Cy obj
 
                 logP -= log(numComponents) - log(2) + ( log( Cx->getNodes().size() ) + log( Cx->getNodes().size()-1 ) ); // backward probability
-    if( !std::isfinite( logP ) )
-    {
-        std::cout << "Clog(numComponents) - log(2) + ( log( Cx->getNodes().size() ) + log( Cx->getNodes().size()-1 ) )" << std::endl;
-        std::cout <<  log(numComponents) << " " << log( Cx->getNodes().size() ) <<" "<< log( Cx->getNodes().size()-1 ) << std::endl;
-        std::cin>>countN;
-    } 
 
             }else if( setCxlS.size() > 1 && setCylS.size() > 1 ) // d) Cx and Cy contain more than just x and S (and y and S) 
             {
@@ -620,12 +645,6 @@ std::pair<bool,double> JunctionTree::propose_single_edge_update( arma::uvec& upd
             }
 
             logP += log(numComponents-1) + log(setCxlS.size()) + log(setCylS.size()) ; // forward probability
-    if( !std::isfinite( logP ) )
-    {
-        std::cout << "log(numComponents-1) + log(setCxlS.size()) + log(setCylS.size())" << std::endl;
-        std::cout << log(numComponents-1) << "  " << log(setCxlS.size()) <<" "<< log(setCylS.size()) << std::endl;
-        std::cin>>countN;
-    } 
 
         }else //if only one there's no option for edge addition
         {
@@ -647,12 +666,6 @@ std::pair<bool,double> JunctionTree::propose_single_edge_update( arma::uvec& upd
         {
             // deletion has its forward logP computed immediately as setC is likely to be modified after
             logP += log(numComponents) - log(2) + ( log( setC.size() ) + log( setC.size()-1 ) ); // forward probability
-    if( !std::isfinite( logP ) )
-    {
-        std::cout << "log(numComponents) - log(2) + ( log( setC.size() ) + log( setC.size()-1 ) )" << std::endl;
-        std::cout << log(numComponents) << " " <<  log( setC.size() ) << " " << log( setC.size()-1 ) << std::endl;
-        std::cin>>countN;
-    }
 
             // partition C into 3 sets, x y and S (S might be empty)"
             randomIndexes = Distributions::randWeightedIndexSampleWithoutReplacement(setC.size(),2);
@@ -854,12 +867,7 @@ std::pair<bool,double> JunctionTree::propose_single_edge_update( arma::uvec& upd
 
                 logP += N.size() * log(2); // forward probability addition
                 logP -= log(numComponents) + log(ClX->getNodes().size() - setS.size()) + log(ClY->getNodes().size() - setS.size()) ; //backward probability (we added one component here so numComponents rather than numComponents-1)
-    if( !std::isfinite( logP ) )
-    {
-        std::cout << "log(numComponents) + log(ClX->getNodes().size() - setS.size()) + log(ClY->getNodes().size() - setS.size())" << std::endl;
-        std::cout << log(numComponents) << " "<< log(ClX->getNodes().size() - setS.size()) <<" "<< log(ClY->getNodes().size() - setS.size()) << std::endl;
-        std::cin>>countN;
-    } 
+
             }else if( definedCx && !definedCy ) // if only Cx is defined
             {
                 // std::cout << " Type b) " << std::flush;
@@ -891,14 +899,8 @@ std::pair<bool,double> JunctionTree::propose_single_edge_update( arma::uvec& upd
                 }
 
                 logP -= log(numComponents-1) + log(Cx->getNodes().size() - setS.size()) + log(setC.size() - setS.size()) ; //backward probability
-    if( !std::isfinite( logP ) )
-    {
-        std::cout << "log(numComponents-1) + log(Cx->getNodes().size() - setS.size()) + log(setC.size() - setS.size())" << std::endl;
-        std::cout << log(numComponents-1) << " " << log(Cx->getNodes().size() - setS.size()) << " " << log(setC.size() - setS.size()) << std::endl;
-        std::cin>>countN;
-    }                          
 
-            }else if( !definedCx && definedCy ) // if only Cx is defined
+            }else if( !definedCx && definedCy ) // if only Cy is defined
             {
                 // std::cout << " Type c) " << std::flush;
 
@@ -929,12 +931,6 @@ std::pair<bool,double> JunctionTree::propose_single_edge_update( arma::uvec& upd
                 }
                 
                 logP -= log(numComponents-1) + log(Cy->getNodes().size() - setS.size() ) + log(setC.size() - setS.size()) ; //backward probability
-    if( !std::isfinite( logP ) )
-    {
-        std::cout << "log(numComponents-1) + log(Cy->getNodes().size() - setS.size() ) + log(setC.size() - setS.size())" << std::endl;
-        std::cout << log(numComponents-1) <<" "<< log(Cy->getNodes().size() - setS.size() ) << " " << log(setC.size() - setS.size()) << std::endl;
-        std::cin>>countN;
-    }                      
                 
             }else{ //if both are defined
                 // std::cout << " Type d) " << std::flush;
@@ -1027,12 +1023,7 @@ std::pair<bool,double> JunctionTree::propose_single_edge_update( arma::uvec& upd
                 }
                 
                 logP -= log(numComponents-2) + log(setCLeft.size()-newSeparator.size()) + log(setCRight.size()-newSeparator.size()) ; //backward probability (-2 here cause we further deleted one component)
-    if( !std::isfinite( logP ) )
-    {
-        std::cout << "log(numComponents-2) + log(setCLeft.size()-newSeparator.size()) + log(setCRight.size()-newSeparator.size())" << std::endl;
-        std::cout << log(numComponents-2) << " " << log(setCLeft.size()-newSeparator.size()) <<" "<< log(setCRight.size()-newSeparator.size()) << std::endl;
-        std::cin>>countN;
-    }            
+        
             }
 
         }else //if only one there's no option for edge deletion
@@ -1044,6 +1035,7 @@ std::pair<bool,double> JunctionTree::propose_single_edge_update( arma::uvec& upd
 
     updatePEO(); // this->updatePEO();
     updateAdjMat();
+
     update_idx.zeros(2); update_idx(0) = x; update_idx(1) = y;
     return std::make_pair(true,logP);
 
@@ -1165,10 +1157,9 @@ std::pair<bool,double> JunctionTree::propose_single_edge_update( )
                     setNeighbour = i->getNodes();
                     if(std::find(setNeighbour.begin(), setNeighbour.end(), x) == setNeighbour.end()) // if x is NOT in there
                     {
-                        if(std::find(setNeighbour.begin(), setNeighbour.end(), y) != setNeighbour.end()) // if y is NOT in there either
+                        if(std::find(setNeighbour.begin(), setNeighbour.end(), y) == setNeighbour.end()) // if y is NOT in there either
                         {
                             ++countN;
-                        
                         }
 
                     }
@@ -1177,10 +1168,11 @@ std::pair<bool,double> JunctionTree::propose_single_edge_update( )
                 logP -= countN * log(2); // backward probability addition
                 logP -= log(numComponents-1) - log(2) + ( log( Cx->getNodes().size() ) + log( Cx->getNodes().size()-1 ) ); // backward probability (-1 because we reduce the # component by 1)
 
-            }else if( setCxlS.size() > 1 && setCylS.size() == 1 ) // b)
+           }else if( setCxlS.size() > 1 && setCylS.size() == 1 ) // b)
             {
 
                 // std::cout << " Type b) " << std::flush;
+
                 Cy->add1Node(x);
                 Cy->add1Separator(x);
 
@@ -1189,11 +1181,11 @@ std::pair<bool,double> JunctionTree::propose_single_edge_update( )
             }else if( setCxlS.size() == 1 && setCylS.size() > 1 ) //c)
             {
                 // std::cout << " Type c) " << std::flush;
+
                 Cx->add1Node(y);
                 Cy->add1Separator(y); // remember the separator is always the one from the Cy obj
 
                 logP -= log(numComponents) - log(2) + ( log( Cx->getNodes().size() ) + log( Cx->getNodes().size()-1 ) ); // backward probability
-
             }else if( setCxlS.size() > 1 && setCylS.size() > 1 ) // d) Cx and Cy contain more than just x and S (and y and S) 
             {
                 // std::cout << " Type d) " << std::flush;
@@ -1492,7 +1484,7 @@ std::pair<bool,double> JunctionTree::propose_single_edge_update( )
 
                 logP -= log(numComponents-1) + log(Cx->getNodes().size() - setS.size()) + log(setC.size() - setS.size()) ; //backward probability
 
-            }else if( !definedCx && definedCy ) // if only Cx is defined
+            }else if( !definedCx && definedCy ) // if only Cy is defined
             {
                 // std::cout << " Type c) " << std::flush;
 
@@ -1630,4 +1622,795 @@ std::pair<bool,double> JunctionTree::propose_single_edge_update( )
 
     return std::make_pair(true,logP);
 
+}
+
+/*
+JT Update proposal, from Green and Thomas 2013
+MULTIPLE EDGES UPDATE
+*/
+
+std::pair<bool,double> JunctionTree::propose_multiple_edge_update( )
+{
+    // We need to select randomly one separator -- in our structure is any component beside the first
+    unsigned int numComponents = perfectCliqueSequence.size();
+    unsigned int randomSep, randomComp;
+
+    arma::uvec randomIndexes;
+
+    std::shared_ptr<JTComponent> Cx, Cy, C, ClX, ClY, cLeft, cRight;
+    std::vector<unsigned int> setCx, setCy, setCxlS, setCylS, setS, 
+        setC, setNeighbour, xUS, yUS, setCLeft, setCRight, tmpVec;
+
+    std::vector<unsigned int> X,Y;
+    unsigned int dimX, dimY; // dimension of the X and Y sets
+
+    std::vector<std::shared_ptr<JTComponent>> newChildrens;
+    std::vector<unsigned int> newNodes;
+    std::vector<unsigned int> newSeparator;
+    std::shared_ptr<JTComponent> newParent;
+
+    std::vector<std::shared_ptr<JTComponent>> neighbours, N, Nx, Ny, possibleCxComponents, possibleCyComponents;
+    bool definedCx=false, definedCy=false;
+    std::deque<std::shared_ptr<JTComponent>> newPCS;
+    bool XisRightYisLeft = false;
+    unsigned int sizeXIntersect, sizeYIntersect;
+
+    unsigned int pos = 0;
+    unsigned int countN = 0;
+
+    double logP = 0;
+
+    if( Distributions::randU01() < 0.5 )
+    {
+        // propose addition
+        // std::cout << " A" << std::flush;
+
+        // if there's one component only, return false and no update happened
+        if( numComponents > 1 )
+        {
+            // get a Random separator
+            randomSep = Distributions::randIntUniform(1,numComponents-1);
+
+            // populate Cx and Cy
+            Cx = perfectCliqueSequence[randomSep]->getParent();
+            Cy = perfectCliqueSequence[randomSep];
+
+            // std::cout << randomSep << " " << std::flush;
+
+            setCx = Cx->getNodes();
+            setCy = Cy->getNodes();
+            setS = perfectCliqueSequence[randomSep]->getSeparator();
+            
+            // Populate Cx\S and Cy\S
+            std::set_difference(setCx.begin(), setCx.end(), setS.begin(), setS.end(), 
+                            std::inserter(setCxlS, setCxlS.begin()));
+
+            std::set_difference(setCy.begin(), setCy.end(), setS.begin(), setS.end(), 
+                            std::inserter(setCylS, setCylS.begin()));
+
+            // now choose x and y from Cx\S and Cy\S
+            dimX = Distributions::randIntUniform(1,setCxlS.size());
+            dimY = Distributions::randIntUniform(1,setCylS.size());
+
+            X = Distributions::randSampleWithoutReplacement( setCxlS.size() , setCxlS , dimX ); 
+            Y = Distributions::randSampleWithoutReplacement( setCylS.size() , setCylS , dimY ); 
+                // this is uncorrect, we should sample
+                // randomly from all possible subsets of CxlS
+
+            // check whether or not Cx and Cy are superset of x U S and y U S and act accordingly
+            // note there's no way for it to be the other way around by construction
+
+
+            // forward probability (common for all merge moves)
+            logP += log(numComponents-1) + 
+                log(setCxlS.size()) - std::lgamma(dimX+1) - std::lgamma(setCxlS.size()-dimX+1) + std::lgamma(setCxlS.size()+1) + 
+                log(setCylS.size()) - std::lgamma(dimY+1) - std::lgamma(setCylS.size()-dimY+1) + std::lgamma(setCylS.size()+1) ;
+
+
+            if( setCxlS.size() == X.size() && setCylS.size() == Y.size() ) // a) this means that both Cx and Cy are exactly just X and S (and Y and S) 
+            {
+                
+                // std::cout << " Type a) " << std::flush;
+
+                // compute new children set
+                newChildrens = Cy->getChildrens();
+                for( auto c : Cx->getChildrens() )
+                {
+                    if( c != Cy )
+                        newChildrens.push_back(c);
+                }
+
+                newNodes = setS; 
+                for( auto i : X )
+                    newNodes.push_back(i);
+                for( auto i : Y )
+                    newNodes.push_back(i);
+
+                // newSeparator = Cx->getSeparator();
+                // newParent = Cx->getParent();
+
+                // Modify Cx to C* (the new component we need)
+                Cx->setChildrens(newChildrens);
+                Cx->setNodes(newNodes);
+                // Cx->setSeparator(newSeparator);
+                // Cx->setParent(newParent);
+
+                // make the new childrens point to C* (rather than Cy)
+                for( auto c : newChildrens )
+                {
+                    if( c->getParent() != Cx )
+                        c->setParent(Cx);
+                }
+
+                // Erase Cy
+                perfectCliqueSequence.erase(perfectCliqueSequence.begin() + randomSep);
+
+                // **** logP addition
+                neighbours.clear();
+                if( Cx->getParent() )
+                    neighbours.push_back( Cx->getParent() );  // push parent only if it exists
+
+                for( auto i : Cx->getChildrens() )
+                    neighbours.push_back(i);
+
+                for( auto i : neighbours )
+                {
+                    setNeighbour = i->getNodes();
+
+                    // // compute intersection between this neighbour and X
+                    // tmpVec.clear();
+                    // std::set_intersection(setNeighbour.begin(), setNeighbour.end(),
+                    //         X.begin(), X.end(),
+                    //         std::back_inserter(tmpVec));
+
+                    // // if size is more than 0, then it intersects
+                    // // if size is equal to dimX then the complete X is in "i" (neighbour)
+                    // sizeXIntersect = tmpVec.size();
+
+                    // // same for Y
+                    // tmpVec.clear();
+                    // std::set_intersection(setNeighbour.begin(), setNeighbour.end(),
+                    //         Y.begin(), Y.end(),
+                    //         std::back_inserter(tmpVec));
+
+                    // // if size is more than 0, then it intersects
+                    // // if size is equal to dimY then the complete Y is in "i" (neighbour)
+                    // sizeYIntersect = tmpVec.size();
+                    //
+                    // if( sizeXIntersect == 0 && sizeYIntersect == 0 ) // if neither intersect i
+                    //     ++countN;
+
+                    // go to the next "i" as soon as you find one match in X
+                    for( auto j : X )
+                        if( std::find(setNeighbour.begin(), setNeighbour.end(), j ) != setNeighbour.end() ) // the element j in X is in neighbour i
+                            continue;
+
+                    // go to the next "i" as soon as you find one match in Y
+                    for( auto j : Y )
+                        if( std::find(setNeighbour.begin(), setNeighbour.end(), j ) != setNeighbour.end() ) // the element j in Y is in neighbour i
+                            continue;
+
+                    //  if not out of the loop yet
+                    ++countN;
+
+                }
+
+                logP -= countN * log(2); // backward probability addition
+                logP -= // backward probability (-1 because we reduce the # component by 1)
+                        log(numComponents-1) - log(2) + log( Cx->getNodes().size()-1 ) + log( dimX+dimY-1 ) -
+                            std::lgamma(dimX+1) - std::lgamma(dimY+1) - std::lgamma(Cx->getSeparator().size()+1) + std::lgamma(Cx->getNodes().size()+1);
+
+            }else if( setCxlS.size() > X.size() && setCylS.size() == Y.size() ) // b)
+            {
+
+                // std::cout << " Type b) " << std::flush;
+                Cy->addNodes(X);
+                Cy->addSeparators(X);
+
+                logP -= // backward probability
+                        log(numComponents) - log(2) + ( log( Cy->getNodes().size()-1 ) + log( dimX+dimY-1 ) ) -
+                            std::lgamma(dimX+1) - std::lgamma(dimY+1) - std::lgamma(Cy->getSeparator().size()+1) + std::lgamma(Cy->getNodes().size()+1);
+
+            }else if( setCxlS.size() == X.size() && setCylS.size() > Y.size() ) //c)
+            {
+                // std::cout << " Type c) " << std::flush;
+
+
+                Cx->addNodes(Y);
+                Cy->addSeparators(Y); // remember the separator is always the one from the Cy obj
+
+                logP -= // backward probability
+                        log(numComponents) - log(2) + ( log( Cx->getNodes().size()-1 ) + log( dimX+dimY-1 ) ) -
+                            std::lgamma(dimX+1) - std::lgamma(dimY+1) - std::lgamma(Cy->getSeparator().size()+1) + std::lgamma(Cx->getNodes().size()+1);
+
+            }else if( setCxlS.size() > X.size() && setCylS.size() > Y.size() ) // d) Cx and Cy contain more than just x and S (and y and S) 
+            {
+                // std::cout << " Type d) " << std::flush;
+
+                // Create C* (the new Component)
+                newChildrens = std::vector<std::shared_ptr<JTComponent>>(1);
+                newChildrens[0] = Cy;
+
+                newNodes = setS; 
+                for( auto i : X )
+                    newNodes.push_back(i);
+                for( auto i : Y )
+                    newNodes.push_back(i);
+
+                newSeparator = setS;
+                for( auto i : X ) 
+                    newSeparator.push_back(i);
+                
+                newParent = Cx;
+
+                // insert it in the PCS
+                perfectCliqueSequence.insert( perfectCliqueSequence.begin() + randomSep ,
+                                std::make_shared<JTComponent>(newNodes,newSeparator,newChildrens,newParent) );
+
+                // Modify Cx to point to C*
+                newChildrens = Cx->getChildrens();
+                for (auto itC = newChildrens.begin(); itC != newChildrens.end();  ++itC )
+                {
+                    if( *(itC) == Cy )
+                        *(itC) = perfectCliqueSequence[randomSep];
+                }
+                Cx->setChildrens(newChildrens);
+
+                // Modify Cy to have C* as parent and modify its separator
+                Cy->setParent(perfectCliqueSequence[randomSep]);
+
+                Cy->addSeparators(Y);         
+
+
+                logP -= // backward probability (+1 because we insert a new component here)
+                    log(numComponents+1) - log(2) + log( perfectCliqueSequence[randomSep]->getNodes().size()-1 ) + log( dimX+dimY-1 ) -
+                        std::lgamma(dimX+1) - std::lgamma(dimY+1) - std::lgamma(perfectCliqueSequence[randomSep]->getSeparator().size()+1) + std::lgamma(perfectCliqueSequence[randomSep]->getNodes().size()+1);
+                
+            }
+
+        }else //if only one there's no option for edge addition
+        {
+            return std::make_pair(false,0.0); // and the graph is unchanged
+        }
+    
+    }else         // propose deletion
+    {
+        // std::cout << " D" << std::flush;
+        // get a random component
+        randomComp = Distributions::randIntUniform(0,numComponents-1);
+        C = perfectCliqueSequence[randomComp];
+
+        // std::cout << randomComp << " ";
+
+        setC = C->getNodes();
+
+        if( setC.size() > 1 )
+        {
+            // partition C into 3 sets, x y and S (S might be empty)"
+            dimY = Distributions::randIntUniform(2,setC.size());
+            dimX = Distributions::randIntUniform(1,dimY-1);
+            dimY -= dimX;
+
+            // Set S = Set C
+            std::copy(setC.begin(), setC.end(),
+                std::back_inserter(setS));
+            // Select X
+            X = Distributions::randSampleWithoutReplacement( setS.size() , setS , dimX ); 
+
+            //remove X from setS
+            tmpVec.clear();
+            std::set_difference(std::make_move_iterator(setS.begin()), 
+                                std::make_move_iterator(setS.end()), 
+                                X.begin(), X.end(), 
+                        std::inserter(tmpVec, tmpVec.begin()));
+            setS.swap(tmpVec);
+
+            // Select Y
+            Y = Distributions::randSampleWithoutReplacement( setS.size() , setS , dimY ); 
+
+            //remove Y from setS
+            tmpVec.clear();
+            std::set_difference(std::make_move_iterator(setS.begin()), 
+                                std::make_move_iterator(setS.end()), 
+                                Y.begin(), Y.end(), 
+                        std::inserter(tmpVec, tmpVec.begin()));
+            setS.swap(tmpVec);
+
+            // what's left in setS is just S
+
+            // forward logP computed immediately as setC is likely to be modified after
+            logP += log(numComponents) - log(2) + ( log( setC.size()-1 ) + log( dimX+dimY-1 ) ) -
+                std::lgamma(dimX+1) - std::lgamma(dimY+1) - std::lgamma(setS.size()+1) + std::lgamma(setC.size()+1); // forward probability
+
+            // now scan the neighbours of C and construct Nx, Ny and N"
+            neighbours.clear();
+            if( C->getParent() )
+                neighbours.push_back( C->getParent() );  // push parent only if it exists
+
+            for( auto i : C->getChildrens() )
+                neighbours.push_back(i);
+
+
+            possibleCxComponents.clear();
+            possibleCyComponents.clear();
+
+            for( auto i : neighbours )
+            {
+                setNeighbour = i->getNodes();
+
+                // compute intersection between this neighbour and X
+                tmpVec.clear();
+                std::set_intersection(setNeighbour.begin(), setNeighbour.end(),
+                          X.begin(), X.end(),
+                          std::back_inserter(tmpVec));
+
+                // if size is more than 0, then it intersects
+                // if size is equal to dimX then the complete X is in "i" (neighbour)
+                sizeXIntersect = tmpVec.size();
+
+                // same for Y
+                tmpVec.clear();
+                std::set_intersection(setNeighbour.begin(), setNeighbour.end(),
+                          Y.begin(), Y.end(),
+                          std::back_inserter(tmpVec));
+
+                // if size is more than 0, then it intersects
+                // if size is equal to dimY then the complete Y is in "i" (neighbour)
+                sizeYIntersect = tmpVec.size();
+
+                if( sizeXIntersect > 0 && sizeYIntersect > 0 ) // if both intersect i
+                {
+                    return std::make_pair(false,0.0); // exit, deletion is not possible
+                    
+                }else if( sizeXIntersect > 0 && sizeYIntersect == 0 ) // i contains only x
+                {
+                    Nx.push_back(i);
+                    if ( sizeXIntersect == dimX )
+                    {
+                        // possible components already have all X, so we need to be sure they contain all of S as well
+                        if( std::includes(setNeighbour.begin(), setNeighbour.end(), setS.begin(), setS.end()) ) // note that includes only works on sorted ranges
+                            possibleCxComponents.push_back(i);
+                    }
+
+                }else if( sizeXIntersect == 0 && sizeYIntersect > 0 ) // if y is in there (but not x)
+                {
+                    Ny.push_back(i);
+                    if ( sizeYIntersect == dimY )
+                    {
+                        // possible components already have all X, so we need to be sure they contain all of S as well
+                        if( std::includes(setNeighbour.begin(), setNeighbour.end(), setS.begin(), setS.end()) ) // note that includes only works on sorted ranges
+                            possibleCyComponents.push_back(i);
+                    }
+
+                }else{ // nor x nor y are in there
+                    N.push_back(i);
+                }
+            }
+
+            // If we have candidates, select one at random as Cx and/or Cy
+            if( possibleCxComponents.size() > 0 )
+            {
+                Cx = possibleCxComponents[ Distributions::randIntUniform(0,possibleCxComponents.size()-1) ];
+                definedCx = true;
+            }
+
+            if( possibleCyComponents.size() > 0 )
+            {
+                Cy = possibleCyComponents[ Distributions::randIntUniform(0,possibleCyComponents.size()-1) ];
+                definedCy = true;
+            }
+
+            // Now onto the 4 cases
+
+            if( !definedCx && !definedCy ) // if both are undefined
+            {
+
+                // std::cout << " Type a) " << std::flush;
+
+                // Create two new JTComponents, separated by S and made up by xUS and yUS
+                ClX = std::make_shared<JTComponent>( setS );
+                ClX->addNodes(Y);
+
+                ClY = std::make_shared<JTComponent>( setS );
+                ClY->addNodes(X);
+
+                // decide which (Clx or Cly) is the left and which the right clique
+                if( std::find(Nx.begin(), Nx.end(), C->getParent() ) != Nx.end() ) // the parent was in Nx, hence I need ClY on the left
+                {
+                    cLeft = ClY;  // here I'm copying the pointer, so I can use them interchangeably
+                    cRight = ClX;
+
+                }else if( std::find(Ny.begin(), Ny.end(), C->getParent() ) != Ny.end() ) // the parent was in Ny, hence I need ClX on the left
+                {
+                    cLeft = ClX;  
+                    cRight = ClY;
+
+                }else{ // either C was the root or the parent is in N, so I can choose randomly
+
+                    if( Distributions::randU01() < 0.5 )
+                    {
+                        cLeft = ClY;  
+                        cRight = ClX;
+                    }else{
+                        cLeft = ClX;  
+                        cRight = ClY;                        
+                    }
+                }
+
+                // regardless, add now cLeft to its childrens and remove C
+                if( C->getParent() )
+                {
+                    newChildrens = C->getParent()->getChildrens();
+                    newChildrens.erase(std::remove(newChildrens.begin(), newChildrens.end(), C), newChildrens.end());
+                    newChildrens.push_back( cLeft );
+                    C->getParent()->setChildrens( newChildrens );
+                } // else it was the root so no changes
+
+                // Add the original parent to cLeft                
+                cLeft->setParent( C->getParent() );
+                // and its separator, which might be empty
+                cLeft->setSeparator( C->getSeparator() );
+
+                // the parent of the right clique is then the left clique 
+                // (and the right is a child for the left)
+                // their separator is S
+                cLeft->add1Children( cRight ); // note that this is just ONE children and there were none before
+                cRight->setParent( cLeft );
+                cRight->setSeparator( setS );    
+
+                // Now connect all the neighbours to either cLeft or cRight (except the original parent which is already connected)
+                for( auto i : Nx )
+                {
+                    if( i != C->getParent() )
+                    {
+                        ClY->add1Children( i );
+                        i->setParent( ClY );
+                    }
+                }
+
+                for( auto i : Ny )
+                {
+                    if( i != C->getParent() )
+                    {
+                        ClX->add1Children( i );
+                        i->setParent( ClX );
+                    }
+                }
+
+                for( auto i : N )
+                {
+                    if( i != C->getParent() )
+                    {
+                        if( Distributions::randU01() < 0.5 )
+                        {
+                            ClX->add1Children( i );
+                            i->setParent( ClX );
+
+                        }else{
+                            ClY->add1Children( i );
+                            i->setParent( ClY );
+                        }
+                    }
+                }
+
+                // Finally erase C from PCS .. (this actually gets overwritten so no need..)
+                // perfectCliqueSequence.erase(perfectCliqueSequence.begin() + randomComp);
+
+                // .. and Re-build the PCS after this
+                newPCS.clear();
+                if( !( C->getParent() ) )
+                {
+                    // cLeft is the new root
+                    newPCS.insert( newPCS.end() , cLeft );
+                }else{
+                    // the old root is still the root, but I've modified its childrens
+                    newPCS.insert( newPCS.end() , perfectCliqueSequence[0] );
+                }
+                pos = 0;
+                buildNewPCS( newPCS, pos );
+                perfectCliqueSequence = newPCS; // substitute to the current one
+                // PEO updated below
+
+                logP += N.size() * log(2); // forward probability addition
+                logP -= //backward probability (we added one component here so numComponents rather than numComponents-1)
+                        log(numComponents) + 
+                        log(ClY->getNodes().size() - setS.size()) - std::lgamma(dimX+1) - std::lgamma(ClY->getNodes().size()-setS.size()-dimX+1) + std::lgamma(ClY->getNodes().size()-setS.size()+1) +
+                        log(ClX->getNodes().size() - setS.size()) - std::lgamma(dimY+1) - std::lgamma(ClX->getNodes().size()-setS.size()-dimY+1) + std::lgamma(ClX->getNodes().size()-setS.size()+1) ; 
+
+            }else if( definedCx && !definedCy ) // if only Cx is defined
+            {
+                // std::cout << " Type b) " << std::flush;
+
+                // Separation is possible only if Nx contains only Cx
+                if( Nx.size() == 1 )
+                {
+                    if( Nx[0] == Cx )
+                    {
+                        // remove x from C
+                        tmpVec.clear();
+                        std::set_difference(std::make_move_iterator(setC.begin()), 
+                                            std::make_move_iterator(setC.end()), 
+                                            X.begin(), X.end(), 
+                                    std::inserter(tmpVec, tmpVec.begin()));
+                        setC.swap(tmpVec); // move operator, move semantic and swap...ah
+                    
+                        C->setNodes( setC );
+
+                        // find the separator that connects C to Cx
+                        if( Cx == C->getParent() )
+                        {
+                            setS = C->getSeparator();
+
+                            tmpVec.clear();
+                            std::set_difference(std::make_move_iterator(setS.begin()), 
+                                            std::make_move_iterator(setS.end()), 
+                                            X.begin(), X.end(), 
+                                    std::inserter(tmpVec, tmpVec.begin()));
+                            setS.swap(tmpVec);
+
+                            C->setSeparator( setS );
+
+                        }else{ // it's a child
+
+                            setS = Cx->getSeparator();
+                            
+                            tmpVec.clear();
+                            std::set_difference(std::make_move_iterator(setS.begin()), 
+                                            std::make_move_iterator(setS.end()), 
+                                            X.begin(), X.end(), 
+                                    std::inserter(tmpVec, tmpVec.begin()));
+                            setS.swap(tmpVec);
+                            
+                            Cx->setSeparator( setS );
+                        }
+                    }else{
+                        return std::make_pair(false,0.0); // and the graph is unchanged
+                    }
+                }else{
+                    return std::make_pair(false,0.0); // and the graph is unchanged
+                }
+
+                logP -= //backward probability
+                        log(numComponents-1) + 
+                        log(Cx->getNodes().size() - setS.size()) - std::lgamma(dimX+1) - std::lgamma(Cx->getNodes().size()-setS.size()-dimX+1) + std::lgamma(Cx->getNodes().size()-setS.size()+1) + 
+                        log(setC.size() - setS.size()) - std::lgamma(dimY+1) - std::lgamma(setC.size()-setS.size()-dimY+1) + std::lgamma(setC.size()-setS.size()+1) ;
+
+            }else if( !definedCx && definedCy ) // if only Cy is defined
+            {
+                // std::cout << " Type c) " << std::flush;
+
+                // Separation is possible only if Ny contains only Cy
+                if( Ny.size() == 1 )
+                {
+                    if( Ny[0] == Cy )
+                    {
+                        // remove y from C
+                        tmpVec.clear();
+                        std::set_difference(std::make_move_iterator(setC.begin()), 
+                                            std::make_move_iterator(setC.end()), 
+                                            Y.begin(), Y.end(), 
+                                    std::inserter(tmpVec, tmpVec.begin()));
+                        setC.swap(tmpVec); // move operator, move semantic and swap...ah
+
+                        C->setNodes( setC );
+                        // find the separator that connects C to Cy
+                        if( Cy == C->getParent() )
+                        {
+                            setS = C->getSeparator();
+                            
+                            tmpVec.clear();
+                            std::set_difference(std::make_move_iterator(setS.begin()), 
+                                            std::make_move_iterator(setS.end()), 
+                                            Y.begin(), Y.end(), 
+                                    std::inserter(tmpVec, tmpVec.begin()));
+                            setS.swap(tmpVec);
+
+                            C->setSeparator( setS );
+                        }else{ // it's a child
+                            setS = Cy->getSeparator();
+
+                            tmpVec.clear();
+                            std::set_difference(std::make_move_iterator(setS.begin()), 
+                                            std::make_move_iterator(setS.end()), 
+                                            Y.begin(), Y.end(), 
+                                    std::inserter(tmpVec, tmpVec.begin()));
+                            setS.swap(tmpVec);
+
+                            Cy->setSeparator( setS );
+                        }
+                    }else{
+                        return std::make_pair(false,0.0); // and the graph is unchanged
+                    }
+                }else{
+                    return std::make_pair(false,0.0); // and the graph is unchanged
+                }
+                
+                logP -= //backward probability
+                    log(numComponents-1) + 
+                    log(setC.size() - setS.size()) - std::lgamma(dimX+1) - std::lgamma(setC.size()-setS.size()-dimX+1) + std::lgamma(setC.size()-setS.size()+1) +
+                    log(Cy->getNodes().size() - setS.size()) - std::lgamma(dimY+1) - std::lgamma(Cy->getNodes().size()-setS.size()-dimY+1) + std::lgamma(Cy->getNodes().size()-setS.size()+1);
+
+
+            }else{ //if both are defined
+                // std::cout << " Type d) " << std::flush;
+                // std::cout << definedCx << " " << Cx << ", " << definedCy << " "<< Cy << std::flush;
+
+                // Separation is possible only if N* contains only C* [*=x,y] and N is empty
+                if( Nx.size() == 1 && Ny.size() == 1 && N.size() == 0 )
+                {
+                    if( Nx[0]==Cx && Ny[0]==Cy)
+                    {
+                        // Find who's first between Cx and Cy
+                        // adjust their links
+                        // and change their separator to be a new S
+                        // the separator for cLeft now is either its old separator (if it was the parent)
+                        // or it needs to be set to the separator of C if cLeft was its child
+                        if( Cx == C->getParent() )
+                        {
+                            cLeft = Cx;
+                            cRight = Cy;
+
+                            XisRightYisLeft = false;
+
+                        }else if( Cy == C->getParent() ) // if Cy is the parent
+                        {
+                            cLeft = Cy;
+                            cRight = Cx;
+
+                            XisRightYisLeft = true;
+
+                        }else if( !( C->getParent()) ) // C was their parent, so choose randomly
+                        {                               // note as well that in this case (becase N is empty), C was the root of JT
+                            if( Distributions::randU01() < 0.5 )
+                            {
+                                cLeft = Cx;
+                                cRight = Cy;
+                                XisRightYisLeft = false;
+
+                            }else{
+                                cLeft = Cy;
+                                cRight = Cx;
+                                XisRightYisLeft = true;
+                            }
+
+                            // because C was the root of the tree, the clique chosen to replace him at the top get its separator emptied
+                            newSeparator.clear();
+                            cLeft->setSeparator( newSeparator );
+
+                            // and its parent's emptied as well as it becomes the new root
+                            cLeft->setParent( nullptr );
+
+                            // DO WE NEED TO CHANGE THE PCS in this case? (it's safer to do so, but... do we need?)
+                            // I'll do it because our code relies on the fact that perfectCliqueSequence[0] is the root
+
+                        }
+
+                        // Now fix links
+                        // find C in cLeft's childs and substitute (or add) cRight
+                        newChildrens = cLeft->getChildrens();
+                        newChildrens.erase(std::remove(newChildrens.begin(), newChildrens.end(), C), newChildrens.end());
+                        newChildrens.push_back( cRight );
+                        cLeft->setChildrens( newChildrens );
+
+                        // set cLeft as cRight's parent (cRight HAS to come from C's childs)
+                        cRight->setParent( cLeft );
+
+                        // set the separator between them as the intersection between them
+                        newSeparator.clear();
+                        setCLeft = cLeft->getNodes();
+                        setCRight = cRight->getNodes();
+
+                        std::set_intersection(setCLeft.begin(), setCLeft.end(),
+                                                setCRight.begin(), setCRight.end(),
+                                            std::back_inserter(newSeparator));
+
+                        cRight->setSeparator( newSeparator );
+                        
+                        // Finally erase C
+                        perfectCliqueSequence.erase(perfectCliqueSequence.begin() + randomComp);
+
+                        if( !( C->getParent()) ) // if we erased the root node, we created a new one and we need to create a newPCS
+                        {
+                            newPCS.clear();
+                            // cLeft is the new root
+                            newPCS.insert( newPCS.end() , cLeft );
+                            pos = 0;
+                            buildNewPCS( newPCS, pos );
+                            perfectCliqueSequence = newPCS; // substitute to the current one
+                            // PEO updated below
+                        }
+
+                        if( XisRightYisLeft )
+                        {
+                            logP -= //backward probability (-2 here cause we further deleted one component)
+                                log(numComponents-2) + 
+                                log(setCLeft.size() - newSeparator.size()) - std::lgamma(dimY+1) - std::lgamma(setCLeft.size()-newSeparator.size()-dimY+1) + std::lgamma(setCLeft.size()-newSeparator.size()+1) +
+                                log(setCRight.size() - newSeparator.size()) - std::lgamma(dimX+1) - std::lgamma(setCRight.size()-newSeparator.size()-dimX+1) + std::lgamma(setCRight.size()-newSeparator.size()+1);
+                        }else{
+                            logP -= //backward probability (-2 here cause we further deleted one component)
+                                log(numComponents-2) + 
+                                log(setCLeft.size() - newSeparator.size()) - std::lgamma(dimX+1) - std::lgamma(setCLeft.size()-newSeparator.size()-dimX+1) + std::lgamma(setCLeft.size()-newSeparator.size()+1) +
+                                log(setCRight.size() - newSeparator.size()) - std::lgamma(dimY+1) - std::lgamma(setCRight.size()-newSeparator.size()-dimY+1) + std::lgamma(setCRight.size()-newSeparator.size()+1);
+                        }
+                        
+
+                    }else{
+                        return std::make_pair(false,0.0); // and the graph is unchanged
+                    }
+
+                }else{
+                    return std::make_pair(false,0.0); // and the graph is unchanged
+                }
+                
+
+            }
+
+        }else //if only one there's no option for edge deletion
+        {
+            return std::make_pair(false,0.0); // and the graph is unchanged
+        }
+
+    }
+
+    updatePEO(); // this->updatePEO();
+    updateAdjMat();
+
+    return std::make_pair(true,logP);
+
+}
+
+
+
+void JunctionTree::swapParentChild( std::shared_ptr<JTComponent>& parent , std::shared_ptr<JTComponent>& child )
+{
+
+    std::vector<std::shared_ptr<JTComponent>> childrenVec;
+    std::shared_ptr<JTComponent> hyperParent;
+
+    if( parent->getParent() )
+    {
+        hyperParent = parent->getParent();
+        swapParentChild( hyperParent , parent );
+
+    }
+    
+    // parent is now the root of the tree, so now swap
+    
+    child -> add1Children(parent);
+    child -> setParent(nullptr);
+
+    parent->setParent(child);
+    
+    childrenVec = parent->getChildrens();
+    childrenVec.erase(std::remove(childrenVec.begin(), childrenVec.end(), child), childrenVec.end());
+    parent -> setChildrens( childrenVec );
+
+    parent -> setSeparator( child->getSeparator() );
+    child -> clearSeparator();
+
+}
+
+void JunctionTree::randomJTPermutation()
+{
+    unsigned int pos = 0;
+    std::deque<std::shared_ptr<JTComponent>> newPCS;
+    std::shared_ptr<JTComponent> parent;
+
+    // select at random one component as the NEW root ( sampling from 1 excludes current root )
+    newPCS.insert( newPCS.end() , perfectCliqueSequence[ Distributions::randIntUniform( 1 , perfectCliqueSequence.size() -1 ) ] );
+
+    // get its parent
+    parent = newPCS[pos]->getParent();
+
+    // make the selected component recursively the root by swapping parents and childs
+    swapParentChild( parent , newPCS[pos] );
+
+    // now build the new PCS, starting from the root and its (new and old) childrens ..
+    buildNewPCS( newPCS, pos );
+    // ... and substitute to the current one
+    perfectCliqueSequence = newPCS; 
+
+    // updateAdjMat(); // this shouldn't be necessary !
+    updatePEO();
+    
 }

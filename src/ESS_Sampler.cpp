@@ -1,34 +1,52 @@
-#include "ESS_Sampler.h"
-#include <omp.h>
-
-ESS_Sampler::ESS_Sampler( arma::mat& Y_ , arma::mat& X_ , unsigned int nChains_ , std::string chainType_ )
+template<typename T>
+ESS_Sampler<T>::ESS_Sampler( arma::mat& Y_ , arma::mat& X_ , unsigned int nChains_ , double temperatureRatio )
 {
+
+    // compile-time check that T is one of ESS_Atom's derived classes
+    static_assert(std::is_base_of<ESS_Atom<T>, T>::value, "type parameter of this class must derive from ESS_Atom");
+
     nChains = nChains_ ;
-    chainType = chainType_ ;
 
-    chain = std::vector<std::shared_ptr<SSUR_Chain>>(nChains);
-
-    double tempRatio = 1.2;
+    chain = std::vector<std::shared_ptr<T>>(nChains);
 
     for( unsigned int i=0; i<nChains; ++i )
-        chain[i] = std::make_shared<SSUR_Chain>( Y_ , X_ , std::pow( tempRatio , (double)i ) );  // default init for now
+        chain[i] = std::make_shared<T>( Y_ , X_ , std::pow( temperatureRatio , (double)i ) );  // default init for now
 
-    corrMatX = arma::cor( X_ );
-
-    updateCounter = 200; // how often do we update the temperatures?
+    updateCounter = 500; // how often do we update the temperatures?
     global_proposal_count = 0;
     global_acc_count = 0;
 
 }
 
+// Silly example of how to specialise a constructor, might be needed to initialise with more precise arguments depending on the chain type
+template<> ESS_Sampler<SSUR_Chain>::ESS_Sampler( arma::mat& Y_ , arma::mat& X_ , unsigned int nChains_ , double temperatureRatio )
+{
+    std::cout << "You're using the specialised SSUR contructor!" <<std::endl; // "debugging"
+    std::string gst = "Bandit";
+
+    nChains = nChains_ ;
+    chain = std::vector<std::shared_ptr<SSUR_Chain>>(nChains);
+
+    for( unsigned int i=0; i<nChains; ++i )
+        chain[i] = std::make_shared<SSUR_Chain>( Y_ , X_ , gst , std::pow( temperatureRatio , (double)i ) );  // default init for now
+
+    updateCounter = 500; // how often do we update the temperatures?
+    global_proposal_count = 0;
+    global_acc_count = 0;
+
+}
+
+
 // this gets one of the chains from the vector
-std::shared_ptr<SSUR_Chain>& ESS_Sampler::operator[]( unsigned int i )
+template<typename T>
+std::shared_ptr<T>& ESS_Sampler<T>::operator[]( unsigned int i )
 {
     return chain[i];
 }
 
 // this gets the whole vector if useful for some reason
-std::vector<std::shared_ptr<SSUR_Chain>>& ESS_Sampler::getChains()
+template<typename T>
+std::vector<std::shared_ptr<T>>& ESS_Sampler<T>::getChains()
 {
     return chain;
 }
@@ -37,14 +55,16 @@ std::vector<std::shared_ptr<SSUR_Chain>>& ESS_Sampler::getChains()
 // STEP OPERATORS
 // ********************************
 
-void ESS_Sampler::step()
+template<typename T>
+void ESS_Sampler<T>::step()
 { 
     this->localStep();
     this->globalStep();
 }
 
 // Local Operator
-void ESS_Sampler::localStep()
+template<typename T>
+void ESS_Sampler<T>::localStep()
 {
     // OMP GIVES RUNTIME ERRORS, PROBABLY DUE TO SOME VARIABLE ACCESSED AT THE SAME TIME OR SOMRTHING :/
     // TODO but leave it out for now -- ideally use MPI or similar to distribute the different chains -- shared variables will be a pain though
@@ -61,7 +81,8 @@ void ESS_Sampler::localStep()
 // the internal chains class know how to perform them between two chains
 //  this one selectes two chains and ask them to check for global operators to be applied
 
-std::pair<unsigned int , unsigned int>  ESS_Sampler::randomChainSelect()
+template<typename T>
+std::pair<unsigned int , unsigned int>  ESS_Sampler<T>::randomChainSelect()
 {
     unsigned int chainIdx = 1, firstChain = 0, secondChain = 1;
 
@@ -84,7 +105,8 @@ std::pair<unsigned int , unsigned int>  ESS_Sampler::randomChainSelect()
 }
 
 
-std::pair<unsigned int , unsigned int>  ESS_Sampler::nearChainSelect()
+template<typename T>
+std::pair<unsigned int , unsigned int>  ESS_Sampler<T>::nearChainSelect()
 {
     unsigned int firstChain = 0, secondChain = 1;
 
@@ -97,98 +119,39 @@ std::pair<unsigned int , unsigned int>  ESS_Sampler::nearChainSelect()
     return std::pair<unsigned int , unsigned int>( firstChain , secondChain );
 }
 
-void ESS_Sampler::globalStep()
-{
-    unsigned int globalType = 0;
-    if( chainType == "SSUR" || chainType == "ssur") 
-        globalType = Distributions::randIntUniform(0,10);
-    else if( chainType == "HESS" || chainType == "hess") 
-        globalType = Distributions::randIntUniform(0,5);
 
-    std::pair<unsigned int , unsigned int> chainIdx;
+template<typename T>
+void ESS_Sampler<T>::globalStep()
+{
+    ++global_proposal_count;
+    std::pair<unsigned int , unsigned int> chainIdx = {0,1};
 
     if( nChains > 1 )
     {
-        switch(globalType){
-
-            case 0: 
-                break;
-
-            // -- Exchange and CrossOver
-            case 1: 
-                ++global_proposal_count;
+        if( Distributions::randU01() < 0.9 )
+        {
+            if( Distributions::randU01() < 0.5 )
                 chainIdx = randomChainSelect();
-                global_acc_count += chain[ chainIdx.first ] -> exchangeGamma_step( chain[ chainIdx.second ] );
-                break;
-            
-            case 2: 
-                ++global_proposal_count;
+            else
                 chainIdx = nearChainSelect();
-                global_acc_count += chain[ chainIdx.first ] -> exchangeGamma_step( chain[ chainIdx.second ] );
-                break;
-            case 3: 
-                ++global_proposal_count;
-                chainIdx = randomChainSelect();
-                global_acc_count += chain[ chainIdx.first ] -> adapt_crossOver_step( chain[ chainIdx.second ] );
-                break;
-            
-            case 4: 
-                ++global_proposal_count;
-                chainIdx = randomChainSelect();
-                global_acc_count += chain[ chainIdx.first ] -> uniform_crossOver_step( chain[ chainIdx.second ] );
-                break;
-            
-            case 5: 
-                ++global_proposal_count;
-                chainIdx = randomChainSelect();
-                global_acc_count += chain[ chainIdx.first ] -> block_crossOver_step( chain[ chainIdx.second ] , corrMatX , 0.25 );
-                break;
-            
-            case 6: 
-                ++global_proposal_count;
-                chainIdx = randomChainSelect();
-                global_acc_count += chain[ chainIdx.first ] -> exchangeJT_step( chain[ chainIdx.second ] );
-                break;
-            
-            case 7: 
-                ++global_proposal_count;
-                chainIdx = nearChainSelect();
-                global_acc_count += chain[ chainIdx.first ] -> exchangeJT_step( chain[ chainIdx.second ] );
-                break;
-            
-            case 8: 
-                ++global_proposal_count;
-                chainIdx = randomChainSelect();
-                global_acc_count += exchangeAll_step( chain[ chainIdx.first ] , chain[ chainIdx.second ] );
-                break;
-            
-            case 9: 
-                ++global_proposal_count;
-                chainIdx = nearChainSelect();
-                global_acc_count += exchangeAll_step( chain[ chainIdx.first ] , chain[ chainIdx.second ] );
-                break;
 
-            case 10: 
-                ++global_proposal_count;
-                global_acc_count += allExchangeAll_step( chain );
-                break;
-
-            default: 
-                break;
-        }
+            global_acc_count += chain[chainIdx.first] -> globalStep( chain[chainIdx.second] );
+    
+        }else
+            global_acc_count += allExchangeAll_step();
 
         if ( (global_proposal_count % updateCounter) == 0 )
             updateTemperatures();
-
     }
 }
 
-
-double ESS_Sampler::getGlobalAccRate() const { return ((double)global_acc_count)/((double)global_proposal_count); }
+template<typename T>
+double ESS_Sampler<T>::getGlobalAccRate() const { return ((double)global_acc_count)/((double)global_proposal_count); }
 
 
 // This below assumes that acceptance ratio is a monotonic function of the temperatre ratio
-void ESS_Sampler::updateTemperatures()
+template<typename T>
+void ESS_Sampler<T>::updateTemperatures()
 {
 
     double tempRatio = chain[1]->getTemperature(); // / temperatures(0) = 1
@@ -196,7 +159,7 @@ void ESS_Sampler::updateTemperatures()
     // check acceptance rate
     // if too high/low , update temperatures
 
-    if( getGlobalAccRate() > 0.35 )
+    if( getGlobalAccRate() > 0.3 )
     {
         tempRatio *= 1.1 ;
 
@@ -205,7 +168,7 @@ void ESS_Sampler::updateTemperatures()
             chain[i]->setTemperature( tempRatio * chain[i-1]->getTemperature() );
         }
 
-    }else if( getGlobalAccRate() < 0.15 )
+    }else if( getGlobalAccRate() < 0.05 )
     {
         tempRatio *= 0.9 ; 
 
@@ -221,6 +184,81 @@ void ESS_Sampler::updateTemperatures()
     global_proposal_count = 0;
     global_acc_count = 0;
 
+}
 
+template<typename T>
+int ESS_Sampler<T>::allExchangeAll_step()
+{
+    unsigned int nChainCombinations = ((nChains)*(nChains-1)/2);
+
+    arma::vec pExchange( nChainCombinations +1 );
+    unsigned int swapIdx, firstChain, secondChain;
+
+    arma::umat indexTable( pExchange.n_elem, 2);
+    unsigned int tabIndex = 0;
+    indexTable(tabIndex,0) = 0; indexTable(tabIndex,1) = 0;
+    tabIndex++;
+
+    for(unsigned int c=1; c<nChains; ++c)
+    {
+        for(unsigned int r=0; r<c; ++r)
+        {
+            indexTable(tabIndex,0) = r; indexTable(tabIndex,1) = c;
+            tabIndex++;
+        }
+    }
+
+
+    pExchange(0) = 0.; // these are log probabilities, remember!
+    // #pragma omp parallel for private(tabIndex, firstChain, secondChain)
+    for(tabIndex = 1; tabIndex <= nChainCombinations; ++tabIndex)
+    {
+
+        firstChain = indexTable(tabIndex,0);
+        secondChain  = indexTable(tabIndex,1);
+
+        // Swap probability
+        pExchange(tabIndex) = ( chain[firstChain]->getLogLikelihood() * chain[firstChain]->getTemperature() -
+                            chain[secondChain]->getLogLikelihood() * chain[secondChain]->getTemperature() ) * 
+					( 1. / chain[secondChain]->getTemperature() - 1. / chain[firstChain]->getTemperature() );
+                    //  no priors because that is not tempered so it cancels out
+    }
+
+    // normalise and cumulate the weights
+    double logSumWeights = Utils::logspace_add(pExchange); // normaliser
+    arma::vec cumulPExchange = arma::cumsum( arma::exp( pExchange - logSumWeights ) ); // this should sum to one
+
+    // Now select which swap happens
+    double val = Distributions::randU01();
+
+    swapIdx = 0;
+    while( val > cumulPExchange(swapIdx) )
+    {
+        swapIdx++;
+    }
+
+    if( swapIdx != 0 )
+    {
+        firstChain = indexTable(swapIdx,0);
+        secondChain  = indexTable(swapIdx,1);
+
+        swapAll( chain[firstChain] , chain[secondChain] );
+
+        return 1;
+    }else
+        return 0;
+
+}
+
+template<typename T>
+void ESS_Sampler<T>::swapAll( std::shared_ptr<T>& thisChain , std::shared_ptr<T>& thatChain )
+{
+
+    // POINTER SWAP
+    std::swap ( thisChain , thatChain );
+
+    double swapTemp = thisChain -> getTemperature();
+    thisChain -> setTemperature( thatChain -> getTemperature() );
+    thatChain -> setTemperature( swapTemp );
 
 }
