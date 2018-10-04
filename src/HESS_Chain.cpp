@@ -30,8 +30,7 @@ HESS_Chain::HESS_Chain( arma::mat& externalY , arma::mat& externalX , double ext
     gammaInit();
     wInit();
 
-    a_sigma = 0.1; // TODO figure out what to put here
-    b_sigma = 0.01;
+    sigmaABInit();
 
     updateGammaMask();
 
@@ -71,6 +70,8 @@ HESS_Chain::HESS_Chain( arma::mat& externalY , arma::mat& externalX , // Y and X
     piInit( pi_init );
     gammaInit( gamma_init );
     wInit( w_init );
+
+    sigmaABInit();
 
     updateGammaMask();
 
@@ -174,6 +175,12 @@ arma::vec& HESS_Chain::getBanditNormalisedMismatchBackwards(){ return normalised
 void HESS_Chain::setBanditNormalisedMismatchBackwards( arma::vec normalised_mismatch_backwards_ ){ normalised_mismatch_backwards = normalised_mismatch_backwards_ ; }
 
 // Parameter states etc
+
+void HESS_Chain::sigmaABInit()
+{
+    a_sigma = 1.;     // their mean is gonna be b/(a-1)
+    b_sigma = 1.;     // with variance b^2/(a-1)^2/(a-2)
+}
 
 double HESS_Chain::getSigmaA() const{ return a_sigma ; }
 void HESS_Chain::setSigmaA( double a_sigma_ )
@@ -421,12 +428,12 @@ void HESS_Chain::wInit( double w_init , double a_w_ , double b_w_ , double var_w
 
 void HESS_Chain::wInit( double w_init )
 {
-    wInit( w_init , 2. , 10. , 0.02 );
+    wInit( w_init , 2. , 5. , 0.02 );
 }
 
 void HESS_Chain::wInit()
 {
-    wInit( 10. , 2. , 10. , 0.02 );
+    wInit( 1. , 2. , 5. , 0.02 );
 }
 
 // *****************************
@@ -552,8 +559,8 @@ double HESS_Chain::logLikelihood( )
         arma::log_det(tmp, sign, W_k );
         logP += 0.5*tmp; 
 
-        // arma::log_det(tmp, sign, 1./w * arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
-        logP += -0.5 * (double)VS_IN_k.n_elem * (1./w); 
+        // arma::log_det(tmp, sign, w * arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
+        logP -= 0.5 * (double)VS_IN_k.n_elem * log(w); 
 
         logP += a_sigma*log(b_sigma) - a_sigma_k*log(b_sigma_k);
 
@@ -592,8 +599,8 @@ double HESS_Chain::logLikelihood( const arma::umat&  externalGammaMask )
         arma::log_det(tmp, sign, W_k );
         logP += 0.5*tmp; 
 
-        // arma::log_det(tmp, sign, 1./w * arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
-        logP += -0.5 * (double)VS_IN_k.n_elem * (1./w); 
+        // arma::log_det(tmp, sign, w * arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
+        logP -= 0.5 * (double)VS_IN_k.n_elem * log(w); 
 
         logP += a_sigma*log(b_sigma) - a_sigma_k*log(b_sigma_k);
 
@@ -634,8 +641,8 @@ double HESS_Chain::logLikelihood( arma::umat& externalGammaMask , const arma::um
         arma::log_det(tmp, sign, W_k );
         logP += 0.5*tmp; 
 
-        // arma::log_det(tmp, sign, 1./w * arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
-        logP += -0.5 * (double)VS_IN_k.n_elem * (1./w); 
+        // arma::log_det(tmp, sign, w * arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
+        logP -= 0.5 * (double)VS_IN_k.n_elem * log(w); 
 
         logP += a_sigma*log(b_sigma) - a_sigma_k*log(b_sigma_k);
 
@@ -672,8 +679,8 @@ double HESS_Chain::logLikelihood( const arma::umat& externalGammaMask , const do
         arma::log_det(tmp, sign, W_k );
         logP += 0.5*tmp; 
 
-        // arma::log_det(tmp, sign, 1./w * arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
-        logP += -0.5 * (double)VS_IN_k.n_elem * (1./externalW); 
+        // arma::log_det(tmp, sign, w * arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
+        logP -= 0.5 * (double)VS_IN_k.n_elem * log(externalW); 
 
         logP += externalA_sigma*log(externalB_sigma) - a_sigma_k*log(b_sigma_k);
 

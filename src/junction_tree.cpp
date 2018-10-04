@@ -2390,7 +2390,7 @@ void JunctionTree::swapParentChild( std::shared_ptr<JTComponent>& parent , std::
 
 }
 
-void JunctionTree::randomJTPermutation()
+void JunctionTree::reRoot()
 {
     unsigned int pos = 0;
     std::deque<std::shared_ptr<JTComponent>> newPCS;
@@ -2413,4 +2413,119 @@ void JunctionTree::randomJTPermutation()
     // updateAdjMat(); // this shouldn't be necessary !
     updatePEO();
     
+}
+
+bool JunctionTree::isChild( std::shared_ptr<JTComponent>& parent , std::shared_ptr<JTComponent>& node )
+{
+    std::vector<std::shared_ptr<JTComponent>> parentsChildrens = parent -> getChildrens();
+    unsigned int nChildrens = parentsChildrens.size();
+
+    if( nChildrens == 0 )
+        return false;
+
+    boost::dynamic_bitset<> res(nChildrens);
+    res.reset(); // set all to false
+
+    for( unsigned int i=0; i<nChildrens; ++i )
+    {
+        if( parentsChildrens[i] == node )
+            return true;
+        else{
+            res[i] = isChild( parentsChildrens[i] , node );
+        }
+    }
+
+    return res.any();
+}
+
+void JunctionTree::randomJTPermutation()
+{
+    unsigned int numComponents = perfectCliqueSequence.size();
+
+    // this->print();
+
+    // reroot the tree, this happens anyway
+    if( numComponents > 1 ) // otherwise is at best the reverse of the above reRoot move
+        this->reRoot();
+
+    // std::cout << " **************  Rebased  *************  " << std::endl;
+    // this->print();
+
+
+    // then see if we can shuffle something
+    if( numComponents > 2 ) // otherwise is at best the reverse of thea bove reRoot move
+    {
+        // Select at random one component (not the root)
+        std::shared_ptr<JTComponent> thisComponent = perfectCliqueSequence[ Distributions::randIntUniform( 1 , numComponents -1 ) ];
+        std::shared_ptr<JTComponent> itsParent = thisComponent -> getParent();
+        std::vector<std::shared_ptr<JTComponent>> itsChildrens = thisComponent -> getChildrens();
+        std::vector<unsigned int> setI;
+        std::vector<unsigned int> itsSeparator = thisComponent->getSeparator();
+        std::vector<std::shared_ptr<JTComponent>> parentsChildrens;
+
+
+        std::vector<std::shared_ptr<JTComponent>> possibleNewParent;
+        unsigned int idx;
+
+        // search in the PCS if there are other possible fathers (not in its childrens)
+        bool isSelf, isOGParent, isItsChild, hasRightSep;
+        for( unsigned int i=0; i<numComponents; ++i )
+        {
+            isSelf = ( perfectCliqueSequence[i] == thisComponent );
+
+            if( !isSelf )
+            {
+                isOGParent = ( perfectCliqueSequence[i] == itsParent );
+
+                if( !isOGParent )
+                {
+                    isItsChild = this->isChild( thisComponent , perfectCliqueSequence[i] );
+
+                    if( !isItsChild )
+                    {
+                        setI = perfectCliqueSequence[i]->getNodes();
+                        hasRightSep = std::includes(setI.begin(), setI.end(), itsSeparator.begin(), itsSeparator.end()); 
+                        // should I check if the intersection between setI and setThis is just setS? no right?
+                        // because if that was the case, the RIProperty would be violated from the start
+
+                        if( hasRightSep )
+                        {
+                            // select this as a candidate
+                            possibleNewParent.push_back( perfectCliqueSequence[i] );
+                        }
+                    }
+                }
+            }
+        }
+
+        // now select a new parent
+        if( possibleNewParent.size() > 0 )
+        {
+            idx = Distributions::randIntUniform(0,possibleNewParent.size()-1);
+
+            //swap its parent with this new one, break and rebuild PCS
+            thisComponent->setParent( possibleNewParent[idx] );
+            possibleNewParent[idx] -> add1Children( thisComponent );
+            
+            parentsChildrens = itsParent -> getChildrens();
+            parentsChildrens.erase(std::remove(parentsChildrens.begin(), parentsChildrens.end(), thisComponent), parentsChildrens.end());
+            itsParent -> setChildrens( parentsChildrens );
+
+            // Rebuild the PCS
+            unsigned int pos = 0;
+            std::deque<std::shared_ptr<JTComponent>> newPCS;
+
+            newPCS.insert( newPCS.end() , perfectCliqueSequence[ 0 ] );
+
+            buildNewPCS( newPCS , pos );
+
+            // updateAdjMat(); // this shouldn't be necessary !
+            updatePEO();
+
+            // std::cout << " **************  Updated  *************  " << std::endl;
+            // this->print();
+            // std::cin >> pos;
+        
+        } //else nothing to do  
+    }
 }

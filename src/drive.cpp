@@ -29,9 +29,25 @@ int drive_SSUR( arma::mat& Y , arma::mat& X , unsigned int& nChains , unsigned i
 	ESS_Sampler<SSUR_Chain> sampler( Y , X , nChains );// this is thus also some sort of default
 		// although note that you won't pass the input phase with a different method string
 
+
+	// *****************************
+
+	arma::mat betaInit = arma::inv_sympd( sampler[0]->getXtX() ) * arma::trans(*sampler[0]->getX()) * Y;
+	arma::umat gammaInit = betaInit > 0.5*arma::stddev(arma::vectorise(betaInit));
+	gammaInit.shed_row(0);
+
+	sampler[0] -> gammaInit( gammaInit );
+    sampler[0] -> updateQuantities();
+    sampler[0] -> logLikelihood();
+	sampler[0] -> stepSigmaRhoAndBeta();
+
+	// *****************************
+
+
 	// set when the JT move should start
+	unsigned int jtStartIteration = nIter/10;
 	for( unsigned int i=0; i<nChains; ++i)
-		sampler[i]->setJTStartIteration( nIter/10 );
+		sampler[i]->setJTStartIteration( jtStartIteration );
 
 	// ****************************************
 
@@ -126,7 +142,7 @@ int drive_SSUR( arma::mat& Y , arma::mat& X , unsigned int& nChains , unsigned i
 				gammaOutFile.close();
 
 				gOutFile.open( outFilePath+inFile+"G_out.txt" , std::ios_base::trunc);
-				gOutFile << ( arma::conv_to<arma::mat>::from(g_out) )/((double)i+1.0) << std::flush;   // this might be quite long...
+				gOutFile << ( arma::conv_to<arma::mat>::from(g_out) )/((double)(i-jtStartIteration)+1.0) << std::flush;   // this might be quite long...
 				gOutFile.close();
 
 				logPOutFile << 	sampler[0] -> getLogPTau() << " ";
@@ -155,7 +171,7 @@ int drive_SSUR( arma::mat& Y , arma::mat& X , unsigned int& nChains , unsigned i
 	gammaOutFile.close();
 
 	gOutFile.open( outFilePath+inFile+"G_out.txt" , std::ios_base::trunc);
-	gOutFile << ( arma::conv_to<arma::mat>::from(g_out) )/((double)nIter+1.0) << std::flush;   // this might be quite long...
+	gOutFile << ( arma::conv_to<arma::mat>::from(g_out) )/((double)(nIter-jtStartIteration)+1.0) << std::flush;   // this might be quite long...
 	gOutFile.close();
 
 	logPOutFile << 	sampler[0] -> getLogPTau() << " ";
@@ -204,6 +220,21 @@ int drive_HESS( arma::mat& Y , arma::mat& X , unsigned int& nChains , unsigned i
 
 	ESS_Sampler<HESS_Chain> sampler( Y , X , nChains );// this is thus also some sort of default
 		// although note that you won't pass the input phase with a differetn method string
+
+
+	// *****************************
+
+	arma::mat betaInit = arma::inv_sympd( sampler[0]->getXtX() ) * arma::trans(*sampler[0]->getX()) * Y;
+	arma::umat gammaInit = betaInit > 0.5*arma::stddev(arma::vectorise(betaInit));
+	gammaInit.shed_row(0);
+
+	sampler[0] -> gammaInit( gammaInit );
+    sampler[0] -> updateGammaMask();
+    sampler[0] -> logLikelihood();
+
+	// *****************************
+
+
 
 	// ****************************************
 

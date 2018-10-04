@@ -524,12 +524,12 @@ void SSUR_Chain::etaInit( double eta_init , double a_eta_ , double b_eta_ )
 
 void SSUR_Chain::etaInit()
 {
-    etaInit( 0.1 , 0.5*s*(s-1)*0.1 , 0.5*s*(s-1)*(1.-0.1) );
+    etaInit( 0.1 , /*0.5*s*(s-1)*0.1*/ 1. , /*0.5*s*(s-1)*(1.-0.1)*/ 1. ); // 0.1  is essentially the expected active proportion
 }
 
 void SSUR_Chain::etaInit( double eta_init )
 {
-    etaInit( eta_init , 0.5*s*(s-1)*0.1 , 0.5*s*(s-1)*(1.-0.1) ); // should I use eta_init in the prior parameters?
+    etaInit( eta_init , /*0.5*s*(s-1)*0.1*/ 1. , /*0.5*s*(s-1)*(1.-0.1)*/ 1. ); // should I use eta_init in the prior parameters?
 }
 
 
@@ -645,12 +645,12 @@ void SSUR_Chain::wInit( double w_init , double a_w_ , double b_w_ )
 
 void SSUR_Chain::wInit( double w_init )
 {
-    wInit( w_init , 2. , 10. );
+    wInit( w_init , 2. , 5. );
 }
 
 void SSUR_Chain::wInit()
 {
-    wInit( 10. , 2. , 10. );
+    wInit( 1. , 2. , 5. );
 }
 
 void SSUR_Chain::betaInit( arma::mat& beta_init )
@@ -1847,8 +1847,11 @@ void SSUR_Chain::stepPi()
 // Gibbs sampler available here again for w given all the current betas and the gammas -- TODO keep an eye on this
 void SSUR_Chain::stepW()
 {
-    double a = a_w + 0.5*( /*arma::accu(gamma)*/ gammaMask.n_rows ); // divide by temperature if the prior on gamma is tempered
-    double b = b_w + 0.5*( arma::accu( arma::square(beta) ) );   // all the beta_jk w/ gamma_jk=0 are 0 already // /temperature
+    double a = a_w + 0.5*( /*arma::accu(gamma) + intercept */ /*or*/ gammaMask.n_rows ); // divide by temperature if the prior on gamma is tempered
+    double b = b_w + 0.5*( arma::accu( arma::square(arma::nonzeros(beta)) ) );   // all the beta_jk w/ gamma_jk=0 are 0 already // /temperature
+
+    // std::cout << a_w << " -> " << a << "   ---   "<< b_w << " -> " << b << std::endl; 
+    // std::cout << arma::nonzeros(beta).t() << std::endl; std::cin >> w;
 
     w = Distributions::randIGamma( a , b );
 

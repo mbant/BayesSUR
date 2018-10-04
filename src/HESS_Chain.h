@@ -105,6 +105,8 @@ class HESS_Chain : public ESS_Atom<HESS_Chain>
         double getSigmaB() const; 
         void setSigmaB( double ); 
         
+        void sigmaABInit();
+
         // no setter for this, dedicated setter below
 
         // o_k
@@ -385,6 +387,7 @@ class HESS_Chain : public ESS_Atom<HESS_Chain>
         double gamma_acc_count;
         double logP_gamma;
 
+        // SIGMAs have a IG prior with parameters
         double a_sigma, b_sigma;
 
         // W - prior variance for the Norma component of the beta spike and slab prior

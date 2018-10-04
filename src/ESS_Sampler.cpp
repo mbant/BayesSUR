@@ -168,14 +168,18 @@ void ESS_Sampler<T>::updateTemperatures()
             chain[i]->setTemperature( tempRatio * chain[i-1]->getTemperature() );
         }
 
+        std::cout << "Temperature ladder updated, new temperature ratio : " << tempRatio << std::endl;
+
     }else if( getGlobalAccRate() < 0.05 )
     {
-        tempRatio *= 0.9 ; 
+        tempRatio = std::max( 1. + 1e-8 , tempRatio * 0.9 ); 
 
         for( unsigned int i=1; i < nChains ; ++i )
         {
             chain[i]->setTemperature( tempRatio * chain[i-1]->getTemperature() );
         }
+        
+        std::cout << "Temperature ladder updated, new temperature ratio : " << tempRatio << std::endl;
     }
 
     // I want to maintain a sort-of-moving avaerage acceptance count for the global moves, so that 

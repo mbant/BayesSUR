@@ -6,6 +6,8 @@
 #include <memory>
 #include <algorithm> // std::set_difference, std::sort, ...
 
+#include <boost/dynamic_bitset.hpp>
+
 #include "distr.h"
 #include "utils.h"
 
@@ -87,6 +89,8 @@ class JunctionTree {
         std::pair<bool,double> propose_multiple_edge_update( );
 
         void swapParentChild( std::shared_ptr<JTComponent>& parent , std::shared_ptr<JTComponent>& child );
+        void reRoot();
+        bool isChild( std::shared_ptr<JTComponent>& , std::shared_ptr<JTComponent>& );
         void randomJTPermutation();
 
         void print() const;
