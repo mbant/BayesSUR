@@ -31,8 +31,9 @@ int drive_SSUR( arma::mat& Y , arma::mat& X , unsigned int& nChains , unsigned i
 
 
 	// *****************************
-
-	arma::mat betaInit = arma::inv_sympd( sampler[0]->getXtX() ) * arma::trans(*sampler[0]->getX()) * Y;
+	// need to use getX because I need the intercept
+	arma::mat Q,R; arma::qr(Q,R, *sampler[0]->getX() );
+	arma::mat betaInit = arma::solve(R,arma::trans(Q) * Y );
 	arma::umat gammaInit = betaInit > 0.5*arma::stddev(arma::vectorise(betaInit));
 	gammaInit.shed_row(0);
 
@@ -91,6 +92,7 @@ int drive_SSUR( arma::mat& Y , arma::mat& X , unsigned int& nChains , unsigned i
 	logPOutFile << 	sampler[0] -> getLogPGamma() <<  " ";
 	logPOutFile << 	sampler[0] -> getLogPW() <<  " ";
 	logPOutFile << 	sampler[0] -> getLogPBeta() <<  " ";
+	logPOutFile << 	sampler[0] -> getLogLikelihood();
 	logPOutFile << 	std::endl << std::flush;
 					
 
@@ -154,6 +156,7 @@ int drive_SSUR( arma::mat& Y , arma::mat& X , unsigned int& nChains , unsigned i
 				logPOutFile << 	sampler[0] -> getLogPGamma() <<  " ";
 				logPOutFile << 	sampler[0] -> getLogPW() <<  " ";
 				logPOutFile << 	sampler[0] -> getLogPBeta() <<  " ";
+				logPOutFile << 	sampler[0] -> getLogLikelihood();
 				logPOutFile << 	std::endl << std::flush;
 			}
 
@@ -183,6 +186,7 @@ int drive_SSUR( arma::mat& Y , arma::mat& X , unsigned int& nChains , unsigned i
 	logPOutFile << 	sampler[0] -> getLogPGamma() <<  " ";
 	logPOutFile << 	sampler[0] -> getLogPW() <<  " ";
 	logPOutFile << 	sampler[0] -> getLogPBeta() <<  " ";
+	logPOutFile << 	sampler[0] -> getLogLikelihood();
 	logPOutFile << 	std::endl << std::flush;
 
 	// ----
@@ -223,8 +227,8 @@ int drive_HESS( arma::mat& Y , arma::mat& X , unsigned int& nChains , unsigned i
 
 
 	// *****************************
-
-	arma::mat betaInit = arma::inv_sympd( sampler[0]->getXtX() ) * arma::trans(*sampler[0]->getX()) * Y;
+	arma::mat Q,R; arma::qr(Q,R, *sampler[0]->getX() );
+	arma::mat betaInit = arma::solve(R,arma::trans(Q) * Y );
 	arma::umat gammaInit = betaInit > 0.5*arma::stddev(arma::vectorise(betaInit));
 	gammaInit.shed_row(0);
 
@@ -265,6 +269,7 @@ int drive_HESS( arma::mat& Y , arma::mat& X , unsigned int& nChains , unsigned i
 	logPOutFile << 	sampler[0] -> getLogPPi() <<  " ";
 	logPOutFile << 	sampler[0] -> getLogPGamma() <<  " ";
 	logPOutFile << 	sampler[0] -> getLogPW() <<  " ";
+	logPOutFile << 	sampler[0] -> getLogLikelihood();
 	logPOutFile << 	std::endl << std::flush;
 					
 
@@ -314,6 +319,7 @@ int drive_HESS( arma::mat& Y , arma::mat& X , unsigned int& nChains , unsigned i
 				logPOutFile << 	sampler[0] -> getLogPPi() <<  " ";
 				logPOutFile << 	sampler[0] -> getLogPGamma() <<  " ";
 				logPOutFile << 	sampler[0] -> getLogPW() <<  " ";
+				logPOutFile << 	sampler[0] -> getLogLikelihood();
 				logPOutFile << 	std::endl << std::flush;
 			}
 
@@ -334,6 +340,7 @@ int drive_HESS( arma::mat& Y , arma::mat& X , unsigned int& nChains , unsigned i
 	logPOutFile << 	sampler[0] -> getLogPPi() <<  " ";
 	logPOutFile << 	sampler[0] -> getLogPGamma() <<  " ";
 	logPOutFile << 	sampler[0] -> getLogPW() <<  " ";
+	logPOutFile << 	sampler[0] -> getLogLikelihood();
 	logPOutFile << 	std::endl << std::flush;
 
 	std::cout << "Saved to :   "+outFilePath+inFile+"****_out.txt" << std::endl;
