@@ -6,8 +6,9 @@
 #include "distr.h"
 
 #include "ESS_Atom.h"
-#include "SSUR_Chain.h"
 #include "HESS_Chain.h"
+#include "SSUR_Chain.h"
+#include "dSUR_Chain.h"
 
 #ifndef ESS_SAMPLER_H
 #define ESS_SAMPLER_H

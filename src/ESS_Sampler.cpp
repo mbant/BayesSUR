@@ -21,14 +21,30 @@ ESS_Sampler<T>::ESS_Sampler( arma::mat& Y_ , arma::mat& X_ , unsigned int nChain
 // Silly example of how to specialise a constructor, might be needed to initialise with more precise arguments depending on the chain type
 template<> ESS_Sampler<SSUR_Chain>::ESS_Sampler( arma::mat& Y_ , arma::mat& X_ , unsigned int nChains_ , double temperatureRatio )
 {
-    std::cout << "You're using the specialised SSUR contructor!" <<std::endl; // "debugging"
     std::string gst = "Bandit";
 
     nChains = nChains_ ;
     chain = std::vector<std::shared_ptr<SSUR_Chain>>(nChains);
 
     for( unsigned int i=0; i<nChains; ++i )
-        chain[i] = std::make_shared<SSUR_Chain>( Y_ , X_ , gst , std::pow( temperatureRatio , (double)i ) );  // default init for now
+        chain[i] = std::make_shared<SSUR_Chain>( Y_ , X_ , gst , false , std::pow( temperatureRatio , (double)i ) );  // default init for now
+
+    updateCounter = 500; // how often do we update the temperatures?
+    global_proposal_count = 0;
+    global_acc_count = 0;
+
+}
+
+// Silly example #2 of how to specialise a constructor, might be needed to initialise with more precise arguments depending on the chain type
+template<> ESS_Sampler<dSUR_Chain>::ESS_Sampler( arma::mat& Y_ , arma::mat& X_ , unsigned int nChains_ , double temperatureRatio )
+{
+    std::string gst = "Bandit";
+
+    nChains = nChains_ ;
+    chain = std::vector<std::shared_ptr<dSUR_Chain>>(nChains);
+
+    for( unsigned int i=0; i<nChains; ++i )
+        chain[i] = std::make_shared<dSUR_Chain>( Y_ , X_ , gst , false , std::pow( temperatureRatio , (double)i ) );  // default init for now
 
     updateCounter = 500; // how often do we update the temperatures?
     global_proposal_count = 0;

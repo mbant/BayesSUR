@@ -1,19 +1,26 @@
 CC=g++
 CFLAGS= -c -Wall -std=c++11 -fopenmp
-LDFLAGS= -larmadillo -lpthread -llapack -lopenblas -fopenmp
-#LDFLAGS= -larmadillo -lpthread -llapack -lnvblas -fopenmp
 
-SOURCES_BVS=global.cpp utils.cpp distr.cpp junction_tree.cpp HESS_Chain.cpp SSUR_Chain.cpp ESS_Sampler.h drive.cpp 
+OPENLDFLAGS= -larmadillo -lpthread -lopenblas -fopenmp
+NVLDFLAGS= -larmadillo -lpthread -lnvblas -fopenmp
+
+SOURCES_BVS=global.cpp utils.cpp distr.cpp junction_tree.cpp HESS_Chain.cpp dSUR_Chain.cpp SSUR_Chain.cpp ESS_Sampler.h drive.cpp 
 #ESS_Atom.h interface only
 OBJECTS_BVS=$(SOURCES_BVS:.cpp=.o)
 
-all:$(SOURCES_BVS) BVS
+all:$(SOURCES_BVS) BVS_NONVDIA
 
 BVS: OPTIM_FLAGS := -O3
 BVS: $(OBJECTS_BVS)
 	@echo [Linking and producing executable]:
-	$(CC) $(OBJECTS_BVS) -o BVS_Reg $(LDFLAGS)
-	
+	if [ -e /usr/lib/libnvblas.so -o -e /usr/lib64/libnvblas.so ] ; then $(CC) $(OBJECTS_BVS) -o BVS_Reg $(NVLDFLAGS) ; else $(CC) $(OBJECTS_BVS) -o BVS_Reg $(OPENLDFLAGS) ; fi
+# I hate that this is searching only in the standard path, the correct way is with automake ./config, but that will come later...
+
+BVS_NONVDIA: OPTIM_FLAGS := -O3
+BVS_NONVDIA: $(OBJECTS_BVS)
+	@echo [Linking and producing executable]:
+	$(CC) $(OBJECTS_BVS) -o BVS_Reg $(OPENLDFLAGS)
+
 BVS_DEBUG: $(OBJECTS_BVS)
 	@echo [Linking and producing executable]:
 	$(CC) $(OBJECTS_BVS) -o BVS_DEBUG_Reg $(LDFLAGS) -ggdb3
@@ -21,9 +28,7 @@ BVS_DEBUG: $(OBJECTS_BVS)
 %.o: %.cpp
 	@echo [Compiling]: $<
 	$(CC) $(CFLAGS) $(OPTIM_FLAGS) -o $@ -c $<	
-	
 
 clean: 
 	@echo [Cleaning: ]
-	rm *.o 
-	rm *_Reg 
+	rm *.o ; rm *_Reg ; rm *_Example* ;

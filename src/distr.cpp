@@ -196,7 +196,7 @@ namespace Distributions{
 		//check
 		if(shape <= 0 || scale <= 0 )
 		{
-			std::cout << " Negative parameter in the gamma sampler" << std::flush;
+			std::cout << " Negative parameter in the gamma sampler " << std::flush;
 			throw; // THROW EXCPTION
 		}
 
@@ -211,7 +211,7 @@ namespace Distributions{
 		//check
 		if(shape <= 0 || scale <= 0 )
 		{
-			std::cout << " Negative parameter in the gamma sampler" << std::flush;
+			std::cout << " Negative parameter in the gamma sampler " << std::flush;
 			throw; // THROW EXCPTION
 		}
 

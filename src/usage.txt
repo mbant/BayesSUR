@@ -1,6 +1,7 @@
-./[ALGORITHM]_Reg [--method X]--nIter X --inFile path/to/[inFileName].txt --outFile [outFileName] --nOutcomes X --nPredictors X
+./[ALGORITHM]_Reg [--method X]--nIter X --inFile path/to/[inFileName].txt --outFile [outFileName] --nOutcomes X --nPredictors X --gPrior[EXPERIMENTAL!]
 
 EXAMPLES:
 
 ./BVS_Reg --method SSUR --inFile ../Data/data_test.txt --outFilePath ../Data/ --nOutcomes 10 --nPredictors 20  --nChains 1 --nIter 200
+./BVS_Reg --method dSUR --inFile ../Data/data_test.txt --outFilePath ../Data/ --nOutcomes 10 --nPredictors 20  --nChains 1 --nIter 200
 ./BVS_Reg --method HESS --inFile ../Data/data_test.txt --outFilePath ../Data/ --nOutcomes 10 --nPredictors 20  --nChains 1 --nIter 200

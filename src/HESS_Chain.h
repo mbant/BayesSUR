@@ -14,9 +14,10 @@
 
 /************************************
  * HESS class that works with the ESS_Sampler class
- * This is the same model from Bottolo et al 2010, so no hyperprior ona_sigma, b_sigma
+ * This is the same model from Bottolo et al 2010, so no hyperprior on a_sigma, b_sigma
  * To maintain notation consistent with SSUR tau ( from paper) is names w here
  * CRTP used for global exchanges
+ * Note that contrarily from SUR here the model still have sigma in the prior for beta for computaional convenience
  ***********************************/
 
 class HESS_Chain : public ESS_Atom<HESS_Chain>
@@ -39,7 +40,7 @@ class HESS_Chain : public ESS_Atom<HESS_Chain>
         // full, every parameter object is initialised from existing objects, plus the type of gamma sampler
         HESS_Chain( arma::mat& , arma::mat& , // Y and X
                 arma::vec& , arma::vec& , arma::umat& , double ,  // o, pi, gamma, w
-                std::string , double ); // gamma sampler type , temperature
+                std::string , bool , double ); // gamma sampler type , gPrior? , temperature
 
         // *******************************
         // Getters and Setters
@@ -60,6 +61,10 @@ class HESS_Chain : public ESS_Atom<HESS_Chain>
         unsigned int getP() const;
         unsigned int getS() const;
         // no setters as they are linked to the data
+
+        // gPrior
+        void gPriorInit(); // g Prior can only be init at the start, so no proper "set" method
+        bool getGPrior() const;
 
         // usefull quantities to keep track of
         arma::umat& getGammaMask();
@@ -212,6 +217,7 @@ class HESS_Chain : public ESS_Atom<HESS_Chain>
 
         void wInit();
         void wInit( double );
+        void wInit( double , double , double );
         void wInit( double , double , double , double );
 
         // *****************************
@@ -262,8 +268,8 @@ class HESS_Chain : public ESS_Atom<HESS_Chain>
         // *********************
 
         // sampler for proposed updates on gamma
-        double gammaBanditProposal( arma::umat& , arma::uvec& ); // steppedGamma , updateIdx
-        double gammaMC3Proposal( arma::umat& , arma::uvec& ); // steppedGamma , updateIdx
+        double gammaBanditProposal( arma::umat& , arma::uvec& , unsigned int& ); // steppedGamma , updateIdx, outcomeIdx
+        double gammaMC3Proposal( arma::umat& , arma::uvec& , unsigned int& ); // steppedGamma , updateIdx, outcomeIdx
 
         // update the internal state of each parameter given all the others
         void stepOneO();
@@ -316,13 +322,14 @@ class HESS_Chain : public ESS_Atom<HESS_Chain>
         // MC3 init
         void MC3Init();
 
-    private:
+    protected:
 
         // Data (and related quatities)
         std::shared_ptr<arma::mat> Y;
         std::shared_ptr<arma::mat> X;
         // these are pointers cause they will live on outside the MCMC
         
+        bool preComputedXtX;
         arma::mat XtX;
 
         unsigned int n; // number of samples
@@ -361,6 +368,9 @@ class HESS_Chain : public ESS_Atom<HESS_Chain>
         // Parameter states, with their associated parameters from priors and proposal and current logP
         // **************************
 
+        // beta Prior
+        bool gPrior;
+
         // o_k - outcome association propensity 
         // o_k ~ Beta(a_o,b_o) || its proposal is a symmetric normal RWMH in the log-scale
         arma::vec o;
@@ -390,7 +400,8 @@ class HESS_Chain : public ESS_Atom<HESS_Chain>
         // SIGMAs have a IG prior with parameters
         double a_sigma, b_sigma;
 
-        // W - prior variance for the Norma component of the beta spike and slab prior
+        // W - prior variance for the (slab) Normal component of the beta spike and slab prior
+        // BETA slab is N(0,\sigma^2_k w)
         // w ~ InvGamma(a_w,b_w) || its proposal is a symmetric normal RWMH in the log-scale
         // a common value makes sense given common-scale for Xs and Ys
         double w;

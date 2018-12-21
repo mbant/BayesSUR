@@ -28,7 +28,7 @@ class SSUR_Chain : public ESS_Atom<SSUR_Chain>
 
         // empty, everything is default, except the data
         SSUR_Chain( arma::mat& , arma::mat& , double ); // Y and X  (and temperature that'll have a default value of 1.)
-        SSUR_Chain( arma::mat& , arma::mat& , std::string& , double ); // Y and X and gammaSamplerType (and temperature that'll have a default value of 1.)
+        SSUR_Chain( arma::mat& , arma::mat& , std::string& , bool , double ); // Y and X and gammaSamplerType (and temperature that'll have a default value of 1.)
 
         // full, every parameter object is initialised from existing objects
         SSUR_Chain( arma::mat& , arma::mat& , // Y and X
@@ -40,7 +40,7 @@ class SSUR_Chain : public ESS_Atom<SSUR_Chain>
         SSUR_Chain( arma::mat& , arma::mat& , // Y and X
                 double , double , JunctionTree& , arma::mat& , // tau, eta, jt, sigmaRho 
                 arma::vec& , arma::vec& , arma::umat& , double , arma::mat& , // o, pi, gamma, w, beta
-                std::string , double ); // gamma sampler type , temperature
+                std::string , bool , double ); // gamma sampler type , temperature
 
         // *******************************
         // Getters and Setters
@@ -61,6 +61,10 @@ class SSUR_Chain : public ESS_Atom<SSUR_Chain>
         unsigned int getP() const;
         unsigned int getS() const;
         // no setters as they are linked to the data
+
+        // gPrior
+        void gPriorInit(); // g Prior can only be init at the start, so no proper "set" method
+        bool getGPrior() const;
 
         // usefull quantities to keep track of
         arma::umat& getGammaMask();
@@ -294,6 +298,7 @@ class SSUR_Chain : public ESS_Atom<SSUR_Chain>
         void wInit();
         void wInit( double );
         void wInit( double , double , double );
+        void wInit( double , double , double , double );
 
         void betaInit();
         void betaInit( arma::mat& );
@@ -399,8 +404,8 @@ class SSUR_Chain : public ESS_Atom<SSUR_Chain>
         void sampleBetaGivenSigmaRho();
 
         // sampler for proposed updates on gamma
-        double gammaBanditProposal( arma::umat& , arma::uvec& ); // steppedGamma , updateIdx
-        double gammaMC3Proposal( arma::umat& , arma::uvec& ); // steppedGamma , updateIdx
+        double gammaBanditProposal( arma::umat& , arma::uvec& , unsigned int& ); // steppedGamma , updateIdx , outcomeIdx
+        double gammaMC3Proposal( arma::umat& , arma::uvec& , unsigned int&); // steppedGamma , updateIdx , outcomeIdx
 
 
         // update the internal state of each parameter given all the others
@@ -411,6 +416,8 @@ class SSUR_Chain : public ESS_Atom<SSUR_Chain>
         void stepOnePi();
         void stepPi();
         void stepW();
+        void stepWMH();
+        void stepWGibbs();
 
         void stepJT();
         void stepGamma();
@@ -477,13 +484,14 @@ class SSUR_Chain : public ESS_Atom<SSUR_Chain>
         // MC3 init
         void MC3Init();
 
-    private:
+    protected:
 
         // Data (and related quatities)
         std::shared_ptr<arma::mat> Y;
         std::shared_ptr<arma::mat> X;
         // these are pointers cause they will live on outside the MCMC
         
+        bool preComputedXtX;
         arma::mat XtX;
 
         unsigned int n; // number of samples
@@ -503,11 +511,11 @@ class SSUR_Chain : public ESS_Atom<SSUR_Chain>
         std::string gammaSamplerType;
 
         // empirical mean/variances to adapt the proposal distribution
-        double tauEmpiricalMean;
+        double tauEmpiricalMean, wEmpiricalMean;
         arma::vec oEmpiricalMean, piEmpiricalMean;
-        double tauEmpiricalM2;
+        double tauEmpiricalM2, wEmpiricalM2;
         arma::vec oEmpiricalM2, piEmpiricalM2; // second moment ( nb, all on the log-scale )
-        double var_tau_proposal_init, var_o_proposal_init, var_pi_proposal_init ;
+        double var_tau_proposal_init, var_o_proposal_init, var_pi_proposal_init, var_w_proposal_init ;
 
         // Bandit-sampling related quantities
         unsigned int n_updates_bandit;
@@ -587,6 +595,8 @@ class SSUR_Chain : public ESS_Atom<SSUR_Chain>
         double w;
         double a_w,b_w;
         double logP_w;
+        double w_acc_count;
+        double var_w_proposal;
 
         // BETA - regression coefficients
         // beta_jk | gamma_jk ~ gamma_jk * Normal( 0 , w ) + (1-gamma_jk) * delta(0) where delta(0) is a Dirac point mass on 0
@@ -594,6 +604,9 @@ class SSUR_Chain : public ESS_Atom<SSUR_Chain>
         arma::mat beta;
         // prior hyperparameters are all already defined
         double logP_beta;
+
+        bool gPrior;
+
 
         // **************************
         // LOG-LIKELIHOOD FOR THE SSUR MODEL
