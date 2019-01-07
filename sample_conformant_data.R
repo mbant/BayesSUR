@@ -159,11 +159,6 @@ corr_param = 0.9 # in 0.3 , 0.6 , 0.9
     for(i in 1:length(Res))
       gamma[6:10 + (i+9) * 10, Res[[i]]] = 1
   }
-  ## note that both of these are still better than Bhadra & Mallick
-  # and in particular the first is even better of the "grouping/clustering"
-  # GUESS (where var is blockdiag)
-  # image(gamma, main="Gamma",col=greyscale)
-  # image(as.matrix(G)[s:1,],col=greyscale)
   
   #### Sample the betas
   sd_b = 1
