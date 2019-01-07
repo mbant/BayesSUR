@@ -4,7 +4,7 @@ CFLAGS= -c -Wall -std=c++11 -fopenmp
 OPENLDFLAGS= -larmadillo -lpthread -lopenblas -fopenmp
 NVLDFLAGS= -larmadillo -lpthread -lnvblas -fopenmp
 
-SOURCES_BVS=global.cpp utils.cpp distr.cpp junction_tree.cpp HESS_Chain.cpp dSUR_Chain.cpp SSUR_Chain.cpp ESS_Sampler.h drive.cpp 
+SOURCES_BVS=src/global.cpp src/utils.cpp src/distr.cpp src/junction_tree.cpp src/HESS_Chain.cpp src/dSUR_Chain.cpp src/SSUR_Chain.cpp src/ESS_Sampler.h src/drive.cpp 
 #ESS_Atom.h interface only
 OBJECTS_BVS=$(SOURCES_BVS:.cpp=.o)
 
@@ -31,4 +31,4 @@ BVS_DEBUG: $(OBJECTS_BVS)
 
 clean: 
 	@echo [Cleaning: ]
-	rm *.o ; rm *_Reg ; rm *_Example* ;
+	rm src/*.o ; rm *_Reg ; rm simul* ; rm call.sh ; rm -R results ;
