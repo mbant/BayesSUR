@@ -1,25 +1,10 @@
-#include <vector>
-#include <iostream>
-#include <string>
-#include <armadillo>
-#include <tgmath.h>
-#include <limits>
-#include <omp.h>
-
-#include "global.h"
-#include "utils.h"
-#include "distr.h"
-
-#include "ESS_Sampler.h"
-#include "HESS_Chain.h"
-#include "SSUR_Chain.h"
-#include "dSUR_Chain.h"
+#include "drive.h"
 
 extern omp_lock_t RNGlock; //defined in global.h
 extern std::vector<std::mt19937_64> rng;
 
 int drive_SSUR( arma::mat& Y , arma::mat& X , unsigned int& nChains , unsigned int& nIter , 
-				std::string& inFile , std::string& outFilePath , std::string& gammaSampler , bool gPrior )
+				std::string& inFile , std::string& outFilePath , std::string& gammaSampler , bool usingGPrior )
 {
 
 	// ****************************************
@@ -51,7 +36,7 @@ int drive_SSUR( arma::mat& Y , arma::mat& X , unsigned int& nChains , unsigned i
 
 	// *****************************
 
-	if( gPrior )
+	if( usingGPrior )
 		for(unsigned int m=0; m<nChains; ++m)
 			sampler[m] -> gPriorInit();
 
@@ -258,7 +243,7 @@ int drive_SSUR( arma::mat& Y , arma::mat& X , unsigned int& nChains , unsigned i
 }
 
 int drive_dSUR( arma::mat& Y , arma::mat& X , unsigned int& nChains , unsigned int& nIter , 
-				std::string& inFile , std::string& outFilePath , std::string& gammaSampler , bool gPrior )
+				std::string& inFile , std::string& outFilePath , std::string& gammaSampler , bool usingGPrior )
 {
 
 	// ****************************************
@@ -284,7 +269,7 @@ int drive_dSUR( arma::mat& Y , arma::mat& X , unsigned int& nChains , unsigned i
 
 	// *****************************
 
-	if( gPrior )
+	if( usingGPrior )
 		for(unsigned int m=0; m<nChains; ++m)
 			sampler[m] -> gPriorInit();
 
@@ -470,7 +455,7 @@ int drive_dSUR( arma::mat& Y , arma::mat& X , unsigned int& nChains , unsigned i
 
 
 int drive_HESS( arma::mat& Y , arma::mat& X , unsigned int& nChains , unsigned int& nIter , 
-				std::string& inFile , std::string& outFilePath , std::string& gammaSampler , bool gPrior )
+				std::string& inFile , std::string& outFilePath , std::string& gammaSampler , bool usingGPrior )
 {
 
 	// ****************************************
@@ -494,7 +479,7 @@ int drive_HESS( arma::mat& Y , arma::mat& X , unsigned int& nChains , unsigned i
 
 	// *****************************
 
-	if( gPrior )
+	if( usingGPrior )
 		for(unsigned int m=0; m<nChains; ++m)
 			sampler[m] -> gPriorInit();
 
@@ -653,114 +638,11 @@ int drive_HESS( arma::mat& Y , arma::mat& X , unsigned int& nChains , unsigned i
 
 }
 
-int main(int argc, char *  argv[])
+int drive( unsigned int nIter, unsigned int s, unsigned int p, unsigned int nChains, std::string inFile,
+			std::string outFilePath, std::string method, std::string gammaSampler, bool usingGPrior )
 {
+
 	omp_init_lock(&RNGlock);  // RNG lock for the parallel part
-
-	unsigned int nIter = 10; // default number of iterations
-	unsigned int s=1,p=1;      // might read them from a meta-data file, but for the moment is easier like this..
-	unsigned int nChains = 1;
-
-	std::string inFile = "data.txt";
-	std::string outFilePath = "";
-	std::string omegaInitPath = "";
-
-	std::string method = "";
-	std::string gammaSampler = "Bandit";
-	bool gPrior = false;
-
-    // ### Read and interpret command line (to put in a separate file / function?)
-    int na = 1;
-    while(na < argc)
-    {
-		if ( 0 == strcmp(argv[na],"--method") )
-		{
-			method = std::string(argv[++na]); // use the next
-
-			if( method != "SSUR" && method != "HESS" && method != "dSUR")
-			{
-				std::cout << "Unknown method: only SSUR, dSUR or HESS are available" << std::endl;
-			    return(1); //this is exit if I'm in a function elsewhere
-			}
-
-			if (na+1==argc) break; // in case it's last, break
-			++na; // otherwise augment counter
-		}
-		else if ( 0 == strcmp(argv[na],"--gammaSampler") )
-		{
-			gammaSampler = std::string(argv[++na]); // use the next
-
-			if( gammaSampler != "MC3" && gammaSampler != "mc3" && gammaSampler != "Bandit" && gammaSampler != "bandit")
-			{
-				std::cout << "Unknown gammaSampler method: only Bandit or MC3 are available" << std::endl;
-			    return(1); //this is exit if I'm in a function elsewhere
-			}
-
-			if (na+1==argc) break; // in case it's last, break
-			++na; // otherwise augment counter
-		}
-		else if ( 0 == strcmp(argv[na],"--gPrior") )
-		{
-			gPrior = true;
-
-			if (na+1==argc) break; // in case it's last, break
-			++na; // otherwise augment counter
-		}
-		else if ( 0 == strcmp(argv[na],"--nIter") )
-		{
-			nIter = std::stoi(argv[++na]);
-			if (na+1==argc) break;
-			++na;
-		}
-		// else if ( 0 == strcmp(argv[na],"--jtMethod") )
-		// {
-		// 	jtMethod = std::stoi(argv[++na]); // 0 for single, 1 for multiple
-		// 	if (na+1==argc) break;
-		// 	++na;
-		// }
-		else if ( 0 == strcmp(argv[na],"--nOutcomes") )
-		{
-			s = std::stoi(argv[++na]); // use the next
-			if (na+1==argc) break; // in case it's last, break
-			++na; // otherwise augment counter
-		}
-		else if ( 0 == strcmp(argv[na],"--nPredictors") )
-		{
-			p = std::stoi(argv[++na]); // use the next
-			if (na+1==argc) break; // in case it's last, break
-			++na; // otherwise augment counter
-		}
-		else if ( 0 == strcmp(argv[na],"--nChains") )
-		{
-			nChains = std::stoi(argv[++na]); // use the next
-			if (na+1==argc) break; // in case it's last, break
-			++na; // otherwise augment counter
-		}
-		else if ( 0 == strcmp(argv[na],"--inFile") )
-		{
-			inFile = ""+std::string(argv[++na]); // use the next
-			if (na+1==argc) break; // in case it's last, break
-			++na; // otherwise augment counter
-		}
-		else if ( 0 == strcmp(argv[na],"--outFilePath") )
-		{
-			outFilePath = std::string(argv[++na]); // use the next
-			if (na+1==argc) break; // in case it's last, break
-			++na; // otherwise augment counter
-		}
-		else if ( 0 == strcmp(argv[na],"--omegaInitPath") )
-		{
-			omegaInitPath = ""+std::string(argv[++na]); // use the next
-			if (na+1==argc) break; // in case it's last, break
-			++na; // otherwise augment counter
-		}
-		else
-    {
-	    std::cout << "Unknown option: " << argv[na] << std::endl;
-	    return(1); //this is exit if I'm in a function elsewhere
-    }
-    }//end reading from command line
-
 	std::cout << "Init RNG engine .. " << std::endl;
 
 	// ############# Init the RNG generator/engine
@@ -814,13 +696,13 @@ int main(int argc, char *  argv[])
 	// still if there's a more elegant solution I'd like to find it
 
 	if( method == "SSUR" )
-		status = drive_SSUR(Y,X,nChains,nIter,inFile,outFilePath,gammaSampler,gPrior);
+		status = drive_SSUR(Y,X,nChains,nIter,inFile,outFilePath,gammaSampler,usingGPrior);
 	else if( method == "dSUR" )
-		status = drive_dSUR(Y,X,nChains,nIter,inFile,outFilePath,gammaSampler,gPrior);
+		status = drive_dSUR(Y,X,nChains,nIter,inFile,outFilePath,gammaSampler,usingGPrior);
 	else if( method == "HESS" )
-		status = drive_HESS(Y,X,nChains,nIter,inFile,outFilePath,gammaSampler,gPrior);
+		status = drive_HESS(Y,X,nChains,nIter,inFile,outFilePath,gammaSampler,usingGPrior);
 	else
-		status = drive_SSUR(Y,X,nChains,nIter,inFile,outFilePath,gammaSampler,gPrior); // this makes a default, but
+		status = drive_SSUR(Y,X,nChains,nIter,inFile,outFilePath,gammaSampler,usingGPrior); // this makes a default, but
 			// you shound't reach here if method is wrongly specified
 
 	return status;
