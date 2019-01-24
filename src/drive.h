@@ -18,17 +18,29 @@
 #ifndef DRIVESUR
 #define DRIVESUR
 
-int drive_SSUR( arma::mat& Y , arma::mat& X , unsigned int& nChains , unsigned int& nIter , 
-				std::string& inFile , std::string& outFilePath , std::string& gammaSampler , bool usingGPrior );
+struct Chain_Data
+{
+	Utils::SUR_Data surData;
+	unsigned int nChains , nIter ;
+	std::string gammaSampler;
+	
+	bool usingGPrior;
 
-int drive_dSUR( arma::mat& Y , arma::mat& X , unsigned int& nChains , unsigned int& nIter , 
-				std::string& inFile , std::string& outFilePath , std::string& gammaSampler , bool usingGPrior );
+	arma::mat betaInit;
+	arma::umat gammaInit;
 
+	std::string filePrefix , outFilePath;
+};
+	
 
-int drive_HESS( arma::mat& Y , arma::mat& X , unsigned int& nChains , unsigned int& nIter , 
-				std::string& inFile , std::string& outFilePath , std::string& gammaSampler , bool usingGPrior );
+int drive_SSUR( Chain_Data& chainData );
 
-int drive( unsigned int nIter, unsigned int s, unsigned int p, unsigned int nChains, std::string inFile,
-			std::string outFilePath, std::string method, std::string gammaSampler, bool usingGPrior );
+int drive_dSUR( Chain_Data& chainData );
+
+int drive_HESS( Chain_Data& chainData );
+
+int drive( const std::string& dataFile, const std::string& blockFile, const std::string& structureGraphFile, const std::string& outFilePath,  
+			unsigned int nIter, unsigned int nChains,
+			const std::string& method, const std::string& gammaSampler, const std::string& gammaInit, bool usingGPrior );
 
 #endif

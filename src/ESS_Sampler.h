@@ -3,6 +3,7 @@
 #include <string>
 #include <memory>
 
+#include "utils.h"
 #include "distr.h"
 
 #include "ESS_Atom.h"
@@ -19,8 +20,8 @@ class ESS_Sampler{
     public:
         
         // Constructor - nChains and type of MCMC
-        ESS_Sampler( arma::mat& Y_ , arma::mat& X_ , unsigned int nChains_ , double temperatureRatio );
-        ESS_Sampler( arma::mat& Y_ , arma::mat& X_ , unsigned int nChains_ ) : ESS_Sampler( Y_ , X_ , nChains_ , 1.2 ){}
+        ESS_Sampler( Utils::SUR_Data& surData , unsigned int nChains_ , double temperatureRatio );
+        ESS_Sampler( Utils::SUR_Data& surData , unsigned int nChains_ ) : ESS_Sampler( surData , nChains_ , 1.2 ){}
         
         // this gets one of the chains from the vector
         std::shared_ptr<T>& operator[]( unsigned int );
@@ -61,9 +62,6 @@ class ESS_Sampler{
         // Pointer to chains -  
         // we use pointers so that the client can ask for the original object and manipulate them as he wish
         std::vector<std::shared_ptr<T>> chain;
-
-        // Chain type
-        std::string chainType;
 
         unsigned int updateCounter; // how often do we update the temperatures?
         unsigned int global_proposal_count, global_acc_count;

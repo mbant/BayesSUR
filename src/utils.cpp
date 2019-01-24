@@ -9,104 +9,197 @@
 
 namespace Utils{
 
-
-	bool readData(std::string fileName, unsigned int &nOutcomes, unsigned int &nPredictors, unsigned int &nObservations, arma::mat &Y, arma::mat& X)
+	bool readData(const std::string& dataFileName, std::shared_ptr<arma::mat> data)
 	{
 
-		bool status = X.load(fileName,arma::raw_ascii);
+		bool status = data->load(dataFileName,arma::raw_ascii);
+		if( !status )
+			throw badFile();
 
-		if(!status){ 
-			std::cout<< "Somethign went wrong while reading "<<fileName<<std::endl;
-			return false;
-		}else{
+		return status;
+	}
 
-			if(X.n_cols < (nOutcomes+nPredictors) ){
-				std::cout<< "Less columns than the sum of the specified outcomes and predictors. Specify the correct numbers. "<<std::endl;
-				return false;
-			}
+	bool readGraph(const std::string& graphFileName, arma::umat& graph)
+	{
 
-			Y = X.cols(0,nOutcomes-1);
-			X.shed_cols(0,nOutcomes-1);
+		bool status = graph.load(graphFileName,arma::raw_ascii);
+		if( !status )
+			throw badFile();
 
-			nObservations = Y.n_rows;
+		return status;
+	}
 
-			if( nPredictors < X.n_cols){
-				X.shed_cols(nPredictors,X.n_cols-1);
-				std::cout<< "More predictors read then what specified in p=" << nPredictors << " -- I kept the firsts and discarded the others." << std::endl;
-				nPredictors = X.n_cols;
-			}
+	bool readBlocks(const std::string& blocksFileName, arma::ivec& blockLabels)
+	{
 
-			if( nOutcomes < Y.n_cols){
-				Y.shed_cols(nOutcomes,Y.n_cols-1);
-				std::cout<< "More outcomes read then what specified in q=" << nOutcomes << " -- I kept the firsts and discarded the others." << std::endl;
-				nOutcomes = Y.n_cols;
-			}
+		bool status = blockLabels.load(blocksFileName,arma::raw_ascii);
+		if( !status )
+			throw badFile();
+
+		// checks on the blockLabels
+		// index 0 stands for the Xs, predictors
+		// index 1+ are the upper-level outcomes
+		// -1 are for variable to be excluded from analysis
+		// so we always need at least some zeros and some ones
+		arma::ivec uniqueblockLabels = arma::unique(blockLabels);
+
+		if( arma::max( blockLabels ) < 1 || uniqueblockLabels.n_elem < 2 ) // more indepth check would be length of positive indexes..
+			throw badBlocks();
+
+		// remember R produces these labels and thus checks the dimensions (need to correspond to data dimensions) before entering the C++ code
+		return status;
+	}
+
+	void removeDisposable(std::shared_ptr<arma::mat> data, arma::ivec& blockLabels)
+	{
+		arma::uword shedIdx;
+		while( arma::any( arma::find(blockLabels < 0)) )
+		{
+			shedIdx = arma::as_scalar(arma::find(blockLabels < 0 , 1 , "first"));
+			
+			// then shed the rest		
+			data->shed_col( shedIdx );
+			blockLabels.shed_row( shedIdx ); //shed the blockIdx as well!
 		}
-
-		return true;
+		return;
 	}
 
 
-	bool readDataSEM(std::string fileName, arma::mat &data, arma::ivec &blockIndexes, arma::ivec &variableType,
-		arma::uvec &missingDataIndexes, arma::uvec &nOutcomes, unsigned int &nPredictors, unsigned int &nObservations)
+	void getBlockDimensions(const arma::ivec& blockLabels, const arma::umat& structureGraph,
+							const std::shared_ptr<arma::mat>& data, unsigned int& nObservations,
+							unsigned int& nOutcomes, std::shared_ptr<arma::uvec> outcomeIndexes, 
+							unsigned int& nPredictors, unsigned int& nVSPredictors, unsigned int& nFixedPredictors,
+							std::shared_ptr<arma::uvec> VSPredictorsIndexes, std::shared_ptr<arma::uvec> fixedPredictorsIndexes)
 	{
+		// define the structure
+		arma::uvec allOutcomeLabels = arma::find( arma::sum(structureGraph,0)!=0 );  // structureGraph(i,j) != 0 means an arrow j->i
+		unsigned int nEquations = allOutcomeLabels.n_elem;
+		if ( nEquations > 1 || nEquations == 0 )
+			throw badSURGraph();
 
-		bool status = data.load(fileName,arma::raw_ascii);
-		arma::uvec jnk;
-		arma::ivec ijnk;
+		unsigned int outcomeLabel{ arma::as_scalar( arma::find( arma::sum(structureGraph,1)!=0 ) ) };
 		
-		if(!status){ 
-			std::cout<< "Somethign went wrong while reading "<<fileName<<std::endl;
-			return false;
-		}else{
+		// dimensions variables
+		nObservations = data->n_rows;
 
-			// the first row is a row of blockIndexes
-			blockIndexes = arma::conv_to<arma::ivec>::from( data.row(0)/*.t()*/ );
-			data.shed_row(0);
-			
-			// checks on the blockIndexes
-			// index 0 stands for the Xs, predictors
-			// index 1+ are the upper-level outcomes
-			// so we always need at least some zeros and some ones
-			ijnk = arma::unique(blockIndexes);
-			if( arma::max( blockIndexes ) < 1 || jnk.n_elem < 2 ) // more indepth check would be length of positive indexes..
-			{
-				std::cout<< "You need to define at least two blocks -- Xs (block 0) and Ys (block 1)"<<std::endl;
-				return false;
-			}
+		// outcomes
+		arma::uvec outcomeIndexes = arma::find( blockLabels == outcomeLabel );   // groups in the graph are ordered by their position in the blockList
+		nOutcomes = outcomeIndexes->n_elem;
+		
+		// Predictors
+		arma::uvec VSPredictorsLabels = arma::find( structureGraph.row(outcomeLabel) == 1 );
+		arma::uvec fixedPredictorsLabels = arma::find( structureGraph.row(outcomeLabel) == 2 );
 
+		// reset
+		VSPredictorsIndexes->clear();
+		fixedPredictorsIndexes->clear();
 
-			// the second row is a row of variableType
-			variableType = arma::conv_to<arma::ivec>::from( data.row(0)/*.t()*/ );
-			data.shed_row(0);
-			
-
-			// miscellanea variables
-			for( int i=0, n=arma::max(blockIndexes) ; i<n ; ++i )
-			{
-				jnk = arma::find( blockIndexes == i );   // meh, hate this temporary but is needed
-				nOutcomes(i) = jnk.n_elem;
-			}
-			// first index is the number of predictors
-			nPredictors = nOutcomes(0);
-			nOutcomes.shed_row(0);
-			
-			nObservations = data.n_rows;
-
-			// Now deal with NANs
-			if( data.has_nan() )
-			{
-				missingDataIndexes = arma::find_nonfinite(data);
-				data(missingDataIndexes).fill( arma::datum::nan );  // This makes all the ind values into valid armadillo NANs (should be ok even without, but..)
-			}
-			else
-			{
-				missingDataIndexes.set_size(0);
-			}
-			
+		for( auto label : VSPredictorsLabels )
+		{
+			VSPredictorsIndexes->insert_rows( VSPredictorsIndexes->n_elem , arma::find( blockLabels == label ) );
 		}
 
-		return true;
+		for( auto label : fixedPredictorsLabels )
+		{
+			fixedPredictorsIndexes->insert_rows( fixedPredictorsIndexes->n_elem , arma::find( blockLabels == label ) );
+		}
+
+		nVSPredictors = VSPredictorsIndexes->n_elem;
+		nFixedPredictors = fixedPredictorsIndexes->n_elem;
+		nPredictors = nVSPredictors + nFixedPredictors;
+
+		return;
+	}
+
+
+	/* Computes the set-difference from two vectors of indexes */
+	arma::uvec arma_setdiff_idx(const arma::uvec& x, const arma::uvec& y)
+	{
+
+		arma::uvec ux = arma::unique(x);
+		arma::uvec uy = arma::unique(y);
+
+		for (size_t j = 0; j < uy.n_elem; j++) {
+			arma::uvec q1 = arma::find(ux == uy[j]);
+			if (!q1.empty()) {
+				ux.shed_row(q1(0));
+			}
+		}
+
+		return ux;
+	}	
+
+	void initMissingData(std::shared_ptr<arma::mat> data, std::shared_ptr<arma::umat> missingDataArrayIndexes, std::shared_ptr<arma::uvec> completeCases, bool print=false )
+	{
+
+		const unsigned int nObservations = data->n_rows;
+		arma::uvec missingDataVecIdx;
+
+		// Now deal with NANs
+		if( data->has_nan() )
+		{
+			missingDataVecIdx = arma::find_nonfinite(*data);
+			(*data)(missingDataVecIdx).fill( arma::datum::nan );  // This makes all the ind values into valid armadillo NANs (should be ok even without, but..)
+		}
+
+		// Init the missing data array in a more readable way, i.e. in a row,column format
+		if( missingDataVecIdx.n_elem > 0 )
+		{
+			// create an array of indexes with rows and columns
+			(*missingDataArrayIndexes) = arma::umat(missingDataVecIdx.n_elem,2);
+			for( unsigned int j=0, n=missingDataVecIdx.n_elem; j<n; ++j)
+			{
+				(*missingDataArrayIndexes)(j,1) = std::floor( missingDataVecIdx(j) / nObservations ); // this is the corresponding column
+				(*missingDataArrayIndexes)(j,0) = missingDataVecIdx(j) - (*missingDataArrayIndexes)(j,1) * nObservations; // this is the row
+			}
+			(*completeCases) = Utils::arma_setdiff_idx( arma::regspace<arma::uvec>(0, nObservations-1)   , missingDataArrayIndexes->col(0) );
+		
+		}else{
+
+			(*missingDataArrayIndexes) = arma::umat(0,2);
+			(*completeCases) = arma::regspace<arma::uvec>(0, nObservations-1);
+		} 
+
+		if( print )
+		{
+			std::cout << 100. * missingDataVecIdx.n_elem/(double)(nObservations*data->n_cols) <<"% of missing data.." <<std::flush<<std::endl;
+			std::cout << 100. * completeCases->n_elem/(double)(nObservations) <<"% of Complete cases" <<std::flush<<std::endl;
+		}
+
+		return;
+	}
+
+	void standardiseData( std::shared_ptr<arma::mat> data, const std::shared_ptr<arma::uvec>& outcomeIndexes, 
+						const std::shared_ptr<arma::uvec>& VSPredictorsIndexes, const std::shared_ptr<arma::uvec>& fixedPredictorsIndexes)
+	{
+		// standardise data
+		data->each_col( [](arma::vec& a){ a = ( a - arma::mean(a) ) / arma::stddev(a); } ); // no need to separate between Ys and Xs sincw=e we stdaze each column independently
+		// i'll keep the extra function arguments in case something changes
+
+	}
+
+
+	void formatData( const std::string& dataFileName, const std::string& blockFileName, const std::string& structureGraphFileName,  SUR_Data& surData )
+	{
+		
+		bool status = readData(dataFileName,surData.data);
+		status = status && readBlocks(blockFileName,surData.blockLabels);
+		status = status && readGraph(structureGraphFileName,surData.structureGraph);
+
+		if( !status )
+			throw badRead();
+		
+		removeDisposable(surData.data,surData.blockLabels); // variables indexed by negative indexes are deemed unnecessary by the user, remove them
+
+
+		getBlockDimensions( surData.blockLabels, surData.structureGraph, surData.data, surData.nObservations,
+							surData.nOutcomes, surData.outcomesIdx, surData.nPredictors, surData.nVSPredictors, surData.nFixedPredictors,
+							surData.VSPredictorsIdx, surData.fixedPredictorsIdx);
+
+		initMissingData( surData.data, surData.missingDataArrayIdx, surData.completeCases, false );
+
+		standardiseData( surData.data, surData.outcomesIdx, surData.VSPredictorsIdx, surData.fixedPredictorsIdx );
+
 	}
 
 

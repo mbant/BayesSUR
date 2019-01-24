@@ -2,21 +2,26 @@
 #include <string>
 
 // redeclare the drive funciton
-int drive( unsigned int nIter, unsigned int s, unsigned int p, unsigned int nChains, std::string inFile,
-			std::string outFilePath, std::string method, std::string gammaSampler, bool usingGPrior );
+int drive( const std::string& dataFile, const std::string& blockFile, const std::string& structureGraphFile, const std::string& outFilePath,  
+			unsigned int nIter, unsigned int nChains,
+			const std::string& method, const std::string& gammaSampler, const std::string& gammaInit, bool usingGPrior );
 
 int main(int argc, char *  argv[])
 {
 
 	unsigned int nIter = 10; // default number of iterations
-	unsigned int s=1,p=1;      // might read them from a meta-data file, but for the moment is easier like this..
 	unsigned int nChains = 1;
 
-	std::string inFile = "data.txt";
+	std::string dataFile = "data.txt";
+	std::string blockFile = "blocks.txt";
+	std::string structureGraphFile = "structureGraph.txt";
+
 	std::string outFilePath = "";
 
-	std::string method = "";
+	std::string method = "SSUR";
 	std::string gammaSampler = "Bandit";
+	std::string gammaInit = "MLE";
+	
 	bool usingGPrior = false;
 
     // ### Read and interpret command line (to put in a separate file / function?)
@@ -49,6 +54,19 @@ int main(int argc, char *  argv[])
 			if (na+1==argc) break; // in case it's last, break
 			++na; // otherwise augment counter
 		}
+		else if ( 0 == std::string{argv[na]}.compare(std::string{"--gammaInit"}) )
+		{
+			gammaSampler = std::string(argv[++na]); // use the next
+
+			if( gammaInit != "R" && gammaInit != "0" && gammaInit != "1" && gammaInit != "MLE")
+			{
+				std::cout << "Unknown gammaInit method: only allowed:\n\t*\tR: random init (0.5 probability)\n\t*\t0: all elements set to 0\n\t*\t1: all elements set to 1\n\t*\tMLE: computes MLE for beta and init gamma for all significant coeffs" << std::endl;
+			    return(1); //this is exit if I'm in a function elsewhere
+			}
+
+			if (na+1==argc) break; // in case it's last, break
+			++na; // otherwise augment counter
+		}
 		else if ( 0 == std::string{argv[na]}.compare(std::string{"--gPrior"}) )
 		{
 			usingGPrior = true;
@@ -62,27 +80,27 @@ int main(int argc, char *  argv[])
 			if (na+1==argc) break;
 			++na;
 		}
-		else if ( 0 == std::string{argv[na]}.compare(std::string{"--nOutcomes"}) )
-		{
-			s = std::stoi(argv[++na]); // use the next
-			if (na+1==argc) break; // in case it's last, break
-			++na; // otherwise augment counter
-		}
-		else if ( 0 == std::string{argv[na]}.compare(std::string{"--nPredictors"}) )
-		{
-			p = std::stoi(argv[++na]); // use the next
-			if (na+1==argc) break; // in case it's last, break
-			++na; // otherwise augment counter
-		}
 		else if ( 0 == std::string{argv[na]}.compare(std::string{"--nChains"}) )
 		{
 			nChains = std::stoi(argv[++na]); // use the next
 			if (na+1==argc) break; // in case it's last, break
 			++na; // otherwise augment counter
 		}
-		else if ( 0 == std::string{argv[na]}.compare(std::string{"--inFile"}) )
+		else if ( 0 == std::string{argv[na]}.compare(std::string{"--dataFile"}) )
 		{
-			inFile = ""+std::string(argv[++na]); // use the next
+			dataFile = ""+std::string(argv[++na]); // use the next
+			if (na+1==argc) break; // in case it's last, break
+			++na; // otherwise augment counter
+		}
+		else if ( 0 == std::string{argv[na]}.compare(std::string{"--blockFile"}) )
+		{
+			blockFile = ""+std::string(argv[++na]); // use the next
+			if (na+1==argc) break; // in case it's last, break
+			++na; // otherwise augment counter
+		}
+		else if ( 0 == std::string{argv[na]}.compare(std::string{"--graphFile"}) )
+		{
+			structureGraphFile = ""+std::string(argv[++na]); // use the next
 			if (na+1==argc) break; // in case it's last, break
 			++na; // otherwise augment counter
 		}
@@ -100,6 +118,6 @@ int main(int argc, char *  argv[])
     }//end reading from command line
 
 
-	return drive(nIter,s,p,nChains,inFile,outFilePath,method,gammaSampler,usingGPrior);
+	return drive(dataFile,blockFile,structureGraphFile,outFilePath,nIter,nChains,method,gammaSampler,gammaInit,usingGPrior);
 
 }

@@ -23,7 +23,7 @@ class ESS_Atom
     public:
 
         // NEED TO IMPLEMENT A CONSTRUCTOR AS BELOW
-        // ESS_Atom( arma::mat& Y_ , arma::mat& X_ , double temperature_ );
+        // ESS_Atom( Utils::SUR_Data& surData , double temperature_ );
 
         virtual void step() = 0;
 

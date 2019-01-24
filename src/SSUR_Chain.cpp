@@ -4,163 +4,75 @@
 // Constructors
 // *******************************
 
-// empty, everything is default, except the data
-SSUR_Chain::SSUR_Chain( arma::mat& externalY , arma::mat& externalX , double externalTemperature = 1. )
-{
 
-    setData( std::make_shared<arma::mat>(externalY), std::make_shared<arma::mat>(externalX) );
-
-    temperature = externalTemperature;
-
-    internalIterationCounter = 0;
-    jtStartIteration = 0;
-
-    gammaSamplerType = "Bandit";
-    gPrior = false;
+SSUR_Chain::SSUR_Chain( std::shared_ptr<arma::mat> data, unsigned int nObservations, 
+            unsigned int nOutcomes, unsigned int nVSPredictors, unsigned int nFixedPredictors,
+            std::shared_ptr<arma::uvec> outcomesIdx, std::shared_ptr<arma::uvec> VSPredictorsIdx,
+            std::shared_ptr<arma::uvec> fixedPredictorIdx, std::shared_ptr<arma::umat> NAArrayIdx, std::shared_ptr<arma::uvec> completeCases, 
+            std::string gammaSamplerType_ = "Bandit", bool usingGprior = false, double externalTemperature = 1. ):
+    data(data), outcomesIdx(outcomesIdx), VSPredictorsIdx(VSPredictorsIdx), fixedPredictorsIdx(fixedPredictorsIdx),
     
-    banditInit();
-    MC3Init();    
+    missingDataArrayIdx(NAArrayIdx), completeCases(completeCases),gammaSamplerType(gammaSamplerType_),gPrior(usingGprior),
+    temperature(externalTemperature),internalIterationCounter(0),jtStartIteration(0)
+    {
 
-    tauInit();
-    etaInit();
-    jtInit();
-    oInit();
-    piInit();
-    gammaInit();
-    wInit();
+        predictorsIdx = std::make_shared<arma::uvec>(arma::join_rows( *fixedPredictorsIdx, *VSPredictorsIdx ));
+        setXtX();
 
-    betaInit();
-    sigmaRhoInit();
-
-    updateQuantities();
-
-    logLikelihood();
-
-    // init for sigma rho and beta to reasonable values -- one step of gibbs
-    stepSigmaRhoAndBeta();
-
-}
-
-SSUR_Chain::SSUR_Chain( arma::mat& externalY , arma::mat& externalX , std::string& gammaSamplerType_ , bool gPrior_ , double externalTemperature = 1. ):
-    SSUR_Chain(externalY, externalX, externalTemperature){ gammaSamplerType = gammaSamplerType_ ; gPrior = gPrior_; }
-
-// full, every parameter object is initialised from existing objects
-SSUR_Chain::SSUR_Chain( arma::mat& externalY , arma::mat& externalX , // Y and X
-        double tau_init , double eta_init , JunctionTree& jt_init , arma::mat& sigmaRho_init , // tau, eta, jt, sigmaRho 
-        arma::vec& o_init , arma::vec& pi_init , arma::umat& gamma_init , double w_init , arma::mat& beta_init , // o, pi, gamma, w, beta
-        double externalTemperature = 1. ) // temperature
-{
-    std::string banditSampler = "bandit";
-    bool gPrior_ = false;
-    SSUR_Chain( externalY , externalX , tau_init , eta_init , jt_init , sigmaRho_init , o_init , pi_init , 
-        gamma_init , w_init , beta_init , banditSampler , gPrior_ , externalTemperature );
-}
-
-
-// full, every parameter object is initialised from existing objects, plus the type of gamma sampler
-SSUR_Chain::SSUR_Chain( arma::mat& externalY , arma::mat& externalX , // Y and X
-        double tau_init , double eta_init , JunctionTree& jt_init , arma::mat& sigmaRho_init , // tau, eta, jt, sigmaRho 
-        arma::vec& o_init , arma::vec& pi_init , arma::umat& gamma_init , double w_init , arma::mat& beta_init , // o, pi, gamma, w, beta
-        std::string gammaSamplerType_ , bool gPrior_ , double externalTemperature = 1. ) // gamma sampler type , temperature
-{
-
-    setData( std::make_shared<arma::mat>(externalY), std::make_shared<arma::mat>(externalX) );
-
-    temperature = externalTemperature;
-
-    internalIterationCounter = 0;
-    jtStartIteration = 0;
-
-    gammaSamplerType = gammaSamplerType_;
-    if( gammaSamplerType == "B" || gammaSamplerType == "bandit" || gammaSamplerType == "Bandit" || gammaSamplerType == "b" )
         banditInit();
-    else
         MC3Init();    
 
-    gPrior = gPrior_ ;
+        tauInit();
+        etaInit();
+        jtInit();
+        oInit();
+        piInit();
+        gammaInit();
+        wInit();
 
-    tauInit( tau_init );
-    etaInit( eta_init );
-    jtInit( jt_init );
-    oInit( o_init );
-    piInit( pi_init );
-    gammaInit( gamma_init );
-    wInit( w_init );
+        betaInit();
+        sigmaRhoInit();
 
-    betaInit( beta_init );
-    sigmaRhoInit( sigmaRho_init );
+        updateQuantities();
 
-    updateQuantities();
+        logLikelihood();
 
-    logLikelihood();
+        // init for sigma rho and beta to reasonable values -- one step of gibbs
+        stepSigmaRhoAndBeta();
+    }
 
 
-}
+SSUR_Chain::SSUR_Chain( Utils::SUR_Data& surData, std::string gammaSamplerType_ = "Bandit", bool usingGprior = false, double externalTemperature = 1. ):
+    SSUR_Chain(surData.data,surData.nObservations,surData.nOutcomes,surData.nVSPredictors,surData.nFixedPredictors,
+        surData.outcomesIdx,surData.VSPredictorsIdx,surData.fixedPredictorsIdx,surData.missingDataArrayIdx,surData.completeCases,
+        gammaSamplerType_,usingGprior,externalTemperature){ }
+
+SSUR_Chain::SSUR_Chain( Utils::SUR_Data& surData, double externalTemperature = 1. ):
+    SSUR_Chain(surData.data,surData.nObservations,surData.nOutcomes,surData.nVSPredictors,surData.nFixedPredictors,
+        surData.outcomesIdx,surData.VSPredictorsIdx,surData.fixedPredictorsIdx,surData.missingDataArrayIdx,surData.completeCases,
+        "Bandit",false,externalTemperature){ }
+
 
 // *******************************
 // Getters and Setters
 // *******************************
 
-// data
-std::shared_ptr<arma::mat> SSUR_Chain::getY() const{ return Y ; }
-
-std::shared_ptr<arma::mat> SSUR_Chain::getX() const{ return X ; }
-
-void SSUR_Chain::setData( std::shared_ptr<arma::mat> externalY , std::shared_ptr<arma::mat> externalX )
+void SSUR_Chain::setXtX()
 { 
-    Y = externalY ;
-    
-    n = (*Y).n_rows;
-    s = (*Y).n_cols;
-
-    X = externalX ;
-
-    if( arma::all( (*X).col(0) == 1. ) )
-    {
-        // if the intercept is there, remove it temporarilty
-        (*X).shed_col(0);
-    }
-
-    p = (*X).n_cols;
-
-    // standardise data
-    (*Y).each_col( [](arma::vec& a){ a = ( a - arma::mean(a) ) / arma::stddev(a); } );
-    (*X).each_col( [](arma::vec& a){ a = ( a - arma::mean(a) ) / arma::stddev(a); } );
-    
-    // add intercept (again)
-    (*X).insert_cols(0, arma::ones<arma::vec>(n) );
 
     // Compute XtX
-    if( p < 3000 )  // kinda arbitrary value, how can we assess a more sensible one?
+    if( (nFixedPredictors+nVSPredictors) < 3000 )  // kinda arbitrary value, how can we assess a more sensible one?
     {
         preComputedXtX = true;
-        XtX = (*X).t() * (*X);
-        corrMatX = arma::cor( (*X).submat(0,1,n-1,p) );  // this need to be on pxp values, not with the intercept
+        XtX = data->cols( *predictorsIdx ).t() * data->cols( *predictorsIdx );
+        corrMatX = arma::cor( data->submat(arma::regspace<arma::uvec>(0,nObservations-1), *VSPredictorsIdx ) );  // this is only for values to be selected
     }else{
 
         preComputedXtX = false;
-        XtX = arma::mat();          // if not precomputed, these two are just reset
-        corrMatX = arma::mat();
+        XtX.clear();          // if not precomputed, these two are just reset
+        corrMatX.clear();
     }
-
-
-    // this should never be called once the model is set. 
-    // In case it is, all the liklihood-impacted states are reset
-    gamma = arma::zeros<arma::umat>(p,s);
-    beta = arma::zeros<arma::mat>(p+1,s);
-    jt = JunctionTree();
-    sigmaRho = arma::eye(s,s);
-    
-    log_likelihood = -std::numeric_limits<double>::infinity();
-
 }
-
-arma::mat& SSUR_Chain::getXtX(){ return XtX ; }
-
-unsigned int SSUR_Chain::getN() const{ return n ; }
-unsigned int SSUR_Chain::getP() const{ return p ; }
-unsigned int SSUR_Chain::getS() const{ return s ; }
-// no setters as they are linked to the data
 
 // gPrior
 void SSUR_Chain::gPriorInit() // g Prior can only be init at the start, so no proper set method
@@ -176,7 +88,7 @@ void SSUR_Chain::gPriorInit() // g Prior can only be init at the start, so no pr
     gPrior = true;
     
     // re-initialise the w parameter in line with the new prior, as w now has a different meaning
-    wInit( (double)n , 0.5*s + s -1. , 0.5*n*s ); // these values are taken from Lewin 2016
+    wInit( (double)nObservations , 0.5*nOutcomes + nOutcomes -1. , 0.5*nObservations*nOutcomes ); // these values are taken from Lewin 2016
     
     // update internals
     logPW();
@@ -603,7 +515,7 @@ void SSUR_Chain::jtInit( JunctionTree& jt_init )
 
 void SSUR_Chain::jtInit()
 {
-    jt = JunctionTree( s , "empty" ); //empty constructor, diagonal adj matrix of dimension s
+    jt = JunctionTree( nOutcomes , "empty" ); //empty constructor, diagonal adj matrix of dimension s
     // jt = JunctionTree( s , "full" ); // full constructor, dense adj matrix of dimension s
  
     jt_acc_count = 0.;
@@ -623,13 +535,13 @@ void SSUR_Chain::sigmaRhoInit( arma::mat& sigmaRho_init , double nu_ )
 
 void SSUR_Chain::sigmaRhoInit()
 {
-    arma::mat init = arma::eye<arma::mat>(s,s);
-    sigmaRhoInit( init , s+2. );
+    arma::mat init = arma::eye<arma::mat>(nOutcomes,nOutcomes);
+    sigmaRhoInit( init , nOutcomes+2. );
 }
 
 void SSUR_Chain::sigmaRhoInit( arma::mat& sigmaRho_init )
 {
-    sigmaRhoInit( sigmaRho_init , s+2. );
+    sigmaRhoInit( sigmaRho_init , nOutcomes+2. );
 }
 
 void SSUR_Chain::oInit( arma::vec& o_init , double a_o_ , double b_o_ , double var_o_proposal_ )
@@ -645,13 +557,13 @@ void SSUR_Chain::oInit( arma::vec& o_init , double a_o_ , double b_o_ , double v
 
 void SSUR_Chain::oInit()
 {
-    arma::vec init = arma::ones<arma::vec>(s) / std::max( 500. , (double)p ) ;
-    oInit( init , 2. , (double)p-2. , 0.005 );
+    arma::vec init = arma::ones<arma::vec>(nOutcomes) / std::max( 500. , (double)nVSPredictors ) ;
+    oInit( init , 2. , (double)nVSPredictors-2. , 0.005 );
 }
 
 void SSUR_Chain::oInit( arma::vec& o_init )
 {
-    oInit( o_init , 2. , (double)p-2. , 0.005 );
+    oInit( o_init , 2. , (double)nVSPredictors-2. , 0.005 );
 }
 
 void SSUR_Chain::piInit( arma::vec& pi_init , double a_pi_ , double b_pi_ , double var_pi_proposal_ )
@@ -667,7 +579,7 @@ void SSUR_Chain::piInit( arma::vec& pi_init , double a_pi_ , double b_pi_ , doub
 
 void SSUR_Chain::piInit()
 {
-    arma::vec init = arma::ones<arma::vec>(p) ;
+    arma::vec init = arma::ones<arma::vec>(nVSPredictors) ;
     piInit( init , 2. , 1. , 0.02 );
 }
 
@@ -686,7 +598,7 @@ void SSUR_Chain::gammaInit( arma::umat& gamma_init )
 
 void SSUR_Chain::gammaInit()
 {
-    arma::umat init = arma::zeros<arma::umat>(p,s);
+    arma::umat init = arma::zeros<arma::umat>(nVSPredictors,nOutcomes);
     gammaInit( init );
 }
 
@@ -726,7 +638,7 @@ void SSUR_Chain::betaInit( arma::mat& beta_init )
 
 void SSUR_Chain::betaInit()
 {
-    arma::mat init = arma::zeros<arma::mat>(p+1,s);
+    arma::mat init = arma::zeros<arma::mat>(nFixedPredictors+nVSPredictors,nOutcomes);
     betaInit( init );
 }
 
@@ -778,9 +690,9 @@ double SSUR_Chain::logPEta( double eta_ )
 double SSUR_Chain::logPJT( const JunctionTree& externalJT , double eta_ )
 {
     double logP = 0.;
-    for(unsigned int k=0; k<(s-1); ++k)
+    for(unsigned int k=0; k<(nOutcomes-1); ++k)
     {
-        for(unsigned int l=k+1; l<s; ++l)
+        for(unsigned int l=k+1; l<nOutcomes; ++l)
         {
             logP += Distributions::logPDFBernoulli( externalJT.adjacencyMatrix(k,l) , eta_ );
         }
@@ -856,7 +768,7 @@ double SSUR_Chain::logPSigmaRho( const arma::mat&  externalSigmaRho , double nu_
             // *** Diagonal Element
 
             // Compute parameters
-            a = 0.5 * ( nu_ - s + nConditioninIndexes + 1. ) ;
+            a = 0.5 * ( nu_ - nOutcomes + nConditioninIndexes + 1. ) ;
             b = 0.5 * thisSigmaTT ;
 
             logP += Distributions::logPDFIGamma(  externalSigmaRho(l,l), a , b );
@@ -890,7 +802,7 @@ double SSUR_Chain::logPSigmaRho( const arma::mat&  externalSigmaRho )
 double SSUR_Chain::logPO( const arma::vec& o_ , double a_o_ , double b_o_ )
 {
     double logP = 0.;
-    for(unsigned int k=0; k<s; ++k)
+    for(unsigned int k=0; k<nOutcomes; ++k)
         logP += Distributions::logPDFBeta( o_(k) , a_o_, b_o_ );
 
     return logP;
@@ -912,7 +824,7 @@ double SSUR_Chain::logPO( const arma::vec& o_ )
 double SSUR_Chain::logPPi( arma::vec& pi_ , double a_pi_ , double b_pi_ )
 {
     double logP = 0.;
-    for(unsigned int j=0; j<p; ++j)
+    for(unsigned int j=0; j<nVSPredictors; ++j)
         logP += Distributions::logPDFGamma( pi_(j) , a_pi_, b_pi_ );
 
     return logP;    
@@ -932,9 +844,9 @@ double SSUR_Chain::logPPi( arma::vec& pi_ )
 double SSUR_Chain::logPGamma( const arma::umat& externalGamma , const arma::vec& o_ , const arma::vec& pi_ )
 {
     double logP = 0.;
-    for(unsigned int j=0; j<p; ++j)
+    for(unsigned int j=0; j<nVSPredictors; ++j)
     {
-        for(unsigned int k=0; k<s; ++k)
+        for(unsigned int k=0; k<nOutcomes; ++k)
         {
             if( ( o_(k) * pi_(j) ) > 1 )
                 return -std::numeric_limits<double>::infinity();
@@ -990,21 +902,21 @@ double SSUR_Chain::logPBetaMask( const arma::mat&  externalBeta , const arma::um
     if( gPrior )
     {
         arma::uvec xi = arma::conv_to<arma::uvec>::from(jt.perfectEliminationOrder);
-        arma::vec xtxMultiplier(s);
+        arma::vec xtxMultiplier(nOutcomes);
 
         // prepare posterior full conditional's hyperparameters
-        xtxMultiplier(xi(s-1)) = 0;
+        xtxMultiplier(xi(nOutcomes-1)) = 0;
 
-        for( unsigned int k=0; k < (s-1); ++k)
+        for( unsigned int k=0; k < (nOutcomes-1); ++k)
         {
             xtxMultiplier(xi(k)) = 0;
-            for(unsigned int l=k+1 ; l<s ; ++l)
+            for(unsigned int l=k+1 ; l<nOutcomes ; ++l)
             {
                 xtxMultiplier(xi(k)) += pow( sigmaRho(xi(l),xi(k)) , 2 ) / sigmaRho(xi(l),xi(l));
             }
         }
 
-        for(unsigned int k=0; k<s ; ++k)
+        for(unsigned int k=0; k<nOutcomes ; ++k)
         {
             singleIdx_k(0) = k;
             VS_IN_k = mask_( arma::find( mask_.col(1) == k ) , arma::zeros<arma::uvec>(1) );
@@ -1014,12 +926,13 @@ double SSUR_Chain::logPBetaMask( const arma::mat&  externalBeta , const arma::um
                     arma::inv_sympd( XtX(VS_IN_k,VS_IN_k) ) , ( 1./ sigmaRho(k,k) + xtxMultiplier(k) ) );
             else
                 logP += logPBetaMaskgPriorK( externalBeta(VS_IN_k,singleIdx_k) , w_ , 
-                    arma::inv_sympd( (*X).cols(VS_IN_k).t() * (*X).cols(VS_IN_k) ) , ( 1./ sigmaRho(k,k) + xtxMultiplier(k) ) );
+                    arma::inv_sympd( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) , 
+                        ( 1./ sigmaRho(k,k) + xtxMultiplier(k) ) );
         }
 
     }else{
 
-        for(unsigned int k=0; k<s ; ++k)
+        for(unsigned int k=0; k<nOutcomes ; ++k)
         {
             singleIdx_k(0) = k;
             VS_IN_k = mask_( arma::find( mask_.col(1) == k) , arma::zeros<arma::uvec>(1) );
@@ -1054,9 +967,9 @@ double SSUR_Chain::logLikelihood( )
 {
     double logP = 0.;
     #pragma omp parallel for default(shared) reduction(+:logP)
-    for( unsigned int k=0; k<s; ++k)
+    for( unsigned int k=0; k<nOutcomes; ++k)
     {
-        logP += Distributions::logPDFNormal( (*Y).col(k) , (XB.col(k)+rhoU.col(k)) , sigmaRho(k,k));
+        logP += Distributions::logPDFNormal( data->col( (*outcomesIdx)(k) ) , (XB.col(k)+rhoU.col(k)) , sigmaRho(k,k));
     }
 
     logP /= temperature;
@@ -1071,9 +984,9 @@ double SSUR_Chain::logLikelihood( const arma::umat&  externalGammaMask , const a
 {
         double logP = 0.;
 		#pragma omp parallel for default(shared) reduction(+:logP)
-		for( unsigned int k=0; k<s; ++k)
+		for( unsigned int k=0; k<nOutcomes; ++k)
 		{
-			logP += Distributions::logPDFNormal( (*Y).col(k) , (externalXB.col(k) + externalRhoU.col(k)) ,  externalSigmaRho(k,k));
+			logP += Distributions::logPDFNormal( data->col( (*outcomesIdx)(k) ) , (externalXB.col(k) + externalRhoU.col(k)) ,  externalSigmaRho(k,k));
 		}
 
 		return logP/temperature;
@@ -1091,9 +1004,9 @@ double SSUR_Chain::logLikelihood( arma::umat&  externalGammaMask , arma::mat& ex
 
     double logP = 0.;
     #pragma omp parallel for default(shared) reduction(+:logP)
-    for( unsigned int k=0; k<s; ++k)
+    for( unsigned int k=0; k<nOutcomes; ++k)
     {
-        logP += Distributions::logPDFNormal( (*Y).col(k) , ( externalXB.col(k) + externalRhoU.col(k)) ,  externalSigmaRho(k,k));
+        logP += Distributions::logPDFNormal( data->col( (*outcomesIdx)(k) ) , ( externalXB.col(k) + externalRhoU.col(k)) ,  externalSigmaRho(k,k));
     }
 
     return logP/temperature;
@@ -1111,7 +1024,7 @@ double SSUR_Chain::sampleSigmaRhoGivenBeta( const arma::mat&  externalBeta , arm
 {
     double logP = 0.;
 
-    mutantSigmaRho.zeros(s,s); // RESET THE WHOLE MATRIX !!!
+    mutantSigmaRho.zeros(nOutcomes,nOutcomes); // RESET THE WHOLE MATRIX !!!
 
     // hyperparameter of the posterior sampler
     arma::mat Sigma = ( externalU.t() * externalU ) / temperature; Sigma.diag() += tau;
@@ -1168,7 +1081,7 @@ double SSUR_Chain::sampleSigmaRhoGivenBeta( const arma::mat&  externalBeta , arm
             // *** Diagonal Element
 
             // Compute parameters
-            a = 0.5 * ( n/temperature + nu - s + nConditioninIndexes + 1. ) ;
+            a = 0.5 * ( nObservations/temperature + nu - nOutcomes + nConditioninIndexes + 1. ) ;
             b = 0.5 * thisSigmaTT ;
 
             mutantSigmaRho(l,l) = Distributions::randIGamma( a , b );
@@ -1220,22 +1133,22 @@ double SSUR_Chain::sampleBetaGivenSigmaRho( arma::mat& mutantBeta , const arma::
     //bool test;
 
     arma::uvec xi = arma::conv_to<arma::uvec>::from(externalJT.perfectEliminationOrder);
-    arma::vec xtxMultiplier(s);
-    arma::mat y_tilde = (*Y) - mutantRhoU ;
+    arma::vec xtxMultiplier(nOutcomes);
+    arma::mat y_tilde = data->cols( (*outcomesIdx) ) - mutantRhoU ;
 
     // prepare posterior full conditional's hyperparameters
     y_tilde.each_row() /= ( externalSigmaRho.diag().t()) ; // divide each col by the corresponding element of sigma
-    xtxMultiplier(xi(s-1)) = 0;
-    // y_tilde.col(xi(s-1)) is already ok;
+    xtxMultiplier(xi(nOutcomes-1)) = 0;
+    // y_tilde.col(xi(nOutcomes-1)) is already ok;
 
-    for( unsigned int k=0; k < (s-1); ++k)
+    for( unsigned int k=0; k < (nOutcomes-1); ++k)
     {
         xtxMultiplier(xi(k)) = 0;
-        for(unsigned int l=k+1 ; l<s ; ++l)
+        for(unsigned int l=k+1 ; l<nOutcomes ; ++l)
         {
             xtxMultiplier(xi(k)) += pow( externalSigmaRho(xi(l),xi(k)),2) /  externalSigmaRho(xi(l),xi(l));
             y_tilde.col(xi(k)) -= (  externalSigmaRho(xi(l),xi(k)) /  externalSigmaRho(xi(l),xi(l)) ) * 
-                ( mutantU.col(xi(l)) - mutantRhoU.col(xi(l)) +  externalSigmaRho(xi(l),xi(k)) * ( mutantU.col(xi(k)) - (*Y).col(xi(k)) ) );
+                ( mutantU.col(xi(l)) - mutantRhoU.col(xi(l)) +  externalSigmaRho(xi(l),xi(k)) * ( mutantU.col(xi(k)) - data->col( (*outcomesIdx)(xi(k)) ) ) );
         }
 
     }
@@ -1244,7 +1157,7 @@ double SSUR_Chain::sampleBetaGivenSigmaRho( arma::mat& mutantBeta , const arma::
     tmpVec.clear();
 
     // for( unsigned int j : externalJT.perfectEliminationOrder ) //shouldn't make a difference..
-    for(unsigned int k=0; k<s ; ++k)
+    for(unsigned int k=0; k<nOutcomes ; ++k)
     {
 
         VS_IN_k =  externalGammaMask( arma::find(  externalGammaMask.col(1) == k) , arma::zeros<arma::uvec>(1) );
@@ -1259,12 +1172,12 @@ double SSUR_Chain::sampleBetaGivenSigmaRho( arma::mat& mutantBeta , const arma::
                 arma::inv_sympd( iXtX , XtX(VS_IN_k,VS_IN_k) );
                 // W_k = iXtX * ( (w*temperature)/(w + temperature) ) / varianceFactor;
             }else{
-                arma::inv_sympd( iXtX , (*X).cols(VS_IN_k).t() * (*X).cols(VS_IN_k));
+                arma::inv_sympd( iXtX , data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) );
                 // W_k = iXtX * ( (w*temperature)/(w + temperature) ) / varianceFactor;          
             }
 
             mu_k = ( (w*temperature)/(w + temperature) / varianceFactor ) * iXtX *
-                 ( (*X).cols(VS_IN_k).t() * y_tilde.col(k) / temperature );
+                 ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * y_tilde.col(k) / temperature );
 
             tmpVec = Distributions::randMvNormal( mu_k , ( (w*temperature)/(w + temperature) / varianceFactor ) * iXtX );
             logP += Distributions::logPDFNormal( tmpVec , mu_k , ( (w*temperature)/(w + temperature) / varianceFactor ) * iXtX );
@@ -1283,9 +1196,9 @@ double SSUR_Chain::sampleBetaGivenSigmaRho( arma::mat& mutantBeta , const arma::
             if( preComputedXtX )
                 arma::inv_sympd( W_k ,  ( XtX(VS_IN_k,VS_IN_k) / temperature ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier(k) ) + (1./w)*arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
             else                
-                arma::inv_sympd( W_k ,  ( (*X).cols(VS_IN_k).t() * (*X).cols(VS_IN_k) ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier(k) ) + (1./w)*arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
+                arma::inv_sympd( W_k ,  ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier(k) ) + (1./w)*arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
 
-            mu_k = W_k * ( (*X).cols(VS_IN_k).t() * y_tilde.col(k) / temperature ) ;
+            mu_k = W_k * ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * y_tilde.col(k) / temperature ) ;
 
             tmpVec = Distributions::randMvNormal( mu_k , W_k );
             logP += Distributions::logPDFNormal( tmpVec , mu_k , W_k );
@@ -1330,7 +1243,7 @@ double SSUR_Chain::sampleBetaKGivenSigmaRho( const unsigned int k , arma::mat& m
 
     arma::uvec xi = arma::conv_to<arma::uvec>::from(externalJT.perfectEliminationOrder);
     double xtxMultiplier;
-    arma::vec y_tilde = (*Y).col(k) - mutantRhoU.col(k) ;
+    arma::vec y_tilde = data->col( (*outcomesIdx)(k) ) - mutantRhoU.col(k) ;
 
     // prepare posterior full conditional's hyperparameters
     xtxMultiplier = 0;
@@ -1340,11 +1253,11 @@ double SSUR_Chain::sampleBetaKGivenSigmaRho( const unsigned int k , arma::mat& m
 
     unsigned int k_idx = arma::as_scalar( arma::find( xi == k , 1 ) );
 
-    for(unsigned int l=k_idx+1 ; l<s ; ++l)
+    for(unsigned int l=k_idx+1 ; l<nOutcomes ; ++l)
     {
         xtxMultiplier += pow( externalSigmaRho(xi(l),k),2) /  externalSigmaRho(xi(l),xi(l));
         y_tilde -= (  externalSigmaRho(xi(l),k) /  externalSigmaRho(xi(l),xi(l)) ) * 
-            ( mutantU.col(xi(l)) - mutantRhoU.col(xi(l)) +  externalSigmaRho(xi(l),k) * ( mutantU.col(k) - (*Y).col(k) ) );
+            ( mutantU.col(xi(l)) - mutantRhoU.col(xi(l)) +  externalSigmaRho(xi(l),k) * ( mutantU.col(k) - data->col( (*outcomesIdx)(k) ) ) );
     }
 
     // actual sampling
@@ -1361,12 +1274,12 @@ double SSUR_Chain::sampleBetaKGivenSigmaRho( const unsigned int k , arma::mat& m
             arma::inv_sympd( W_k ,  ( XtX(VS_IN_k,VS_IN_k) / temperature ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier ) + (1./w)*arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
     }else{
         if( gPrior )
-            W_k = (w*temperature)/(w + temperature) * arma::inv_sympd( (*X).cols(VS_IN_k).t() * (*X).cols(VS_IN_k) ) / ( 1./ externalSigmaRho(k,k) + xtxMultiplier );
+            W_k = (w*temperature)/(w + temperature) * arma::inv_sympd( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) / ( 1./ externalSigmaRho(k,k) + xtxMultiplier );
         else                
-            arma::inv_sympd( W_k ,  ( (*X).cols(VS_IN_k).t() * (*X).cols(VS_IN_k) ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier ) + (1./w)*arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
+            arma::inv_sympd( W_k ,  ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier ) + (1./w)*arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
     }
 
-    mu_k = W_k * ( (*X).cols(VS_IN_k).t() * y_tilde / temperature ) ;
+    mu_k = W_k * ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * y_tilde / temperature ) ;
 
     tmpVec = Distributions::randMvNormal( mu_k , W_k );
     logP = Distributions::logPDFNormal( tmpVec , mu_k , W_k );
@@ -1449,7 +1362,7 @@ double SSUR_Chain::logPSigmaRhoGivenBeta( const arma::mat&  externalBeta , const
             // *** Diagonal Element
 
             // Compute parameters
-            a = 0.5 * ( n/temperature + nu - s + nConditioninIndexes + 1. ) ;
+            a = 0.5 * ( nObservations/temperature + nu - nOutcomes + nConditioninIndexes + 1. ) ;
             b = 0.5 * thisSigmaTT ;
 
             logP += Distributions::logPDFIGamma( mutantSigmaRho(l,l), a , b );
@@ -1483,28 +1396,28 @@ double SSUR_Chain::logPBetaGivenSigmaRho( const arma::mat& mutantBeta , const ar
     //bool test;
 
     arma::uvec xi = arma::conv_to<arma::uvec>::from( externalJT.perfectEliminationOrder );
-    arma::vec xtxMultiplier(s);
-    arma::mat y_tilde = (*Y) - mutantRhoU ;
+    arma::vec xtxMultiplier(nOutcomes);
+    arma::mat y_tilde = data->cols( *outcomesIdx ) - mutantRhoU ;
 
     // prepare posterior full conditional's hyperparameters
     y_tilde.each_row() /= ( externalSigmaRho.diag().t()) ; // divide each col by the corresponding element of sigma
-    xtxMultiplier(xi(s-1)) = 0;
+    xtxMultiplier(xi(nOutcomes-1)) = 0;
     // y_tilde.col(xi(s-1)) is already ok;
 
-    for( unsigned int k=0; k < (s-1); ++k)
+    for( unsigned int k=0; k < (nOutcomes-1); ++k)
     {
         xtxMultiplier(xi(k)) = 0;
-        for(unsigned int l=k+1 ; l<s ; ++l)
+        for(unsigned int l=k+1 ; l<nOutcomes ; ++l)
         {
             xtxMultiplier(xi(k)) += pow( externalSigmaRho(xi(l),xi(k)),2) /  externalSigmaRho(xi(l),xi(l));
             y_tilde.col(xi(k)) -= (  externalSigmaRho(xi(l),xi(k)) /  externalSigmaRho(xi(l),xi(l)) ) * 
-                ( U.col(xi(l)) - mutantRhoU.col(xi(l)) +  externalSigmaRho(xi(l),xi(k)) * ( mutantU.col(xi(k)) - (*Y).col(xi(k)) ) );
+                ( U.col(xi(l)) - mutantRhoU.col(xi(l)) +  externalSigmaRho(xi(l),xi(k)) * ( mutantU.col(xi(k)) - data->col( (*outcomesIdx)(xi(k)) ) ) );
         }
 
     }
 
     // for( unsigned int j : externalJT.perfectEliminationOrder ) //shouldn't make a difference..
-    for(unsigned int k=0; k<s ; ++k)
+    for(unsigned int k=0; k<nOutcomes ; ++k)
     {
 
         VS_IN_k = externalGammaMask( arma::find( externalGammaMask.col(1) == k) , arma::zeros<arma::uvec>(1) );
@@ -1518,12 +1431,12 @@ double SSUR_Chain::logPBetaGivenSigmaRho( const arma::mat& mutantBeta , const ar
                 arma::inv_sympd( W_k ,  ( XtX(VS_IN_k,VS_IN_k) / temperature ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier(k) ) + (1./w)*arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
         }else{
             if( gPrior )
-                W_k = (w*temperature)/(w + temperature) * arma::inv_sympd( (*X).cols(VS_IN_k).t() * (*X).cols(VS_IN_k) ) / ( 1./ externalSigmaRho(k,k) + xtxMultiplier(k) );
+                W_k = (w*temperature)/(w + temperature) * arma::inv_sympd( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) / ( 1./ externalSigmaRho(k,k) + xtxMultiplier(k) );
             else                
-                arma::inv_sympd( W_k ,  ( (*X).cols(VS_IN_k).t() * (*X).cols(VS_IN_k) ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier(k) ) + (1./w)*arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
+                arma::inv_sympd( W_k ,  ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier(k) ) + (1./w)*arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
         }
 
-        mu_k = W_k * ( (*X).cols(VS_IN_k).t() * y_tilde.col(k) / temperature ) ;
+        mu_k = W_k * ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * y_tilde.col(k) / temperature ) ;
 
         logP += Distributions::logPDFNormal( mutantBeta(VS_IN_k,singleIdx_k) , mu_k , W_k );
     }
@@ -1547,7 +1460,7 @@ double SSUR_Chain::logPBetaKGivenSigmaRho( const unsigned int k , const arma::ma
 
     arma::uvec xi = arma::conv_to<arma::uvec>::from(externalJT.perfectEliminationOrder);
     double xtxMultiplier;
-    arma::vec y_tilde = (*Y).col(k) - mutantRhoU.col(k) ;
+    arma::vec y_tilde = data->col( (*outcomesIdx)(k) ) - mutantRhoU.col(k) ;
 
     // prepare posterior full conditional's hyperparameters
     xtxMultiplier = 0;
@@ -1557,11 +1470,11 @@ double SSUR_Chain::logPBetaKGivenSigmaRho( const unsigned int k , const arma::ma
 
     unsigned int k_idx = arma::as_scalar( arma::find( xi == k , 1 ) );
 
-    for(unsigned int l=k_idx+1 ; l<s ; ++l)
+    for(unsigned int l=k_idx+1 ; l<nOutcomes ; ++l)
     {
         xtxMultiplier += pow( externalSigmaRho(xi(l),k),2) /  externalSigmaRho(xi(l),xi(l));
         y_tilde -= (  externalSigmaRho(xi(l),k) /  externalSigmaRho(xi(l),xi(l)) ) * 
-            ( mutantU.col(xi(l)) - mutantRhoU.col(xi(l)) +  externalSigmaRho(xi(l),k) * ( mutantU.col(k) - (*Y).col(k) ) );
+            ( mutantU.col(xi(l)) - mutantRhoU.col(xi(l)) +  externalSigmaRho(xi(l),k) * ( mutantU.col(k) - data->col( (*outcomesIdx)(k) ) ) );
     }
 
     VS_IN_k =  externalGammaMask( arma::find(  externalGammaMask.col(1) == k) , arma::zeros<arma::uvec>(1) );
@@ -1575,12 +1488,12 @@ double SSUR_Chain::logPBetaKGivenSigmaRho( const unsigned int k , const arma::ma
             arma::inv_sympd( W_k ,  ( XtX(VS_IN_k,VS_IN_k) / temperature ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier ) + (1./w)*arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
     }else{
         if( gPrior )
-            W_k = (w*temperature)/(w + temperature) * arma::inv_sympd( (*X).cols(VS_IN_k).t() * (*X).cols(VS_IN_k) ) / ( 1./ externalSigmaRho(k,k) + xtxMultiplier );
+            W_k = (w*temperature)/(w + temperature) * arma::inv_sympd( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) / ( 1./ externalSigmaRho(k,k) + xtxMultiplier );
         else                
-            arma::inv_sympd( W_k ,  ( (*X).cols(VS_IN_k).t() * (*X).cols(VS_IN_k) ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier ) + (1./w)*arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
+            arma::inv_sympd( W_k ,  ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier ) + (1./w)*arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
     }
 
-    mu_k = W_k * ( (*X).cols(VS_IN_k).t() * y_tilde / temperature ) ;
+    mu_k = W_k * ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * y_tilde / temperature ) ;
 
     logP = Distributions::logPDFNormal( mutantBeta(VS_IN_k,singleIdx_k) , mu_k , W_k );
 
@@ -1611,16 +1524,16 @@ double SSUR_Chain::gammaBanditProposal( arma::umat& mutantGamma , arma::uvec& up
     double logProposalRatio;
 
     // decide on one outcome
-    outcomeIdx = Distributions::randIntUniform(0,s-1);
+    outcomeIdx = Distributions::randIntUniform(0,nOutcomes-1);
 
     // Sample Zs (only for relevant outocome)
-    for(unsigned int i=0; i<p; ++i)
+    for(unsigned int i=0; i<nVSPredictors; ++i)
     {
             banditZeta(i) = Distributions::randBeta(banditAlpha(i,outcomeIdx),banditAlpha(i,outcomeIdx));
     }
 
     // Create mismatch (only for relevant outcome)
-    for(unsigned int i=0; i<p; ++i)
+    for(unsigned int i=0; i<nVSPredictors; ++i)
     {
         mismatch(i) = (mutantGamma(i,outcomeIdx)==0)?(banditZeta(i)):(1.-banditZeta(i));   //mismatch
     }
@@ -1636,7 +1549,7 @@ double SSUR_Chain::gammaBanditProposal( arma::umat& mutantGamma , arma::uvec& up
 
         // Decide which to update
         updateIdx = arma::zeros<arma::uvec>(1);
-        updateIdx(0) = Distributions::randWeightedIndexSampleWithoutReplacement(p,normalised_mismatch); // sample the one
+        updateIdx(0) = Distributions::randWeightedIndexSampleWithoutReplacement(nVSPredictors,normalised_mismatch); // sample the one
 
         // Update
         mutantGamma(updateIdx(0),outcomeIdx) = 1 - gamma(updateIdx(0),outcomeIdx); // deterministic, just switch
@@ -1661,7 +1574,7 @@ double SSUR_Chain::gammaBanditProposal( arma::umat& mutantGamma , arma::uvec& up
         logProposalRatio = 0.;
         // Decide which to update
         updateIdx = arma::zeros<arma::uvec>(n_updates_bandit);
-        updateIdx = Distributions::randWeightedIndexSampleWithoutReplacement(p,normalised_mismatch,n_updates_bandit); // sample n_updates_bandit indexes
+        updateIdx = Distributions::randWeightedIndexSampleWithoutReplacement(nVSPredictors,normalised_mismatch,n_updates_bandit); // sample n_updates_bandit indexes
 
         normalised_mismatch_backwards = mismatch; // copy for backward proposal
 
@@ -1693,10 +1606,10 @@ double SSUR_Chain::gammaMC3Proposal( arma::umat& mutantGamma , arma::uvec& updat
     updateIdx = arma::uvec(n_updates_MC3);
 
     // decide on one outcome
-    outcomeIdx = Distributions::randIntUniform(0,s-1);
+    outcomeIdx = Distributions::randIntUniform(0,nOutcomes-1);
 
     for( unsigned int i=0; i<n_updates_MC3; ++i)
-        updateIdx(i) = Distributions::randIntUniform(0,p-1);    // note that I might be updating multiple times the same coeff
+        updateIdx(i) = Distributions::randIntUniform(0,nVSPredictors-1);    // note that I might be updating multiple times the same coeff
 
     for( auto i : updateIdx)
     mutantGamma(i,outcomeIdx) = ( Distributions::randU01() < 0.5)? gamma(i,outcomeIdx) : 1-gamma(i,outcomeIdx); // could simply be ( 0.5 ? 1 : 0) ;
@@ -1734,7 +1647,7 @@ void SSUR_Chain::stepTau()
 void SSUR_Chain::stepEta()
 {
     double a = a_eta + 0.5*(arma::accu(jt.getAdjMat())/2. ) ; // divide by temperature if the prior on G is tempered
-    double b = b_eta + ( (double)(s * (s-1.) * 0.5) - 0.5*(arma::accu(jt.getAdjMat())/2. ) ); // /temperature
+    double b = b_eta + ( (double)(nOutcomes * (nOutcomes-1.) * 0.5) - 0.5*(arma::accu(jt.getAdjMat())/2. ) ); // /temperature
 
     eta = Distributions::randBeta( a , b );
 
@@ -1884,7 +1797,7 @@ void SSUR_Chain::stepJT()
 void SSUR_Chain::stepOneO()
 {
     
-    unsigned int k = Distributions::randIntUniform(0,s-1);
+    unsigned int k = Distributions::randIntUniform(0,nOutcomes-1);
     arma::vec proposedO = o;
 
     double proposedOPrior, proposedGammaPrior, logAccProb;
@@ -1920,7 +1833,7 @@ void SSUR_Chain::stepO()
 
     double proposedOPrior, proposedGammaPrior, logAccProb;
 
-    for( unsigned int k=0; k < s ; ++k )
+    for( unsigned int k=0; k < nOutcomes ; ++k )
     {
         proposedO(k) = std::exp( std::log( o(k) ) + Distributions::randTruncNorm(0.0, var_o_proposal , -std::numeric_limits<double>::infinity() , -std::log( o(k) ) ) );
 
@@ -1940,7 +1853,7 @@ void SSUR_Chain::stepO()
                 logP_o = proposedOPrior;
                 logP_gamma = proposedGammaPrior;
 
-                o_acc_count += o_acc_count / (double)s;
+                o_acc_count += o_acc_count / (double)nOutcomes;
             }else
                 proposedO(k) = o(k);
         }else
@@ -1952,7 +1865,7 @@ void SSUR_Chain::stepO()
 // MH update (log-normal) -- update one value at each iteration TODO worth doing more?
 void SSUR_Chain::stepOnePi()
 {
-    unsigned int j = Distributions::randIntUniform(0,p-1);
+    unsigned int j = Distributions::randIntUniform(0,nVSPredictors-1);
     arma::vec proposedPi = pi;
 
     double proposedPiPrior, proposedGammaPrior, logAccProb;
@@ -1985,7 +1898,7 @@ void SSUR_Chain::stepPi()
 
     double proposedPiPrior, proposedGammaPrior, logAccProb;
 
-    for( unsigned int j=0; j < p ; ++j )
+    for( unsigned int j=0; j < nVSPredictors ; ++j )
     {
         proposedPi(j) = std::exp( std::log( pi(j) ) + Distributions::randNormal(0.0, var_pi_proposal) );
 
@@ -2003,7 +1916,7 @@ void SSUR_Chain::stepPi()
                 logP_pi = proposedPiPrior;
                 logP_gamma = proposedGammaPrior;
 
-                pi_acc_count += pi_acc_count / (double)p;
+                pi_acc_count += pi_acc_count / (double)nVSPredictors;
             }else
                 proposedPi(j) = pi(j);
         }else
@@ -2209,8 +2122,8 @@ void SSUR_Chain::updateProposalVariances()
         piEmpiricalMean = arma::log(pi);
 
         tauEmpiricalM2 = 0.;
-        oEmpiricalM2 = arma::zeros<arma::vec>(s);
-        piEmpiricalM2 = arma::zeros<arma::vec>(p);
+        oEmpiricalM2 = arma::zeros<arma::vec>(nOutcomes);
+        piEmpiricalM2 = arma::zeros<arma::vec>(nVSPredictors);
 
         var_tau_proposal_init = var_tau_proposal;
         var_o_proposal_init = var_o_proposal;
@@ -2257,7 +2170,7 @@ void SSUR_Chain::updateProposalVariances()
 
     // Then if it's actually > n update the proposal variances
 
-    if( internalIterationCounter > n  )  // update quantities and variance
+    if( internalIterationCounter > nObservations )  // update quantities and variance
     {
 
         // update proposal variances
@@ -2435,14 +2348,14 @@ int SSUR_Chain::adapt_crossOver_step( std::shared_ptr<SSUR_Chain>& that )
 
     unsigned int n11,n12,n21,n22;
 
-    std::vector<arma::umat> gammaXO(2); gammaXO[0] = arma::umat(p,s);  gammaXO[1] = arma::umat(p,s); 
+    std::vector<arma::umat> gammaXO(2); gammaXO[0] = arma::umat(nVSPredictors,nOutcomes);  gammaXO[1] = arma::umat(nVSPredictors,nOutcomes); 
 
     // Propose Crossover
     n11=0;n12=0;n21=0;n22=0;
 
-    for(unsigned int j=0; j<p; ++j)
+    for(unsigned int j=0; j<nVSPredictors; ++j)
     {
-        for(unsigned int k=0; k<s; ++k)
+        for(unsigned int k=0; k<nOutcomes; ++k)
         {
             if ( this->getGamma()(j,k) == that->getGamma()(j,k) )
             {
@@ -2561,12 +2474,12 @@ int SSUR_Chain::uniform_crossOver_step( std::shared_ptr<SSUR_Chain>& that )
 {
     double pCrossOver;
 
-    std::vector<arma::umat> gammaXO(2); gammaXO[0] = arma::umat(p,s);  gammaXO[1] = arma::umat(p,s); 
+    std::vector<arma::umat> gammaXO(2); gammaXO[0] = arma::umat(nVSPredictors,nOutcomes);  gammaXO[1] = arma::umat(nVSPredictors,nOutcomes); 
 
     // Propose Crossover
-    for(unsigned int j=0; j<p; ++j)
+    for(unsigned int j=0; j<nVSPredictors; ++j)
     {
-        for(unsigned int k=0; k<s; ++k)
+        for(unsigned int k=0; k<nOutcomes; ++k)
         {
             if( Distributions::randU01() < 0.5 )
             {
@@ -2668,13 +2581,13 @@ int SSUR_Chain::block_crossOver_step( std::shared_ptr<SSUR_Chain>& that , arma::
 {
     double pCrossOver;
 
-    std::vector<arma::umat> gammaXO(2); gammaXO[0] = arma::umat(p,s);  gammaXO[1] = arma::umat(p,s); 
+    std::vector<arma::umat> gammaXO(2); gammaXO[0] = arma::umat(nVSPredictors,nOutcomes);  gammaXO[1] = arma::umat(nVSPredictors,nOutcomes); 
 
     // Propose Crossover
 
     // Select the ONE index to foor the block
-    unsigned int predIdx = Distributions::randIntUniform(0, p-1 ); // pred
-    unsigned int outcIdx = Distributions::randIntUniform(0, s-1 ); // outcome
+    unsigned int predIdx = Distributions::randIntUniform(0, nVSPredictors-1 ); // pred
+    unsigned int outcIdx = Distributions::randIntUniform(0, nOutcomes-1 ); // outcome
 
     arma::uvec covIdx;
     
@@ -2684,13 +2597,13 @@ int SSUR_Chain::block_crossOver_step( std::shared_ptr<SSUR_Chain>& that , arma::
         // if not precomputed, compute the correlation only for the current row
         
         // #pragma omp parallel for
-        // for( unsigned int j=0; j<p; ++j){
-        //     tmpVec(j) = arma::as_scalar( arma::cor( (*X).col(predIdx+1) , (*X).col(j+1) ) );
+        // for( unsigned int j=0; j<nVSPredictors-1; ++j){
+        //     tmpVec(j) = arma::as_scalar( arma::cor( data->col( (*VSPredictorsIdx)(predIdx) ) , data->col( (*VSPredictorsIdx(j)) ) );
         // }
         // covIdx = arma::find( arma::abs( tmpVec ) > threshold );
         // I'd rather leave parallelisation to armadillo and avoid the temp, but this version would work as well
 
-        covIdx = arma::find( arma::abs( arma::cor( (*X).col(predIdx+1) , (*X).cols(1,p) ) ) > threshold );
+        covIdx = arma::find( arma::abs( arma::cor( data->col( (*VSPredictorsIdx)(predIdx) ) , data->cols( (*VSPredictorsIdx) ) ) ) > threshold );
     }
 
     gammaXO[0] = this->getGamma();
@@ -2899,23 +2812,24 @@ arma::umat SSUR_Chain::createGammaMask( const arma::umat& gamma )
 
     // CREATE HERE THE GAMMA "MASK"
     // INITIALISE THE INDEXES FOR THE GAMMA MASK
-    arma::umat mask = arma::zeros<arma::umat>(s,2); //this is just an initialisation
-    arma::uvec tmpUVec;
-    unsigned int tmpIdx;
-    for(unsigned int k=0 ; k<s ; ++k)  //add gammas for the intercepts
+    arma::umat mask = arma::zeros<arma::umat>(nOutcomes,2); //this is just an initialisation
+    for( unsigned int j=0; j<nFixedPredictors; ++j)
     {
-        mask(k,0) = 0; mask(k,1) = k;
+        for(unsigned int k=0 ; k<nOutcomes ; ++k)  //add gammas for the fixed variables
+        {
+            mask(k,0) = j; mask(k,1) = k;
+        }
     }
 
-    for(unsigned int k=0 ; k<s ; ++k)  //add the other gammas
+    for(unsigned int k=0 ; k<nOutcomes ; ++k)  //add the other gammas
     {
-        tmpUVec = arma::find(gamma.col(k) != 0);
-        tmpIdx = mask.n_rows;
+        arma::uvec tmpUVec = arma::find(gamma.col(k) != 0);
+        unsigned int tmpIdx = mask.n_rows;
 
         if( tmpUVec.n_elem > 0 )
         {
             mask.insert_rows( tmpIdx , arma::zeros<arma::umat>( tmpUVec.n_elem , 2 ));
-            mask.submat( tmpIdx, 0, mask.n_rows-1 , 0 ) = tmpUVec + 1 ; // +1 cause gamma doesn't have the intercept
+            mask.submat( tmpIdx, 0, mask.n_rows-1 , 0 ) = tmpUVec + nFixedPredictors ;
             mask.submat( tmpIdx, 1, mask.n_rows-1 , 1 ).fill(k);
         }
     }
@@ -2929,23 +2843,24 @@ void SSUR_Chain::updateGammaMask()
 {
     // CREATE HERE THE GAMMA "MASK"
     // INITIALISE THE INDEXES FOR THE GAMMA MASK
-    gammaMask.zeros(s,2); //this is just an initialisation  -- 2*s means at least all the intercept plus one other covariate for each equation
-    arma::uvec tmpUVec;
-    unsigned int tmpIdx;
-    for(unsigned int k=0 ; k<s ; ++k)  //add gammas for the intercepts
+    gammaMask.zeros(nOutcomes,2); //this is just an initialisation
+    for( unsigned int j=0; j<nFixedPredictors; ++j)
     {
-        gammaMask(k,0) = 0; gammaMask(k,1) = k;
+        for(unsigned int k=0 ; k<nOutcomes ; ++k)  //add gammas for the fixed variables
+        {
+            gammaMask(k,0) = j; gammaMask(k,1) = k;
+        }
     }
 
-    for(unsigned int k=0 ; k<s ; ++k)  //add gammas for the intercepts
+    for(unsigned int k=0 ; k<nOutcomes ; ++k)   //add the other gammas
     {
-        tmpUVec = arma::find(gamma.col(k) != 0);
-        tmpIdx = gammaMask.n_rows;
+        arma::uvec tmpUVec = arma::find(gamma.col(k) != 0);
+        unsigned int tmpIdx = gammaMask.n_rows;
 
         if( tmpUVec.n_elem > 0 )
         {
             gammaMask.insert_rows( tmpIdx , arma::zeros<arma::umat>( tmpUVec.n_elem , 2 ));
-            gammaMask.submat( tmpIdx, 0, gammaMask.n_rows-1 , 0 ) = tmpUVec + 1 ;
+            gammaMask.submat( tmpIdx, 0, gammaMask.n_rows-1 , 0 ) = tmpUVec + nFixedPredictors ;
             gammaMask.submat( tmpIdx, 1, gammaMask.n_rows-1 , 1 ).fill(k);
         }
     }
@@ -2955,13 +2870,13 @@ void SSUR_Chain::updateGammaMask()
 arma::mat SSUR_Chain::createXB( const arma::umat&  externalGammaMask , const arma::mat&  externalBeta )
 {
     arma::uvec singleIdx_k(1), VS_IN_k;
-    arma::mat externalXB(n,s);
+    arma::mat externalXB(nObservations,nOutcomes);
 
-    for(unsigned int k=0; k<s; ++k)
+    for(unsigned int k=0; k<nOutcomes; ++k)
     {
         singleIdx_k(0) = k;
         VS_IN_k =  externalGammaMask( arma::find(  externalGammaMask.col(1) == k ) , arma::zeros<arma::uvec>(1) );
-        externalXB.col(k) = ((*X).cols(VS_IN_k) *  externalBeta.submat(VS_IN_k,singleIdx_k) );
+        externalXB.col(k) = (data->cols( (*predictorsIdx)(VS_IN_k) ) *  externalBeta.submat(VS_IN_k,singleIdx_k) );
     }
     return externalXB;
 }
@@ -2969,34 +2884,34 @@ arma::mat SSUR_Chain::createXB( const arma::umat&  externalGammaMask , const arm
 void SSUR_Chain::updateXB()
 {
     arma::uvec singleIdx_k(1), VS_IN_k;
-    XB.set_size(n,s); // reset without initialising nor preserving data
+    XB.set_size(nObservations,nOutcomes); // reset without initialising nor preserving data
 
-    for(unsigned int k=0; k<s; ++k)
+    for(unsigned int k=0; k<nOutcomes; ++k)
     {
         singleIdx_k(0) = k;
         VS_IN_k = gammaMask( arma::find( gammaMask.col(1) == k ) , arma::zeros<arma::uvec>(1) );
-        XB.col(k) = ((*X).cols(VS_IN_k) * beta.submat(VS_IN_k,singleIdx_k) );
+        XB.col(k) = (data->cols( (*predictorsIdx)(VS_IN_k) ) * beta.submat(VS_IN_k,singleIdx_k) );
     }
 
 }
 
 arma::mat SSUR_Chain::createU( const arma::mat& externalXB )
 {
-    arma::mat externalU = (*Y) - externalXB;
+    arma::mat externalU = data->cols( *outcomesIdx ) - externalXB;
     return externalU;
 }
 
 void SSUR_Chain::updateU()
 {
-    U = (*Y) - XB;
+    U = data->cols( *outcomesIdx ) - XB;
 }
 
 arma::mat SSUR_Chain::createRhoU( const arma::mat& externalU , const arma::mat&  externalSigmaRho , const JunctionTree& externalJT )
 {
     arma::uvec xi = arma::conv_to<arma::uvec>::from(externalJT.perfectEliminationOrder);
-    arma::mat externalRhoU = arma::zeros<arma::mat>(n,s);
+    arma::mat externalRhoU = arma::zeros<arma::mat>(nObservations,nOutcomes);
 
-    for( unsigned int k=1; k < s; ++k)
+    for( unsigned int k=1; k < nOutcomes; ++k)
     {
         for(unsigned int l=0 ; l<k ; ++l)
         {
@@ -3012,9 +2927,9 @@ arma::mat SSUR_Chain::createRhoU( const arma::mat& externalU , const arma::mat& 
 void SSUR_Chain::updateRhoU()
 {
     arma::uvec xi = arma::conv_to<arma::uvec>::from(jt.perfectEliminationOrder);
-    rhoU.zeros(n,s);
+    rhoU.zeros(nObservations,nOutcomes);
 
-    for( unsigned int k=1; k < s; ++k)
+    for( unsigned int k=1; k < nOutcomes; ++k)
     {
         for(unsigned int l=0 ; l<k ; ++l)
         {
@@ -3047,26 +2962,26 @@ void SSUR_Chain::updateQuantities()
 // Bandit-sampling related methods
 void SSUR_Chain::banditInit()// initialise all the private memebers
 {
-    banditZeta = arma::vec(p);
+    banditZeta = arma::vec(nVSPredictors);
 
-    banditAlpha = arma::mat(p,s);
+    banditAlpha = arma::mat(nVSPredictors,nOutcomes);
     banditAlpha.fill( 0.5 );
     
-    banditBeta = arma::mat(p,s);
+    banditBeta = arma::mat(nVSPredictors,nOutcomes);
     banditBeta.fill( 0.5 );
 
-    mismatch = arma::vec(p);
-    normalised_mismatch = arma::vec(p);
-    normalised_mismatch_backwards = arma::vec(p);
+    mismatch = arma::vec(nVSPredictors);
+    normalised_mismatch = arma::vec(nVSPredictors);
+    normalised_mismatch_backwards = arma::vec(nVSPredictors);
 
     n_updates_bandit = 4; // this needs to be low as its O(n_updates!)
 
-    banditLimit = (double)n;
+    banditLimit = (double)nObservations;
     banditIncrement = 1.;
 }
 
 // MC3 init
 void SSUR_Chain::MC3Init()
 {
-    n_updates_MC3 = std::ceil( p/40 ); //arbitrary number, should I use something different?
+    n_updates_MC3 = std::ceil( nVSPredictors/40 ); //arbitrary number, should I use something different?
 }

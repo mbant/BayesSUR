@@ -8,6 +8,22 @@
 
 namespace Distributions{
 
+	class negativeParameters : public std::exception
+	{
+		const char * what () const throw ()
+		{
+			return "Negative parameter used to either sample from or compute the pdf of a distribution that takes only positive values.";
+		}
+	};
+
+	class negativeDefiniteParameters : public std::exception
+	{
+		const char * what () const throw ()
+		{
+			return "Negative Definite matrix used to either sample from or compute the pdf of a distribution that takes only Positive Definite matrices.";
+		}
+	};
+
 	double randExponential(const double lambda);
 	arma::vec randExponential(const unsigned int n, const double lambda);
 
