@@ -11,7 +11,6 @@ SSUR_Chain::SSUR_Chain( std::shared_ptr<arma::mat> data, unsigned int nObservati
             std::shared_ptr<arma::uvec> fixedPredictorIdx, std::shared_ptr<arma::umat> NAArrayIdx, std::shared_ptr<arma::uvec> completeCases, 
             std::string gammaSamplerType_ = "Bandit", bool usingGprior = false, double externalTemperature = 1. ):
     data(data), outcomesIdx(outcomesIdx), VSPredictorsIdx(VSPredictorsIdx), fixedPredictorsIdx(fixedPredictorsIdx),
-    
     missingDataArrayIdx(NAArrayIdx), completeCases(completeCases),gammaSamplerType(gammaSamplerType_),gPrior(usingGprior),
     temperature(externalTemperature),internalIterationCounter(0),jtStartIteration(0)
     {
@@ -966,7 +965,9 @@ double SSUR_Chain::logPBeta( const arma::mat&  externalBeta )
 double SSUR_Chain::logLikelihood( )
 {
     double logP = 0.;
+    #ifdef _OPENMP
     #pragma omp parallel for default(shared) reduction(+:logP)
+    #endif
     for( unsigned int k=0; k<nOutcomes; ++k)
     {
         logP += Distributions::logPDFNormal( data->col( (*outcomesIdx)(k) ) , (XB.col(k)+rhoU.col(k)) , sigmaRho(k,k));
@@ -983,7 +984,9 @@ double SSUR_Chain::logLikelihood( const arma::umat&  externalGammaMask , const a
                                   const arma::mat& externalU , const arma::mat& externalRhoU , const arma::mat&  externalSigmaRho )
 {
         double logP = 0.;
+        #ifdef _OPENMP
 		#pragma omp parallel for default(shared) reduction(+:logP)
+        #endif
 		for( unsigned int k=0; k<nOutcomes; ++k)
 		{
 			logP += Distributions::logPDFNormal( data->col( (*outcomesIdx)(k) ) , (externalXB.col(k) + externalRhoU.col(k)) ,  externalSigmaRho(k,k));
@@ -1003,7 +1006,9 @@ double SSUR_Chain::logLikelihood( arma::umat&  externalGammaMask , arma::mat& ex
                       externalGamma ,  externalBeta ,  externalSigmaRho , externalJT );
 
     double logP = 0.;
+    #ifdef _OPENMP
     #pragma omp parallel for default(shared) reduction(+:logP)
+    #endif
     for( unsigned int k=0; k<nOutcomes; ++k)
     {
         logP += Distributions::logPDFNormal( data->col( (*outcomesIdx)(k) ) , ( externalXB.col(k) + externalRhoU.col(k)) ,  externalSigmaRho(k,k));
@@ -2596,7 +2601,9 @@ int SSUR_Chain::block_crossOver_step( std::shared_ptr<SSUR_Chain>& that , arma::
     }else{
         // if not precomputed, compute the correlation only for the current row
         
+        // #ifdef _OPENMP
         // #pragma omp parallel for
+        // #endif
         // for( unsigned int j=0; j<nVSPredictors-1; ++j){
         //     tmpVec(j) = arma::as_scalar( arma::cor( data->col( (*VSPredictorsIdx)(predIdx) ) , data->col( (*VSPredictorsIdx(j)) ) );
         // }

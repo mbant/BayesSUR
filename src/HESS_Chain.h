@@ -29,18 +29,16 @@ class HESS_Chain : public ESS_Atom<HESS_Chain>
         // Constructors
         // *******************************
 
-        // empty, everything is default, except the data
-        HESS_Chain( arma::mat& , arma::mat& , double ); // Y and X  (and temperature that'll have a default value of 1.)
+        HESS_Chain( std::shared_ptr<arma::mat> data, unsigned int nObservations, 
+                unsigned int nOutcomes, unsigned int nVSPredictors, unsigned int nFixedPredictors,
+                std::shared_ptr<arma::uvec> outcomesIdx, std::shared_ptr<arma::uvec> VSPredictorsIdx,
+                std::shared_ptr<arma::uvec> fixedPredictorIdx, std::shared_ptr<arma::umat> NAArrayIdx, std::shared_ptr<arma::uvec> completeCases, 
+                std::string gammaSamplerType_ = "Bandit", bool usingGprior = false, double externalTemperature = 1. );
 
-        // full, every parameter object is initialised from existing objects
-        HESS_Chain( arma::mat& , arma::mat& , // Y and X
-                arma::vec& , arma::vec& , arma::umat& , double , // o, pi, gamma, w
-                double ); // temperature
 
-        // full, every parameter object is initialised from existing objects, plus the type of gamma sampler
-        HESS_Chain( arma::mat& , arma::mat& , // Y and X
-                arma::vec& , arma::vec& , arma::umat& , double ,  // o, pi, gamma, w
-                std::string , bool , double ); // gamma sampler type , gPrior? , temperature
+        HESS_Chain( Utils::SUR_Data& surData, std::string gammaSamplerType_ = "Bandit", bool usingGprior = false, double externalTemperature = 1. );
+
+        HESS_Chain( Utils::SUR_Data& surData, double externalTemperature = 1. );
 
         // *******************************
         // Getters and Setters
@@ -50,16 +48,15 @@ class HESS_Chain : public ESS_Atom<HESS_Chain>
 
 
         // data
-        std::shared_ptr<arma::mat> getY() const;
-        std::shared_ptr<arma::mat> getX() const;
+        inline std::shared_ptr<arma::mat> getData() const{ return data ; }
 
-        // data are best set together as we need to confirm dimension matching
-        void setData( std::shared_ptr<arma::mat> , std::shared_ptr<arma::mat> );
+        inline arma::mat& getXtX(){ return XtX ; }
 
-        arma::mat& getXtX();
-        unsigned int getN() const;
-        unsigned int getP() const;
-        unsigned int getS() const;
+        inline unsigned int getN() const{ return nObservations ; }
+        inline unsigned int getP() const{ return nFixedPredictors+nVSPredictors ; }
+        inline unsigned int getPFixed() const{ return nFixedPredictors ; }
+        inline unsigned int getPVS() const{ return nVSPredictors ; }
+        inline unsigned int getS() const{ return nOutcomes ; }
         // no setters as they are linked to the data
 
         // gPrior
@@ -325,16 +322,26 @@ class HESS_Chain : public ESS_Atom<HESS_Chain>
     protected:
 
         // Data (and related quatities)
-        std::shared_ptr<arma::mat> Y;
-        std::shared_ptr<arma::mat> X;
+        std::shared_ptr<arma::mat> data;
+        std::shared_ptr<arma::uvec> outcomesIdx;
+
+        std::shared_ptr<arma::uvec> predictorsIdx;
+        std::shared_ptr<arma::uvec> VSPredictorsIdx;
+        std::shared_ptr<arma::uvec> fixedPredictorsIdx;
+
+        std::shared_ptr<arma::umat> missingDataArrayIdx;
+        std::shared_ptr<arma::uvec> completeCases;
+
         // these are pointers cause they will live on outside the MCMC
         
         bool preComputedXtX;
         arma::mat XtX;
+        void setXtX();
 
-        unsigned int n; // number of samples
-        unsigned int p; // number of predictors
-        unsigned int s; // number of outcomes
+        unsigned int nObservations; // number of samples
+        unsigned int nVSPredictors; // number of predictors to be selected
+        unsigned int nFixedPredictors; // number of predictors to be kept no matter what
+        unsigned int nOutcomes; // number of outcomes
 
         // usefull quantities to keep track of
         arma::umat gammaMask;

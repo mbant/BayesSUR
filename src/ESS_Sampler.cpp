@@ -12,7 +12,7 @@ ESS_Sampler<T>::ESS_Sampler( Utils::SUR_Data& surData , unsigned int nChains_ , 
 
     for( unsigned int i=0; i<nChains; ++i )
         chain[i] = std::make_shared<T>( surData , std::pow( temperatureRatio , (double)i ) );  // default init for now
-        
+
 }
 
 // Example of specialised constructor, might be needed to initialise with more precise arguments depending on the chain type
@@ -61,7 +61,9 @@ void ESS_Sampler<T>::localStep()
 {
     // OMP GIVES RUNTIME ERRORS, PROBABLY DUE TO SOME VARIABLE ACCESSED AT THE SAME TIME OR SOMRTHING :/
     // TODO but leave it out for now -- ideally use MPI or similar to distribute the different chains -- shared variables will be a pain though
+    // #ifdef _OPENMP    
     // #pragma omp parallel for schedule(static,1)
+    // #endif
     for( auto i = chain.begin(); i < chain.end(); ++i )
         (*i) -> step();
 
@@ -207,7 +209,9 @@ int ESS_Sampler<T>::allExchangeAll_step()
 
 
     pExchange(0) = 0.; // these are log probabilities, remember!
+    // #ifdef _OPENMP
     // #pragma omp parallel for private(tabIndex, firstChain, secondChain)
+    // #endif
     for(tabIndex = 1; tabIndex <= nChainCombinations; ++tabIndex)
     {
 

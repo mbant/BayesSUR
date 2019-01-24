@@ -4,65 +4,44 @@
 // Constructors
 // *******************************
 
-// empty, everything is default, except the data
-dSUR_Chain::dSUR_Chain( arma::mat& externalY , arma::mat& externalX , double externalTemperature = 1. ) : 
-    SSUR_Chain( externalY , externalX , externalTemperature )
-{
-    jtInit(); 
-    betaInit(beta);
-    sigmaRhoInit(sigmaRho);
+#include "dSUR_Chain.h"
 
-    updateQuantities();
+// *******************************
+// Constructors
+// *******************************
 
-    logLikelihood();
-}
+dSUR_Chain::dSUR_Chain ( std::shared_ptr<arma::mat> data, unsigned int nObservations, 
+            unsigned int nOutcomes, unsigned int nVSPredictors, unsigned int nFixedPredictors,
+            std::shared_ptr<arma::uvec> outcomesIdx, std::shared_ptr<arma::uvec> VSPredictorsIdx,
+            std::shared_ptr<arma::uvec> fixedPredictorIdx, std::shared_ptr<arma::umat> NAArrayIdx, std::shared_ptr<arma::uvec> completeCases, 
+            std::string gammaSamplerType_ = "Bandit", bool usingGprior = false, double externalTemperature = 1. ):
+    SSUR_Chain ( data, nObservations, nOutcomes, nVSPredictors, nFixedPredictors,
+            outcomesIdx, VSPredictorsIdx, fixedPredictorIdx, NAArrayIdx, completeCases,
+            gammaSamplerType_, usingGprior, externalTemperature )
+    {
 
-dSUR_Chain::dSUR_Chain( arma::mat& externalY , arma::mat& externalX , std::string& gammaSamplerType_ , bool gPrior_ , double externalTemperature = 1. ):
-    SSUR_Chain( externalY , externalX , gammaSamplerType_ , gPrior_ , externalTemperature )
-{
-    jtInit(); 
-    betaInit(beta);
-    sigmaRhoInit(sigmaRho);
-    
-    updateQuantities();
+        // after the SSUR_Chain constructor has been executed run the following to "correct"
+        jtInit(); 
 
-    logLikelihood();
-}
+        betaInit(beta);
+        sigmaRhoInit(sigmaRho);
 
-// full, every parameter object is initialised from existing objects
-dSUR_Chain::dSUR_Chain( arma::mat& externalY , arma::mat& externalX , // Y and X
-        double tau_init , JunctionTree& jt_init , arma::mat& sigmaRho_init , // tau, jt, sigmaRho 
-        arma::vec& o_init , arma::vec& pi_init , arma::umat& gamma_init , double w_init , arma::mat& beta_init , // o, pi, gamma, w, beta
-        double externalTemperature = 1. ): // temperature
-            SSUR_Chain( externalY , externalX , tau_init , 1., jt_init , sigmaRho_init , o_init , pi_init , 
-            gamma_init , w_init , beta_init , externalTemperature )
-{
-    jtInit(); 
-    betaInit(beta);
-    sigmaRhoInit(sigmaRho);
-    
-    updateQuantities();
+        updateQuantities();
 
-    logLikelihood();
-}
+        logLikelihood();
+    }
 
 
-// full, every parameter object is initialised from existing objects, plus the type of gamma sampler
-dSUR_Chain::dSUR_Chain( arma::mat& externalY , arma::mat& externalX , // Y and X
-        double tau_init , JunctionTree& jt_init , arma::mat& sigmaRho_init , // tau, jt, sigmaRho 
-        arma::vec& o_init , arma::vec& pi_init , arma::umat& gamma_init , double w_init , arma::mat& beta_init , // o, pi, gamma, w, beta
-        std::string gammaSamplerType_ , bool gPrior_ , double externalTemperature = 1. ): // gamma sampler type , temperature
-    SSUR_Chain( externalY , externalX , tau_init , 1., jt_init, sigmaRho_init , o_init , pi_init , 
-            gamma_init , w_init , beta_init , gammaSamplerType_ , gPrior_ , externalTemperature )
-{
-    jtInit(); 
-    betaInit(beta);
-    sigmaRhoInit(sigmaRho);
-    
-    updateQuantities();
+dSUR_Chain::dSUR_Chain( Utils::SUR_Data& surData, std::string gammaSamplerType_ = "Bandit", bool usingGprior = false, double externalTemperature = 1. ):
+    dSUR_Chain(surData.data,surData.nObservations,surData.nOutcomes,surData.nVSPredictors,surData.nFixedPredictors,
+        surData.outcomesIdx,surData.VSPredictorsIdx,surData.fixedPredictorsIdx,surData.missingDataArrayIdx,surData.completeCases,
+        gammaSamplerType_,usingGprior,externalTemperature){ }
 
-    logLikelihood();
-}
+dSUR_Chain::dSUR_Chain( Utils::SUR_Data& surData, double externalTemperature = 1. ):
+    dSUR_Chain(surData.data,surData.nObservations,surData.nOutcomes,surData.nVSPredictors,surData.nFixedPredictors,
+        surData.outcomesIdx,surData.VSPredictorsIdx,surData.fixedPredictorsIdx,surData.missingDataArrayIdx,surData.completeCases,
+        "Bandit",false,externalTemperature){ }
+
 
 // ******************************
 // Init Methods
@@ -80,7 +59,7 @@ void dSUR_Chain::jtInit( JunctionTree& jt_init )
 
 void dSUR_Chain::jtInit()
 {
-    jt = JunctionTree( s , "full" ); // full constructor, dense adj matrix of dimension s
+    jt = JunctionTree( nOutcomes , "full" ); // full constructor, dense adj matrix of dimension s
  
     jt_acc_count = 0.;
     n_updates_jt = 5; // default value, should I pick something different?
@@ -100,7 +79,7 @@ double dSUR_Chain::sampleSigmaRhoGivenBeta( const arma::mat&  externalBeta , arm
 {
     double logP = 0.;
 
-    mutantSigmaRho.zeros(s,s); // RESET THE WHOLE MATRIX !!!
+    mutantSigmaRho.zeros(nOutcomes,nOutcomes); // RESET THE WHOLE MATRIX !!!
 
     // hyperparameter of the posterior sampler
     arma::mat Sigma = ( externalU.t() * externalU ) / temperature; Sigma.diag() += tau;
@@ -117,7 +96,7 @@ double dSUR_Chain::sampleSigmaRhoGivenBeta( const arma::mat&  externalBeta , arm
 
     //bool test;
 
-    for( unsigned int k=0; k<s; ++k )
+    for( unsigned int k=0; k<nOutcomes; ++k )
     {
         singleIdx_k(0) = k;
 
@@ -139,7 +118,7 @@ double dSUR_Chain::sampleSigmaRhoGivenBeta( const arma::mat&  externalBeta , arm
         // *** Diagonal Element
 
         // Compute parameters
-        a = 0.5 * ( n/temperature + nu - s + nConditioninIndexes + 1. ) ;
+        a = 0.5 * ( nObservations/temperature + nu - nOutcomes + nConditioninIndexes + 1. ) ;
         b = 0.5 * thisSigmaTT ;
 
         mutantSigmaRho(k,k) = Distributions::randIGamma( a , b );
@@ -195,7 +174,7 @@ double dSUR_Chain::logPSigmaRhoGivenBeta( const arma::mat&  externalBeta , const
     //bool test;
 
 
-    for( unsigned int k=0; k<s; ++k )
+    for( unsigned int k=0; k<nOutcomes; ++k )
     {
         singleIdx_k(0) = k;
 
@@ -218,7 +197,7 @@ double dSUR_Chain::logPSigmaRhoGivenBeta( const arma::mat&  externalBeta , const
         // *** Diagonal Element
 
         // Compute parameters
-        a = 0.5 * ( n/temperature + nu - s + nConditioninIndexes + 1. ) ;
+        a = 0.5 * ( nObservations/temperature + nu - nOutcomes + nConditioninIndexes + 1. ) ;
         b = 0.5 * thisSigmaTT ;
 
         logP += Distributions::logPDFIGamma( mutantSigmaRho(k,k), a , b );
@@ -383,14 +362,14 @@ int dSUR_Chain::adapt_crossOver_step( std::shared_ptr<dSUR_Chain>& that )
 
     unsigned int n11,n12,n21,n22;
 
-    std::vector<arma::umat> gammaXO(2); gammaXO[0] = arma::umat(p,s);  gammaXO[1] = arma::umat(p,s); 
+    std::vector<arma::umat> gammaXO(2); gammaXO[0] = arma::umat(nVSPredictors,nOutcomes);  gammaXO[1] = arma::umat(nVSPredictors,nOutcomes); 
 
     // Propose Crossover
     n11=0;n12=0;n21=0;n22=0;
 
-    for(unsigned int j=0; j<p; ++j)
+    for(unsigned int j=0; j<nVSPredictors; ++j)
     {
-        for(unsigned int k=0; k<s; ++k)
+        for(unsigned int k=0; k<nOutcomes; ++k)
         {
             if ( this->getGamma()(j,k) == that->getGamma()(j,k) )
             {
@@ -509,12 +488,12 @@ int dSUR_Chain::uniform_crossOver_step( std::shared_ptr<dSUR_Chain>& that )
 {
     double pCrossOver;
 
-    std::vector<arma::umat> gammaXO(2); gammaXO[0] = arma::umat(p,s);  gammaXO[1] = arma::umat(p,s); 
+    std::vector<arma::umat> gammaXO(2); gammaXO[0] = arma::umat(nVSPredictors,nOutcomes);  gammaXO[1] = arma::umat(nVSPredictors,nOutcomes); 
 
     // Propose Crossover
-    for(unsigned int j=0; j<p; ++j)
+    for(unsigned int j=0; j<nVSPredictors; ++j)
     {
-        for(unsigned int k=0; k<s; ++k)
+        for(unsigned int k=0; k<nOutcomes; ++k)
         {
             if( Distributions::randU01() < 0.5 )
             {
@@ -616,13 +595,13 @@ int dSUR_Chain::block_crossOver_step( std::shared_ptr<dSUR_Chain>& that , arma::
 {
     double pCrossOver;
 
-    std::vector<arma::umat> gammaXO(2); gammaXO[0] = arma::umat(p,s);  gammaXO[1] = arma::umat(p,s); 
+    std::vector<arma::umat> gammaXO(2); gammaXO[0] = arma::umat(nVSPredictors,nOutcomes);  gammaXO[1] = arma::umat(nVSPredictors,nOutcomes); 
 
     // Propose Crossover
 
     // Select the ONE index to foor the block
-    unsigned int predIdx = Distributions::randIntUniform(0, p-1 ); // pred
-    unsigned int outcIdx = Distributions::randIntUniform(0, s-1 ); // outcome
+    unsigned int predIdx = Distributions::randIntUniform(0, nVSPredictors-1 ); // pred
+    unsigned int outcIdx = Distributions::randIntUniform(0, nOutcomes-1 ); // outcome
 
     arma::uvec covIdx;
     
@@ -631,14 +610,16 @@ int dSUR_Chain::block_crossOver_step( std::shared_ptr<dSUR_Chain>& that , arma::
     }else{
         // if not precomputed, compute the correlation only for the current row
         
+        // #ifdef _OPENMP
         // #pragma omp parallel for
-        // for( unsigned int j=0; j<p; ++j){
-        //     tmpVec(j) = arma::as_scalar( arma::cor( (*X).col(predIdx+1) , (*X).col(j+1) ) );
+        // #endif
+        // for( unsigned int j=0; j<nVSPredictors-1; ++j){
+        //     tmpVec(j) = arma::as_scalar( arma::cor( data->col( (*VSPredictorsIdx)(predIdx) ) , data->col( (*VSPredictorsIdx(j)) ) );
         // }
         // covIdx = arma::find( arma::abs( tmpVec ) > threshold );
         // I'd rather leave parallelisation to armadillo and avoid the temp, but this version would work as well
 
-        covIdx = arma::find( arma::abs( arma::cor( (*X).col(predIdx+1) , (*X).cols(1,p) ) ) > threshold );
+        covIdx = arma::find( arma::abs( arma::cor( data->col( (*VSPredictorsIdx)(predIdx) ) , data->cols( (*VSPredictorsIdx) ) ) ) > threshold );
     }
 
     gammaXO[0] = this->getGamma();
@@ -835,9 +816,9 @@ int dSUR_Chain::exchangeAll_step( std::shared_ptr<dSUR_Chain>& thatChain )
 
 arma::mat dSUR_Chain::createRhoU( const arma::mat& externalU , const arma::mat&  externalSigmaRho )
 {
-    arma::mat externalRhoU = arma::zeros<arma::mat>(n,s);
+    arma::mat externalRhoU = arma::zeros<arma::mat>(nObservations,nOutcomes);
 
-    for( unsigned int k=1; k < s; ++k)
+    for( unsigned int k=1; k < nOutcomes; ++k)
     {
         for(unsigned int l=0 ; l<k ; ++l)
         {
@@ -852,9 +833,9 @@ arma::mat dSUR_Chain::createRhoU( const arma::mat& externalU , const arma::mat& 
 
 void dSUR_Chain::updateRhoU()
 {
-    rhoU.zeros(n,s);
+    rhoU.zeros(nObservations,nOutcomes);
 
-    for( unsigned int k=1; k < s; ++k)
+    for( unsigned int k=1; k < nOutcomes; ++k)
     {
         for(unsigned int l=0 ; l<k ; ++l)
         {

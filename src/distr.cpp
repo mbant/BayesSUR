@@ -10,7 +10,9 @@
 #include <boost/math/special_functions/erf.hpp> // can I do this?
 
 #ifdef _OPENMP
-#include <omp.h>
+   #include <omp.h>
+#else
+   #define omp_get_thread_num() 0
 #endif
 
 //defined in global.h
@@ -21,31 +23,19 @@ namespace Distributions{
 	double randU01()
 	{
 		std::uniform_real_distribution<> distr(0, std::nextafter(1, std::numeric_limits<double>::max())); // init U(0,1)
-		#ifdef _OPENMP
 		return distr(rng[omp_get_thread_num()]);
-		#else
-		return distr(rng[0]);
-		#endif
 	}
 
 	double randLogU01()
 	{
 		std::uniform_real_distribution<> distr(0, std::nextafter(1, std::numeric_limits<double>::max())); // init U(0,1)
-		#ifdef _OPENMP
 		return log(distr(rng[omp_get_thread_num()]));
-		#else
-		return log(distr(rng[0]));
-		#endif
 	}
 
 	int randIntUniform(const int a,const int b)
 	{
 		std::uniform_int_distribution<> distr(a, b); // init the discrete uniform
-		#ifdef _OPENMP
 		return distr(rng[omp_get_thread_num()]);
-		#else
-		return distr(rng[0]);
-		#endif
 	}
 
 	arma::ivec randIntUniform(const unsigned int n, const int a,const int b)
@@ -54,11 +44,7 @@ namespace Distributions{
 		std::uniform_int_distribution<> distr(a, b); // init the discrete uniform
 		for(unsigned int i=0; i<n; ++i)
 		{
-			#ifdef _OPENMP
 			res(i) = distr(rng[omp_get_thread_num()]);
-			#else
-			res(i) = distr(rng[0]);
-			#endif
 		}
 		return res;
 	}
@@ -66,11 +52,7 @@ namespace Distributions{
 	double randExponential(const double lambda)
 	{
 		std::exponential_distribution<> distr(lambda);
-		#ifdef _OPENMP
 		return distr(rng[omp_get_thread_num()]);
-		#else
-		return distr(rng[0]);
-		#endif
 	}
 
 	arma::vec randExponential(const unsigned int n, const double lambda)
@@ -79,11 +61,7 @@ namespace Distributions{
 		std::exponential_distribution<> distr(lambda);
 		for(unsigned int i=0; i<n; ++i)
 		{
-			#ifdef _OPENMP
 			res(i) = distr(rng[omp_get_thread_num()]);
-			#else
-			res(i) = distr(rng[0]);
-			#endif
 		}
 		return res;
 	}
@@ -91,11 +69,7 @@ namespace Distributions{
 	unsigned int randBinomial(const unsigned int n, const double p) // slow but safe (CARE, n here is the binomial parameters, return value is always ONE integer)
 	{
 		std::binomial_distribution<> distr(n, p);
-		#ifdef _OPENMP
 		return distr(rng[omp_get_thread_num()]);
-		#else
-		return distr(rng[0]);
-		#endif
 	}
 
 	arma::uvec randMultinomial(unsigned int n, const arma::vec prob)
@@ -132,11 +106,7 @@ namespace Distributions{
 			throw negativeParameters();
 
     	std::normal_distribution<> distr(m,sqrt(sigmaSquare));
-		#ifdef _OPENMP
 		return distr(rng[omp_get_thread_num()]);
-		#else
-		return distr(rng[0]);
-		#endif
 	}
 
 	arma::vec randNormal(const unsigned int n, const double m=0., const double sigmaSquare=1.) // n-sample normal, parameters mean and variance
@@ -149,11 +119,7 @@ namespace Distributions{
     	std::normal_distribution<> distr(m,sqrt(sigmaSquare));
     	for(unsigned int i=0; i<n; ++i)
 		{
-			#ifdef _OPENMP
 			res(i) = distr(rng[omp_get_thread_num()]);
-			#else
-			res(i) = distr(rng[0]);
-			#endif
 		}
 		return res;
 	}
@@ -197,11 +163,7 @@ namespace Distributions{
 	double randT(const double nu)
 	{
     	std::student_t_distribution<double> distr(nu);
-		#ifdef _OPENMP
 		return distr(rng[omp_get_thread_num()]);
-		#else
-		return distr(rng[0]);
-		#endif
 	}
 
 	arma::vec randT(const unsigned int n, const double nu)
@@ -210,11 +172,7 @@ namespace Distributions{
     	std::student_t_distribution<double> distr(nu);
     	for(unsigned int i=0; i<n; ++i)
 		{
-			#ifdef _OPENMP
 			res(i) = distr(rng[omp_get_thread_num()]);
-			#else
-			res(i) = distr(rng[0]);
-			#endif
 		}
 		return res;
 	}
@@ -239,11 +197,7 @@ namespace Distributions{
 		}
 
 		std::gamma_distribution<> distr(shape,scale);
-		#ifdef _OPENMP
 		return distr(rng[omp_get_thread_num()]);
-		#else
-		return distr(rng[0]);
-		#endif
 	}
 
 
@@ -257,11 +211,7 @@ namespace Distributions{
 		}
 
 		std::gamma_distribution<> distr(shape,1./scale);
-		#ifdef _OPENMP
 		return  ( 1./distr(rng[omp_get_thread_num()]) );
-		#else
-		return  ( 1./distr(rng[0]) );
-		#endif
 	}
 
 
@@ -286,11 +236,7 @@ namespace Distributions{
 		// Fill the lower matrix with random normals
 		for(unsigned int j = 0; j < m; j++){
 			for(unsigned int i = j+1; i < m; i++){
-				#ifdef _OPENMP
 		  		Z(i,j) = normal01(rng[omp_get_thread_num()]);
-				#else
-		  		Z(i,j) = normal01(rng[0]);
-				#endif
 			}
 		}
 
@@ -330,11 +276,7 @@ namespace Distributions{
 	unsigned int randBernoulli(double pi)
 	{
 		std::bernoulli_distribution distr(pi);
-		#ifdef _OPENMP
 		return distr(rng[omp_get_thread_num()]);
-		#else
-		return distr(rng[0]);
-		#endif
 	}
 
 	double randTruncNorm(double m, double sd,double lower, double upper) // Naive, but it'll do for now -- notice now parameters are mean and standard deviation!

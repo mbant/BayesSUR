@@ -23,21 +23,16 @@ class dSUR_Chain : public SSUR_Chain // derive from SSUR and override only a few
         // Constructors
         // *******************************
 
-        // empty, everything is default, except the data
-        dSUR_Chain( arma::mat& , arma::mat& , double ); // Y and X  (and temperature that'll have a default value of 1.)
-        dSUR_Chain( arma::mat& , arma::mat& , std::string& , bool , double ); // Y and X and gammaSamplerType (and temperature that'll have a default value of 1.)
+        dSUR_Chain( std::shared_ptr<arma::mat> data, unsigned int nObservations, 
+                unsigned int nOutcomes, unsigned int nVSPredictors, unsigned int nFixedPredictors,
+                std::shared_ptr<arma::uvec> outcomesIdx, std::shared_ptr<arma::uvec> VSPredictorsIdx,
+                std::shared_ptr<arma::uvec> fixedPredictorIdx, std::shared_ptr<arma::umat> NAArrayIdx, std::shared_ptr<arma::uvec> completeCases, 
+                std::string gammaSamplerType_ = "Bandit", bool usingGprior = false, double externalTemperature = 1. );
 
-        // full, every parameter object is initialised from existing objects
-        dSUR_Chain( arma::mat& , arma::mat& , // Y and X
-                double , JunctionTree& , arma::mat& , // tau, jt, sigmaRho 
-                arma::vec& , arma::vec& , arma::umat& , double , arma::mat& , // o, pi, gamma, w, beta
-                double ); // temperature
 
-        // full, every parameter object is initialised from existing objects, plus the type of gamma sampler
-        dSUR_Chain( arma::mat& , arma::mat& , // Y and X
-                double , JunctionTree& jt_init , arma::mat& , // tau, jt, sigmaRho 
-                arma::vec& , arma::vec& , arma::umat& , double , arma::mat& , // o, pi, gamma, w, beta
-                std::string , bool , double ); // gamma sampler type , temperature
+        dSUR_Chain( Utils::SUR_Data& surData, std::string gammaSamplerType_ = "Bandit", bool usingGprior = false, double externalTemperature = 1. );
+
+        dSUR_Chain( Utils::SUR_Data& surData, double externalTemperature = 1. );
 
         // ******************************
         // Init Methods

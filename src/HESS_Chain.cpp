@@ -12,139 +12,67 @@
 // Constructors
 // *******************************
 
-// empty, everything is default, except the data
-HESS_Chain::HESS_Chain( arma::mat& externalY , arma::mat& externalX , double externalTemperature = 1. ) // Y and X  (and temperature that'll have a default value of 1.)
-{
+HESS_Chain::HESS_Chain( std::shared_ptr<arma::mat> data, unsigned int nObservations, 
+            unsigned int nOutcomes, unsigned int nVSPredictors, unsigned int nFixedPredictors,
+            std::shared_ptr<arma::uvec> outcomesIdx, std::shared_ptr<arma::uvec> VSPredictorsIdx,
+            std::shared_ptr<arma::uvec> fixedPredictorIdx, std::shared_ptr<arma::umat> NAArrayIdx, std::shared_ptr<arma::uvec> completeCases, 
+            std::string gammaSamplerType_ = "Bandit", bool usingGprior = false, double externalTemperature = 1. ):
+    data(data), outcomesIdx(outcomesIdx), VSPredictorsIdx(VSPredictorsIdx), fixedPredictorsIdx(fixedPredictorsIdx),
+    missingDataArrayIdx(NAArrayIdx), completeCases(completeCases),gammaSamplerType(gammaSamplerType_),gPrior(usingGprior),
+    temperature(externalTemperature),internalIterationCounter(0)
+    {
 
-    setData( std::make_shared<arma::mat>(externalY), std::make_shared<arma::mat>(externalX) );
+        predictorsIdx = std::make_shared<arma::uvec>(arma::join_rows( *fixedPredictorsIdx, *VSPredictorsIdx ));
+        setXtX();
 
-    temperature = externalTemperature;
-
-    internalIterationCounter = 0;
-
-    gammaSamplerType = "bandit";
-    gPrior = false;
-
-    banditInit();
-    // MC3Init();
-
-    oInit();
-    piInit();
-    gammaInit();
-    wInit();
-
-    sigmaABInit();
-
-    updateGammaMask();
-
-    logLikelihood();
-
-}
-
-// full, every parameter object is initialised from existing objects
-HESS_Chain::HESS_Chain( arma::mat& externalY , arma::mat& externalX , // Y and X
-        arma::vec& o_init , arma::vec& pi_init , arma::umat& gamma_init , double w_init , // o, pi, gamma, w
-        double externalTemperature = 1. ) // temperature
-{
-    std::string banditSampler = "bandit";
-    bool gPrior_= false;
-    HESS_Chain( externalY , externalX , o_init , pi_init , 
-        gamma_init , w_init , banditSampler , gPrior_ , externalTemperature );
-}
-
-
-// full, every parameter object is initialised from existing objects, plus the type of gamma sampler
-HESS_Chain::HESS_Chain( arma::mat& externalY , arma::mat& externalX , // Y and X
-        arma::vec& o_init , arma::vec& pi_init , arma::umat& gamma_init , double w_init , // o, pi, gamma, w
-        std::string gammaSamplerType_ , bool gPrior_ , double externalTemperature = 1. ) // gamma sampler type , gPrior , temperature
-{
-
-    setData( std::make_shared<arma::mat>(externalY), std::make_shared<arma::mat>(externalX) );
-
-    temperature = externalTemperature;
-
-    internalIterationCounter = 0;
-
-    gPrior = gPrior_;
-
-    gammaSamplerType = gammaSamplerType_;
-    if( gammaSamplerType == "B" || gammaSamplerType == "bandit" || gammaSamplerType == "Bandit" || gammaSamplerType == "b" )
         banditInit();
-    else
-       MC3Init();    
+        MC3Init();    
 
-    oInit( o_init );
-    piInit( pi_init );
-    gammaInit( gamma_init );
-    wInit( w_init );
+        oInit();
+        piInit();
+        gammaInit();
+        wInit();
 
-    sigmaABInit();
+        sigmaABInit();
 
-    updateGammaMask();
+        updateGammaMask();
 
-    logLikelihood();
-}
+        logLikelihood();
+
+    }
+
+
+HESS_Chain::HESS_Chain( Utils::SUR_Data& surData, std::string gammaSamplerType_ = "Bandit", bool usingGprior = false, double externalTemperature = 1. ):
+    HESS_Chain(surData.data,surData.nObservations,surData.nOutcomes,surData.nVSPredictors,surData.nFixedPredictors,
+        surData.outcomesIdx,surData.VSPredictorsIdx,surData.fixedPredictorsIdx,surData.missingDataArrayIdx,surData.completeCases,
+        gammaSamplerType_,usingGprior,externalTemperature){ }
+
+HESS_Chain::HESS_Chain( Utils::SUR_Data& surData, double externalTemperature = 1. ):
+    HESS_Chain(surData.data,surData.nObservations,surData.nOutcomes,surData.nVSPredictors,surData.nFixedPredictors,
+        surData.outcomesIdx,surData.VSPredictorsIdx,surData.fixedPredictorsIdx,surData.missingDataArrayIdx,surData.completeCases,
+        "Bandit",false,externalTemperature){ }
 
 // *******************************
 // Getters and Setters
 // *******************************
 
 // data
-std::shared_ptr<arma::mat> HESS_Chain::getY() const{ return Y ; }
-
-std::shared_ptr<arma::mat> HESS_Chain::getX() const{ return X ; }
-
-void HESS_Chain::setData( std::shared_ptr<arma::mat> externalY , std::shared_ptr<arma::mat> externalX )
+void HESS_Chain::setXtX()
 { 
-    Y = externalY ;
-    
-    n = (*Y).n_rows;
-    s = (*Y).n_cols;
-
-    X = externalX ;
-
-    if( arma::all( (*X).col(0) == 1. ) )
-    {
-        // if the interceot is there, remove it temporarilty
-        (*X).shed_col(0);
-    }
-
-    p = (*X).n_cols;
-    corrMatX = arma::cor( *X );  // this need to be on pxp values, not with the intercept
-
-    // standardise data
-    (*Y).each_col( [](arma::vec& a){ a = ( a - arma::mean(a) ) / arma::stddev(a); } );
-    (*X).each_col( [](arma::vec& a){ a = ( a - arma::mean(a) ) / arma::stddev(a); } );
-    
-    // add intercept (again)
-    (*X).insert_cols(0, arma::ones<arma::vec>(n) );
 
     // Compute XtX
-    if( p < 3000 )  // kinda arbitrary value, how can we assess a more sensible one?
+    if( (nFixedPredictors+nVSPredictors) < 3000 )  // kinda arbitrary value, how can we assess a more sensible one?
     {
         preComputedXtX = true;
-        XtX = (*X).t() * (*X);
+        XtX = data->cols( *predictorsIdx ).t() * data->cols( *predictorsIdx );
+        corrMatX = arma::cor( data->submat(arma::regspace<arma::uvec>(0,nObservations-1), *VSPredictorsIdx ) );  // this is only for values to be selected
     }else{
+
         preComputedXtX = false;
-        XtX = arma::mat();
+        XtX.clear();          // if not precomputed, these two are just reset
+        corrMatX.clear();
     }
-
-
-    // this should never be called once the model is set. 
-    // In case it is, all the liklihood-impacted states are reset
-    gamma = arma::zeros<arma::umat>(p,s);
-    updateGammaMask();
-    
-    log_likelihood = logLikelihood();
-
 }
-
-arma::mat& HESS_Chain::getXtX(){ return XtX ; }
-
-unsigned int HESS_Chain::getN() const{ return n ; }
-unsigned int HESS_Chain::getP() const{ return p ; }
-unsigned int HESS_Chain::getS() const{ return s ; }
-// no setters as they are linked to the data
 
 // gPrior
 void HESS_Chain::gPriorInit() // g Prior can only be init at the start, so no proper set method
@@ -156,7 +84,7 @@ void HESS_Chain::gPriorInit() // g Prior can only be init at the start, so no pr
     gPrior = true;
 
     // re-initialise the w parameter in line with the new prior, as w now has a different meaning
-    wInit( (double)n , 0.5*s + s -1. , 0.5*n*s ); // these values are taken from Lewin 2016
+    wInit( (double)nObservations , 0.5*nOutcomes + nOutcomes -1. , 0.5*nObservations*nOutcomes ); // these values are taken from Lewin 2016
     
     // update internals
     logPW();
@@ -420,13 +348,13 @@ void HESS_Chain::oInit( arma::vec& o_init , double a_o_ , double b_o_ , double v
 
 void HESS_Chain::oInit()
 {
-    arma::vec init = arma::ones<arma::vec>(s) / std::max( 500. , (double)p ) ;
-    oInit( init , 2. , std::max(500.,(double)p)-2. , 0.005 );
+    arma::vec init = arma::ones<arma::vec>(nOutcomes) / std::max( 500. , (double)nVSPredictors ) ;
+    oInit( init , 2. , std::max(500.,(double)nVSPredictors)-2. , 0.005 );
 }
 
 void HESS_Chain::oInit( arma::vec& o_init )
 {
-    oInit( o_init , 2. , std::max(500.,(double)p)-2. , 0.005 );
+    oInit( o_init , 2. , std::max(500.,(double)nVSPredictors)-2. , 0.005 );
 }
 
 void HESS_Chain::piInit( arma::vec& pi_init , double a_pi_ , double b_pi_ , double var_pi_proposal_ )
@@ -442,7 +370,7 @@ void HESS_Chain::piInit( arma::vec& pi_init , double a_pi_ , double b_pi_ , doub
 
 void HESS_Chain::piInit()
 {
-    arma::vec init = arma::ones<arma::vec>(p) ;
+    arma::vec init = arma::ones<arma::vec>(nVSPredictors) ;
     piInit( init , 2. , 1. , 0.02 );
 }
 
@@ -461,7 +389,7 @@ void HESS_Chain::gammaInit( arma::umat& gamma_init )
 
 void HESS_Chain::gammaInit()
 {
-    arma::umat init = arma::zeros<arma::umat>(p,s);
+    arma::umat init = arma::zeros<arma::umat>(nVSPredictors,nOutcomes);
     gammaInit( init );
 }
 
@@ -508,7 +436,7 @@ void HESS_Chain::wInit()
 double HESS_Chain::logPO( const arma::vec& o_ , double a_o_ , double b_o_ )
 {
     double logP = 0.;
-    for(unsigned int k=0; k<s; ++k)
+    for(unsigned int k=0; k<nOutcomes; ++k)
         logP += Distributions::logPDFBeta( o_(k) , a_o_, b_o_ );
 
     return logP;
@@ -530,7 +458,7 @@ double HESS_Chain::logPO( const arma::vec& o_ )
 double HESS_Chain::logPPi( arma::vec& pi_ , double a_pi_ , double b_pi_ )
 {
     double logP = 0.;
-    for(unsigned int j=0; j<p; ++j)
+    for(unsigned int j=0; j<nVSPredictors; ++j)
         logP += Distributions::logPDFGamma( pi_(j) , a_pi_, b_pi_ );
 
     return logP;    
@@ -550,9 +478,9 @@ double HESS_Chain::logPPi( arma::vec& pi_ )
 double HESS_Chain::logPGamma( const arma::umat& externalGamma , const arma::vec& o_ , const arma::vec& pi_ )
 {
     double logP = 0.;
-    for(unsigned int j=0; j<p; ++j)
+    for(unsigned int j=0; j<nVSPredictors; ++j)
     {
-        for(unsigned int k=0; k<s; ++k)
+        for(unsigned int k=0; k<nOutcomes; ++k)
         {
             if( ( o_(k) * pi_(j) ) > 1 )
                 return -std::numeric_limits<double>::infinity();
@@ -596,7 +524,7 @@ double HESS_Chain::logLikelihood( )
 {
     double logP, sign, tmp; //sign is needed for the implementation, but we 'assume' that all the matrices are (semi-)positive-definite (-> det>=0)
 
-    logP = -log(M_PI)*((double)n*(double)s*0.5); // initialise with the normalising constant remaining from the likelhood
+    logP = -log(M_PI)*((double)nObservations*(double)nOutcomes*0.5); // initialise with the normalising constant remaining from the likelhood
 
     arma::uvec VS_IN_k;
     arma::mat W_k;
@@ -605,7 +533,7 @@ double HESS_Chain::logLikelihood( )
 
     // HERE WOULD BE A CANDIDATE FOR private(VS_IN_k, W_k, mu_k, a_sigma_k, b_sigma_k, tmp, sign) reduction(+:logP)
     // but it introduces random arma::inv_sympd errors and problems with the logP =/
-    for( unsigned int k=0; k<s; ++k)
+    for( unsigned int k=0; k<nOutcomes; ++k)
     {
         VS_IN_k = gammaMask( arma::find(  gammaMask.col(1) == k) , arma::zeros<arma::uvec>(1) );
         
@@ -619,15 +547,15 @@ double HESS_Chain::logLikelihood( )
         else
         {
             if( gPrior )
-                W_k = (w*temperature)/(w+temperature) * arma::inv_sympd( ( (*X).cols(VS_IN_k).t() * (*X).cols(VS_IN_k) ) );
+                W_k = (w*temperature)/(w+temperature) * arma::inv_sympd( ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) );
             else
-                W_k = arma::inv_sympd( ( (*X).cols(VS_IN_k).t() * (*X).cols(VS_IN_k) )/temperature + 1./w * arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
+                W_k = arma::inv_sympd( ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) )/temperature + 1./w * arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
         }
 
-        mu_k = W_k * ( (*X).cols(VS_IN_k).t() * (*Y).col(k) ); // we divide by temp later
+        mu_k = W_k * ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->col( (*outcomesIdx)(k) ) ); // we divide by temp later
 
-        a_sigma_k = a_sigma + 0.5*(double)n/temperature;
-        b_sigma_k = b_sigma + 0.5* arma::as_scalar( ((*Y).col(k).t() * (*Y).col(k)) - ( mu_k.t() * (*X).cols(VS_IN_k).t() * (*Y).col(k) ) )/temperature;
+        a_sigma_k = a_sigma + 0.5*(double)nObservations/temperature;
+        b_sigma_k = b_sigma + 0.5* arma::as_scalar( (data->col( (*outcomesIdx)(k) ).t() * data->col( (*outcomesIdx)(k) )) - ( mu_k.t() * data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->col( (*outcomesIdx)(k) ) ) )/temperature;
 
         arma::log_det(tmp, sign, W_k );
         logP += 0.5*tmp; 
@@ -649,7 +577,7 @@ double HESS_Chain::logLikelihood( const arma::umat&  externalGammaMask )
 {
     double logP, sign, tmp; //sign is needed for the implementation, but we 'assume' that all the matrices are (semi-)positive-definite (-> det>=0)
 
-    logP = -log(M_PI)*((double)n*(double)s*0.5); // initialise with the normalising constant remaining from the likelhood
+    logP = -log(M_PI)*((double)nObservations*(double)nOutcomes*0.5); // initialise with the normalising constant remaining from the likelhood
 
     arma::uvec VS_IN_k;
     arma::mat W_k;
@@ -658,7 +586,7 @@ double HESS_Chain::logLikelihood( const arma::umat&  externalGammaMask )
 
     // HERE WOULD BE A CANDIDATE FOR private(VS_IN_k, W_k, mu_k, a_sigma_k, b_sigma_k, tmp, sign) reduction(+:logP)
     // but it introduces random arma::inv_sympd errors and problems with the logP =/
-    for( unsigned int k=0; k<s; ++k)
+    for( unsigned int k=0; k<nOutcomes; ++k)
     {
         VS_IN_k = externalGammaMask( arma::find(  externalGammaMask.col(1) == k) , arma::zeros<arma::uvec>(1) );
 
@@ -672,15 +600,15 @@ double HESS_Chain::logLikelihood( const arma::umat&  externalGammaMask )
         else
         {
             if( gPrior )
-                W_k = (w*temperature)/(w+temperature) * arma::inv_sympd( ( (*X).cols(VS_IN_k).t() * (*X).cols(VS_IN_k) ) );
+                W_k = (w*temperature)/(w+temperature) * arma::inv_sympd( ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) );
             else
-                W_k = arma::inv_sympd( ( (*X).cols(VS_IN_k).t() * (*X).cols(VS_IN_k) )/temperature + 1./w * arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
+                W_k = arma::inv_sympd( ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) )/temperature + 1./w * arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
         }
 
-        mu_k = W_k * ( (*X).cols(VS_IN_k).t() * (*Y).col(k) ); // we divide by temp later
+        mu_k = W_k * ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->col( (*outcomesIdx)(k) ) ); // we divide by temp later
 
-        a_sigma_k = a_sigma + 0.5*(double)n/temperature;
-        b_sigma_k = b_sigma + 0.5* arma::as_scalar( ((*Y).col(k).t() * (*Y).col(k)) - ( mu_k.t() * (*X).cols(VS_IN_k).t() * (*Y).col(k) ) )/temperature;
+        a_sigma_k = a_sigma + 0.5*(double)nObservations/temperature;
+        b_sigma_k = b_sigma + 0.5* arma::as_scalar( (data->col( (*outcomesIdx)(k) ).t() * data->col( (*outcomesIdx)(k) )) - ( mu_k.t() * data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->col( (*outcomesIdx)(k) ) ) )/temperature;
 
         arma::log_det(tmp, sign, W_k );
         logP += 0.5*tmp; 
@@ -704,7 +632,7 @@ double HESS_Chain::logLikelihood( arma::umat& externalGammaMask , const arma::um
 
     externalGammaMask = createGammaMask(externalGamma);
 
-    logP = -log(M_PI)*((double)n*(double)s*0.5); // initialise with the normalising constant remaining from the likelhood
+    logP = -log(M_PI)*((double)nObservations*(double)nOutcomes*0.5); // initialise with the normalising constant remaining from the likelhood
 
     arma::uvec VS_IN_k;
     arma::mat W_k;
@@ -713,7 +641,7 @@ double HESS_Chain::logLikelihood( arma::umat& externalGammaMask , const arma::um
 
     // HERE WOULD BE A CANDIDATE FOR private(VS_IN_k, W_k, mu_k, a_sigma_k, b_sigma_k, tmp, sign) reduction(+:logP)
     // but it introduces random arma::inv_sympd errors and problems with the logP =/
-    for( unsigned int k=0; k<s; ++k)
+    for( unsigned int k=0; k<nOutcomes; ++k)
     {
         VS_IN_k = externalGammaMask( arma::find(  externalGammaMask.col(1) == k) , arma::zeros<arma::uvec>(1) );
 
@@ -727,15 +655,15 @@ double HESS_Chain::logLikelihood( arma::umat& externalGammaMask , const arma::um
         else
         {
             if( gPrior )
-                W_k = (w*temperature)/(w+temperature) * arma::inv_sympd( ( (*X).cols(VS_IN_k).t() * (*X).cols(VS_IN_k) ) );
+                W_k = (w*temperature)/(w+temperature) * arma::inv_sympd( ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) );
             else
-                W_k = arma::inv_sympd( ( (*X).cols(VS_IN_k).t() * (*X).cols(VS_IN_k) )/temperature + 1./w * arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
+                W_k = arma::inv_sympd( ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) )/temperature + 1./w * arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
         }
 
-        mu_k = W_k * ( (*X).cols(VS_IN_k).t() * (*Y).col(k) ); // we divide by temp later
+        mu_k = W_k * ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->col( (*outcomesIdx)(k) ) ); // we divide by temp later
 
-        a_sigma_k = a_sigma + 0.5*(double)n/temperature;
-        b_sigma_k = b_sigma + 0.5* arma::as_scalar( ((*Y).col(k).t() * (*Y).col(k)) - ( mu_k.t() * (*X).cols(VS_IN_k).t() * (*Y).col(k) ) )/temperature;
+        a_sigma_k = a_sigma + 0.5*(double)nObservations/temperature;
+        b_sigma_k = b_sigma + 0.5* arma::as_scalar( (data->col( (*outcomesIdx)(k) ).t() * data->col( (*outcomesIdx)(k) )) - ( mu_k.t() * data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->col( (*outcomesIdx)(k) ) ) )/temperature;
 
         arma::log_det(tmp, sign, W_k );
         logP += 0.5*tmp; 
@@ -756,7 +684,7 @@ double HESS_Chain::logLikelihood( const arma::umat& externalGammaMask , const do
 {
 
     double logP, sign, tmp; //sign is needed for the implementation, but we 'assume' that all the matrices are (semi-)positive-definite (-> det>=0)
-    logP = -log(M_PI)*((double)n*(double)s*0.5); // initialise with the normalising constant remaining from the likelhood
+    logP = -log(M_PI)*((double)nObservations*(double)nOutcomes*0.5); // initialise with the normalising constant remaining from the likelhood
 
     arma::uvec VS_IN_k;
     arma::mat W_k;
@@ -765,7 +693,7 @@ double HESS_Chain::logLikelihood( const arma::umat& externalGammaMask , const do
 
     // HERE WOULD BE A CANDIDATE FOR private(VS_IN_k, W_k, mu_k, a_sigma_k, b_sigma_k, tmp, sign) reduction(+:logP)
     // but it introduces random arma::inv_sympd errors and problems with the logP =/
-    for( unsigned int k=0; k<s; ++k)
+    for( unsigned int k=0; k<nOutcomes; ++k)
     {
         VS_IN_k = externalGammaMask( arma::find(  externalGammaMask.col(1) == k) , arma::zeros<arma::uvec>(1) );
 
@@ -779,16 +707,16 @@ double HESS_Chain::logLikelihood( const arma::umat& externalGammaMask , const do
         else
         {
             if( gPrior )
-                W_k = (externalW*temperature)/(externalW+temperature) * arma::inv_sympd( ( (*X).cols(VS_IN_k).t() * (*X).cols(VS_IN_k) ) );
+                W_k = (externalW*temperature)/(externalW+temperature) * arma::inv_sympd( ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) );
             else
-                W_k = arma::inv_sympd( ( (*X).cols(VS_IN_k).t() * (*X).cols(VS_IN_k) )/temperature + 1./externalW * arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
+                W_k = arma::inv_sympd( ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) )/temperature + 1./externalW * arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
         }
 
 
-        mu_k = W_k * ( (*X).cols(VS_IN_k).t() * (*Y).col(k) );
+        mu_k = W_k * ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->col( (*outcomesIdx)(k) ) );
 
-        a_sigma_k = externalA_sigma + 0.5*(double)n/temperature;
-        b_sigma_k = externalB_sigma + 0.5* arma::as_scalar( (*Y).col(k).t() * (*Y).col(k) - ( mu_k.t() * ( (*X).cols(VS_IN_k).t() * (*Y).col(k) ) ) )/temperature;
+        a_sigma_k = externalA_sigma + 0.5*(double)nObservations/temperature;
+        b_sigma_k = externalB_sigma + 0.5* arma::as_scalar( data->col( (*outcomesIdx)(k) ).t() * data->col( (*outcomesIdx)(k) ) - ( mu_k.t() * ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->col( (*outcomesIdx)(k) ) ) ) )/temperature;
 
         arma::log_det(tmp, sign, W_k );
         logP += 0.5*tmp; 
@@ -814,16 +742,16 @@ double HESS_Chain::gammaBanditProposal( arma::umat& mutantGamma , arma::uvec& up
     double logProposalRatio;
 
     // decide on one outcome
-    outcomeIdx = Distributions::randIntUniform(0,s-1);
+    outcomeIdx = Distributions::randIntUniform(0,nOutcomes-1);
 
     // Sample Zs (only for relevant outocome)
-    for(unsigned int i=0; i<p; ++i)
+    for(unsigned int i=0; i<nVSPredictors; ++i)
     {
             banditZeta(i) = Distributions::randBeta(banditAlpha(i,outcomeIdx),banditAlpha(i,outcomeIdx));
     }
 
     // Create mismatch (only for relevant outcome)
-    for(unsigned int i=0; i<p; ++i)
+    for(unsigned int i=0; i<nVSPredictors; ++i)
     {
         mismatch(i) = (mutantGamma(i,outcomeIdx)==0)?(banditZeta(i)):(1.-banditZeta(i));   //mismatch
     }
@@ -839,7 +767,7 @@ double HESS_Chain::gammaBanditProposal( arma::umat& mutantGamma , arma::uvec& up
 
         // Decide which to update
         updateIdx = arma::zeros<arma::uvec>(1);
-        updateIdx(0) = Distributions::randWeightedIndexSampleWithoutReplacement(p,normalised_mismatch); // sample the one
+        updateIdx(0) = Distributions::randWeightedIndexSampleWithoutReplacement(nVSPredictors,normalised_mismatch); // sample the one
 
         // Update
         mutantGamma(updateIdx(0),outcomeIdx) = 1 - gamma(updateIdx(0),outcomeIdx); // deterministic, just switch
@@ -864,7 +792,7 @@ double HESS_Chain::gammaBanditProposal( arma::umat& mutantGamma , arma::uvec& up
         logProposalRatio = 0.;
         // Decide which to update
         updateIdx = arma::zeros<arma::uvec>(n_updates_bandit);
-        updateIdx = Distributions::randWeightedIndexSampleWithoutReplacement(p,normalised_mismatch,n_updates_bandit); // sample n_updates_bandit indexes
+        updateIdx = Distributions::randWeightedIndexSampleWithoutReplacement(nVSPredictors,normalised_mismatch,n_updates_bandit); // sample n_updates_bandit indexes
 
         normalised_mismatch_backwards = mismatch; // copy for backward proposal
 
@@ -896,10 +824,10 @@ double HESS_Chain::gammaMC3Proposal( arma::umat& mutantGamma , arma::uvec& updat
     updateIdx = arma::uvec(n_updates_MC3);
 
     // decide on one outcome
-    outcomeIdx = Distributions::randIntUniform(0,s-1);
+    outcomeIdx = Distributions::randIntUniform(0,nOutcomes-1);
 
     for( unsigned int i=0; i<n_updates_MC3; ++i)
-        updateIdx(i) = Distributions::randIntUniform(0,p-1);    // note that I might be updating multiple times the same coeff
+        updateIdx(i) = Distributions::randIntUniform(0,nVSPredictors-1);    // note that I might be updating multiple times the same coeff
 
     for( auto i : updateIdx)
     mutantGamma(i,outcomeIdx) = ( Distributions::randU01() < 0.5)? gamma(i,outcomeIdx) : 1-gamma(i,outcomeIdx); // could simply be ( 0.5 ? 1 : 0) ;
@@ -917,7 +845,7 @@ double HESS_Chain::gammaMC3Proposal( arma::umat& mutantGamma , arma::uvec& updat
 void HESS_Chain::stepOneO()
 {
     
-    unsigned int k = Distributions::randIntUniform(0,s-1);
+    unsigned int k = Distributions::randIntUniform(0,nOutcomes-1);
     arma::vec proposedO = o;
 
     double proposedOPrior, proposedGammaPrior, logAccProb;
@@ -953,7 +881,7 @@ void HESS_Chain::stepO()
 
     double proposedOPrior, proposedGammaPrior, logAccProb;
 
-    for( unsigned int k=0; k < s ; ++k )
+    for( unsigned int k=0; k<nOutcomes ; ++k )
     {
         proposedO(k) = std::exp( std::log( o(k) ) + Distributions::randTruncNorm(0.0, var_o_proposal , -std::numeric_limits<double>::infinity() , -std::log( o(k) ) ) );
 
@@ -973,7 +901,7 @@ void HESS_Chain::stepO()
                 logP_o = proposedOPrior;
                 logP_gamma = proposedGammaPrior;
 
-                o_acc_count += o_acc_count / (double)s;
+                o_acc_count += o_acc_count / (double)nOutcomes;
             }else
                 proposedO(k) = o(k);
         }else
@@ -985,7 +913,7 @@ void HESS_Chain::stepO()
 // MH update (log-normal) -- update one value at each iteration TODO worth doing more?
 void HESS_Chain::stepOnePi()
 {
-    unsigned int j = Distributions::randIntUniform(0,p-1);
+    unsigned int j = Distributions::randIntUniform(0,nVSPredictors-1);
     arma::vec proposedPi = pi;
 
     double proposedPiPrior, proposedGammaPrior, logAccProb;
@@ -1018,7 +946,7 @@ void HESS_Chain::stepPi()
 
     double proposedPiPrior, proposedGammaPrior, logAccProb;
 
-    for( unsigned int j=0; j < p ; ++j )
+    for( unsigned int j=0; j < nVSPredictors ; ++j )
     {
         proposedPi(j) = std::exp( std::log( pi(j) ) + Distributions::randNormal(0.0, var_pi_proposal) );
 
@@ -1036,7 +964,7 @@ void HESS_Chain::stepPi()
                 logP_pi = proposedPiPrior;
                 logP_gamma = proposedGammaPrior;
 
-                pi_acc_count += pi_acc_count / (double)p;
+                pi_acc_count += pi_acc_count / (double)nVSPredictors;
             }else
                 proposedPi(j) = pi(j);
         }else
@@ -1178,8 +1106,8 @@ void HESS_Chain::updateProposalVariances()
         piEmpiricalMean = arma::log(pi);
 
         wEmpiricalM2 = 0.;
-        oEmpiricalM2 = arma::zeros<arma::vec>(s);
-        piEmpiricalM2 = arma::zeros<arma::vec>(p);
+        oEmpiricalM2 = arma::zeros<arma::vec>(nOutcomes);
+        piEmpiricalM2 = arma::zeros<arma::vec>(nVSPredictors);
 
         var_w_proposal_init = var_w_proposal;
         var_o_proposal_init = var_o_proposal;
@@ -1210,7 +1138,7 @@ void HESS_Chain::updateProposalVariances()
 
     // Then if it's actually > n update the proposal variances
 
-    if( internalIterationCounter > n  )  // update quantities and variance
+    if( internalIterationCounter > nObservations  )  // update quantities and variance
     {
 
         // update proposal variances
@@ -1303,14 +1231,14 @@ int HESS_Chain::adapt_crossOver_step( std::shared_ptr<HESS_Chain>& that )
 
     unsigned int n11,n12,n21,n22;
 
-    std::vector<arma::umat> gammaXO(2); gammaXO[0] = arma::umat(p,s);  gammaXO[1] = arma::umat(p,s); 
+    std::vector<arma::umat> gammaXO(2); gammaXO[0] = arma::umat(nVSPredictors,nOutcomes);  gammaXO[1] = arma::umat(nVSPredictors,nOutcomes); 
 
     // Propose Crossover
     n11=0;n12=0;n21=0;n22=0;
 
-    for(unsigned int j=0; j<p; ++j)
+    for(unsigned int j=0; j<nVSPredictors; ++j)
     {
-        for(unsigned int k=0; k<s; ++k)
+        for(unsigned int k=0; k<nOutcomes; ++k)
         {
             if ( this->getGamma()(j,k) == that->getGamma()(j,k) )
             {
@@ -1388,12 +1316,12 @@ int HESS_Chain::uniform_crossOver_step( std::shared_ptr<HESS_Chain>& that )
 {
     double pCrossOver;
 
-    std::vector<arma::umat> gammaXO(2); gammaXO[0] = arma::umat(p,s);  gammaXO[1] = arma::umat(p,s); 
+    std::vector<arma::umat> gammaXO(2); gammaXO[0] = arma::umat(nVSPredictors,nOutcomes);  gammaXO[1] = arma::umat(nVSPredictors,nOutcomes); 
 
     // Propose Crossover
-    for(unsigned int j=0; j<p; ++j)
+    for(unsigned int j=0; j<nVSPredictors; ++j)
     {
-        for(unsigned int k=0; k<s; ++k)
+        for(unsigned int k=0; k<nOutcomes; ++k)
         {
             if( Distributions::randU01() < 0.5 )
             {
@@ -1453,13 +1381,13 @@ int HESS_Chain::block_crossOver_step( std::shared_ptr<HESS_Chain>& that , arma::
 {
     double pCrossOver;
 
-    std::vector<arma::umat> gammaXO(2); gammaXO[0] = arma::umat(p,s);  gammaXO[1] = arma::umat(p,s); 
+    std::vector<arma::umat> gammaXO(2); gammaXO[0] = arma::umat(nVSPredictors,nOutcomes);  gammaXO[1] = arma::umat(nVSPredictors,nOutcomes); 
 
     // Propose Crossover
 
     // Select the ONE index to foor the block
-    unsigned int predIdx = Distributions::randIntUniform(0, p-1 ); // pred
-    unsigned int outcIdx = Distributions::randIntUniform(0, s-1 ); // outcome
+    unsigned int predIdx = Distributions::randIntUniform(0, nVSPredictors-1 ); // pred
+    unsigned int outcIdx = Distributions::randIntUniform(0, nOutcomes-1 ); // outcome
 
     arma::uvec covIdx = arma::find( arma::abs( corrMatX.row(predIdx) ) > threshold );  // this will include the original predIdx
 
@@ -1580,15 +1508,15 @@ arma::umat HESS_Chain::createGammaMask( const arma::umat& gamma )
 
     // CREATE HERE THE GAMMA "MASK"
     // INITIALISE THE INDEXES FOR THE GAMMA MASK
-    arma::umat mask = arma::zeros<arma::umat>(s,2); //this is just an initialisation
+    arma::umat mask = arma::zeros<arma::umat>(nOutcomes,2); //this is just an initialisation
     arma::uvec tmpUVec;
     unsigned int tmpIdx;
-    for(unsigned int k=0 ; k<s ; ++k)  //add gammas for the intercepts
+    for(unsigned int k=0 ; k<nOutcomes ; ++k)  //add gammas for the intercepts
     {
         mask(k,0) = 0; mask(k,1) = k;
     }
 
-    for(unsigned int k=0 ; k<s ; ++k)  //add the other gammas
+    for(unsigned int k=0 ; k<nOutcomes ; ++k)  //add the other gammas
     {
         tmpUVec = arma::find(gamma.col(k) != 0);
         tmpIdx = mask.n_rows;
@@ -1610,15 +1538,15 @@ void HESS_Chain::updateGammaMask()
 {
     // CREATE HERE THE GAMMA "MASK"
     // INITIALISE THE INDEXES FOR THE GAMMA MASK
-    gammaMask.zeros(s,2); //this is just an initialisation  -- 2*s means at least all the intercept plus one other covariate for each equation
+    gammaMask.zeros(nOutcomes,2); //this is just an initialisation  -- 2*s means at least all the intercept plus one other covariate for each equation
     arma::uvec tmpUVec;
     unsigned int tmpIdx;
-    for(unsigned int k=0 ; k<s ; ++k)  //add gammas for the intercepts
+    for(unsigned int k=0 ; k<nOutcomes ; ++k)  //add gammas for the intercepts
     {
         gammaMask(k,0) = 0; gammaMask(k,1) = k;
     }
 
-    for(unsigned int k=0 ; k<s ; ++k)  //add gammas for the intercepts
+    for(unsigned int k=0 ; k<nOutcomes ; ++k)  //add gammas for the intercepts
     {
         tmpUVec = arma::find(gamma.col(k) != 0);
         tmpIdx = gammaMask.n_rows;
@@ -1636,26 +1564,26 @@ void HESS_Chain::updateGammaMask()
 // Bandit-sampling related methods
 void HESS_Chain::banditInit()// initialise all the private memebers
 {
-    banditZeta = arma::vec(p);
+    banditZeta = arma::vec(nVSPredictors);
 
-    banditAlpha = arma::mat(p,s);
+    banditAlpha = arma::mat(nVSPredictors,nOutcomes);
     banditAlpha.fill( 0.5 );
     
-    banditBeta = arma::mat(p,s);
+    banditBeta = arma::mat(nVSPredictors,nOutcomes);
     banditBeta.fill( 0.5 );
 
-    mismatch = arma::vec(p);
-    normalised_mismatch = arma::vec(p);
-    normalised_mismatch_backwards = arma::vec(p);
+    mismatch = arma::vec(nVSPredictors);
+    normalised_mismatch = arma::vec(nVSPredictors);
+    normalised_mismatch_backwards = arma::vec(nVSPredictors);
 
     n_updates_bandit = 4; // this needs to be low as its O(n_updates!)
 
-    banditLimit = (double)n;
+    banditLimit = (double)nObservations;
     banditIncrement = 1.;
 }
 
 // MC3 init
 void HESS_Chain::MC3Init()
 {
-    n_updates_MC3 = std::ceil( p/40 ); //arbitrary number, should I use something different?
+    n_updates_MC3 = std::ceil( nVSPredictors/40 ); //arbitrary number, should I use something different?
 }

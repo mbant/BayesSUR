@@ -478,7 +478,7 @@ class SSUR_Chain : public ESS_Atom<SSUR_Chain>
         // MC3 init
         void MC3Init();
 
-    protected:
+    protected:  // not private, so that they're available to derived classes
 
         // Data (and related quatities)
         std::shared_ptr<arma::mat> data;
