@@ -1,5 +1,5 @@
 CC=g++
-CFLAGS= -c -Wall -std=c++11 -fopenmp
+CFLAGS= -c -Wall -Wno-reorder -std=c++11 -fopenmp
 
 OPENLDFLAGS= -larmadillo -lpthread -lopenblas -fopenmp
 NVLDFLAGS= -larmadillo -lpthread -lnvblas -fopenmp
@@ -31,4 +31,8 @@ BVS_DEBUG: $(OBJECTS_BVS)
 
 clean: 
 	@echo [Cleaning: ]
-	rm src/*.o ; rm *_Reg ; rm simul* ; rm call.sh ; rm -R results ;
+	rm src/*.o ; rm *_Reg ; rm simul* ; rm blocks* ; rm structureGraph* ; rm call.sh ; rm -R results ;
+
+remake: 
+	@echo [Cleaning compilation objets only: ]
+	rm src/*.o ; rm *_Reg ;

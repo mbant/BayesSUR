@@ -10,13 +10,13 @@
 // Constructors
 // *******************************
 
-dSUR_Chain::dSUR_Chain ( std::shared_ptr<arma::mat> data, unsigned int nObservations, 
-            unsigned int nOutcomes, unsigned int nVSPredictors, unsigned int nFixedPredictors,
-            std::shared_ptr<arma::uvec> outcomesIdx, std::shared_ptr<arma::uvec> VSPredictorsIdx,
-            std::shared_ptr<arma::uvec> fixedPredictorIdx, std::shared_ptr<arma::umat> NAArrayIdx, std::shared_ptr<arma::uvec> completeCases, 
-            std::string gammaSamplerType_ = "Bandit", bool usingGprior = false, double externalTemperature = 1. ):
-    SSUR_Chain ( data, nObservations, nOutcomes, nVSPredictors, nFixedPredictors,
-            outcomesIdx, VSPredictorsIdx, fixedPredictorIdx, NAArrayIdx, completeCases,
+dSUR_Chain::dSUR_Chain( std::shared_ptr<arma::mat> data_, unsigned int nObservations_, 
+                unsigned int nOutcomes_, unsigned int nVSPredictors_, unsigned int nFixedPredictors_,
+                std::shared_ptr<arma::uvec> outcomesIdx_, std::shared_ptr<arma::uvec> VSPredictorsIdx_,
+                std::shared_ptr<arma::uvec> fixedPredictorsIdx_, std::shared_ptr<arma::umat> missingDataArrayIdx_, std::shared_ptr<arma::uvec> completeCases_, 
+                std::string gammaSamplerType_ , bool usingGprior , double externalTemperature ):
+    SSUR_Chain ( data_, nObservations_, nOutcomes_, nVSPredictors_, nFixedPredictors_,
+            outcomesIdx_, VSPredictorsIdx_, fixedPredictorsIdx_, missingDataArrayIdx_, completeCases_,
             gammaSamplerType_, usingGprior, externalTemperature )
     {
 
@@ -32,12 +32,12 @@ dSUR_Chain::dSUR_Chain ( std::shared_ptr<arma::mat> data, unsigned int nObservat
     }
 
 
-dSUR_Chain::dSUR_Chain( Utils::SUR_Data& surData, std::string gammaSamplerType_ = "Bandit", bool usingGprior = false, double externalTemperature = 1. ):
+dSUR_Chain::dSUR_Chain( Utils::SUR_Data& surData, std::string gammaSamplerType_ , bool usingGprior , double externalTemperature ):
     dSUR_Chain(surData.data,surData.nObservations,surData.nOutcomes,surData.nVSPredictors,surData.nFixedPredictors,
         surData.outcomesIdx,surData.VSPredictorsIdx,surData.fixedPredictorsIdx,surData.missingDataArrayIdx,surData.completeCases,
         gammaSamplerType_,usingGprior,externalTemperature){ }
 
-dSUR_Chain::dSUR_Chain( Utils::SUR_Data& surData, double externalTemperature = 1. ):
+dSUR_Chain::dSUR_Chain( Utils::SUR_Data& surData, double externalTemperature ):
     dSUR_Chain(surData.data,surData.nObservations,surData.nOutcomes,surData.nVSPredictors,surData.nFixedPredictors,
         surData.outcomesIdx,surData.VSPredictorsIdx,surData.fixedPredictorsIdx,surData.missingDataArrayIdx,surData.completeCases,
         "Bandit",false,externalTemperature){ }

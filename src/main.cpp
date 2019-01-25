@@ -98,7 +98,7 @@ int main(int argc, char *  argv[])
 			if (na+1==argc) break; // in case it's last, break
 			++na; // otherwise augment counter
 		}
-		else if ( 0 == std::string{argv[na]}.compare(std::string{"--graphFile"}) )
+		else if ( 0 == std::string{argv[na]}.compare(std::string{"--structureGraphFile"}) )
 		{
 			structureGraphFile = ""+std::string(argv[++na]); // use the next
 			if (na+1==argc) break; // in case it's last, break

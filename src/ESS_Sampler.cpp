@@ -4,11 +4,11 @@ ESS_Sampler<T>::ESS_Sampler( Utils::SUR_Data& surData , unsigned int nChains_ , 
     global_proposal_count(0),
     global_acc_count(0),
     nChains(nChains_),
-    chain(std::vector<std::shared_ptr<T>>(nChains_))
+    chain(std::vector<std::shared_ptr<T>>(nChains))
 {
 
     // compile-time check that T is one of ESS_Atom's derived classes
-    static_assert(std::is_base_of<ESS_Atom<T>, T>::value, "type parameter of this class must derive from ESS_Atom");
+    static_assert(std::is_base_of<ESS_Base, T>::value, "type parameter of this class must derive from ESS_Atom");
 
     for( unsigned int i=0; i<nChains; ++i )
         chain[i] = std::make_shared<T>( surData , std::pow( temperatureRatio , (double)i ) );  // default init for now
@@ -21,7 +21,7 @@ ESS_Sampler<T>::ESS_Sampler( Utils::SUR_Data& surData , unsigned int nChains_ , 
 //     global_proposal_count(0),
 //     global_acc_count(0),
 //     nChains(nChains_),
-//     chain(std::vector<std::shared_ptr<SSUR_Chain>>(nChains_))
+//     chain(std::vector<std::shared_ptr<SSUR_Chain>>(nChains))
 // {
 //     std::string gst = "Bandit";
 
@@ -29,20 +29,6 @@ ESS_Sampler<T>::ESS_Sampler( Utils::SUR_Data& surData , unsigned int nChains_ , 
 //         chain[i] = std::make_shared<SSUR_Chain>( surData , gst , false , std::pow( temperatureRatio , (double)i ) );  // default init for now
 
 // }
-
-// this gets one of the chains from the vector
-template<typename T>
-std::shared_ptr<T>& ESS_Sampler<T>::operator[]( unsigned int i )
-{
-    return chain[i];
-}
-
-// this gets the whole vector if useful for some reason
-template<typename T>
-std::vector<std::shared_ptr<T>>& ESS_Sampler<T>::getChains()
-{
-    return chain;
-}
 
 // ********************************
 // STEP OPERATORS

@@ -1,6 +1,7 @@
 #include "drive.h"
 
 using std::cout;
+using std::endl;
 
 extern omp_lock_t RNGlock; //defined in global.h
 extern std::vector<std::mt19937_64> rng;
@@ -11,7 +12,7 @@ int drive_SSUR( Chain_Data& chainData )
 	// ****************************************
 	// **********  INIT THE CHAIN *************
 	// ****************************************
-	cout << "Initialising the MCMC Chain " << std::endl;
+	cout << "Initialising the (SSUR) MCMC Chain ... " << std::flush;
 
 	ESS_Sampler<SSUR_Chain> sampler( chainData.surData , chainData.nChains );
 
@@ -41,6 +42,9 @@ int drive_SSUR( Chain_Data& chainData )
 	
 
 	// ****************************************
+
+	cout << " DONE!\nDrafting the output files with the start of the chain ... " << std::flush;
+
 
 	// INIT THE FILE OUTPUT
 	std::string outFilePrefix = chainData.outFilePath+chainData.filePrefix;
@@ -86,7 +90,7 @@ int drive_SSUR( Chain_Data& chainData )
 	logPOutFile << 	sampler[0] -> getLogPW() <<  " ";
 	logPOutFile << 	sampler[0] -> getLogPBeta() <<  " ";
 	logPOutFile << 	sampler[0] -> getLogLikelihood();
-	logPOutFile << 	std::endl << std::flush;
+	logPOutFile << 	endl << std::flush;
 
 	piOutFile.open( outFilePrefix+"pi_out.txt" , std::ios_base::trunc);
 	piOutFile << pi_out << std::flush;
@@ -103,7 +107,7 @@ int drive_SSUR( Chain_Data& chainData )
 	// ########
 	// ########
 
-	cout << "Starting "<< chainData.nChains <<" (parallel) chain(s) for " << chainData.nIter << " iterations:" << std::endl << std::flush;
+	cout << "DONE! \n\nStarting "<< chainData.nChains <<" (parallel) chain(s) for " << chainData.nIter << " iterations:" << endl << std::flush;
 
 	unsigned int tick = 1000; // how many iter for each print?
 
@@ -137,10 +141,10 @@ int drive_SSUR( Chain_Data& chainData )
 			cout << " -- JT: " << Utils::round( sampler[0] -> getJTAccRate() , 3 ) ;
 
 			if( chainData.nChains > 1)
-				cout << " -- Global: " << Utils::round( sampler.getGlobalAccRate() , 3 ) << std::endl; 
+				cout << " -- Global: " << Utils::round( sampler.getGlobalAccRate() , 3 ) << endl; 
 			else
-				cout << std::endl;
-				
+				cout << endl;
+
 			// Output to files every now and then
 			if( (i+1) % (tick*10) == 0 )
 			{
@@ -163,7 +167,7 @@ int drive_SSUR( Chain_Data& chainData )
 				logPOutFile << 	sampler[0] -> getLogPW() <<  " ";
 				logPOutFile << 	sampler[0] -> getLogPBeta() <<  " ";
 				logPOutFile << 	sampler[0] -> getLogLikelihood();
-				logPOutFile << 	std::endl << std::flush;
+				logPOutFile << 	endl << std::flush;
 
 				piOutFile.open( outFilePrefix+"pi_out.txt" , std::ios_base::trunc);
 				piOutFile << pi_out/((double)i+1.0) << std::flush;
@@ -180,7 +184,7 @@ int drive_SSUR( Chain_Data& chainData )
 
 
 	// Print the end
-	cout << " MCMC ends. " /* << " Final temperature ratio ~ " << temperatureRatio  */<< "  --- Saving results and exiting" << std::endl;
+	cout << " MCMC ends. " /* << " Final temperature ratio ~ " << temperatureRatio  */<< "  --- Saving results and exiting" << endl;
 
 	// ### Collect results and save them
 	gammaOutFile.open( outFilePrefix+"gamma_out.txt" , std::ios_base::trunc);
@@ -201,7 +205,7 @@ int drive_SSUR( Chain_Data& chainData )
 	logPOutFile << 	sampler[0] -> getLogPW() <<  " ";
 	logPOutFile << 	sampler[0] -> getLogPBeta() <<  " ";
 	logPOutFile << 	sampler[0] -> getLogLikelihood();
-	logPOutFile << 	std::endl << std::flush;
+	logPOutFile << 	endl << std::flush;
 	logPOutFile.close();
 
 	// ----
@@ -223,19 +227,19 @@ int drive_SSUR( Chain_Data& chainData )
 	// -----
 
 
-	cout << "Saved to :   "+outFilePrefix+"****_out.txt" << std::endl;
-	cout << "Final w : " << sampler[0] -> getW() <<  std::endl;
-	cout << "Final tau : " << sampler[0] -> getTau() << "    w/ proposal variance: " << sampler[0] -> getVarTauProposal() << std::endl;
-	cout << "Final eta : " << sampler[0] -> getEta() <<  std::endl;
-	// cout << "Final o : " << sampler[0] -> getO().t() << "       w/ proposal variance: " << sampler[0] -> getVarOProposal() << std::endl;  
-	// cout << "Final pi : " << sampler[0] -> getPi().t() << "       w/ proposal variance: " << sampler[0] -> getVarPiProposal() << std::endl;
-	cout << "  -- Average Omega : " << arma::accu( sampler[0] -> getO() * sampler[0] -> getPi().t() )/((double)(sampler[0]->getP()*sampler[0]->getS())) <<  std::endl;
+	cout << "Saved to :   "+outFilePrefix+"****_out.txt" << endl;
+	cout << "Final w : " << sampler[0] -> getW() <<  endl;
+	cout << "Final tau : " << sampler[0] -> getTau() << "    w/ proposal variance: " << sampler[0] -> getVarTauProposal() << endl;
+	cout << "Final eta : " << sampler[0] -> getEta() <<  endl;
+	// cout << "Final o : " << sampler[0] -> getO().t() << "       w/ proposal variance: " << sampler[0] -> getVarOProposal() << endl;  
+	// cout << "Final pi : " << sampler[0] -> getPi().t() << "       w/ proposal variance: " << sampler[0] -> getVarPiProposal() << endl;
+	cout << "  -- Average Omega : " << arma::accu( sampler[0] -> getO() * sampler[0] -> getPi().t() )/((double)(sampler[0]->getP()*sampler[0]->getS())) <<  endl;
 	if( chainData.nChains > 1 ) 
-		cout << "Final temperature ratio : " << sampler[1]->getTemperature() <<  std::endl << std::endl ;
+		cout << "Final temperature ratio : " << sampler[1]->getTemperature() <<  endl << endl ;
 
 	// Exit
 
-	cout << "DONE, exiting! " << std::endl << std::endl ;
+	cout << "DONE, exiting! " << endl << endl ;
 	return 0;
 }
 
@@ -245,7 +249,7 @@ int drive_dSUR( Chain_Data& chainData )
 	// ****************************************
 	// **********  INIT THE CHAIN *************
 	// ****************************************
-	cout << "Initialising the MCMC Chain " << std::endl;
+	cout << "Initialising the (dSUR) MCMC Chain ... " << std::flush;
 
 	ESS_Sampler<dSUR_Chain> sampler( chainData.surData , chainData.nChains );
 
@@ -268,6 +272,8 @@ int drive_dSUR( Chain_Data& chainData )
 		sampler[m] -> setGammaSamplerType(chainData.gammaSampler);
 		
 	// *****************************
+
+	cout << " DONE!\nDrafting the output files with the start of the chain ... " << std::flush;
 
 	// INIT THE FILE OUTPUT
 	std::string outFilePrefix = chainData.outFilePath+chainData.filePrefix;
@@ -306,7 +312,7 @@ int drive_dSUR( Chain_Data& chainData )
 	logPOutFile << 	sampler[0] -> getLogPW() <<  " ";
 	logPOutFile << 	sampler[0] -> getLogPBeta() <<  " ";
 	logPOutFile << 	sampler[0] -> getLogLikelihood();
-	logPOutFile << 	std::endl << std::flush;
+	logPOutFile << 	endl << std::flush;
 
 	piOutFile.open( outFilePrefix+"pi_out.txt" , std::ios_base::trunc);
 	piOutFile << pi_out << std::flush;
@@ -323,7 +329,7 @@ int drive_dSUR( Chain_Data& chainData )
 	// ########
 	// ########
 
-	cout << "Starting "<< chainData.nChains <<" (parallel) chain(s) for " << chainData.nIter << " iterations:" << std::endl << std::flush;
+	cout << "DONE! \n\nStarting "<< chainData.nChains <<" (parallel) chain(s) for " << chainData.nIter << " iterations:" << endl << std::flush;
 
 	unsigned int tick = 1000; // how many iter for each print?
 
@@ -355,9 +361,9 @@ int drive_dSUR( Chain_Data& chainData )
 			cout << " Running iteration " << i+1 << " ... local Acc Rate: ~ gamma: " << Utils::round( sampler[0] -> getGammaAccRate() , 3 );
 
 			if( chainData.nChains > 1)
-				cout << " -- Global: " << Utils::round( sampler.getGlobalAccRate() , 3 ) << std::endl; 
+				cout << " -- Global: " << Utils::round( sampler.getGlobalAccRate() , 3 ) << endl; 
 			else
-				cout << std::endl;
+				cout << endl;
 				
 			// Output to files every now and then
 			if( (i+1) % (tick*10) == 0 )
@@ -375,7 +381,7 @@ int drive_dSUR( Chain_Data& chainData )
 				logPOutFile << 	sampler[0] -> getLogPW() <<  " ";
 				logPOutFile << 	sampler[0] -> getLogPBeta() <<  " ";
 				logPOutFile << 	sampler[0] -> getLogLikelihood();
-				logPOutFile << 	std::endl << std::flush;
+				logPOutFile << 	endl << std::flush;
 
 				piOutFile.open( outFilePrefix+"pi_out.txt" , std::ios_base::trunc);
 				piOutFile << pi_out/((double)i+1.0) << std::flush;
@@ -392,7 +398,7 @@ int drive_dSUR( Chain_Data& chainData )
 
 
 	// Print the end
-	cout << " MCMC ends. " /* << " Final temperature ratio ~ " << temperatureRatio  */<< "  --- Saving results and exiting" << std::endl;
+	cout << " MCMC ends. " /* << " Final temperature ratio ~ " << temperatureRatio  */<< "  --- Saving results and exiting" << endl;
 
 	// ### Collect results and save them
 	gammaOutFile.open( outFilePrefix+"gamma_out.txt" , std::ios_base::trunc);
@@ -407,7 +413,7 @@ int drive_dSUR( Chain_Data& chainData )
 	logPOutFile << 	sampler[0] -> getLogPW() <<  " ";
 	logPOutFile << 	sampler[0] -> getLogPBeta() <<  " ";
 	logPOutFile << 	sampler[0] -> getLogLikelihood();
-	logPOutFile << 	std::endl << std::flush;
+	logPOutFile << 	endl << std::flush;
 	logPOutFile.close();
 
 	// ----
@@ -429,18 +435,18 @@ int drive_dSUR( Chain_Data& chainData )
 	// -----
 
 
-	cout << "Saved to :   "+outFilePrefix+"****_out.txt" << std::endl;
-	cout << "Final w : " << sampler[0] -> getW() <<  std::endl;
-	cout << "Final tau : " << sampler[0] -> getTau() << "    w/ proposal variance: " << sampler[0] -> getVarTauProposal() << std::endl;
-	// cout << "Final o : " << sampler[0] -> getO().t() << "       w/ proposal variance: " << sampler[0] -> getVarOProposal() << std::endl;  
-	// cout << "Final pi : " << sampler[0] -> getPi().t() << "       w/ proposal variance: " << sampler[0] -> getVarPiProposal() << std::endl;
-	cout << "  -- Average Omega : " << arma::accu( sampler[0] -> getO() * sampler[0] -> getPi().t() )/((double)(sampler[0]->getP()*sampler[0]->getS())) <<  std::endl;
+	cout << "Saved to :   "+outFilePrefix+"****_out.txt" << endl;
+	cout << "Final w : " << sampler[0] -> getW() <<  endl;
+	cout << "Final tau : " << sampler[0] -> getTau() << "    w/ proposal variance: " << sampler[0] -> getVarTauProposal() << endl;
+	// cout << "Final o : " << sampler[0] -> getO().t() << "       w/ proposal variance: " << sampler[0] -> getVarOProposal() << endl;  
+	// cout << "Final pi : " << sampler[0] -> getPi().t() << "       w/ proposal variance: " << sampler[0] -> getVarPiProposal() << endl;
+	cout << "  -- Average Omega : " << arma::accu( sampler[0] -> getO() * sampler[0] -> getPi().t() )/((double)(sampler[0]->getP()*sampler[0]->getS())) <<  endl;
 	if( chainData.nChains > 1 ) 
-		cout << "Final temperature ratio : " << sampler[1]->getTemperature() <<  std::endl << std::endl ;
+		cout << "Final temperature ratio : " << sampler[1]->getTemperature() <<  endl << endl ;
 
 	// Exit
 
-	cout << "DONE, exiting! " << std::endl << std::endl ;
+	cout << "DONE, exiting! " << endl << endl ;
 	return 0;
 }
 
@@ -451,17 +457,14 @@ int drive_HESS( Chain_Data& chainData )
 	// ****************************************
 	// **********  INIT THE CHAIN *************
 	// ****************************************
-	cout << "Initialising the MCMC Chain " << std::endl;
+	cout << "Initialising the (HESS) MCMC Chain ... " << std::flush;
 
-	ESS_Sampler<HESS_Chain> sampler( chainData.surData, chainData.nChains );// this is thus also some sort of default
-		// although note that you won't pass the input phase with a differetn method string
-
+	ESS_Sampler<HESS_Chain> sampler( chainData.surData, chainData.nChains );
 
 	// *****************************
-
-	sampler[0] -> gammaInit( chainData.gammaInit );
-    sampler[0] -> updateGammaMask();
-    sampler[0] -> logLikelihood();
+	
+	sampler[0] -> gammaInit( chainData.gammaInit ); // this updates gammaMask as well
+	sampler[0] -> logLikelihood();
 
 	// *****************************
 
@@ -474,6 +477,8 @@ int drive_HESS( Chain_Data& chainData )
 		
 
 	// ****************************************
+
+	cout << " DONE!\nDrafting the output files with the start of the chain ... " << std::flush;
 
 	// INIT THE FILE OUTPUT
 	std::string outFilePrefix = chainData.outFilePath+chainData.filePrefix;
@@ -505,7 +510,7 @@ int drive_HESS( Chain_Data& chainData )
 	logPOutFile << 	sampler[0] -> getLogPGamma() <<  " ";
 	logPOutFile << 	sampler[0] -> getLogPW() <<  " ";
 	logPOutFile << 	sampler[0] -> getLogLikelihood();
-	logPOutFile << 	std::endl << std::flush;
+	logPOutFile << 	endl << std::flush;
 					
 	piOutFile.open( outFilePrefix+"pi_out.txt" , std::ios_base::trunc);
 	piOutFile << pi_out << std::flush;
@@ -522,7 +527,7 @@ int drive_HESS( Chain_Data& chainData )
 	// ########
 	// ########
 
-	cout << "Starting "<< chainData.nChains <<" (parallel) chain(s) for " << chainData.nIter << " iterations:" << std::endl << std::flush;
+	cout << "Starting "<< chainData.nChains <<" (parallel) chain(s) for " << chainData.nIter << " iterations:" << endl << std::flush;
 
 	unsigned int tick = 1000; // how many iter for each print?
 
@@ -551,9 +556,9 @@ int drive_HESS( Chain_Data& chainData )
 			cout << " Running iteration " << i+1 << " ... local Acc Rate: ~ gamma: " << Utils::round( sampler[0] -> getGammaAccRate() , 3 );
 
 			if( chainData.nChains > 1)
-				cout << " -- Global: " << Utils::round( sampler.getGlobalAccRate() , 3 ) << std::endl; 
+				cout << " -- Global: " << Utils::round( sampler.getGlobalAccRate() , 3 ) << endl; 
 			else
-				cout << std::endl;
+				cout << endl;
 				
 			// Output to files every now and then
 			if( (i+1) % (tick*10) == 0 )
@@ -568,7 +573,7 @@ int drive_HESS( Chain_Data& chainData )
 				logPOutFile << 	sampler[0] -> getLogPGamma() <<  " ";
 				logPOutFile << 	sampler[0] -> getLogPW() <<  " ";
 				logPOutFile << 	sampler[0] -> getLogLikelihood();
-				logPOutFile << 	std::endl << std::flush;
+				logPOutFile << 	endl << std::flush;
 
 				piOutFile.open( outFilePrefix+"pi_out.txt" , std::ios_base::trunc);
 				piOutFile << pi_out/((double)i+1.0) << std::flush;
@@ -585,7 +590,7 @@ int drive_HESS( Chain_Data& chainData )
 
 
 	// Print the end
-	cout << " MCMC ends. " /* << " Final temperature ratio ~ " << temperatureRatio  */<< "  --- Saving results and exiting" << std::endl;
+	cout << " MCMC ends. " /* << " Final temperature ratio ~ " << temperatureRatio  */<< "  --- Saving results and exiting" << endl;
 
 	// ### Collect results and save them
 	gammaOutFile.open( outFilePrefix+"gamma_out.txt" , std::ios_base::trunc);
@@ -597,7 +602,7 @@ int drive_HESS( Chain_Data& chainData )
 	logPOutFile << 	sampler[0] -> getLogPGamma() <<  " ";
 	logPOutFile << 	sampler[0] -> getLogPW() <<  " ";
 	logPOutFile << 	sampler[0] -> getLogLikelihood();
-	logPOutFile << 	std::endl << std::flush;
+	logPOutFile << 	endl << std::flush;
 	logPOutFile.close();
 
 	// -----
@@ -610,17 +615,17 @@ int drive_HESS( Chain_Data& chainData )
 	htpOutFile.close();
 	// -----
 
-	cout << "Saved to :   "+outFilePrefix+"****_out.txt" << std::endl;
-	cout << "Final w : " << sampler[0] -> getW() << "       w/ proposal variance: " << sampler[0] -> getVarWProposal() << std::endl;  
-	// cout << "Final o : " << sampler[0] -> getO().t() << "       w/ proposal variance: " << sampler[0] -> getVarOProposal() << std::endl;  
-	// cout << "Final pi : " << sampler[0] -> getPi().t() << "       w/ proposal variance: " << sampler[0] -> getVarPiProposal() << std::endl;
-	cout << "  -- Average Omega : " << arma::accu( sampler[0] -> getO() * sampler[0] -> getPi().t() )/((double)(sampler[0]->getP()*sampler[0]->getS())) <<  std::endl;
+	cout << "Saved to :   "+outFilePrefix+"****_out.txt" << endl;
+	cout << "Final w : " << sampler[0] -> getW() << "       w/ proposal variance: " << sampler[0] -> getVarWProposal() << endl;  
+	// cout << "Final o : " << sampler[0] -> getO().t() << "       w/ proposal variance: " << sampler[0] -> getVarOProposal() << endl;  
+	// cout << "Final pi : " << sampler[0] -> getPi().t() << "       w/ proposal variance: " << sampler[0] -> getVarPiProposal() << endl;
+	cout << "  -- Average Omega : " << arma::accu( sampler[0] -> getO() * sampler[0] -> getPi().t() )/((double)(sampler[0]->getP()*sampler[0]->getS())) <<  endl;
 	if( chainData.nChains > 1 ) 
-		cout << "Final temperature ratio : " << sampler[1]->getTemperature() <<  std::endl << std::endl ;
+		cout << "Final temperature ratio : " << sampler[1]->getTemperature() <<  endl << endl ;
 
 	// Exit
 
-	cout << "DONE, exiting! " << std::endl << std::endl ;
+	cout << "DONE, exiting! " << endl << endl ;
 	return 0;
 
 }
@@ -630,10 +635,10 @@ int drive( const std::string& dataFile, const std::string& blockFile, const std:
 			const std::string& method, const std::string& gammaSampler, const std::string& gammaInit, bool usingGPrior )
 {
 
-	cout << "R2SSUR -- Bayesian Sparse Seemingly Unrelated Regression Modelling" << std::endl;
+	cout << "R2SSUR -- Bayesian Sparse Seemingly Unrelated Regression Modelling" << endl;
 
 	#ifdef _OPENMP
-	cout << "Using OpenMP" << std::endl;
+	cout << "Using OpenMP" << endl;
 	omp_init_lock(&RNGlock);  // init RNG lock for the parallel part
 	#endif
 
@@ -645,20 +650,28 @@ int drive( const std::string& dataFile, const std::string& blockFile, const std:
 	// ###########################################################
 
 	// Declare all the data-related variables
-	Chain_Data chainData; // this initialises the pointers
+	Chain_Data chainData; // this initialises the pointers and the strings to ""
+
+	chainData.nChains = nChains;
+	chainData.nIter = nIter;
+	chainData.gammaSampler = gammaSampler;
+	chainData.usingGPrior = usingGPrior;
+
+	chainData.outFilePath = outFilePath;
+
 
 	// read Data and format into usables
 	cout << "Reading input ... ";
 
 	Utils::formatData(dataFile, blockFile, structureGraphFile, chainData.surData );
 
-	cout << " successfull!" << std::endl;
+	cout << " successfull!" << endl;
 
 	// ############
 
 	// The intercept column to X will be inserted when initialising the chain
 
-	cout << "Clearing and initialising output files " << std::endl;
+	cout << "Clearing and initialising output files " << endl;
 	// Re-define dataFile so that I can use it in the output
 	chainData.filePrefix = dataFile;
 	std::size_t slash = chainData.filePrefix.find("/");  // remove the path from filePrefix
@@ -667,13 +680,12 @@ int drive( const std::string& dataFile, const std::string& blockFile, const std:
 		chainData.filePrefix.erase(chainData.filePrefix.begin(),chainData.filePrefix.begin()+slash+1);
 		slash = chainData.filePrefix.find("/");
 	}
-	chainData.filePrefix.erase(chainData.filePrefix.begin()+chainData.filePrefix.find("."),chainData.filePrefix.end());  // remove the .txt from filePrefix !
+	chainData.filePrefix.erase(chainData.filePrefix.begin()+chainData.filePrefix.find(".txt"),chainData.filePrefix.end());  // remove the .txt from filePrefix !
 
 	// Update the "outFilePath" (filePrefix variable) with the method's name
 	chainData.filePrefix += "_"+method+"_";
 
-
-	cout << "Init RNG engine .. " << std::endl;
+	cout << "Init RNG engine .. ";
 
 	// ############# Init the RNG generator/engine
 	std::random_device r;
@@ -694,10 +706,16 @@ int drive( const std::string& dataFile, const std::string& blockFile, const std:
 		rng[i] = std::mt19937_64(seed + i*(1000*(std::pow(chainData.surData.nOutcomes,3)*chainData.surData.nPredictors*3)*nIter) );
 	}
 
+	cout << " DONE ! " << endl;
 
 	// ###################################
 	// Parameters Inits
 	// ###################################
+
+
+	// cout<< chainData.surData.data->n_rows << " " << chainData.surData.data->n_cols << endl;
+	// cout<< chainData.surData.nObservations << " " << chainData.surData.nOutcomes<< " " << chainData.surData.nFixedPredictors<< " " << chainData.surData.nVSPredictors << endl;
+	// cout<< (*chainData.surData.outcomesIdx).t() << (*chainData.surData.fixedPredictorsIdx).t() << (*chainData.surData.VSPredictorsIdx).t() << endl;
 
 
 	if ( gammaInit == "R" )
@@ -719,11 +737,13 @@ int drive( const std::string& dataFile, const std::string& blockFile, const std:
 
 	}else if ( gammaInit == "MLE" ) {
 		// ** MLE
-		arma::mat Q,R; arma::qr(Q,R, chainData.surData.data->cols( arma::join_rows( *chainData.surData.fixedPredictorsIdx , *chainData.surData.VSPredictorsIdx ) ) );
+		arma::mat Q,R; arma::qr(Q,R, chainData.surData.data->cols( arma::join_vert( *chainData.surData.fixedPredictorsIdx , *chainData.surData.VSPredictorsIdx ) ) );
+		
 		chainData.betaInit = arma::solve(R,arma::trans(Q) * chainData.surData.data->cols( *chainData.surData.outcomesIdx ) );
 		chainData.gammaInit = chainData.betaInit > 0.5*arma::stddev(arma::vectorise(chainData.betaInit));
 
-		chainData.gammaInit.shed_rows( 0 , chainData.surData.nFixedPredictors-1 ); // shed the fixed preditors rows since we don't have gammas for those
+		if( chainData.surData.nFixedPredictors > 0 )
+			chainData.gammaInit.shed_rows( 0 , chainData.surData.nFixedPredictors-1 ); // shed the fixed preditors rows since we don't have gammas for those
 
 	}else{
 		// default case

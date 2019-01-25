@@ -16,8 +16,10 @@
  * CRTP used for global exchanges
  ***********************************/
 
+class ESS_Base {}; // non-templated base-class needed for static assert checks
+
 template<typename T>
-class ESS_Atom
+class ESS_Atom : public ESS_Base
 {
 
     public:

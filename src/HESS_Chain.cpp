@@ -12,17 +12,18 @@
 // Constructors
 // *******************************
 
-HESS_Chain::HESS_Chain( std::shared_ptr<arma::mat> data, unsigned int nObservations, 
-            unsigned int nOutcomes, unsigned int nVSPredictors, unsigned int nFixedPredictors,
-            std::shared_ptr<arma::uvec> outcomesIdx, std::shared_ptr<arma::uvec> VSPredictorsIdx,
-            std::shared_ptr<arma::uvec> fixedPredictorIdx, std::shared_ptr<arma::umat> NAArrayIdx, std::shared_ptr<arma::uvec> completeCases, 
-            std::string gammaSamplerType_ = "Bandit", bool usingGprior = false, double externalTemperature = 1. ):
-    data(data), outcomesIdx(outcomesIdx), VSPredictorsIdx(VSPredictorsIdx), fixedPredictorsIdx(fixedPredictorsIdx),
-    missingDataArrayIdx(NAArrayIdx), completeCases(completeCases),gammaSamplerType(gammaSamplerType_),gPrior(usingGprior),
+HESS_Chain::HESS_Chain( std::shared_ptr<arma::mat> data_, unsigned int nObservations_, 
+            unsigned int nOutcomes_, unsigned int nVSPredictors_, unsigned int nFixedPredictors_,
+            std::shared_ptr<arma::uvec> outcomesIdx_, std::shared_ptr<arma::uvec> VSPredictorsIdx_,
+            std::shared_ptr<arma::uvec> fixedPredictorsIdx_, std::shared_ptr<arma::umat> missingDataArrayIdx_, std::shared_ptr<arma::uvec> completeCases_, 
+            std::string gammaSamplerType_, bool usingGprior, double externalTemperature):
+    data(data_), outcomesIdx(outcomesIdx_), VSPredictorsIdx(VSPredictorsIdx_), fixedPredictorsIdx(fixedPredictorsIdx_),
+    nObservations(nObservations_), nOutcomes(nOutcomes_), nVSPredictors(nVSPredictors_), nFixedPredictors(nFixedPredictors_),
+    missingDataArrayIdx(missingDataArrayIdx_), completeCases(completeCases_),gammaSamplerType(gammaSamplerType_),gPrior(usingGprior),
     temperature(externalTemperature),internalIterationCounter(0)
     {
 
-        predictorsIdx = std::make_shared<arma::uvec>(arma::join_rows( *fixedPredictorsIdx, *VSPredictorsIdx ));
+        predictorsIdx = std::make_shared<arma::uvec>(arma::join_vert( *fixedPredictorsIdx, *VSPredictorsIdx ));
         setXtX();
 
         banditInit();
@@ -42,12 +43,12 @@ HESS_Chain::HESS_Chain( std::shared_ptr<arma::mat> data, unsigned int nObservati
     }
 
 
-HESS_Chain::HESS_Chain( Utils::SUR_Data& surData, std::string gammaSamplerType_ = "Bandit", bool usingGprior = false, double externalTemperature = 1. ):
+HESS_Chain::HESS_Chain( Utils::SUR_Data& surData, std::string gammaSamplerType_, bool usingGprior, double externalTemperature):
     HESS_Chain(surData.data,surData.nObservations,surData.nOutcomes,surData.nVSPredictors,surData.nFixedPredictors,
         surData.outcomesIdx,surData.VSPredictorsIdx,surData.fixedPredictorsIdx,surData.missingDataArrayIdx,surData.completeCases,
         gammaSamplerType_,usingGprior,externalTemperature){ }
 
-HESS_Chain::HESS_Chain( Utils::SUR_Data& surData, double externalTemperature = 1. ):
+HESS_Chain::HESS_Chain( Utils::SUR_Data& surData, double externalTemperature ):
     HESS_Chain(surData.data,surData.nObservations,surData.nOutcomes,surData.nVSPredictors,surData.nFixedPredictors,
         surData.outcomesIdx,surData.VSPredictorsIdx,surData.fixedPredictorsIdx,surData.missingDataArrayIdx,surData.completeCases,
         "Bandit",false,externalTemperature){ }
@@ -736,24 +737,24 @@ double HESS_Chain::logLikelihood( const arma::umat& externalGammaMask , const do
 // *********************
 
 // sampler for proposed updates on gamma
-double HESS_Chain::gammaBanditProposal( arma::umat& mutantGamma , arma::uvec& updateIdx , unsigned int& outcomeIdx )
+double HESS_Chain::gammaBanditProposal( arma::umat& mutantGamma , arma::uvec& updateIdx , unsigned int& outcomeUpdateIdx )
 {
 
     double logProposalRatio;
 
     // decide on one outcome
-    outcomeIdx = Distributions::randIntUniform(0,nOutcomes-1);
+    outcomeUpdateIdx = Distributions::randIntUniform(0,nOutcomes-1);
 
     // Sample Zs (only for relevant outocome)
     for(unsigned int i=0; i<nVSPredictors; ++i)
     {
-            banditZeta(i) = Distributions::randBeta(banditAlpha(i,outcomeIdx),banditAlpha(i,outcomeIdx));
+            banditZeta(i) = Distributions::randBeta(banditAlpha(i,outcomeUpdateIdx),banditAlpha(i,outcomeUpdateIdx));
     }
 
     // Create mismatch (only for relevant outcome)
     for(unsigned int i=0; i<nVSPredictors; ++i)
     {
-        mismatch(i) = (mutantGamma(i,outcomeIdx)==0)?(banditZeta(i)):(1.-banditZeta(i));   //mismatch
+        mismatch(i) = (mutantGamma(i,outcomeUpdateIdx)==0)?(banditZeta(i)):(1.-banditZeta(i));   //mismatch
     }
 
     // Normalise
@@ -770,7 +771,7 @@ double HESS_Chain::gammaBanditProposal( arma::umat& mutantGamma , arma::uvec& up
         updateIdx(0) = Distributions::randWeightedIndexSampleWithoutReplacement(nVSPredictors,normalised_mismatch); // sample the one
 
         // Update
-        mutantGamma(updateIdx(0),outcomeIdx) = 1 - gamma(updateIdx(0),outcomeIdx); // deterministic, just switch
+        mutantGamma(updateIdx(0),outcomeUpdateIdx) = 1 - gamma(updateIdx(0),outcomeUpdateIdx); // deterministic, just switch
 
         // Compute logProposalRatio probabilities
         normalised_mismatch_backwards = mismatch;
@@ -799,12 +800,12 @@ double HESS_Chain::gammaBanditProposal( arma::umat& mutantGamma , arma::uvec& up
         // Update
         for(unsigned int i=0; i<n_updates_bandit; ++i)
         {
-            mutantGamma(updateIdx(i),outcomeIdx) = Distributions::randBernoulli(banditZeta(updateIdx(i))); // random update
+            mutantGamma(updateIdx(i),outcomeUpdateIdx) = Distributions::randBernoulli(banditZeta(updateIdx(i))); // random update
 
             normalised_mismatch_backwards(updateIdx(i)) = 1.- normalised_mismatch_backwards(updateIdx(i));
 
-            logProposalRatio += Distributions::logPDFBernoulli(gamma(updateIdx(i),outcomeIdx),banditZeta(updateIdx(i))) -
-                Distributions::logPDFBernoulli(mutantGamma(updateIdx(i),outcomeIdx),banditZeta(updateIdx(i)));
+            logProposalRatio += Distributions::logPDFBernoulli(gamma(updateIdx(i),outcomeUpdateIdx),banditZeta(updateIdx(i))) -
+                Distributions::logPDFBernoulli(mutantGamma(updateIdx(i),outcomeUpdateIdx),banditZeta(updateIdx(i)));
         }
         // note that above I might be resampling a value equal to the current one, thus not updating da facto ... TODO
 
@@ -819,18 +820,18 @@ double HESS_Chain::gammaBanditProposal( arma::umat& mutantGamma , arma::uvec& up
     return logProposalRatio; // pass this to the outside
 }
                 
-double HESS_Chain::gammaMC3Proposal( arma::umat& mutantGamma , arma::uvec& updateIdx , unsigned int& outcomeIdx )
+double HESS_Chain::gammaMC3Proposal( arma::umat& mutantGamma , arma::uvec& updateIdx , unsigned int& outcomeUpdateIdx )
 {
     updateIdx = arma::uvec(n_updates_MC3);
 
     // decide on one outcome
-    outcomeIdx = Distributions::randIntUniform(0,nOutcomes-1);
+    outcomeUpdateIdx = Distributions::randIntUniform(0,nOutcomes-1);
 
     for( unsigned int i=0; i<n_updates_MC3; ++i)
         updateIdx(i) = Distributions::randIntUniform(0,nVSPredictors-1);    // note that I might be updating multiple times the same coeff
 
     for( auto i : updateIdx)
-    mutantGamma(i,outcomeIdx) = ( Distributions::randU01() < 0.5)? gamma(i,outcomeIdx) : 1-gamma(i,outcomeIdx); // could simply be ( 0.5 ? 1 : 0) ;
+    mutantGamma(i,outcomeUpdateIdx) = ( Distributions::randU01() < 0.5)? gamma(i,outcomeUpdateIdx) : 1-gamma(i,outcomeUpdateIdx); // could simply be ( 0.5 ? 1 : 0) ;
 
     return 0. ; // pass this to the outside, it's the (symmetric) logProposalRatio
 }
@@ -997,21 +998,21 @@ void HESS_Chain::stepGamma()
 {
     arma::umat proposedGamma = gamma;
     arma::uvec updateIdx;
-    unsigned int outcomeIdx;
+    unsigned int outcomeUpdateIdx;
 
     double logProposalRatio = 0;
 
     // Update the proposed Gamma
     if( gammaSamplerType == "B" || gammaSamplerType == "bandit" || gammaSamplerType == "Bandit" || gammaSamplerType == "b" )
     {
-        logProposalRatio += gammaBanditProposal( proposedGamma , updateIdx , outcomeIdx );
+        logProposalRatio += gammaBanditProposal( proposedGamma , updateIdx , outcomeUpdateIdx );
 
     }else if( gammaSamplerType == "MC3" || gammaSamplerType == "mc3" )
     {
-        logProposalRatio += gammaMC3Proposal( proposedGamma , updateIdx , outcomeIdx );
+        logProposalRatio += gammaMC3Proposal( proposedGamma , updateIdx , outcomeUpdateIdx );
 
     }else{
-        logProposalRatio += gammaBanditProposal( proposedGamma , updateIdx , outcomeIdx ); // default
+        logProposalRatio += gammaBanditProposal( proposedGamma , updateIdx , outcomeUpdateIdx ); // default
     }
 
 
@@ -1047,21 +1048,21 @@ void HESS_Chain::stepGamma()
         for(arma::uvec::iterator iter = updateIdx.begin(); iter != updateIdx.end(); ++iter)
         {
             // FINITE UPDATE
-            if( banditAlpha(*iter,outcomeIdx) + banditBeta(*iter,outcomeIdx) <= banditLimit )
+            if( banditAlpha(*iter,outcomeUpdateIdx) + banditBeta(*iter,outcomeUpdateIdx) <= banditLimit )
             {
-                banditAlpha(*iter,outcomeIdx) += banditIncrement * gamma(*iter,outcomeIdx);
-                banditBeta(*iter,outcomeIdx) += banditIncrement * (1-gamma(*iter,outcomeIdx));
+                banditAlpha(*iter,outcomeUpdateIdx) += banditIncrement * gamma(*iter,outcomeUpdateIdx);
+                banditBeta(*iter,outcomeUpdateIdx) += banditIncrement * (1-gamma(*iter,outcomeUpdateIdx));
             }
 
             // // CONTINUOUS UPDATE
-            // banditAlpha(*iter,outcomeIdx) += banditIncrement * gamma(*iter,outcomeIdx);
-            // banditBeta(*iter,outcomeIdx) += banditIncrement * (1-gamma(*iter,outcomeIdx));
+            // banditAlpha(*iter,outcomeUpdateIdx) += banditIncrement * gamma(*iter,outcomeUpdateIdx);
+            // banditBeta(*iter,outcomeUpdateIdx) += banditIncrement * (1-gamma(*iter,outcomeUpdateIdx));
 
             // // then renormalise them
-            // if( banditAlpha(*iter,outcomeIdx) + banditBeta(*iter) > banditLimit )
+            // if( banditAlpha(*iter,outcomeUpdateIdx) + banditBeta(*iter) > banditLimit )
             // {
-            //     banditAlpha(*iter,outcomeIdx) = banditLimit * ( banditAlpha(*iter,outcomeIdx) / ( banditAlpha(*iter,outcomeIdx) + banditBeta(*iter,outcomeIdx) ));
-            //     banditBeta(*iter,outcomeIdx) = banditLimit * (1. - ( banditAlpha(*iter,outcomeIdx) / ( banditAlpha(*iter,outcomeIdx) + banditBeta(*iter,outcomeIdx) )) );
+            //     banditAlpha(*iter,outcomeUpdateIdx) = banditLimit * ( banditAlpha(*iter,outcomeUpdateIdx) / ( banditAlpha(*iter,outcomeUpdateIdx) + banditBeta(*iter,outcomeUpdateIdx) ));
+            //     banditBeta(*iter,outcomeUpdateIdx) = banditLimit * (1. - ( banditAlpha(*iter,outcomeUpdateIdx) / ( banditAlpha(*iter,outcomeUpdateIdx) + banditBeta(*iter,outcomeUpdateIdx) )) );
             // }
         }
     }
@@ -1508,23 +1509,24 @@ arma::umat HESS_Chain::createGammaMask( const arma::umat& gamma )
 
     // CREATE HERE THE GAMMA "MASK"
     // INITIALISE THE INDEXES FOR THE GAMMA MASK
-    arma::umat mask = arma::zeros<arma::umat>(nOutcomes,2); //this is just an initialisation
-    arma::uvec tmpUVec;
-    unsigned int tmpIdx;
-    for(unsigned int k=0 ; k<nOutcomes ; ++k)  //add gammas for the intercepts
+    arma::umat mask = arma::zeros<arma::umat>(nFixedPredictors*nOutcomes,2); //this is just an initialisation
+    for( unsigned int j=0; j<nFixedPredictors; ++j)
     {
-        mask(k,0) = 0; mask(k,1) = k;
+        for(unsigned int k=0 ; k<nOutcomes ; ++k)  //add gammas for the fixed variables
+        {
+            mask(k,0) = j; mask(k,1) = k;
+        }
     }
 
     for(unsigned int k=0 ; k<nOutcomes ; ++k)  //add the other gammas
     {
-        tmpUVec = arma::find(gamma.col(k) != 0);
-        tmpIdx = mask.n_rows;
+        arma::uvec tmpUVec = arma::find(gamma.col(k) != 0);
+        unsigned int tmpIdx = mask.n_rows;
 
         if( tmpUVec.n_elem > 0 )
         {
             mask.insert_rows( tmpIdx , arma::zeros<arma::umat>( tmpUVec.n_elem , 2 ));
-            mask.submat( tmpIdx, 0, mask.n_rows-1 , 0 ) = tmpUVec + 1 ; // +1 cause gamma doesn't have the intercept
+            mask.submat( tmpIdx, 0, mask.n_rows-1 , 0 ) = tmpUVec + nFixedPredictors ;
             mask.submat( tmpIdx, 1, mask.n_rows-1 , 1 ).fill(k);
         }
     }
@@ -1534,27 +1536,29 @@ arma::umat HESS_Chain::createGammaMask( const arma::umat& gamma )
 }
 
 
+
 void HESS_Chain::updateGammaMask()
 {
     // CREATE HERE THE GAMMA "MASK"
     // INITIALISE THE INDEXES FOR THE GAMMA MASK
-    gammaMask.zeros(nOutcomes,2); //this is just an initialisation  -- 2*s means at least all the intercept plus one other covariate for each equation
-    arma::uvec tmpUVec;
-    unsigned int tmpIdx;
-    for(unsigned int k=0 ; k<nOutcomes ; ++k)  //add gammas for the intercepts
+    gammaMask.zeros(nFixedPredictors*nOutcomes,2); //this is just an initialisation
+    for( unsigned int j=0; j<nFixedPredictors; ++j)
     {
-        gammaMask(k,0) = 0; gammaMask(k,1) = k;
+        for(unsigned int k=0 ; k<nOutcomes ; ++k)  //add gammas for the fixed variables
+        {
+            gammaMask(k,0) = j; gammaMask(k,1) = k;
+        }
     }
 
-    for(unsigned int k=0 ; k<nOutcomes ; ++k)  //add gammas for the intercepts
+    for(unsigned int k=0 ; k<nOutcomes ; ++k)   //add the other gammas
     {
-        tmpUVec = arma::find(gamma.col(k) != 0);
-        tmpIdx = gammaMask.n_rows;
+        arma::uvec tmpUVec = arma::find(gamma.col(k) != 0);
+        unsigned int tmpIdx = gammaMask.n_rows;
 
         if( tmpUVec.n_elem > 0 )
         {
             gammaMask.insert_rows( tmpIdx , arma::zeros<arma::umat>( tmpUVec.n_elem , 2 ));
-            gammaMask.submat( tmpIdx, 0, gammaMask.n_rows-1 , 0 ) = tmpUVec + 1 ;
+            gammaMask.submat( tmpIdx, 0, gammaMask.n_rows-1 , 0 ) = tmpUVec + nFixedPredictors ;
             gammaMask.submat( tmpIdx, 1, gammaMask.n_rows-1 , 1 ).fill(k);
         }
     }

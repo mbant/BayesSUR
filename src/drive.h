@@ -21,15 +21,16 @@
 struct Chain_Data
 {
 	Utils::SUR_Data surData;
-	unsigned int nChains , nIter ;
+	unsigned int nChains = 1 , nIter = 10 ;
 	std::string gammaSampler;
 	
-	bool usingGPrior;
+	bool usingGPrior = false;
 
 	arma::mat betaInit;
 	arma::umat gammaInit;
 
 	std::string filePrefix , outFilePath;
+
 };
 	
 

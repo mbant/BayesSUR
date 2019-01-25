@@ -24,10 +24,10 @@ class ESS_Sampler{
         ESS_Sampler( Utils::SUR_Data& surData , unsigned int nChains_ ) : ESS_Sampler( surData , nChains_ , 1.2 ){}
         
         // this gets one of the chains from the vector
-        std::shared_ptr<T>& operator[]( unsigned int );
+        std::shared_ptr<T> operator[]( unsigned int i ) { return chain[i]; }
 
-        // this gets the whole vector if useful for some reason
-        std::vector<std::shared_ptr<T>>& getChains();
+        // this gets the size of the chain which should be equal to nChains
+        unsigned int size() const { return chain.size(); }
         
         // this creates a new chain with the global type
         // void addChain();

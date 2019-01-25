@@ -71,24 +71,26 @@ namespace Utils{
 							unsigned int& nPredictors, unsigned int& nVSPredictors, unsigned int& nFixedPredictors,
 							std::shared_ptr<arma::uvec> VSPredictorsIndexes, std::shared_ptr<arma::uvec> fixedPredictorsIndexes)
 	{
+		// dimensions variables
+		nObservations = data->n_rows;
+
 		// define the structure
-		arma::uvec allOutcomeLabels = arma::find( arma::sum(structureGraph,0)!=0 );  // structureGraph(i,j) != 0 means an arrow j->i
+		// structureGraph(i,j) != 0 means an arrow j->i
+		arma::uvec allOutcomeLabels = arma::find( arma::sum(structureGraph,0)!=0 );  // so search for sum over columns different from zero
 		unsigned int nEquations = allOutcomeLabels.n_elem;
 		if ( nEquations > 1 || nEquations == 0 )
 			throw badSURGraph();
 
-		unsigned int outcomeLabel{ arma::as_scalar( arma::find( arma::sum(structureGraph,1)!=0 ) ) };
-		
-		// dimensions variables
-		nObservations = data->n_rows;
 
 		// outcomes
-		arma::uvec outcomeIndexes = arma::find( blockLabels == outcomeLabel );   // groups in the graph are ordered by their position in the blockList
+		arma::uword outcomeLabel{ allOutcomeLabels(0) };
+		(*outcomeIndexes) = arma::find( blockLabels == outcomeLabel );   // groups in the graph are ordered by their position in the blockList
 		nOutcomes = outcomeIndexes->n_elem;
 		
 		// Predictors
-		arma::uvec VSPredictorsLabels = arma::find( structureGraph.row(outcomeLabel) == 1 );
-		arma::uvec fixedPredictorsLabels = arma::find( structureGraph.row(outcomeLabel) == 2 );
+		arma::uvec VSPredictorsLabels = arma::find( structureGraph.col(outcomeLabel) == 1 );
+		arma::uvec fixedPredictorsLabels = arma::find( structureGraph.col(outcomeLabel) == 2 );
+
 
 		// reset
 		VSPredictorsIndexes->clear();
@@ -129,7 +131,7 @@ namespace Utils{
 		return ux;
 	}	
 
-	void initMissingData(std::shared_ptr<arma::mat> data, std::shared_ptr<arma::umat> missingDataArrayIndexes, std::shared_ptr<arma::uvec> completeCases, bool print=false )
+	void initMissingData(std::shared_ptr<arma::mat> data, std::shared_ptr<arma::umat> missingDataArrayIndexes, std::shared_ptr<arma::uvec> completeCases, bool print )
 	{
 
 		const unsigned int nObservations = data->n_rows;

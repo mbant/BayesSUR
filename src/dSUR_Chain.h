@@ -23,10 +23,10 @@ class dSUR_Chain : public SSUR_Chain // derive from SSUR and override only a few
         // Constructors
         // *******************************
 
-        dSUR_Chain( std::shared_ptr<arma::mat> data, unsigned int nObservations, 
-                unsigned int nOutcomes, unsigned int nVSPredictors, unsigned int nFixedPredictors,
-                std::shared_ptr<arma::uvec> outcomesIdx, std::shared_ptr<arma::uvec> VSPredictorsIdx,
-                std::shared_ptr<arma::uvec> fixedPredictorIdx, std::shared_ptr<arma::umat> NAArrayIdx, std::shared_ptr<arma::uvec> completeCases, 
+        dSUR_Chain( std::shared_ptr<arma::mat> data_, unsigned int nObservations_, 
+                unsigned int nOutcomes_, unsigned int nVSPredictors_, unsigned int nFixedPredictors_,
+                std::shared_ptr<arma::uvec> outcomesIdx_, std::shared_ptr<arma::uvec> VSPredictorsIdx_,
+                std::shared_ptr<arma::uvec> fixedPredictorsIdx_, std::shared_ptr<arma::umat> missingDataArrayIdx_, std::shared_ptr<arma::uvec> completeCases_, 
                 std::string gammaSamplerType_ = "Bandit", bool usingGprior = false, double externalTemperature = 1. );
 
 
