@@ -1,10 +1,13 @@
+SOURCE_DIR=R2SSUR/src
+VPATH=$(SOURCE_DIR)
+
 CC=g++
-CFLAGS= -c -Wall -Wno-reorder -std=c++11 -fopenmp
+CFLAGS= -c -Wall -Wno-reorder -std=c++11 -fopenmp -I$(SOURCE_DIR)/
 
 OPENLDFLAGS= -larmadillo -lpthread -lopenblas -fopenmp
 NVLDFLAGS= -larmadillo -lpthread -lnvblas -fopenmp
 
-SOURCES_BVS=src/global.cpp src/utils.cpp src/distr.cpp src/junction_tree.cpp src/HESS_Chain.cpp src/dSUR_Chain.cpp src/SSUR_Chain.cpp src/ESS_Sampler.h src/drive.cpp src/main.cpp 
+SOURCES_BVS=$(SOURCE_DIR)/global.cpp $(SOURCE_DIR)/utils.cpp $(SOURCE_DIR)/distr.cpp $(SOURCE_DIR)/junction_tree.cpp $(SOURCE_DIR)/HESS_Chain.cpp $(SOURCE_DIR)/dSUR_Chain.cpp $(SOURCE_DIR)/SSUR_Chain.cpp $(SOURCE_DIR)/ESS_Sampler.cpp $(SOURCE_DIR)/drive.cpp $(SOURCE_DIR)/main.cpp 
 #ESS_Atom.h interface only
 OBJECTS_BVS=$(SOURCES_BVS:.cpp=.o)
 
@@ -31,8 +34,8 @@ BVS_DEBUG: $(OBJECTS_BVS)
 
 clean: 
 	@echo [Cleaning: ]
-	rm src/*.o ; rm *_Reg ; rm simul* ; rm blocks* ; rm structureGraph* ; rm call.sh ; rm -R results ;
+	rm $(SOURCE_DIR)/*.o ; rm *_Reg ; rm simul* ; rm blocks* ; rm structureGraph* ; rm call.sh ; rm -R results ;
 
 remake: 
 	@echo [Cleaning compilation objets only: ]
-	rm src/*.o ; rm *_Reg ;
+	rm $(SOURCE_DIR)/*.o ; rm *_Reg ;

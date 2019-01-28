@@ -23,7 +23,7 @@ x = cbind(rep(1,n),x)
 
 graph_pattern = 2 # in 2,3,4
 
-snr = 15  # in 5,15,25
+snr = 25  # in 5,15,25
   
 corr_param = 0.9 # in 0.3 , 0.6 , 0.9
     
@@ -230,8 +230,8 @@ repeat{
 }
 
 #################
-
-data = cbind(y,x[,-1])   # leave out the intercept because is coded inside already
+x = x[,-1]   # leave out the intercept because is coded inside already (variable standardised)
+data = cbind(y,x)
 
 ####################################################################
 
@@ -239,7 +239,8 @@ data = cbind(y,x[,-1])   # leave out the intercept because is coded inside alrea
 name = paste("simul_",snr,"_",corr_param,"_",graph_pattern,".txt",sep="")
 write.table(x=data,file=name,na = "NAN",col.names=FALSE,row.names=FALSE)
 
-blockLabels = c(rep(0,ncol(y)),rep(1,ncol(x)-1))
+blockList = list(1:ncol(y),ncol(y)+(1:ncol(x)))
+blockLabels = c(rep(0,ncol(y)),rep(1,ncol(x)))
 write.table(x=blockLabels,file="blocks.txt",na = "NAN",col.names=FALSE,row.names=FALSE)
 
 structureGraph = matrix(c(0,0,

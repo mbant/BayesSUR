@@ -68,6 +68,12 @@ class ESS_Sampler{
 
 };
 
-#include "ESS_Sampler.cpp"
+
+// Template declarations to force the compiler to build the needed classes
+template class ESS_Sampler<SSUR_Chain>;
+template class ESS_Sampler<dSUR_Chain>;
+template class ESS_Sampler<HESS_Chain>;
+// the alternative would be to include implementation details alongside with these declarations in a single file to include in drive.h
+// https://stackoverflow.com/questions/8752837/undefined-reference-to-template-class-constructor
 
 #endif

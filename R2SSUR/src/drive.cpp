@@ -1,4 +1,5 @@
 #include "drive.h"
+#include <Rcpp.h>
 
 using std::cout;
 using std::endl;
@@ -146,7 +147,7 @@ int drive_SSUR( Chain_Data& chainData )
 				cout << endl;
 
 			// Output to files every now and then
-			if( (i+1) % (tick*10) == 0 )
+			if( (i+1) % (tick*1) == 0 )
 			{
 
 				gammaOutFile.open( outFilePrefix+"gamma_out.txt" , std::ios_base::trunc);
@@ -176,6 +177,8 @@ int drive_SSUR( Chain_Data& chainData )
 				htpOutFile.open( outFilePrefix+"hotspot_tail_p_out.txt" , std::ios_base::trunc);
 				htpOutFile << hotspot_tail_prob_out/((double)i+1.0) << std::flush;
 				htpOutFile.close();
+
+				Rcpp::checkUserInterrupt(); // this checks for interrupts from R ... or does it?
 			}
 
 		}
@@ -366,7 +369,7 @@ int drive_dSUR( Chain_Data& chainData )
 				cout << endl;
 				
 			// Output to files every now and then
-			if( (i+1) % (tick*10) == 0 )
+			if( (i+1) % (tick*1) == 0 )
 			{
 
 				gammaOutFile.open( outFilePrefix+"gamma_out.txt" , std::ios_base::trunc);
@@ -390,6 +393,9 @@ int drive_dSUR( Chain_Data& chainData )
 				htpOutFile.open( outFilePrefix+"hotspot_tail_p_out.txt" , std::ios_base::trunc);
 				htpOutFile << hotspot_tail_prob_out/((double)i+1.0) << std::flush;
 				htpOutFile.close();
+
+				Rcpp::checkUserInterrupt();
+
 			}
 
 		}
@@ -561,7 +567,7 @@ int drive_HESS( Chain_Data& chainData )
 				cout << endl;
 				
 			// Output to files every now and then
-			if( (i+1) % (tick*10) == 0 )
+			if( (i+1) % (tick*1) == 0 )
 			{
 
 				gammaOutFile.open( outFilePrefix+"gamma_out.txt" , std::ios_base::trunc);
@@ -582,6 +588,9 @@ int drive_HESS( Chain_Data& chainData )
 				htpOutFile.open( outFilePrefix+"hotspot_tail_p_out.txt" , std::ios_base::trunc);
 				htpOutFile << hotspot_tail_prob_out/((double)i+1.0) << std::flush;
 				htpOutFile.close();
+
+				Rcpp::checkUserInterrupt();
+
 			}
 
 		}
@@ -629,6 +638,12 @@ int drive_HESS( Chain_Data& chainData )
 	return 0;
 
 }
+
+
+// *******************************************************************************
+// *******************************************************************************
+// *******************************************************************************
+
 
 int drive( const std::string& dataFile, const std::string& blockFile, const std::string& structureGraphFile, const std::string& outFilePath,  
 			unsigned int nIter, unsigned int nChains,

@@ -1,0 +1,16 @@
+Package: R2SSUR
+Type: Package
+Title: Bayesian Sparse Seemingly Unrelated Regression
+Version: 0.1.0
+Date: 2019-01-28
+Authors@R: c(person("Marco", "Banterle", email = "marco.banterle@lshtm.ac.uk", role = c("aut")), person("Zhi", "Zhao", email = "zhi.zhao@medisin.uio.no", role = c("aut", "cre")))
+Maintainer@R: person("Zhi", "Zhao", email = "zhi.zhao@medisin.uio.no", role = c("aut", "cre")) person("Marco", "Banterle", email = "marco.banterle@lshtm.ac.uk", role = c("aut", "cre")))
+Description: Bayesian Sparse Seemingly Unrelated Regression with general variable selection and sparse covariance matrix
+License: MIT + file LICENSE 
+VignetteBuilder: knitr
+RoxygenNote: 6.1.1
+Depends: R (>= 3.2)
+LinkingTo: Rcpp, RcppArmadillo (>= 0.9.000), BH
+Imports: Rcpp, utils, RcppArmadillo (>= 0.9.000), BH
+Suggests: testthat, knitr, rmarkdown
+LazyData: true

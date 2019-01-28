@@ -1,3 +1,5 @@
+#include "ESS_Sampler.h"
+
 template<typename T>
 ESS_Sampler<T>::ESS_Sampler( Utils::SUR_Data& surData , unsigned int nChains_ , double temperatureRatio ):
     updateCounter(500), // how often do we update the temperatures?
