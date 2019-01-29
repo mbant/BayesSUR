@@ -4,12 +4,12 @@
 \alias{runSSUR}
 \title{runSSUR}
 \usage{
-runSSUR(dataFile, blockList, varType = NULL, structureGraph,
+runSSUR(data, blockList, varType = NULL, structureGraph,
   outFilePath = "", nIter = 10, nChains = 1, method = "SSUR",
   gammaSampler = "Bandit", gammaInit = "MLE", usingGPrior = FALSE)
 }
 \arguments{
-\item{dataFile}{path to data file}
+\item{data}{path to data file}
 
 \item{outFilePath}{path to where the output is to be written}
 
@@ -26,7 +26,7 @@ R2SSUR -- Bayesian Sparse Seemingly Unrelated Regression
 \examples{
 require(utils)
 dir.create("tmp")
-# *** code to call the function on sample data here ***
+# ** code to call the function on sample data here **
 unlink("tmp", recursive=TRUE)
 
 }

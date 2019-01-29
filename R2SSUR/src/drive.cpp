@@ -651,9 +651,8 @@ int drive( const std::string& dataFile, const std::string& blockFile, const std:
 {
 
 	cout << "R2SSUR -- Bayesian Sparse Seemingly Unrelated Regression Modelling" << endl;
-
 	#ifdef _OPENMP
-	cout << "Using OpenMP" << endl;
+	cout << "Using OpenMP" << endl; // why did doens't always print even though it clearly runs in parallel?
 	omp_init_lock(&RNGlock);  // init RNG lock for the parallel part
 	#endif
 
