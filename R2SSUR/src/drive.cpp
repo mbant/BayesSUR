@@ -1,5 +1,7 @@
 #include "drive.h"
+#ifndef CCODE
 #include <Rcpp.h>
+#endif
 
 using std::cout;
 using std::endl;
@@ -180,7 +182,10 @@ int drive_SSUR( Chain_Data& chainData )
 				htpOutFile << hotspot_tail_prob_out/((double)i+1.0) << std::flush;
 				htpOutFile.close();
 
+				#ifndef CCODE
 				Rcpp::checkUserInterrupt(); // this checks for interrupts from R ... or does it?
+				#endif
+
 			}
 
 		}
@@ -396,7 +401,10 @@ int drive_dSUR( Chain_Data& chainData )
 				htpOutFile << hotspot_tail_prob_out/((double)i+1.0) << std::flush;
 				htpOutFile.close();
 
-				Rcpp::checkUserInterrupt();
+				#ifndef CCODE
+				Rcpp::checkUserInterrupt(); // this checks for interrupts from R ... or does it?
+				#endif
+
 
 			}
 
@@ -591,7 +599,9 @@ int drive_HESS( Chain_Data& chainData )
 				htpOutFile << hotspot_tail_prob_out/((double)i+1.0) << std::flush;
 				htpOutFile.close();
 
-				Rcpp::checkUserInterrupt();
+				#ifndef CCODE
+				Rcpp::checkUserInterrupt(); // this checks for interrupts from R ... or does it?
+				#endif
 
 			}
 
