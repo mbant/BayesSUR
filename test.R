@@ -14,7 +14,7 @@ R2SSUR::runSSUR(example_data[["data"]],outFilePath = "results/",
                 blockList = example_data[["blockList"]], structureGraph = example_data[["structureGraph"]],
                 nIter = 10,nChains = 2, method = "SSUR")
 
-## check output
+x## check output
 greyscale = grey((1000:0)/1000)
 data(example_ground_truth, package = "R2SSUR")
 
