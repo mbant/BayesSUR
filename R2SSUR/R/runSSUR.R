@@ -30,7 +30,7 @@
 #' }
 #' 
 #' @export
-runSSUR = function(data, blockList, varType=NULL, structureGraph, outFilePath="", 
+runSSUR = function(data, blockList, varType=NULL, structureGraph=NULL, outFilePath="", 
                 nIter=10,  nChains=1, method="SSUR", gammaSampler="Bandit", gammaInit="MLE", usingGPrior=FALSE)
 {
   
@@ -123,6 +123,15 @@ runSSUR = function(data, blockList, varType=NULL, structureGraph, outFilePath=""
 ###### END ######### ZOMBIE CODE! WILL NEED AD SOME POINT WHEN WE INTRODUCE IMPUTATION
   
   ## structure graph
+  if( is.null(structureGraph) )
+  {
+    cat("structureGraph is null, so I'll assume that the first block correspond to Ys, the second to Xs
+        and that there's no other block. Everything else produces an error!\n")
+    
+    structureGraph = structureGraph = matrix(c(0,0,1,0),2,2,byrow=TRUE)
+    
+  }
+  
   if( ! (is.character(structureGraph) & length(structureGraph) == 1) )
   {
     if( is.null(dim(structureGraph)) | !is.matrix(structureGraph) )

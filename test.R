@@ -12,7 +12,7 @@ data(example_data, package = "R2SSUR")
 
 R2SSUR::runSSUR(example_data[["data"]],outFilePath = "results/",
                 blockList = example_data[["blockList"]], structureGraph = example_data[["structureGraph"]],
-                nIter = 20000,nChains = 2, method = "SSUR")
+                nIter = 10,nChains = 2, method = "SSUR")
 
 ## check output
 greyscale = grey((1000:0)/1000)
