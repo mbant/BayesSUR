@@ -4,7 +4,9 @@
 using std::cout;
 using std::endl;
 
+#ifdef _OPENMP
 extern omp_lock_t RNGlock; //defined in global.h
+#endif
 extern std::vector<std::mt19937_64> rng;
 
 int drive_SSUR( Chain_Data& chainData )
