@@ -3,10 +3,17 @@
 #' @description
 #' Run a SUR Bayesian sampler
 #' @name runSSUR
-#' @param data path to data file
-#' @param outFilePath path to where the output is to be written
-#' @param nIter number of iterations
+#' @param data either a matrix/dataframe or the path to (a plain text) data file with variables on the columns and observations on the rows 
+#' @param blockList list of blocks in the model; each element of the list contains the (column) indices of the variables in each block, with respect to the data file
+#' @param varType variable type for each column in the data file; coded as: 0 - continuous, 1- binary, 2 - categorical. Note that categorical variables cannot be imputed
+#' @param structureGraph graph adjacency matrix representing the structure between the blocks. Edges represented as 2 indicate variables that will be always included in the regression model
+#' @param outFilePath path to where the output files are to be written
+#' @param nIter number of iterations for the MCMC procedure
+#' @param burnin number of iterations (or fraction of iterations) to discard at the start of the chain; Default = 0
 #' @param nChains number of parallel chains to run
+#' @param gammaInit gamma initialisation to either all-zeros ("0"), all ones ("1"), randomly ("R") or (default) MLE-informed ("MLE").
+#' @param method a string indicating the model type, either "SSUR" or "dSUR" for sparse and dense Seemingly Unrelated Regressions, or "HESS" for independent outcomes.
+#'
 #' @examples
 #' \donttest{
 #' data(example_data, package = "R2SSUR")
@@ -31,7 +38,7 @@
 #' 
 #' @export
 runSSUR = function(data, blockList, varType=NULL, structureGraph=NULL, outFilePath="", 
-                nIter=10,  nChains=1, method="SSUR", gammaSampler="Bandit", gammaInit="MLE", usingGPrior=FALSE)
+                nIter=10, burnin=0, nChains=1, method="SSUR", gammaSampler="Bandit", gammaInit="MLE", usingGPrior=FALSE)
 {
   
   dir.create("tmp/")
@@ -152,10 +159,19 @@ runSSUR = function(data, blockList, varType=NULL, structureGraph=NULL, outFilePa
     structureGraph = "tmp/structureGraph.txt"
   
   }# else assume it's already a valid path, should we do checks on this as well?
+
+  # check how burnin was given
+  if ( burnin < 0 ){
+    stop("Burnin must be positive or 0")
+  }else{ if ( burnin > nIter ){
+    stop("Burnin might ont be greater then nIter")
+  }else{ if ( burnin < 1 ){ # given as a fraction
+    burnin = ceiling(nIter * burnin) # the zero case is taken into account here as well
+  }}} # else assume is given as an absolute number
   
   dir.create(outFilePath)
   
-  status = R2SSUR_internal(data, blockList, structureGraph, outFilePath, nIter,  nChains, method, gammaSampler, gammaInit, usingGPrior)
+  status = R2SSUR_internal(data, blockList, structureGraph, outFilePath, nIter, burnin, nChains, method, gammaSampler, gammaInit, usingGPrior)
 
   if(outFilePath != "tmp/")
     unlink("tmp",recursive = TRUE)

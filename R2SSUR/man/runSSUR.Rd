@@ -5,17 +5,30 @@
 \title{runSSUR}
 \usage{
 runSSUR(data, blockList, varType = NULL, structureGraph = NULL,
-  outFilePath = "", nIter = 10, nChains = 1, method = "SSUR",
-  gammaSampler = "Bandit", gammaInit = "MLE", usingGPrior = FALSE)
+  outFilePath = "", nIter = 10, burnin = 0, nChains = 1,
+  method = "SSUR", gammaSampler = "Bandit", gammaInit = "MLE",
+  usingGPrior = FALSE)
 }
 \arguments{
-\item{data}{path to data file}
+\item{data}{either a matrix/dataframe or the path to (a plain text) data file with variables on the columns and observations on the rows}
 
-\item{outFilePath}{path to where the output is to be written}
+\item{blockList}{list of blocks in the model; each element of the list contains the (column) indices of the variables in each block, with respect to the data file}
 
-\item{nIter}{number of iterations}
+\item{varType}{variable type for each column in the data file; coded as: 0 - continuous, 1- binary, 2 - categorical. Note that categorical variables cannot be imputed}
+
+\item{structureGraph}{graph adjacency matrix representing the structure between the blocks. Edges represented as 2 indicate variables that will be always included in the regression model}
+
+\item{outFilePath}{path to where the output files are to be written}
+
+\item{nIter}{number of iterations for the MCMC procedure}
+
+\item{burnin}{number of iterations (or fraction of iterations) to discard at the start of the chain; Default = 0}
 
 \item{nChains}{number of parallel chains to run}
+
+\item{method}{a string indicating the model type, either "SSUR" or "dSUR" for sparse and dense Seemingly Unrelated Regressions, or "HESS" for independent outcomes.}
+
+\item{gammaInit}{gamma initialisation to either all-zeros ("0"), all ones ("1"), randomly ("R") or (default) MLE-informed ("MLE").}
 }
 \description{
 Run a SUR Bayesian sampler

@@ -3,13 +3,14 @@
 
 // redeclare the drive funciton
 int drive( const std::string& dataFile, const std::string& blockFile, const std::string& structureGraphFile, const std::string& outFilePath,  
-			unsigned int nIter, unsigned int nChains,
+			unsigned int nIter, unsigned int burnin, unsigned int nChains,
 			const std::string& method, const std::string& gammaSampler, const std::string& gammaInit, bool usingGPrior );
 
 int main(int argc, char *  argv[])
 {
 
 	unsigned int nIter = 10; // default number of iterations
+	unsigned int burnin = 0;
 	unsigned int nChains = 1;
 
 	std::string dataFile = "data.txt";
@@ -80,6 +81,12 @@ int main(int argc, char *  argv[])
 			if (na+1==argc) break;
 			++na;
 		}
+		else if ( 0 == std::string{argv[na]}.compare(std::string{"--burnin"}) )
+		{
+			burnin = std::stoi(argv[++na]);
+			if (na+1==argc) break;
+			++na;
+		}
 		else if ( 0 == std::string{argv[na]}.compare(std::string{"--nChains"}) )
 		{
 			nChains = std::stoi(argv[++na]); // use the next
@@ -118,6 +125,6 @@ int main(int argc, char *  argv[])
     }//end reading from command line
 
 
-	return drive(dataFile,blockFile,structureGraphFile,outFilePath,nIter,nChains,method,gammaSampler,gammaInit,usingGPrior);
+	return drive(dataFile,blockFile,structureGraphFile,outFilePath,nIter,burnin,nChains,method,gammaSampler,gammaInit,usingGPrior);
 
 }

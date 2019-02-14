@@ -17,12 +17,12 @@
 
 // [[Rcpp::export(rng=false)]]
 int R2SSUR_internal(const std::string& dataFile, const std::string& blockFile, const std::string& structureGraphFile, const std::string& outFilePath,  
-                    unsigned int nIter=10, unsigned int nChains=1,
+                    unsigned int nIter=10, unsigned int burnin=0, unsigned int nChains=1,
                     const std::string& method="SSUR", const std::string& gammaSampler="Bandit", 
                     const std::string& gammaInit = "MLE", bool usingGPrior=false)
 {
     int status = drive( dataFile, blockFile, structureGraphFile, outFilePath,
-            			nIter, nChains, method, gammaSampler, gammaInit, usingGPrior );
+            			nIter, burnin, nChains, method, gammaSampler, gammaInit, usingGPrior );
     // Exit
     return status;  
 }

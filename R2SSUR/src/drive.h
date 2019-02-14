@@ -21,7 +21,7 @@
 struct Chain_Data
 {
 	Utils::SUR_Data surData;
-	unsigned int nChains = 1 , nIter = 10 ;
+	unsigned int nChains = 1 , nIter = 10 , burnin = 0;
 	std::string gammaSampler;
 	
 	bool usingGPrior = false;
@@ -41,7 +41,7 @@ int drive_dSUR( Chain_Data& chainData );
 int drive_HESS( Chain_Data& chainData );
 
 int drive( const std::string& dataFile, const std::string& blockFile, const std::string& structureGraphFile, const std::string& outFilePath,  
-			unsigned int nIter, unsigned int nChains,
+			unsigned int nIter, unsigned int burnin, unsigned int nChains,
 			const std::string& method, const std::string& gammaSampler, const std::string& gammaInit, bool usingGPrior );
 
 #endif
