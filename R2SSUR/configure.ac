@@ -8,6 +8,7 @@ AC_INIT(R2SSUR, m4_esyscmd_s([awk -e '/^Version:/ {print $2}' DESCRIPTION]))
 if test -z "${R_HOME}"; then
     AC_MSG_ERROR([Could not determine R_HOME.])
 fi
+RBIN="${R_HOME}/bin/R"
 
 CXX=$("${R_HOME}/bin/R" CMD config CXX)
 CXXFLAGS=$("${R_HOME}/bin/R" CMD config CXXFLAGS)
@@ -34,13 +35,27 @@ CXXFLAGS="$saved_cxxflags"
 # Check for OMP support
 AC_OPENMP
 
-		AC_MSG_RESULT([]);
-		AC_MSG_RESULT([If the previous line display OpenMP as unsupported, ]);
-		AC_MSG_RESULT([in order to enable parall execution of the C++ library ]);
-		AC_MSG_RESULT([please install a more recent gcc if on Linux, or see]);
-		AC_MSG_RESULT([https://cran.r-project.org/bin/macosx/tools/,]);
-		AC_MSG_RESULT([https://cran.r-project.org/bin/windows/Rtools/]);
-		AC_MSG_RESULT([]);
+# since some systems have broken OMP libraries
+# we also check that the actual package will work
+ac_pkg_openmp=no
+if test -n "${OPENMP_CXXFLAGS}"; then
+	AC_MSG_CHECKING([whether OpenMP will actually work in a package])
+	AC_LANG_CONFTEST([AC_LANG_PROGRAM([[#include <omp.h>]], [[ return omp_get_num_threads (); ]])])
+	PKG_CFLAGS="${OPENMP_CXXFLAGS}" PKG_LIBS="${OPENMP_CXXFLAGS}" "$RBIN" CMD SHLIB conftest.cpp 1>&AS_MESSAGE_LOG_FD 2>&AS_MESSAGE_LOG_FD && "$RBIN" --vanilla -q -e "dyn.load(paste('conftest',.Platform\$dynlib.ext,sep=''))" 1>&AS_MESSAGE_LOG_FD 2>&AS_MESSAGE_LOG_FD && ac_pkg_openmp=yes
+	AC_MSG_RESULT([${ac_pkg_openmp}])
+fi
+
+# if test "${ac_pkg_openmp}" = yes all is fine! 
+if test "${ac_pkg_openmp}" = no; then 
+  AC_MSG_WARN([No OpenMP support. If using GCC, upgrade to >= 4.2. If using clang, upgrade to >= 3.8.0]);
+	AC_MSG_RESULT([]);
+	AC_MSG_RESULT([It seems OpenMP is unsupported on your system,]);
+	AC_MSG_RESULT([in order to enable parall execution of the C++ library]);
+	AC_MSG_RESULT([please install a more recent gcc if on Linux, or see]);
+	AC_MSG_RESULT([https://cran.r-project.org/bin/macosx/tools/ ,]);
+	AC_MSG_RESULT([https://cran.r-project.org/bin/windows/Rtools/]);
+	AC_MSG_RESULT([]);
+fi 
 
 AC_SUBST(OPENMP_FLAG,"$OPENMP_CXXFLAGS")
 
