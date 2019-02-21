@@ -16,12 +16,18 @@ HESS_Chain::HESS_Chain( std::shared_ptr<arma::mat> data_, unsigned int nObservat
             unsigned int nOutcomes_, unsigned int nVSPredictors_, unsigned int nFixedPredictors_,
             std::shared_ptr<arma::uvec> outcomesIdx_, std::shared_ptr<arma::uvec> VSPredictorsIdx_,
             std::shared_ptr<arma::uvec> fixedPredictorsIdx_, std::shared_ptr<arma::umat> missingDataArrayIdx_, std::shared_ptr<arma::uvec> completeCases_, 
-            std::string gammaSamplerType_, bool usingGprior, double externalTemperature):
+            Gamma_Sampler_Type gamma_sampler_type_ , Gamma_Type gamma_type_ ,
+            Beta_Type beta_type_ , Covariance_Type covariance_type_ , 
+            double externalTemperature ):
     data(data_), outcomesIdx(outcomesIdx_), VSPredictorsIdx(VSPredictorsIdx_), fixedPredictorsIdx(fixedPredictorsIdx_),
     nObservations(nObservations_), nOutcomes(nOutcomes_), nVSPredictors(nVSPredictors_), nFixedPredictors(nFixedPredictors_),
-    missingDataArrayIdx(missingDataArrayIdx_), completeCases(completeCases_),gammaSamplerType(gammaSamplerType_),gPrior(usingGprior),
+    missingDataArrayIdx(missingDataArrayIdx_), completeCases(completeCases_),
+    gamma_sampler_type(gamma_sampler_type_),gamma_type(gamma_type_),beta_type(beta_type_),covariance_type(covariance_type_),
     temperature(externalTemperature),internalIterationCounter(0)
     {
+
+        if( covariance_type != Covariance_Type::dense )
+            throw Bad_Covariance_Type{};
 
         predictorsIdx = std::make_shared<arma::uvec>(arma::join_vert( *fixedPredictorsIdx, *VSPredictorsIdx ));
         setXtX();
@@ -43,15 +49,19 @@ HESS_Chain::HESS_Chain( std::shared_ptr<arma::mat> data_, unsigned int nObservat
     }
 
 
-HESS_Chain::HESS_Chain( Utils::SUR_Data& surData, std::string gammaSamplerType_, bool usingGprior, double externalTemperature):
+HESS_Chain::HESS_Chain( Utils::SUR_Data& surData, 
+            Gamma_Sampler_Type gamma_sampler_type_ , Gamma_Type gamma_type_ ,
+            Beta_Type beta_type_ , Covariance_Type covariance_type_ , 
+            double externalTemperature ):
     HESS_Chain(surData.data,surData.nObservations,surData.nOutcomes,surData.nVSPredictors,surData.nFixedPredictors,
         surData.outcomesIdx,surData.VSPredictorsIdx,surData.fixedPredictorsIdx,surData.missingDataArrayIdx,surData.completeCases,
-        gammaSamplerType_,usingGprior,externalTemperature){ }
+        gamma_sampler_type_,gamma_type_,beta_type_,covariance_type_,externalTemperature){ }
 
 HESS_Chain::HESS_Chain( Utils::SUR_Data& surData, double externalTemperature ):
     HESS_Chain(surData.data,surData.nObservations,surData.nOutcomes,surData.nVSPredictors,surData.nFixedPredictors,
         surData.outcomesIdx,surData.VSPredictorsIdx,surData.fixedPredictorsIdx,surData.missingDataArrayIdx,surData.completeCases,
-        "Bandit",false,externalTemperature){ }
+        Gamma_Sampler_Type::bandit , Gamma_Type::hotspot , Beta_Type::independent , Covariance_Type::sparse , 
+        externalTemperature){ }
 
 // *******************************
 // Getters and Setters
@@ -82,7 +92,7 @@ void HESS_Chain::gPriorInit() // g Prior can only be init at the start, so no pr
         throw std::runtime_error(std::string("gPrior can only be initialised at the start of the MCMC"));
 
     // set the boot to true
-    gPrior = true;
+    beta_type = Beta_Type::gprior;
 
     // re-initialise the w parameter in line with the new prior, as w now has a different meaning
     wInit( (double)nObservations , 0.5*nOutcomes + nOutcomes -1. , 0.5*nObservations*nOutcomes ); // these values are taken from Lewin 2016
@@ -92,8 +102,6 @@ void HESS_Chain::gPriorInit() // g Prior can only be init at the start, so no pr
     log_likelihood = logLikelihood();
 
 }
-
-bool HESS_Chain::getGPrior() const { return gPrior ; }
 
 // usefull quantities to keep track of
 arma::umat& HESS_Chain::getGammaMask(){ return gammaMask; }
@@ -540,17 +548,43 @@ double HESS_Chain::logLikelihood( )
         
         if( preComputedXtX )
         {
-            if( gPrior )
-                W_k = (w*temperature)/(w+temperature) * arma::inv_sympd( XtX(VS_IN_k,VS_IN_k) );
-            else
-                W_k = arma::inv_sympd( XtX(VS_IN_k,VS_IN_k)/temperature + 1./w * arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
+            switch ( beta_type )
+            {
+                case Beta_Type::gprior :
+                {
+                    W_k = (w*temperature)/(w+temperature) * arma::inv_sympd( XtX(VS_IN_k,VS_IN_k) );
+                    break;
+                }
+
+                case Beta_Type::independent :
+                {
+                    W_k = arma::inv_sympd( XtX(VS_IN_k,VS_IN_k)/temperature + 1./w * arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
+                    break;
+                }
+            
+                default:
+                    throw Bad_Beta_Type{};
+            }
         }
         else
         {
-            if( gPrior )
-                W_k = (w*temperature)/(w+temperature) * arma::inv_sympd( ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) );
-            else
-                W_k = arma::inv_sympd( ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) )/temperature + 1./w * arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
+            switch ( beta_type )
+            {
+                case Beta_Type::gprior :
+                {
+                   W_k = (w*temperature)/(w+temperature) * arma::inv_sympd( ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) );
+                    break;
+                }
+
+                case Beta_Type::independent :
+                {
+                    W_k = arma::inv_sympd( ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) )/temperature + 1./w * arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
+                    break;
+                }
+            
+                default:
+                    throw Bad_Beta_Type{};
+            }
         }
 
         mu_k = W_k * ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->col( (*outcomesIdx)(k) ) ); // we divide by temp later
@@ -593,17 +627,43 @@ double HESS_Chain::logLikelihood( const arma::umat&  externalGammaMask )
 
         if( preComputedXtX )
         {
-            if( gPrior )
-                W_k = (w*temperature)/(w+temperature) * arma::inv_sympd( XtX(VS_IN_k,VS_IN_k) );
-            else
-                W_k = arma::inv_sympd( XtX(VS_IN_k,VS_IN_k)/temperature + 1./w * arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
+            switch ( beta_type )
+            {
+                case Beta_Type::gprior :
+                {
+                   W_k = (w*temperature)/(w+temperature) * arma::inv_sympd( XtX(VS_IN_k,VS_IN_k) );
+                    break;
+                }
+
+                case Beta_Type::independent :
+                {
+                    W_k = arma::inv_sympd( XtX(VS_IN_k,VS_IN_k)/temperature + 1./w * arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
+                    break;
+                }
+            
+                default:
+                    throw Bad_Beta_Type{};
+            }
         }
         else
         {
-            if( gPrior )
-                W_k = (w*temperature)/(w+temperature) * arma::inv_sympd( ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) );
-            else
-                W_k = arma::inv_sympd( ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) )/temperature + 1./w * arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
+            switch ( beta_type )
+            {
+                case Beta_Type::gprior :
+                {
+                    W_k = (w*temperature)/(w+temperature) * arma::inv_sympd( ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) );
+                    break;
+                }
+
+                case Beta_Type::independent :
+                {
+                    W_k = arma::inv_sympd( ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) )/temperature + 1./w * arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
+                    break;
+                }
+            
+                default:
+                    throw Bad_Beta_Type{};
+            }
         }
 
         mu_k = W_k * ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->col( (*outcomesIdx)(k) ) ); // we divide by temp later
@@ -648,17 +708,43 @@ double HESS_Chain::logLikelihood( arma::umat& externalGammaMask , const arma::um
 
         if( preComputedXtX )
         {
-            if( gPrior )
-                W_k = (w*temperature)/(w+temperature) * arma::inv_sympd( XtX(VS_IN_k,VS_IN_k) );
-            else
-                W_k = arma::inv_sympd( XtX(VS_IN_k,VS_IN_k)/temperature + 1./w * arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
+            switch ( beta_type )
+            {
+                case Beta_Type::gprior :
+                {
+                    W_k = (w*temperature)/(w+temperature) * arma::inv_sympd( XtX(VS_IN_k,VS_IN_k) );
+                    break;
+                }
+
+                case Beta_Type::independent :
+                {
+                  W_k = arma::inv_sympd( XtX(VS_IN_k,VS_IN_k)/temperature + 1./w * arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
+                    break;
+                }
+            
+                default:
+                    throw Bad_Beta_Type{};
+            }
         }
         else
         {
-            if( gPrior )
-                W_k = (w*temperature)/(w+temperature) * arma::inv_sympd( ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) );
-            else
-                W_k = arma::inv_sympd( ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) )/temperature + 1./w * arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
+            switch ( beta_type )
+            {
+                case Beta_Type::gprior :
+                {
+                    W_k = (w*temperature)/(w+temperature) * arma::inv_sympd( ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) );
+                    break;
+                }
+
+                case Beta_Type::independent :
+                {
+                    W_k = arma::inv_sympd( ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) )/temperature + 1./w * arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
+                    break;
+                }
+            
+                default:
+                    throw Bad_Beta_Type{};
+            }
         }
 
         mu_k = W_k * ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->col( (*outcomesIdx)(k) ) ); // we divide by temp later
@@ -700,17 +786,43 @@ double HESS_Chain::logLikelihood( const arma::umat& externalGammaMask , const do
 
         if( preComputedXtX )
         {
-            if( gPrior )
-                W_k = (externalW*temperature)/(externalW+temperature) * arma::inv_sympd( XtX(VS_IN_k,VS_IN_k) );
-            else
-                W_k = arma::inv_sympd( XtX(VS_IN_k,VS_IN_k)/temperature + 1./externalW * arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
+            switch ( beta_type )
+            {
+                case Beta_Type::gprior :
+                {
+                    W_k = (externalW*temperature)/(externalW+temperature) * arma::inv_sympd( XtX(VS_IN_k,VS_IN_k) );
+                    break;
+                }
+
+                case Beta_Type::independent :
+                {
+                    W_k = arma::inv_sympd( XtX(VS_IN_k,VS_IN_k)/temperature + 1./externalW * arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
+                    break;
+                }
+            
+                default:
+                    throw Bad_Beta_Type{};
+            }
         }
         else
         {
-            if( gPrior )
-                W_k = (externalW*temperature)/(externalW+temperature) * arma::inv_sympd( ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) );
-            else
-                W_k = arma::inv_sympd( ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) )/temperature + 1./externalW * arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
+            switch ( beta_type )
+            {
+                case Beta_Type::gprior :
+                {
+                    W_k = (externalW*temperature)/(externalW+temperature) * arma::inv_sympd( ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) );
+                    break;
+                }
+
+                case Beta_Type::independent :
+                {
+                    W_k = arma::inv_sympd( ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) )/temperature + 1./externalW * arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
+                    break;
+                }
+            
+                default:
+                    throw Bad_Beta_Type{};
+            }
         }
 
 

@@ -1,6 +1,10 @@
+#ifndef ESS_SAMPLER_H
+#define ESS_SAMPLER_H
+
 #ifdef _OPENMP
 #include <omp.h>
 #endif
+
 #include <vector>
 #include <string>
 #include <memory>
@@ -10,11 +14,7 @@
 
 #include "ESS_Atom.h"
 #include "HESS_Chain.h"
-#include "SSUR_Chain.h"
-#include "dSUR_Chain.h"
-
-#ifndef ESS_SAMPLER_H
-#define ESS_SAMPLER_H
+#include "SUR_Chain.h"
 
 template<typename T>  //  the template here should be a class derived from ESS_Atom
 class ESS_Sampler{
@@ -22,7 +22,13 @@ class ESS_Sampler{
     public:
         
         // Constructor - nChains and type of MCMC
-        ESS_Sampler( Utils::SUR_Data& surData , unsigned int nChains_ , double temperatureRatio );
+        ESS_Sampler( Utils::SUR_Data& surData , unsigned int nChains_ , double temperatureRatio ,
+        	Gamma_Sampler_Type gamma_sampler_type, Gamma_Type gamma_type, Beta_Type beta_type, Covariance_Type covariance_type);
+
+        ESS_Sampler( Utils::SUR_Data& surData , unsigned int nChains_ , double temperatureRatio ) : 
+            ESS_Sampler( surData , nChains_ , temperatureRatio , 
+               Gamma_Sampler_Type::bandit, Gamma_Type::hotspot , Beta_Type::independent , Covariance_Type::sparse){}
+
         ESS_Sampler( Utils::SUR_Data& surData , unsigned int nChains_ ) : ESS_Sampler( surData , nChains_ , 1.2 ){}
         
         // this gets one of the chains from the vector
@@ -76,35 +82,30 @@ class ESS_Sampler{
 
 
 template<typename T>
-ESS_Sampler<T>::ESS_Sampler( Utils::SUR_Data& surData , unsigned int nChains_ , double temperatureRatio ):
-    updateCounter(500), // how often do we update the temperatures?
-    global_proposal_count(0),
-    global_acc_count(0),
-    nChains(nChains_),
-    chain(std::vector<std::shared_ptr<T>>(nChains))
+ESS_Sampler<T>::ESS_Sampler( Utils::SUR_Data& surData , unsigned int nChains_ , double temperatureRatio ,
+    Gamma_Sampler_Type gamma_sampler_type, Gamma_Type gamma_type, Beta_Type beta_type, Covariance_Type covariance_type):
+        updateCounter(500), // how often do we update the temperatures?
+        global_proposal_count(0),
+        global_acc_count(0),
+        nChains(nChains_),
+        chain(std::vector<std::shared_ptr<T>>(nChains))
 {
+
 
     // compile-time check that T is one of ESS_Atom's derived classes
     static_assert(std::is_base_of<ESS_Base, T>::value, "type parameter of this class must derive from ESS_Atom");
 
     for( unsigned int i=0; i<nChains; ++i )
-        chain[i] = std::make_shared<T>( surData , std::pow( temperatureRatio , (double)i ) );  // default init for now
-
+        chain[i] = std::make_shared<T>( surData , 
+            gamma_sampler_type, gamma_type, beta_type, covariance_type,
+            std::pow( temperatureRatio , (double)i ) );  // default init for now
 }
 
 // Example of specialised constructor, might be needed to initialise with more precise arguments depending on the chain type
-// template<> ESS_Sampler<SSUR_Chain>::ESS_Sampler( Utils::SUR_Data& surData , unsigned int nChains_ , double temperatureRatio ):
-//     updateCounter(500), // how often do we update the temperatures?
-//     global_proposal_count(0),
-//     global_acc_count(0),
-//     nChains(nChains_),
-//     chain(std::vector<std::shared_ptr<SSUR_Chain>>(nChains))
+// template<> ESS_Sampler<SSUR_Chain>::ESS_Sampler( ... ):
+//     ...
 // {
-//     std::string gst = "Bandit";
-
-//     for( unsigned int i=0; i<nChains; ++i )
-//         chain[i] = std::make_shared<SSUR_Chain>( surData , gst , false , std::pow( temperatureRatio , (double)i ) );  // default init for now
-
+//     ...
 // }
 
 // ********************************

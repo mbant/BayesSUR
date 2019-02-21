@@ -4,7 +4,7 @@
 // redeclare the drive funciton
 int drive( const std::string& dataFile, const std::string& blockFile, const std::string& structureGraphFile, const std::string& outFilePath,  
 			unsigned int nIter, unsigned int burnin, unsigned int nChains,
-			const std::string& method, const std::string& gammaSampler, const std::string& gammaInit, bool usingGPrior );
+			const std::string& method, const bool sparse, const std::string& gammaSampler, const std::string& gammaInit, bool usingGPrior );
 
 int main(int argc, char *  argv[])
 {
@@ -19,7 +19,8 @@ int main(int argc, char *  argv[])
 
 	std::string outFilePath = "";
 
-	std::string method = "SSUR";
+	std::string method = "SUR";
+	bool sparse = false;
 	std::string gammaSampler = "Bandit";
 	std::string gammaInit = "MLE";
 	
@@ -33,12 +34,18 @@ int main(int argc, char *  argv[])
 		{
 			method = std::string(argv[++na]); // use the next
 
-			if( method != "SSUR" && method != "HESS" && method != "dSUR")
+			if ( method != "SUR" && method != "HESS" )
 			{
-				std::cout << "Unknown method: only SSUR, dSUR or HESS are available" << std::endl;
+				std::cout << "Unknown method: only SUR or HESS are available" << std::endl;
 			    return(1); //this is exit if I'm in a function elsewhere
 			}
 
+			if (na+1==argc) break; // in case it's last, break
+			++na; // otherwise augment counter
+		}
+		else if ( 0 == std::string{argv[na]}.compare(std::string{"--sparse"}) )
+		{
+			sparse = true;
 			if (na+1==argc) break; // in case it's last, break
 			++na; // otherwise augment counter
 		}
@@ -46,7 +53,11 @@ int main(int argc, char *  argv[])
 		{
 			gammaSampler = std::string(argv[++na]); // use the next
 
-			if( gammaSampler != "MC3" && gammaSampler != "mc3" && gammaSampler != "Bandit" && gammaSampler != "bandit")
+			if ( gammaSampler == "MC3" || gammaSampler == "mc3" )
+				gammaSampler = "MC3";
+			else if ( gammaSampler == "Bandit" || gammaSampler == "bandit" || gammaSampler == "BANDIT" ) 
+				gammaSampler = "Bandit";
+			else
 			{
 				std::cout << "Unknown gammaSampler method: only Bandit or MC3 are available" << std::endl;
 			    return(1); //this is exit if I'm in a function elsewhere
@@ -118,13 +129,12 @@ int main(int argc, char *  argv[])
 			++na; // otherwise augment counter
 		}
 		else
-    {
-	    std::cout << "Unknown option: " << argv[na] << std::endl;
-	    return(1); //this is exit if I'm in a function elsewhere
-    }
+		{
+			std::cout << "Unknown option: " << argv[na] << std::endl;
+			return(1); //this is exit if I'm in a function elsewhere
+    	}
     }//end reading from command line
 
-
-	return drive(dataFile,blockFile,structureGraphFile,outFilePath,nIter,burnin,nChains,method,gammaSampler,gammaInit,usingGPrior);
+	return drive(dataFile,blockFile,structureGraphFile,outFilePath,nIter,burnin,nChains,method,sparse,gammaSampler,gammaInit,usingGPrior);
 
 }

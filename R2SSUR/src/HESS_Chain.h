@@ -1,3 +1,6 @@
+#ifndef HESS_CHAIN_H
+#define HESS_CHAIN_H
+
 #include <iostream>  // for std::cout
 #include <string>
 #include <vector>
@@ -8,9 +11,6 @@
 #include "junction_tree.h"
 
 #include "ESS_Atom.h"
-
-#ifndef HESS_CHAIN_H
-#define HESS_CHAIN_H
 
 /************************************
  * HESS class that works with the ESS_Sampler class
@@ -33,9 +33,14 @@ class HESS_Chain : public ESS_Atom<HESS_Chain>
             unsigned int nOutcomes, unsigned int nVSPredictors, unsigned int nFixedPredictors,
             std::shared_ptr<arma::uvec> outcomesIdx_, std::shared_ptr<arma::uvec> VSPredictorsIdx_,
             std::shared_ptr<arma::uvec> fixedPredictorIdx_, std::shared_ptr<arma::umat> missingDataArrayIdx_, std::shared_ptr<arma::uvec> completeCases_, 
-            std::string gammaSamplerType_ = "Bandit" , bool usingGprior = false, double externalTemperature = 1. );
+            Gamma_Sampler_Type gamma_sampler_type_ , Gamma_Type gamma_type_ ,
+            Beta_Type beta_type_ , Covariance_Type covariance_type_ ,
+            double externalTemperature = 1. );
 
-        HESS_Chain( Utils::SUR_Data& surData, std::string gammaSamplerType_ = "Bandit", bool usingGprior = false, double externalTemperature = 1. );
+        HESS_Chain( Utils::SUR_Data& surData, 
+            Gamma_Sampler_Type gamma_sampler_type_ , Gamma_Type gamma_type_ ,
+            Beta_Type beta_type_ , Covariance_Type covariance_type_ ,
+            double externalTemperature = 1. );
 
         HESS_Chain( Utils::SUR_Data& surData, double externalTemperature = 1. );
 
@@ -60,7 +65,6 @@ class HESS_Chain : public ESS_Atom<HESS_Chain>
 
         // gPrior
         void gPriorInit(); // g Prior can only be init at the start, so no proper "set" method
-        bool getGPrior() const;
 
         // usefull quantities to keep track of
         arma::umat& getGammaMask();
@@ -374,9 +378,6 @@ class HESS_Chain : public ESS_Atom<HESS_Chain>
         // Parameter states, with their associated parameters from priors and proposal and current logP
         // **************************
 
-        // beta Prior
-        bool gPrior;
-
         // o_k - outcome association propensity 
         // o_k ~ Beta(a_o,b_o) || its proposal is a symmetric normal RWMH in the log-scale
         arma::vec o;
@@ -425,6 +426,13 @@ class HESS_Chain : public ESS_Atom<HESS_Chain>
         // extra parameters for global moves
         arma::mat corrMatX;
         // should also put here the ones for adapt_XO
+
+        // Parameter and sampler types
+        Covariance_Type covariance_type;
+        Gamma_Type gamma_type;
+        Beta_Type beta_type;
+        Gamma_Sampler_Type gamma_sampler_type;
+
 
 };
 

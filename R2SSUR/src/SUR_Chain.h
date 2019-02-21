@@ -1,3 +1,6 @@
+#ifndef SUR_Chain_H
+#define SUR_Chain_H
+
 #include <iostream>  // for std::cout
 #include <string>
 #include <vector>
@@ -9,15 +12,12 @@
 
 #include "ESS_Atom.h"
 
-#ifndef SSUR_CHAIN_H
-#define SSUR_CHAIN_H
-
 /************************************
  * SSUR class that works with the ESS_Sampler class
  * CRTP used for global exchanges
  ***********************************/
 
-class SSUR_Chain : public ESS_Atom<SSUR_Chain>
+class SUR_Chain : public ESS_Atom<SUR_Chain>
 { 
 
     public:
@@ -26,15 +26,20 @@ class SSUR_Chain : public ESS_Atom<SSUR_Chain>
         // Constructors
         // *******************************
 
-        SSUR_Chain( std::shared_ptr<arma::mat> data_, unsigned int nObservations_, 
+        SUR_Chain( std::shared_ptr<arma::mat> data_, unsigned int nObservations_, 
             unsigned int nOutcomes_, unsigned int nVSPredictors_, unsigned int nFixedPredictors_,
             std::shared_ptr<arma::uvec> outcomesIdx_, std::shared_ptr<arma::uvec> VSPredictorsIdx_,
             std::shared_ptr<arma::uvec> fixedPredictorsIdx_, std::shared_ptr<arma::umat> missingDataArrayIdx_, std::shared_ptr<arma::uvec> completeCases_, 
-            std::string gammaSamplerType_ = "Bandit" , bool usingGprior = false , double externalTemperature = 1. );
+            Gamma_Sampler_Type gamma_sampler_type_ , Gamma_Type gamma_type_ ,
+            Beta_Type beta_type_ , Covariance_Type covariance_type_ ,
+            double externalTemperature = 1. );
 
-        SSUR_Chain( Utils::SUR_Data& surData, std::string gammaSamplerType_ = "Bandit", bool usingGprior = false, double externalTemperature = 1. );
+        SUR_Chain( Utils::SUR_Data& surData, 
+            Gamma_Sampler_Type gamma_sampler_type_ , Gamma_Type gamma_type_ ,
+            Beta_Type beta_type_ , Covariance_Type covariance_type_ ,
+            double externalTemperature = 1. );
 
-        SSUR_Chain( Utils::SUR_Data& surData, double externalTemperature = 1. );
+        SUR_Chain( Utils::SUR_Data& surData, double externalTemperature = 1. );
 
         // *******************************
         // Getters and Setters
@@ -57,7 +62,6 @@ class SSUR_Chain : public ESS_Atom<SSUR_Chain>
 
         // gPrior
         void gPriorInit(); // g Prior can only be init at the start, so no proper "set" method
-        bool getGPrior() const;
 
         // usefull quantities to keep track of
         arma::umat& getGammaMask();
@@ -424,30 +428,30 @@ class SSUR_Chain : public ESS_Atom<SSUR_Chain>
         // more complex functions could be defined outide
         // through public methods but this as a baseline is good to have.
 
-        int globalStep( std::shared_ptr<SSUR_Chain>& );
-        void swapAll( std::shared_ptr<SSUR_Chain>& );
+        int globalStep( std::shared_ptr<SUR_Chain>& );
+        void swapAll( std::shared_ptr<SUR_Chain>& );
 
         // *******************************
         // Global operators between two chains
         // *******************************
         // assuming nu and other fixed hyperparameters are the same across chains, woudn;t make sense otherwise
-        void swapTau( std::shared_ptr<SSUR_Chain>& );
-        void swapEta( std::shared_ptr<SSUR_Chain>& );
-        void swapJT( std::shared_ptr<SSUR_Chain>& );
-        void swapSigmaRho( std::shared_ptr<SSUR_Chain>& );
-        void swapO( std::shared_ptr<SSUR_Chain>& );
-        void swapPi( std::shared_ptr<SSUR_Chain>& );
-        void swapGamma( std::shared_ptr<SSUR_Chain>& );
-        void swapW( std::shared_ptr<SSUR_Chain>& );
-        void swapBeta( std::shared_ptr<SSUR_Chain>& );
+        void swapTau( std::shared_ptr<SUR_Chain>& );
+        void swapEta( std::shared_ptr<SUR_Chain>& );
+        void swapJT( std::shared_ptr<SUR_Chain>& );
+        void swapSigmaRho( std::shared_ptr<SUR_Chain>& );
+        void swapO( std::shared_ptr<SUR_Chain>& );
+        void swapPi( std::shared_ptr<SUR_Chain>& );
+        void swapGamma( std::shared_ptr<SUR_Chain>& );
+        void swapW( std::shared_ptr<SUR_Chain>& );
+        void swapBeta( std::shared_ptr<SUR_Chain>& );
         
-        int exchangeAll_step( std::shared_ptr<SSUR_Chain>& );
-        int exchangeGamma_step( std::shared_ptr<SSUR_Chain>& );
-        int exchangeJT_step( std::shared_ptr<SSUR_Chain>& );
+        int exchangeAll_step( std::shared_ptr<SUR_Chain>& );
+        int exchangeGamma_step( std::shared_ptr<SUR_Chain>& );
+        int exchangeJT_step( std::shared_ptr<SUR_Chain>& );
 
-        int uniform_crossOver_step( std::shared_ptr<SSUR_Chain>& );
-        int adapt_crossOver_step( std::shared_ptr<SSUR_Chain>& );
-        int block_crossOver_step( std::shared_ptr<SSUR_Chain>& , arma::mat& , double );
+        int uniform_crossOver_step( std::shared_ptr<SUR_Chain>& );
+        int adapt_crossOver_step( std::shared_ptr<SUR_Chain>& );
+        int block_crossOver_step( std::shared_ptr<SUR_Chain>& , arma::mat& , double );
 
         // *******************************
         // Other Methods
@@ -608,9 +612,6 @@ class SSUR_Chain : public ESS_Atom<SSUR_Chain>
         // prior hyperparameters are all already defined
         double logP_beta;
 
-        bool gPrior;
-
-
         // **************************
         // LOG-LIKELIHOOD FOR THE SSUR MODEL
         // **************************
@@ -620,6 +621,13 @@ class SSUR_Chain : public ESS_Atom<SSUR_Chain>
         // extra parameters for global moves
         arma::mat corrMatX;
         // should also put here the ones for adapt_XO
+
+        // Parameter and sampler types
+        Covariance_Type covariance_type;
+        Gamma_Type gamma_type;
+        Beta_Type beta_type;
+        Gamma_Sampler_Type gamma_sampler_type;
+
 
 };
 

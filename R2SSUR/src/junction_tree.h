@@ -1,3 +1,6 @@
+#ifndef JUNCTION_TREE_H
+#define JUNCTION_TREE_H
+
 #include <iostream>  // for std::cout
 #include <string>
 #include <vector>
@@ -10,9 +13,6 @@
 
 #include "distr.h"
 #include "utils.h"
-
-#ifndef JUNCTION_TREE_H
-#define JUNCTION_TREE_H
 
 class JTComponent { 
 

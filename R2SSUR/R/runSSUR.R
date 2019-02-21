@@ -12,7 +12,7 @@
 #' @param burnin number of iterations (or fraction of iterations) to discard at the start of the chain; Default = 0
 #' @param nChains number of parallel chains to run
 #' @param gammaInit gamma initialisation to either all-zeros ("0"), all ones ("1"), randomly ("R") or (default) MLE-informed ("MLE").
-#' @param method a string indicating the model type, either "SSUR" or "dSUR" for sparse and dense Seemingly Unrelated Regressions, or "HESS" for independent outcomes.
+#' @param method a string indicating the model type, either "SUR" for sparse and dense Seemingly Unrelated Regressions, or "HESS" for independent outcomes.
 #'
 #' @examples
 #' \donttest{
@@ -20,7 +20,7 @@
 #' 
 #' R2SSUR::runSSUR(example_data[["data"]],outFilePath = "results/",
 #'                 blockList = example_data[["blockList"]], structureGraph = example_data[["structureGraph"]],
-#'                 nIter = 20000,nChains = 2, method = "SSUR")
+#'                 nIter = 20000,nChains = 2, method = "SUR" , sparse = TRUE )
 #' 
 #' ## check output
 #' greyscale = grey((1000:0)/1000)
@@ -38,7 +38,7 @@
 #' 
 #' @export
 runSSUR = function(data, blockList, varType=NULL, structureGraph=NULL, outFilePath="", 
-                nIter=10, burnin=0, nChains=1, method="SSUR", gammaSampler="Bandit", gammaInit="MLE", usingGPrior=FALSE)
+                nIter=10, burnin=0, nChains=1, method="SUR", sparse = TRUE , gammaSampler="Bandit", gammaInit="MLE", usingGPrior=FALSE)
 {
   
   dir.create("tmp/")
@@ -171,7 +171,7 @@ runSSUR = function(data, blockList, varType=NULL, structureGraph=NULL, outFilePa
   
   dir.create(outFilePath)
   
-  status = R2SSUR_internal(data, blockList, structureGraph, outFilePath, nIter, burnin, nChains, method, gammaSampler, gammaInit, usingGPrior)
+  status = R2SSUR_internal(data, blockList, structureGraph, outFilePath, nIter, burnin, nChains, method, sparse, gammaSampler, gammaInit, usingGPrior)
 
   if(outFilePath != "tmp/")
     unlink("tmp",recursive = TRUE)

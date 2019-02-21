@@ -6,8 +6,8 @@
 \usage{
 runSSUR(data, blockList, varType = NULL, structureGraph = NULL,
   outFilePath = "", nIter = 10, burnin = 0, nChains = 1,
-  method = "SSUR", gammaSampler = "Bandit", gammaInit = "MLE",
-  usingGPrior = FALSE)
+  method = "SUR", sparse = TRUE, gammaSampler = "Bandit",
+  gammaInit = "MLE", usingGPrior = FALSE)
 }
 \arguments{
 \item{data}{either a matrix/dataframe or the path to (a plain text) data file with variables on the columns and observations on the rows}
@@ -26,7 +26,7 @@ runSSUR(data, blockList, varType = NULL, structureGraph = NULL,
 
 \item{nChains}{number of parallel chains to run}
 
-\item{method}{a string indicating the model type, either "SSUR" or "dSUR" for sparse and dense Seemingly Unrelated Regressions, or "HESS" for independent outcomes.}
+\item{method}{a string indicating the model type, either "SUR" for sparse and dense Seemingly Unrelated Regressions, or "HESS" for independent outcomes.}
 
 \item{gammaInit}{gamma initialisation to either all-zeros ("0"), all ones ("1"), randomly ("R") or (default) MLE-informed ("MLE").}
 }
@@ -42,7 +42,7 @@ data(example_data, package = "R2SSUR")
 
 R2SSUR::runSSUR(example_data[["data"]],outFilePath = "results/",
                 blockList = example_data[["blockList"]], structureGraph = example_data[["structureGraph"]],
-                nIter = 20000,nChains = 2, method = "SSUR")
+                nIter = 20000,nChains = 2, method = "SUR" , sparse = TRUE )
 
 ## check output
 greyscale = grey((1000:0)/1000)

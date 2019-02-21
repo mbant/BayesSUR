@@ -1,10 +1,16 @@
+#ifndef DRIVESUR
+#define DRIVESUR
+
 #include <vector>
 #include <iostream>
 #include <string>
 #include <armadillo>
-#include <tgmath.h>
-#include <limits>
+// #include <tgmath.h>
+// #include <limits>
+
+#ifdef _OPENMP
 #include <omp.h>
+#endif
 
 #include "global.h"
 #include "utils.h"
@@ -12,36 +18,39 @@
 
 #include "ESS_Sampler.h"
 #include "HESS_Chain.h"
-#include "SSUR_Chain.h"
-#include "dSUR_Chain.h"
+#include "SUR_Chain.h"
 
-#ifndef DRIVESUR
-#define DRIVESUR
 
 struct Chain_Data
 {
+	// Data
 	Utils::SUR_Data surData;
-	unsigned int nChains = 1 , nIter = 10 , burnin = 0;
-	std::string gammaSampler;
-	
-	bool usingGPrior = false;
 
+	// Misc MCMC quantities
+	unsigned int nChains = 1 , nIter = 10 , burnin = 0;
+	
+	// Parameter and sampler types
+	Covariance_Type covariance_type;
+	Gamma_Type gamma_type;
+	Beta_Type beta_type;
+	Gamma_Sampler_Type gamma_sampler_type;
+
+	// init for some variables
 	arma::mat betaInit;
 	arma::umat gammaInit;
 
+	// file names and paths
 	std::string filePrefix , outFilePath;
 
 };
 	
 
-int drive_SSUR( Chain_Data& chainData );
-
-int drive_dSUR( Chain_Data& chainData );
+int drive_SUR( Chain_Data& chainData );
 
 int drive_HESS( Chain_Data& chainData );
 
 int drive( const std::string& dataFile, const std::string& blockFile, const std::string& structureGraphFile, const std::string& outFilePath,  
 			unsigned int nIter, unsigned int burnin, unsigned int nChains,
-			const std::string& method, const std::string& gammaSampler, const std::string& gammaInit, bool usingGPrior );
+			const std::string& method, const bool sparse, const std::string& gammaSampler, const std::string& gammaInit, bool usingGPrior );
 
 #endif

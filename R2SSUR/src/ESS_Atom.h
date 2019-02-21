@@ -1,3 +1,6 @@
+#ifndef ESS_ATOM_H
+#define ESS_ATOM_H
+
 #include <iostream>  // for std::cout
 #include <string>
 #include <vector>
@@ -7,8 +10,61 @@
 #include "distr.h"
 #include "junction_tree.h"
 
-#ifndef ESS_ATOM_H
-#define ESS_ATOM_H
+/******************************************************
+ * Parameter types, to be used in all derived classes 
+ * ****************************************************/
+
+class Bad_Covariance_Type : public std::exception{
+
+  virtual const char* what() const throw()
+  {
+    return "The covariance type here is not valid";
+  }
+
+};
+
+class Bad_Gamma_Type : public std::exception{
+
+  virtual const char* what() const throw()
+  {
+    return "The Gamma type here is not valid";
+  }
+
+};
+
+class Bad_Beta_Type : public std::exception{
+
+  virtual const char* what() const throw()
+  {
+    return "The Beta type here is not valid";
+  }
+
+};
+
+class Bad_Gamma_Sampler_Type : public std::exception{
+
+  virtual const char* what() const throw()
+  {
+    return "The Gamma_Sampler type here is not valid";
+  }
+
+};
+
+enum class Covariance_Type {
+    sparse=1, dense
+};
+
+enum class Gamma_Type {
+    hotspot=1, hierarchical, mrf
+};
+
+enum class Beta_Type {
+    independent=1, gprior
+};
+
+enum class Gamma_Sampler_Type {
+    bandit=1, mc3
+};
 
 /************************************
  * Interface class that works with

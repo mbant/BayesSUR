@@ -1,20 +1,25 @@
-#include "SSUR_Chain.h"
+#include "SUR_Chain.h"
 
 // *******************************
 // Constructors
 // *******************************
 
 
-SSUR_Chain::SSUR_Chain( std::shared_ptr<arma::mat> data_, unsigned int nObservations_, 
+SUR_Chain::SUR_Chain( std::shared_ptr<arma::mat> data_, unsigned int nObservations_, 
             unsigned int nOutcomes_, unsigned int nVSPredictors_, unsigned int nFixedPredictors_,
             std::shared_ptr<arma::uvec> outcomesIdx_, std::shared_ptr<arma::uvec> VSPredictorsIdx_,
             std::shared_ptr<arma::uvec> fixedPredictorsIdx_, std::shared_ptr<arma::umat> missingDataArrayIdx_, std::shared_ptr<arma::uvec> completeCases_, 
-            std::string gammaSamplerType_ , bool usingGprior , double externalTemperature ):
+            Gamma_Sampler_Type gamma_sampler_type_ , Gamma_Type gamma_type_ ,
+            Beta_Type beta_type_ , Covariance_Type covariance_type_ , 
+            double externalTemperature ):
     data(data_), outcomesIdx(outcomesIdx_), VSPredictorsIdx(VSPredictorsIdx_), fixedPredictorsIdx(fixedPredictorsIdx_),
     nObservations(nObservations_), nOutcomes(nOutcomes_), nVSPredictors(nVSPredictors_), nFixedPredictors(nFixedPredictors_),
-    missingDataArrayIdx(missingDataArrayIdx_), completeCases(completeCases_),gammaSamplerType(gammaSamplerType_),gPrior(usingGprior),
+    missingDataArrayIdx(missingDataArrayIdx_), completeCases(completeCases_),
+    gamma_sampler_type(gamma_sampler_type_),gamma_type(gamma_type_),beta_type(beta_type_),covariance_type(covariance_type_),
     temperature(externalTemperature),internalIterationCounter(0),jtStartIteration(0)
     {
+
+
         predictorsIdx = std::make_shared<arma::uvec>(arma::join_vert( *fixedPredictorsIdx, *VSPredictorsIdx ));
         setXtX();
 
@@ -42,22 +47,26 @@ SSUR_Chain::SSUR_Chain( std::shared_ptr<arma::mat> data_, unsigned int nObservat
     }
 
 
-SSUR_Chain::SSUR_Chain( Utils::SUR_Data& surData, std::string gammaSamplerType_ , bool usingGprior , double externalTemperature ):
-    SSUR_Chain(surData.data,surData.nObservations,surData.nOutcomes,surData.nVSPredictors,surData.nFixedPredictors,
+SUR_Chain::SUR_Chain( Utils::SUR_Data& surData, 
+            Gamma_Sampler_Type gamma_sampler_type_ , Gamma_Type gamma_type_ ,
+            Beta_Type beta_type_ , Covariance_Type covariance_type_  , 
+            double externalTemperature ):
+    SUR_Chain(surData.data,surData.nObservations,surData.nOutcomes,surData.nVSPredictors,surData.nFixedPredictors,
         surData.outcomesIdx,surData.VSPredictorsIdx,surData.fixedPredictorsIdx,surData.missingDataArrayIdx,surData.completeCases,
-        gammaSamplerType_,usingGprior,externalTemperature){ }
+        gamma_sampler_type_,gamma_type_,beta_type_,covariance_type_,externalTemperature){ }
 
-SSUR_Chain::SSUR_Chain( Utils::SUR_Data& surData, double externalTemperature ):
-    SSUR_Chain(surData.data,surData.nObservations,surData.nOutcomes,surData.nVSPredictors,surData.nFixedPredictors,
+SUR_Chain::SUR_Chain( Utils::SUR_Data& surData, double externalTemperature ):
+    SUR_Chain(surData.data,surData.nObservations,surData.nOutcomes,surData.nVSPredictors,surData.nFixedPredictors,
         surData.outcomesIdx,surData.VSPredictorsIdx,surData.fixedPredictorsIdx,surData.missingDataArrayIdx,surData.completeCases,
-        "Bandit",false,externalTemperature){ }
+        Gamma_Sampler_Type::bandit , Gamma_Type::hotspot , Beta_Type::independent , Covariance_Type::sparse , 
+        externalTemperature){ }
 
 
 // *******************************
 // Getters and Setters
 // *******************************
 
-void SSUR_Chain::setXtX()
+void SUR_Chain::setXtX()
 { 
 
     // Compute XtX
@@ -75,7 +84,7 @@ void SSUR_Chain::setXtX()
 }
 
 // gPrior
-void SSUR_Chain::gPriorInit() // g Prior can only be init at the start, so no proper set method
+void SUR_Chain::gPriorInit() // g Prior can only be init at the start, so no proper set method
 {
     if( internalIterationCounter > 0 )
         throw std::runtime_error(std::string("gPrior can only be initialised at the start of the MCMC"));
@@ -84,8 +93,8 @@ void SSUR_Chain::gPriorInit() // g Prior can only be init at the start, so no pr
     // unconditional Error, gPrior not implemented yet
     throw std::runtime_error(std::string("gPrior is not fully functional yet, so its use is blocked"));
 
-    // set the boot to true
-    gPrior = true;
+    // set the beta type
+    beta_type = Beta_Type::gprior;
     
     // re-initialise the w parameter in line with the new prior, as w now has a different meaning
     wInit( (double)nObservations , 0.5*nOutcomes + nOutcomes -1. , 0.5*nObservations*nOutcomes ); // these values are taken from Lewin 2016
@@ -96,36 +105,34 @@ void SSUR_Chain::gPriorInit() // g Prior can only be init at the start, so no pr
 
 }
 
-bool SSUR_Chain::getGPrior() const { return gPrior ; }
-
 // usefull quantities to keep track of
-arma::umat& SSUR_Chain::getGammaMask(){ return gammaMask; }
-void SSUR_Chain::setGammaMask( arma::umat  externalGammaMask ){ gammaMask =  externalGammaMask ; }
+arma::umat& SUR_Chain::getGammaMask(){ return gammaMask; }
+void SUR_Chain::setGammaMask( arma::umat  externalGammaMask ){ gammaMask =  externalGammaMask ; }
 
-arma::mat& SSUR_Chain::getXB(){ return XB; }
-void SSUR_Chain::setXB( arma::mat externalXB ){ XB = externalXB ; }
+arma::mat& SUR_Chain::getXB(){ return XB; }
+void SUR_Chain::setXB( arma::mat externalXB ){ XB = externalXB ; }
 
-arma::mat& SSUR_Chain::getU(){ return U ; }
-void SSUR_Chain::setU( arma::mat externalU ){ U = externalU ; }
+arma::mat& SUR_Chain::getU(){ return U ; }
+void SUR_Chain::setU( arma::mat externalU ){ U = externalU ; }
 
-arma::mat& SSUR_Chain::getRhoU(){ return rhoU ; }
-void SSUR_Chain::setRhoU( arma::mat externalRhoU ){ rhoU = externalRhoU ; }
+arma::mat& SUR_Chain::getRhoU(){ return rhoU ; }
+void SUR_Chain::setRhoU( arma::mat externalRhoU ){ rhoU = externalRhoU ; }
 
 // MCMC related tuning parameters
-double SSUR_Chain::getTemperature() const{ return temperature; }
-void SSUR_Chain::setTemperature( double temp_ )
+double SUR_Chain::getTemperature() const{ return temperature; }
+void SUR_Chain::setTemperature( double temp_ )
 { 
     log_likelihood = log_likelihood * temperature / temp_ ; // re-temper the log_likelihood first
     temperature = temp_ ;
 }
 
-unsigned int SSUR_Chain::getinternalIterationCounter() const{ return internalIterationCounter ; }
+unsigned int SUR_Chain::getinternalIterationCounter() const{ return internalIterationCounter ; }
 
-unsigned int SSUR_Chain::getJTStartIteration() const{ return jtStartIteration; }
-void SSUR_Chain::setJTStartIteration( const unsigned int jts ){ jtStartIteration = jts; }
+unsigned int SUR_Chain::getJTStartIteration() const{ return jtStartIteration; }
+void SUR_Chain::setJTStartIteration( const unsigned int jts ){ jtStartIteration = jts; }
 
-std::string SSUR_Chain::getGammaSamplerType(){ return gammaSamplerType ; }
-void SSUR_Chain::setGammaSamplerType( std::string& gammaSamplerType_ )
+std::string SUR_Chain::getGammaSamplerType(){ return gammaSamplerType ; }
+void SUR_Chain::setGammaSamplerType( std::string& gammaSamplerType_ )
 {
     if( gammaSamplerType != gammaSamplerType_ )
     {
@@ -145,304 +152,304 @@ void SSUR_Chain::setGammaSamplerType( std::string& gammaSamplerType_ )
 }
 
 // Bandit-sampling related quantities
-unsigned int SSUR_Chain::getNUpdatesBandit() const{ return n_updates_bandit ; }
-void SSUR_Chain::setNUpdatesBandit( unsigned int n_updates_bandit_ ){ n_updates_bandit = n_updates_bandit_ ; }
+unsigned int SUR_Chain::getNUpdatesBandit() const{ return n_updates_bandit ; }
+void SUR_Chain::setNUpdatesBandit( unsigned int n_updates_bandit_ ){ n_updates_bandit = n_updates_bandit_ ; }
 
-arma::mat& SSUR_Chain::getBanditZeta(){ return banditZeta; }
-void SSUR_Chain::setBanditZeta( arma::mat banditZeta_ ){ banditZeta = banditZeta_ ; }
+arma::mat& SUR_Chain::getBanditZeta(){ return banditZeta; }
+void SUR_Chain::setBanditZeta( arma::mat banditZeta_ ){ banditZeta = banditZeta_ ; }
 
-arma::mat& SSUR_Chain::getBanditAlpha(){ return banditAlpha ; }
-void SSUR_Chain::setBanditAlpha( arma::mat banditAlpha_ ){ banditAlpha = banditAlpha_ ; }
+arma::mat& SUR_Chain::getBanditAlpha(){ return banditAlpha ; }
+void SUR_Chain::setBanditAlpha( arma::mat banditAlpha_ ){ banditAlpha = banditAlpha_ ; }
 
-arma::mat& SSUR_Chain::getBanditBeta(){ return banditBeta ; }
-void SSUR_Chain::setBanditBeta( arma::mat banditBeta_ ){ banditBeta = banditBeta_ ; }
+arma::mat& SUR_Chain::getBanditBeta(){ return banditBeta ; }
+void SUR_Chain::setBanditBeta( arma::mat banditBeta_ ){ banditBeta = banditBeta_ ; }
 
-arma::vec& SSUR_Chain::getBanditMismatch(){ return mismatch; }
-void SSUR_Chain::setBanditMismatch( arma::vec mismatch_ ){ mismatch = mismatch_ ; }
+arma::vec& SUR_Chain::getBanditMismatch(){ return mismatch; }
+void SUR_Chain::setBanditMismatch( arma::vec mismatch_ ){ mismatch = mismatch_ ; }
 
-arma::vec& SSUR_Chain::getBanditNormalisedMismatch(){ return normalised_mismatch ; }
-void SSUR_Chain::setBanditNormalisedMismatch( arma::vec normalised_mismatch_ ){ normalised_mismatch = normalised_mismatch_ ; }
+arma::vec& SUR_Chain::getBanditNormalisedMismatch(){ return normalised_mismatch ; }
+void SUR_Chain::setBanditNormalisedMismatch( arma::vec normalised_mismatch_ ){ normalised_mismatch = normalised_mismatch_ ; }
 
-arma::vec& SSUR_Chain::getBanditNormalisedMismatchBackwards(){ return normalised_mismatch_backwards ; }
-void SSUR_Chain::setBanditNormalisedMismatchBackwards( arma::vec normalised_mismatch_backwards_ ){ normalised_mismatch_backwards = normalised_mismatch_backwards_ ; }
+arma::vec& SUR_Chain::getBanditNormalisedMismatchBackwards(){ return normalised_mismatch_backwards ; }
+void SUR_Chain::setBanditNormalisedMismatchBackwards( arma::vec normalised_mismatch_backwards_ ){ normalised_mismatch_backwards = normalised_mismatch_backwards_ ; }
 
 // Parameter states etc
 
 // TAU
-double SSUR_Chain::getTau() const{ return tau; }
-void SSUR_Chain::setTau( double tau_ )
+double SUR_Chain::getTau() const{ return tau; }
+void SUR_Chain::setTau( double tau_ )
 {
     tau = tau_;
     logPTau(); // this updates the internal logP variable
 }
 
-void SSUR_Chain::setTau( double tau_ , double logP_tau_)
+void SUR_Chain::setTau( double tau_ , double logP_tau_)
 {
     tau = tau_;
     logP_tau = logP_tau_ ;
 }
 
-double SSUR_Chain::getTauA() const{ return a_tau; }
-void SSUR_Chain::setTauA( double a_tau_ )
+double SUR_Chain::getTauA() const{ return a_tau; }
+void SUR_Chain::setTauA( double a_tau_ )
 { 
     a_tau = a_tau_ ;
     logPTau(); 
 }
 
-double SSUR_Chain::getTauB() const{ return b_tau; }
-void SSUR_Chain::setTauB( double b_tau_ )
+double SUR_Chain::getTauB() const{ return b_tau; }
+void SUR_Chain::setTauB( double b_tau_ )
 { 
     b_tau = b_tau_ ; 
     logPTau();
 }
 
-double SSUR_Chain::getVarTauProposal() const{ return var_tau_proposal ; }
-void SSUR_Chain::setVarTauProposal( double var_tau_proposal_ ){ var_tau_proposal = var_tau_proposal_ ; }
+double SUR_Chain::getVarTauProposal() const{ return var_tau_proposal ; }
+void SUR_Chain::setVarTauProposal( double var_tau_proposal_ ){ var_tau_proposal = var_tau_proposal_ ; }
 
-double SSUR_Chain::getTauAccRate() const{ return tau_acc_count/(double)internalIterationCounter ; }
+double SUR_Chain::getTauAccRate() const{ return tau_acc_count/(double)internalIterationCounter ; }
 // no setter for this, is updated internally
 
-double SSUR_Chain::getLogPTau() const{ return logP_tau ; }
+double SUR_Chain::getLogPTau() const{ return logP_tau ; }
 // no setter for this, dedicated setter below
 
 // ETA
-double SSUR_Chain::getEta() const{ return eta ; }
-void SSUR_Chain::setEta( double eta_ )
+double SUR_Chain::getEta() const{ return eta ; }
+void SUR_Chain::setEta( double eta_ )
 {
     eta = eta_ ;
     logPEta(); // this updates the internal logP variable
 }
 
-void SSUR_Chain::setEta( double eta_ , double logP_eta_ )
+void SUR_Chain::setEta( double eta_ , double logP_eta_ )
 {
     eta = eta_ ;
     logP_eta = logP_eta_ ;
 }
 
-double SSUR_Chain::getEtaA() const{ return a_eta ; }
-void SSUR_Chain::setEtaA( double a_eta_ )
+double SUR_Chain::getEtaA() const{ return a_eta ; }
+void SUR_Chain::setEtaA( double a_eta_ )
 { 
     a_eta = a_eta_ ;
     logPEta();
 }
 
-double SSUR_Chain::getEtaB() const{ return b_eta ; }
-void SSUR_Chain::setEtaB( double b_eta_ )
+double SUR_Chain::getEtaB() const{ return b_eta ; }
+void SUR_Chain::setEtaB( double b_eta_ )
 {
     b_eta = b_eta_ ; 
     logPEta();
 }
 
-double SSUR_Chain::getLogPEta() const{ return logP_eta ; }
+double SUR_Chain::getLogPEta() const{ return logP_eta ; }
 // no setter for this, dedicated setter below
 
 // JT
-JunctionTree& SSUR_Chain::getJT(){ return jt; }  // need to check this works correctly TODO (i.e. correct behaviour is returning a copy of jt)
-arma::sp_umat SSUR_Chain::getGAdjMat() const{ return jt.getAdjMat(); }  // need to check this works correctly TODO (i.e. correct behaviour is returning a copy of jt)
-void SSUR_Chain::setJT( JunctionTree& externalJT )
+JunctionTree& SUR_Chain::getJT(){ return jt; }  // need to check this works correctly TODO (i.e. correct behaviour is returning a copy of jt)
+arma::sp_umat SUR_Chain::getGAdjMat() const{ return jt.getAdjMat(); }  // need to check this works correctly TODO (i.e. correct behaviour is returning a copy of jt)
+void SUR_Chain::setJT( JunctionTree& externalJT )
 { 
     jt = externalJT ; // old jt gets destroyed as there's no reference to him anymore, new jt "points" to the foreign object
     logPJT();
 } 
 
-void SSUR_Chain::setJT( JunctionTree& externalJT , double logP_jt_ )
+void SUR_Chain::setJT( JunctionTree& externalJT , double logP_jt_ )
 { 
     jt = externalJT ; // old jt gets destroyed as there's no reference to him anymore, new jt "points" to the foreign object
     logP_jt = logP_jt_ ;
 } 
 
-unsigned int SSUR_Chain::getNUpdatesJT() const{ return n_updates_jt; }
-void SSUR_Chain::setNUpdatesJT( unsigned int n_updates_jt_ ){ n_updates_jt = n_updates_jt_ ; }
+unsigned int SUR_Chain::getNUpdatesJT() const{ return n_updates_jt; }
+void SUR_Chain::setNUpdatesJT( unsigned int n_updates_jt_ ){ n_updates_jt = n_updates_jt_ ; }
 
-double SSUR_Chain::getJTAccRate() const{ return jt_acc_count/(double)internalIterationCounter ; }
+double SUR_Chain::getJTAccRate() const{ return jt_acc_count/(double)internalIterationCounter ; }
 // no setter for this, is updated internally
 
-double SSUR_Chain::getLogPJT() const{ return logP_jt ; }
+double SUR_Chain::getLogPJT() const{ return logP_jt ; }
 // no setter for this, dedicated setter below
 
 // sigmas and rhos
-arma::mat& SSUR_Chain::getSigmaRho(){ return sigmaRho ; }
-void SSUR_Chain::setSigmaRho( arma::mat&  externalSigmaRho )
+arma::mat& SUR_Chain::getSigmaRho(){ return sigmaRho ; }
+void SUR_Chain::setSigmaRho( arma::mat&  externalSigmaRho )
 { 
     sigmaRho =  externalSigmaRho ; 
     logPSigmaRho();
     // THIS DO NOT ACT ON LOGLIK, SO IT'S IMPORTANT TO REMEMBER TO CHANGE THAT
 }
 
-void SSUR_Chain::setSigmaRho( arma::mat&  externalSigmaRho , double logP_sigmaRho_ )
+void SUR_Chain::setSigmaRho( arma::mat&  externalSigmaRho , double logP_sigmaRho_ )
 { 
     sigmaRho =  externalSigmaRho ; 
     logP_sigmaRho = logP_sigmaRho_ ;
     // THIS DO NOT ACT ON LOGLIK, SO IT'S IMPORTANT TO REMEMBER TO CHANGE THAT
 }
 
-double SSUR_Chain::getNu() const{ return nu; } 
-void SSUR_Chain::setNu( double nu_ )
+double SUR_Chain::getNu() const{ return nu; } 
+void SUR_Chain::setNu( double nu_ )
 { 
     nu = nu_ ; 
     logPSigmaRho();
 } 
 
-double SSUR_Chain::getLogPSigmaRho(){ return logP_sigmaRho ; }
+double SUR_Chain::getLogPSigmaRho(){ return logP_sigmaRho ; }
 // no setter for this, dedicated setter below
 
 // o_k
-arma::vec& SSUR_Chain::getO(){ return o ; }
-void SSUR_Chain::setO( arma::vec& o_ )
+arma::vec& SUR_Chain::getO(){ return o ; }
+void SUR_Chain::setO( arma::vec& o_ )
 {
     o = o_ ;
     logPO();
 }
 
-void SSUR_Chain::setO( arma::vec& o_ , double logP_o_ )
+void SUR_Chain::setO( arma::vec& o_ , double logP_o_ )
 {
     o = o_ ;
     logP_o = logP_o_ ;
 }
 
-double SSUR_Chain::getOA() const{ return a_o ; }
-void SSUR_Chain::setOA( double a_o_ )
+double SUR_Chain::getOA() const{ return a_o ; }
+void SUR_Chain::setOA( double a_o_ )
 { 
     a_o = a_o_ ;
     logPO();
 }
 
-double SSUR_Chain::getOB() const{ return b_o ; }
-void SSUR_Chain::setOB( double b_o_ )
+double SUR_Chain::getOB() const{ return b_o ; }
+void SUR_Chain::setOB( double b_o_ )
 {
     b_o = b_o_ ;
     logPO();
 }
 
-double SSUR_Chain::getVarOProposal() const{ return var_o_proposal ; }
-void SSUR_Chain::setVarOProposal( double var_o_proposal_ ){ var_o_proposal = var_o_proposal_ ; }
+double SUR_Chain::getVarOProposal() const{ return var_o_proposal ; }
+void SUR_Chain::setVarOProposal( double var_o_proposal_ ){ var_o_proposal = var_o_proposal_ ; }
 
-double SSUR_Chain::getOAccRate() const{ return o_acc_count/(double)internalIterationCounter ; }
+double SUR_Chain::getOAccRate() const{ return o_acc_count/(double)internalIterationCounter ; }
 // no setter for this, is updated internally
 
-double SSUR_Chain::getLogPO() const{ return logP_o ; }
+double SUR_Chain::getLogPO() const{ return logP_o ; }
 // no setter for this, dedicated setter below
 
 // pi_j
-arma::vec& SSUR_Chain::getPi(){ return pi ; }
-void SSUR_Chain::setPi( arma::vec& pi_ )
+arma::vec& SUR_Chain::getPi(){ return pi ; }
+void SUR_Chain::setPi( arma::vec& pi_ )
 {
     pi = pi_ ;
     logPPi();
 }
 
-void SSUR_Chain::setPi( arma::vec& pi_ , double logP_pi_ )
+void SUR_Chain::setPi( arma::vec& pi_ , double logP_pi_ )
 {
     pi = pi_ ;
     logP_pi = logP_pi_ ;
 }
 
-double SSUR_Chain::getPiA() const{ return a_pi ; }
-void SSUR_Chain::setPiA( double a_pi_ )
+double SUR_Chain::getPiA() const{ return a_pi ; }
+void SUR_Chain::setPiA( double a_pi_ )
 {
     a_pi = a_pi_ ; 
     logPPi();
 }
 
-double SSUR_Chain::getPiB() const{ return b_pi ; }
-void SSUR_Chain::setPiB( double b_pi_ )
+double SUR_Chain::getPiB() const{ return b_pi ; }
+void SUR_Chain::setPiB( double b_pi_ )
 { 
     b_pi = b_pi_ ;
     logPPi();
 }
 
-double SSUR_Chain::getVarPiProposal() const{ return var_pi_proposal ; }
-void SSUR_Chain::setVarPiProposal( double var_pi_proposal_ ){ var_pi_proposal = var_pi_proposal_ ; }
+double SUR_Chain::getVarPiProposal() const{ return var_pi_proposal ; }
+void SUR_Chain::setVarPiProposal( double var_pi_proposal_ ){ var_pi_proposal = var_pi_proposal_ ; }
 
-double SSUR_Chain::getPiAccRate() const{ return pi_acc_count/(double)internalIterationCounter ; }
+double SUR_Chain::getPiAccRate() const{ return pi_acc_count/(double)internalIterationCounter ; }
 // no setter for this, is updated internally
 
-double SSUR_Chain::getLogPPi() const{ return logP_pi ; }
+double SUR_Chain::getLogPPi() const{ return logP_pi ; }
 // no setter for this, dedicated setter below
 
 // GAMMA
-arma::umat& SSUR_Chain::getGamma(){ return gamma ; }
-void SSUR_Chain::setGamma( arma::umat& externalGamma )
+arma::umat& SUR_Chain::getGamma(){ return gamma ; }
+void SUR_Chain::setGamma( arma::umat& externalGamma )
 {
     gamma = externalGamma ; 
     logPGamma();
 }
 
-void SSUR_Chain::setGamma( arma::umat& externalGamma , double logP_gamma_ )
+void SUR_Chain::setGamma( arma::umat& externalGamma , double logP_gamma_ )
 {
     gamma = externalGamma ; 
     logP_gamma = logP_gamma_ ;
 }
 
-unsigned int SSUR_Chain::getNUpdatesMC3() const{ return n_updates_MC3 ; }
-void SSUR_Chain::setNUpdatesMC3( unsigned int n_updates_MC3_ ){ n_updates_MC3 = n_updates_MC3_ ; }
+unsigned int SUR_Chain::getNUpdatesMC3() const{ return n_updates_MC3 ; }
+void SUR_Chain::setNUpdatesMC3( unsigned int n_updates_MC3_ ){ n_updates_MC3 = n_updates_MC3_ ; }
 
-double SSUR_Chain::getGammaAccRate() const{ return gamma_acc_count/(double)internalIterationCounter ; }
+double SUR_Chain::getGammaAccRate() const{ return gamma_acc_count/(double)internalIterationCounter ; }
 // no setter for this, is updated internally
 
-double SSUR_Chain::getLogPGamma() const{ return logP_gamma ; }
+double SUR_Chain::getLogPGamma() const{ return logP_gamma ; }
 // no setter for this, dedicated setter below
 
 // W
-double SSUR_Chain::getW() const{ return w ; }
-void SSUR_Chain::setW( double w_ )
+double SUR_Chain::getW() const{ return w ; }
+void SUR_Chain::setW( double w_ )
 {
     w = w_ ;
     logPW();
 }
 
-void SSUR_Chain::setW( double w_ , double logP_w_ )
+void SUR_Chain::setW( double w_ , double logP_w_ )
 {
     w = w_ ;
     logP_w = logP_w_ ;
 }
 
-double SSUR_Chain::getWA() const{ return a_w ; }
-void SSUR_Chain::setWA( double a_w_ )
+double SUR_Chain::getWA() const{ return a_w ; }
+void SUR_Chain::setWA( double a_w_ )
 { 
     a_w = a_w_ ;
     logPW();
 }
 
-double SSUR_Chain::getWB() const{ return b_w ; }
-void SSUR_Chain::setWB( double b_w_ )
+double SUR_Chain::getWB() const{ return b_w ; }
+void SUR_Chain::setWB( double b_w_ )
 { 
     b_w = b_w_ ;
     logPW();
 }
 
-double SSUR_Chain::getLogPW() const{ return logP_w; }
+double SUR_Chain::getLogPW() const{ return logP_w; }
 // no setter for this, dedicated setter below
 
 // BETA
-arma::mat& SSUR_Chain::getBeta(){ return beta ; }
-void SSUR_Chain::setBeta( arma::mat&  externalBeta )
+arma::mat& SUR_Chain::getBeta(){ return beta ; }
+void SUR_Chain::setBeta( arma::mat&  externalBeta )
 {
     beta =  externalBeta ;
     logPBeta();
     // THIS DO NOT ACT ON LOGLIK, SO IT'S IMPORTANT TO REMEMBER TO CHANGE THAT
 }
 
-void SSUR_Chain::setBeta( arma::mat&  externalBeta , double logP_beta_ )
+void SUR_Chain::setBeta( arma::mat&  externalBeta , double logP_beta_ )
 {
     beta =  externalBeta ;
     logP_beta = logP_beta_ ;
     // THIS DO NOT ACT ON LOGLIK, SO IT'S IMPORTANT TO REMEMBER TO CHANGE THAT
 }
 
-double SSUR_Chain::getLogPBeta() const{ return logP_beta ; }
+double SUR_Chain::getLogPBeta() const{ return logP_beta ; }
 // no setter for this, dedicated setter below
 
 // LOG-LIKELIHOOD FOR THE SSUR MODEL
-double SSUR_Chain::getLogLikelihood() const{ return log_likelihood ; }
-void SSUR_Chain::setLogLikelihood( double log_likelihood_ ){ log_likelihood = log_likelihood_ ; }
+double SUR_Chain::getLogLikelihood() const{ return log_likelihood ; }
+void SUR_Chain::setLogLikelihood( double log_likelihood_ ){ log_likelihood = log_likelihood_ ; }
 
-double SSUR_Chain::getJointLogPrior() const
+double SUR_Chain::getJointLogPrior() const
 {
     return logP_tau + logP_eta + logP_jt + logP_sigmaRho + logP_o + logP_pi + logP_gamma + logP_w + logP_beta;
 }
 
-double SSUR_Chain::getJointLogPosterior() const
+double SUR_Chain::getJointLogPosterior() const
 {
     return getJointLogPrior() + getLogLikelihood();
 }
@@ -455,7 +462,7 @@ double SSUR_Chain::getJointLogPosterior() const
 // (contrarily from the data, these are native inside the class, not pointers)
 // so the init must happen here to avoid copying and memory-waste in general
 // different version help in selecting different values for fixed hyperameters etc..
-void SSUR_Chain::tauInit( double tau_init , double a_tau_ , double b_tau_ , double var_tau_proposal_ )
+void SUR_Chain::tauInit( double tau_init , double a_tau_ , double b_tau_ , double var_tau_proposal_ )
 {
     tau = tau_init ;
 
@@ -469,18 +476,18 @@ void SSUR_Chain::tauInit( double tau_init , double a_tau_ , double b_tau_ , doub
     logPTau();
 }
 
-void SSUR_Chain::tauInit()
+void SUR_Chain::tauInit()
 {
     tauInit( 1. , 0.1 , 10. , 0.02 );
 }
 
-void SSUR_Chain::tauInit( double tau_init )
+void SUR_Chain::tauInit( double tau_init )
 {
     tauInit( tau_init , 0.1 , 10. , 0.02 );
 }
 
 
-void SSUR_Chain::etaInit( double eta_init , double a_eta_ , double b_eta_ )
+void SUR_Chain::etaInit( double eta_init , double a_eta_ , double b_eta_ )
 {
     eta = eta_init;
 
@@ -490,12 +497,12 @@ void SSUR_Chain::etaInit( double eta_init , double a_eta_ , double b_eta_ )
     logPEta();
 }
 
-void SSUR_Chain::etaInit()
+void SUR_Chain::etaInit()
 {
     etaInit( 0.1 , /*0.5*s*(s-1)*0.1*/ 0.1 , /*0.5*s*(s-1)*(1.-0.1)*/ 1. ); // 0.1  is essentially the expected active proportion
 }
 
-void SSUR_Chain::etaInit( double eta_init )
+void SUR_Chain::etaInit( double eta_init )
 {
     etaInit( eta_init , /*0.5*s*(s-1)*0.1*/ 0.1 , /*0.5*s*(s-1)*(1.-0.1)*/ 1. ); // should I use eta_init in the prior parameters?
 }
@@ -503,48 +510,72 @@ void SSUR_Chain::etaInit( double eta_init )
 
 // **** care, due to the need to pass a whole object, for constuctor purposes
 // this one function differently than the rest (I need to repeat the code in both function essentally..)
-void SSUR_Chain::jtInit( JunctionTree& jt_init )
+void SUR_Chain::jtInit( JunctionTree& jt_init )
 {
     jt = jt_init ;
-
     jt_acc_count = 0.;
-    n_updates_jt = 5; // default value, should I pick something different?
+
+    switch ( covariance_type )
+    {
+        case Covariance_Type::sparse :
+            n_updates_jt = 5; // default value, should I pick something different?
+            break;
+
+        case Covariance_Type::dense :
+            n_updates_jt = 0;
+            break;
+
+        default:
+            throw Bad_Covariance_Type{};
+    }
 
     logPJT();
 }
 
-void SSUR_Chain::jtInit()
+void SUR_Chain::jtInit()
 {
-    jt = JunctionTree( nOutcomes , "empty" ); //empty constructor, diagonal adj matrix of dimension s
-    // jt = JunctionTree( s , "full" ); // full constructor, dense adj matrix of dimension s
- 
     jt_acc_count = 0.;
-    n_updates_jt = 5; // default value, should I pick something different?
+
+    switch ( covariance_type )
+    {
+        case Covariance_Type::sparse :
+            jt = JunctionTree( nOutcomes , "empty" ); //empty constructor, diagonal adj matrix of dimension s
+            n_updates_jt = 5; // default value, should I pick something different?
+            break;
+
+        case Covariance_Type::dense :
+            jt = JunctionTree( nOutcomes , "full" ); // full constructor, dense adj matrix of dimension s
+            n_updates_jt = 0; 
+            break;
+    
+        default:
+            break;
+    }
 
     logPJT();
 }
 // end different from the rest
 
 
-void SSUR_Chain::sigmaRhoInit( arma::mat& sigmaRho_init , double nu_ )
+void SUR_Chain::sigmaRhoInit( arma::mat& sigmaRho_init , double nu_ )
 {
     sigmaRho = sigmaRho_init;
     nu = nu_;
     logPSigmaRho();
 }
 
-void SSUR_Chain::sigmaRhoInit()
+void SUR_Chain::sigmaRhoInit()
 {
     arma::mat init = arma::eye<arma::mat>(nOutcomes,nOutcomes);
     sigmaRhoInit( init , nOutcomes+2. );
 }
 
-void SSUR_Chain::sigmaRhoInit( arma::mat& sigmaRho_init )
+void SUR_Chain::sigmaRhoInit( arma::mat& sigmaRho_init )
 {
     sigmaRhoInit( sigmaRho_init , nOutcomes+2. );
 }
 
-void SSUR_Chain::oInit( arma::vec& o_init , double a_o_ , double b_o_ , double var_o_proposal_ )
+void SUR_Chain::oInit( arma::vec& o_init , double a_o_ , double b_o_ , double var_o_proposal_ )
 {
     o = o_init;
     a_o = a_o_;
@@ -555,18 +586,18 @@ void SSUR_Chain::oInit( arma::vec& o_init , double a_o_ , double b_o_ , double v
     logPO();
 }
 
-void SSUR_Chain::oInit()
+void SUR_Chain::oInit()
 {
     arma::vec init = arma::ones<arma::vec>(nOutcomes) / std::max( 500. , (double)nVSPredictors ) ;
     oInit( init , 2. , (double)nVSPredictors-2. , 0.005 );
 }
 
-void SSUR_Chain::oInit( arma::vec& o_init )
+void SUR_Chain::oInit( arma::vec& o_init )
 {
     oInit( o_init , 2. , (double)nVSPredictors-2. , 0.005 );
 }
 
-void SSUR_Chain::piInit( arma::vec& pi_init , double a_pi_ , double b_pi_ , double var_pi_proposal_ )
+void SUR_Chain::piInit( arma::vec& pi_init , double a_pi_ , double b_pi_ , double var_pi_proposal_ )
 {
     pi = pi_init;
     a_pi = a_pi_;
@@ -577,18 +608,18 @@ void SSUR_Chain::piInit( arma::vec& pi_init , double a_pi_ , double b_pi_ , doub
     logPPi();
 }
 
-void SSUR_Chain::piInit()
+void SUR_Chain::piInit()
 {
     arma::vec init = arma::ones<arma::vec>(nVSPredictors) ;
     piInit( init , 2. , 1. , 0.02 );
 }
 
-void SSUR_Chain::piInit( arma::vec& pi_init )
+void SUR_Chain::piInit( arma::vec& pi_init )
 {
     piInit( pi_init , 2. , 1. , 0.02 );
 }
 
-void SSUR_Chain::gammaInit( arma::umat& gamma_init )
+void SUR_Chain::gammaInit( arma::umat& gamma_init )
 {
     gamma = gamma_init; 
     gamma_acc_count = 0.;
@@ -596,13 +627,13 @@ void SSUR_Chain::gammaInit( arma::umat& gamma_init )
     updateGammaMask();
 }
 
-void SSUR_Chain::gammaInit()
+void SUR_Chain::gammaInit()
 {
     arma::umat init = arma::zeros<arma::umat>(nVSPredictors,nOutcomes);
     gammaInit( init );
 }
 
-void SSUR_Chain::wInit( double w_init , double a_w_ , double b_w_ , double var_w_proposal_ )
+void SUR_Chain::wInit( double w_init , double a_w_ , double b_w_ , double var_w_proposal_ )
 {
     w = w_init;
     a_w = a_w_;
@@ -615,28 +646,28 @@ void SSUR_Chain::wInit( double w_init , double a_w_ , double b_w_ , double var_w
     logPW();
 }
 
-void SSUR_Chain::wInit( double w_init , double a_w_ , double b_w_ )
+void SUR_Chain::wInit( double w_init , double a_w_ , double b_w_ )
 {
     wInit( w_init , a_w_ , b_w_ , 0.02 );
 }
 
-void SSUR_Chain::wInit( double w_init )
+void SUR_Chain::wInit( double w_init )
 {
     wInit( w_init , 2. , 5. );
 }
 
-void SSUR_Chain::wInit()
+void SUR_Chain::wInit()
 {
     wInit( 1. , 2. , 5. );
 }
 
-void SSUR_Chain::betaInit( arma::mat& beta_init )
+void SUR_Chain::betaInit( arma::mat& beta_init )
 {
     beta = beta_init;
     logPBeta();
 }
 
-void SSUR_Chain::betaInit()
+void SUR_Chain::betaInit()
 {
     arma::mat init = arma::zeros<arma::mat>(nFixedPredictors+nVSPredictors,nOutcomes);
     betaInit( init );
@@ -653,41 +684,41 @@ void SSUR_Chain::betaInit()
 // with full arguments for computing the same logP but with different values and different hyperameter values
 
 // TAU
-double SSUR_Chain::logPTau( double tau_ , double a_tau_ , double b_tau_ )
+double SUR_Chain::logPTau( double tau_ , double a_tau_ , double b_tau_ )
 {
     return Distributions::logPDFGamma( tau_ , a_tau_, b_tau_ );
 }
 
-double SSUR_Chain::logPTau( )
+double SUR_Chain::logPTau( )
 {
     logP_tau = logPTau( tau , a_tau, b_tau );
     return logP_tau;
 }
 
-double SSUR_Chain::logPTau( double tau_ )
+double SUR_Chain::logPTau( double tau_ )
 {
     return logPTau( tau_ , a_tau, b_tau );
 }
 
 // ETA
-double SSUR_Chain::logPEta( double eta_ , double a_eta_ , double b_eta_ )
+double SUR_Chain::logPEta( double eta_ , double a_eta_ , double b_eta_ )
 {
     return Distributions::logPDFBeta( eta_ , a_eta_ , b_eta_ );
 }
 
-double SSUR_Chain::logPEta( )
+double SUR_Chain::logPEta( )
 {
     logP_eta = logPEta( eta , a_eta, b_eta );
     return logP_eta;
 }
 
-double SSUR_Chain::logPEta( double eta_ )
+double SUR_Chain::logPEta( double eta_ )
 {
      return logPEta( eta_ , a_eta, b_eta );
 }
 
 // JT
-double SSUR_Chain::logPJT( const JunctionTree& externalJT , double eta_ )
+double SUR_Chain::logPJT( const JunctionTree& externalJT , double eta_ )
 {
     double logP = 0.;
     for(unsigned int k=0; k<(nOutcomes-1); ++k)
@@ -701,20 +732,20 @@ double SSUR_Chain::logPJT( const JunctionTree& externalJT , double eta_ )
     return logP;
 }
 
-double SSUR_Chain::logPJT( )
+double SUR_Chain::logPJT( )
 {
     logP_jt = logPJT( jt , eta );
     return logP_jt;
 }
 
-double SSUR_Chain::logPJT( const JunctionTree& externalJT )
+double SUR_Chain::logPJT( const JunctionTree& externalJT )
 {
     return logPJT( externalJT , eta );
 }
 
 
 // sigma + rhos
-double SSUR_Chain::logPSigmaRho( const arma::mat&  externalSigmaRho , double nu_ , double tau_ , const JunctionTree& externalJT )
+double SUR_Chain::logPSigmaRho( const arma::mat&  externalSigmaRho , double nu_ , double tau_ , const JunctionTree& externalJT )
 {
     double logP = 0.;
 
@@ -787,19 +818,19 @@ double SSUR_Chain::logPSigmaRho( const arma::mat&  externalSigmaRho , double nu_
     return logP;
 }
 
-double SSUR_Chain::logPSigmaRho( )
+double SUR_Chain::logPSigmaRho( )
 {
     logP_sigmaRho = logPSigmaRho( sigmaRho , nu , tau , jt );
     return logP_sigmaRho;
 }
 
-double SSUR_Chain::logPSigmaRho( const arma::mat&  externalSigmaRho )
+double SUR_Chain::logPSigmaRho( const arma::mat&  externalSigmaRho )
 {
     return logPSigmaRho(  externalSigmaRho , nu , tau , jt );
 }
 
 // o_k
-double SSUR_Chain::logPO( const arma::vec& o_ , double a_o_ , double b_o_ )
+double SUR_Chain::logPO( const arma::vec& o_ , double a_o_ , double b_o_ )
 {
     double logP = 0.;
     for(unsigned int k=0; k<nOutcomes; ++k)
@@ -808,20 +839,20 @@ double SSUR_Chain::logPO( const arma::vec& o_ , double a_o_ , double b_o_ )
     return logP;
 }
 
-double SSUR_Chain::logPO( )
+double SUR_Chain::logPO( )
 {
     logP_o = logPO( o , a_o , b_o );
     return logP_o;
 }
 
-double SSUR_Chain::logPO( const arma::vec& o_ )
+double SUR_Chain::logPO( const arma::vec& o_ )
 {
     return logPO( o_ , a_o , b_o );
 }
 
 
 // pi_j
-double SSUR_Chain::logPPi( arma::vec& pi_ , double a_pi_ , double b_pi_ )
+double SUR_Chain::logPPi( arma::vec& pi_ , double a_pi_ , double b_pi_ )
 {
     double logP = 0.;
     for(unsigned int j=0; j<nVSPredictors; ++j)
@@ -830,18 +861,18 @@ double SSUR_Chain::logPPi( arma::vec& pi_ , double a_pi_ , double b_pi_ )
     return logP;    
 }
 
-double SSUR_Chain::logPPi( )
+double SUR_Chain::logPPi( )
 {
     logP_pi = logPPi( pi , a_pi , b_pi );
     return logP_pi;
 }
-double SSUR_Chain::logPPi( arma::vec& pi_ )
+double SUR_Chain::logPPi( arma::vec& pi_ )
 {
     return logPPi( pi_ , a_pi , b_pi );
 }
 
 // GAMMA
-double SSUR_Chain::logPGamma( const arma::umat& externalGamma , const arma::vec& o_ , const arma::vec& pi_ )
+double SUR_Chain::logPGamma( const arma::umat& externalGamma , const arma::vec& o_ , const arma::vec& pi_ )
 {
     double logP = 0.;
     for(unsigned int j=0; j<nVSPredictors; ++j)
@@ -857,30 +888,30 @@ double SSUR_Chain::logPGamma( const arma::umat& externalGamma , const arma::vec&
     return logP;
 }
 
-double SSUR_Chain::logPGamma( )
+double SUR_Chain::logPGamma( )
 {
     logP_gamma = logPGamma( gamma , o , pi );
     return logP_gamma;
 }
 
-double SSUR_Chain::logPGamma( const arma::umat& externalGamma )
+double SUR_Chain::logPGamma( const arma::umat& externalGamma )
 {
     return logPGamma( externalGamma , o , pi );
 }
 
 // W
-double SSUR_Chain::logPW( double w_ , double a_w_ , double b_w_ )
+double SUR_Chain::logPW( double w_ , double a_w_ , double b_w_ )
 {
     return Distributions::logPDFIGamma( w_ , a_w_, b_w_ );
 }
 
-double SSUR_Chain::logPW( )
+double SUR_Chain::logPW( )
 {
     logP_w = logPW( w , a_w , b_w );
     return logP_w;
 }
 
-double SSUR_Chain::logPW( double w_ )
+double SUR_Chain::logPW( double w_ )
 {
     return logPW( w_ , a_w , b_w );
 }
@@ -892,78 +923,89 @@ double logPBetaMaskgPriorK( const arma::vec&  externalBeta_k , const double& w_ 
 }
 
 
-double SSUR_Chain::logPBetaMask( const arma::mat&  externalBeta , const arma::umat& mask_ , double w_ )
+double SUR_Chain::logPBetaMask( const arma::mat&  externalBeta , const arma::umat& mask_ , double w_ )
 {
     arma::uvec VS_IN_k;
     arma::uvec singleIdx_k(1);
 
     double logP = 0.;
 
-    if( gPrior )
+
+    switch ( beta_type )
     {
-        arma::uvec xi = arma::conv_to<arma::uvec>::from(jt.perfectEliminationOrder);
-        arma::vec xtxMultiplier(nOutcomes);
-
-        // prepare posterior full conditional's hyperparameters
-        xtxMultiplier(xi(nOutcomes-1)) = 0;
-
-        for( unsigned int k=0; k < (nOutcomes-1); ++k)
+        case Beta_Type::gprior :
         {
-            xtxMultiplier(xi(k)) = 0;
-            for(unsigned int l=k+1 ; l<nOutcomes ; ++l)
+            arma::uvec xi = arma::conv_to<arma::uvec>::from(jt.perfectEliminationOrder);
+            arma::vec xtxMultiplier(nOutcomes);
+
+            // prepare posterior full conditional's hyperparameters
+            xtxMultiplier(xi(nOutcomes-1)) = 0;
+
+            for( unsigned int k=0; k < (nOutcomes-1); ++k)
             {
-                xtxMultiplier(xi(k)) += pow( sigmaRho(xi(l),xi(k)) , 2 ) / sigmaRho(xi(l),xi(l));
+                xtxMultiplier(xi(k)) = 0;
+                for(unsigned int l=k+1 ; l<nOutcomes ; ++l)
+                {
+                    xtxMultiplier(xi(k)) += pow( sigmaRho(xi(l),xi(k)) , 2 ) / sigmaRho(xi(l),xi(l));
+                }
             }
+
+            for(unsigned int k=0; k<nOutcomes ; ++k)
+            {
+                singleIdx_k(0) = k;
+                VS_IN_k = mask_( arma::find( mask_.col(1) == k ) , arma::zeros<arma::uvec>(1) );
+
+                if( preComputedXtX )
+                    logP += logPBetaMaskgPriorK( externalBeta(VS_IN_k,singleIdx_k) , w_ , 
+                        arma::inv_sympd( XtX(VS_IN_k,VS_IN_k) ) , ( 1./ sigmaRho(k,k) + xtxMultiplier(k) ) );
+                else
+                    logP += logPBetaMaskgPriorK( externalBeta(VS_IN_k,singleIdx_k) , w_ , 
+                        arma::inv_sympd( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) , 
+                            ( 1./ sigmaRho(k,k) + xtxMultiplier(k) ) );
+            }
+            break;
         }
 
-        for(unsigned int k=0; k<nOutcomes ; ++k)
+        case Beta_Type::independent :    
         {
-            singleIdx_k(0) = k;
-            VS_IN_k = mask_( arma::find( mask_.col(1) == k ) , arma::zeros<arma::uvec>(1) );
+            for(unsigned int k=0; k<nOutcomes ; ++k)
+            {
+                singleIdx_k(0) = k;
+                VS_IN_k = mask_( arma::find( mask_.col(1) == k ) , arma::zeros<arma::uvec>(1) );
 
-            if( preComputedXtX )
-                logP += logPBetaMaskgPriorK( externalBeta(VS_IN_k,singleIdx_k) , w_ , 
-                    arma::inv_sympd( XtX(VS_IN_k,VS_IN_k) ) , ( 1./ sigmaRho(k,k) + xtxMultiplier(k) ) );
-            else
-                logP += logPBetaMaskgPriorK( externalBeta(VS_IN_k,singleIdx_k) , w_ , 
-                    arma::inv_sympd( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) , 
-                        ( 1./ sigmaRho(k,k) + xtxMultiplier(k) ) );
+                logP += Distributions::logPDFNormal( externalBeta(VS_IN_k,singleIdx_k) ,
+                            w_ * arma::eye(VS_IN_k.n_elem,VS_IN_k.n_elem) );
+            }
+            break;
         }
 
-    }else{
+        default:
+            throw Bad_Beta_Type{};
 
-        for(unsigned int k=0; k<nOutcomes ; ++k)
-        {
-            singleIdx_k(0) = k;
-            VS_IN_k = mask_( arma::find( mask_.col(1) == k ) , arma::zeros<arma::uvec>(1) );
-
-            logP += Distributions::logPDFNormal( externalBeta(VS_IN_k,singleIdx_k) ,
-                        w_ * arma::eye(VS_IN_k.n_elem,VS_IN_k.n_elem) );
-        }
     }
 
     return logP;
 }
 
-double SSUR_Chain::logPBeta( const arma::mat&  externalBeta , const arma::umat& externalGamma , double w_ )
+double SUR_Chain::logPBeta( const arma::mat&  externalBeta , const arma::umat& externalGamma , double w_ )
 {
     arma::umat mask = createGammaMask( externalGamma );
     return logPBetaMask( externalBeta , mask , w_ );
 }
 
-double SSUR_Chain::logPBeta( )
+double SUR_Chain::logPBeta( )
 {
     logP_beta = logPBetaMask( beta , gammaMask , w );
     return logP_beta;
 }
 
-double SSUR_Chain::logPBeta( const arma::mat&  externalBeta )
+double SUR_Chain::logPBeta( const arma::mat&  externalBeta )
 {
     return logPBetaMask(  externalBeta , gammaMask , w );
 }
 
 // LOG LIKELIHOODS
-double SSUR_Chain::logLikelihood( )
+double SUR_Chain::logLikelihood( )
 {
     double logP = 0.;
     #ifdef _OPENMP
@@ -981,7 +1023,7 @@ double SSUR_Chain::logLikelihood( )
     return logP;
 }
 
-double SSUR_Chain::logLikelihood( const arma::umat&  externalGammaMask , const arma::mat& externalXB ,
+double SUR_Chain::logLikelihood( const arma::umat&  externalGammaMask , const arma::mat& externalXB ,
                                   const arma::mat& externalU , const arma::mat& externalRhoU , const arma::mat&  externalSigmaRho )
 {
         double logP = 0.;
@@ -996,7 +1038,7 @@ double SSUR_Chain::logLikelihood( const arma::umat&  externalGammaMask , const a
 		return logP/temperature;
 }                                  
 
-double SSUR_Chain::logLikelihood( arma::umat&  externalGammaMask , arma::mat& externalXB , arma::mat& externalU , arma::mat& externalRhoU , //gammaMask,XB,U,rhoU
+double SUR_Chain::logLikelihood( arma::umat&  externalGammaMask , arma::mat& externalXB , arma::mat& externalU , arma::mat& externalRhoU , //gammaMask,XB,U,rhoU
                         const arma::mat&  externalBeta , const arma::umat& externalGamma , // beta , gamma 
                         const arma::mat&  externalSigmaRho , const JunctionTree& externalJT ) // sigmaRho, jt
 {
@@ -1025,7 +1067,7 @@ double SSUR_Chain::logLikelihood( arma::umat&  externalGammaMask , arma::mat& ex
 
 
 // This function sample sigmas and rhos from their full conditionals and updates the relevant matrix rhoU to reflect thats
-double SSUR_Chain::sampleSigmaRhoGivenBeta( const arma::mat&  externalBeta , arma::mat& mutantSigmaRho , const JunctionTree& externalJT ,
+double SUR_Chain::sampleSigmaRhoGivenBeta( const arma::mat&  externalBeta , arma::mat& mutantSigmaRho , const JunctionTree& externalJT ,
                 const arma::umat&  externalGammaMask , const arma::mat& externalXB , const arma::mat& externalU , arma::mat& mutantRhoU )
 {
     double logP = 0.;
@@ -1039,89 +1081,150 @@ double SSUR_Chain::sampleSigmaRhoGivenBeta( const arma::mat&  externalBeta , arm
     arma::uvec connectedNodes;
     arma::uvec conditioninIndexes;
     unsigned int nConditioninIndexes;
-    arma::uvec singleIdx_l(1); // needed for convention with arma::submat
 
     double a,b;
     arma::mat rhoVar; // inverse matrix of the residual elements of Sigma in the component 
     arma::rowvec rhoMean; // this is the partial Schur complement, needed for the sampler 
 
-    //bool test;
-
-    std::vector<unsigned int> Prime_q,Res_q, Sep_q;
-    unsigned int l;
-    for( unsigned q=0; q < externalJT.perfectCliqueSequence.size(); ++q )
+    switch ( covariance_type )
     {
-        Sep_q = externalJT.perfectCliqueSequence[q]->getSeparator();
-        Prime_q = externalJT.perfectCliqueSequence[q]->getNodes();
-        Res_q.clear();
-        std::set_difference(Prime_q.begin(), Prime_q.end(),
-                Sep_q.begin(), Sep_q.end(),
-            std::inserter(Res_q, Res_q.begin()));;
-
-        for( unsigned int t=0; t<Res_q.size(); ++t )
+        case Covariance_Type::sparse :
         {
-            l = Res_q[t];
-            singleIdx_l(0) = l;
-
-            // start computing interesting things
-            thisSigmaTT = Sigma(l,l);
-
-            nConditioninIndexes = Sep_q.size() + t;
-            conditioninIndexes.zeros( nConditioninIndexes );
-
-            if( nConditioninIndexes > 0 )
+            arma::uvec singleIdx_l(1); // needed for convention with arma::submat
+            std::vector<unsigned int> Prime_q,Res_q, Sep_q;
+            unsigned int l;
+            for( unsigned q=0; q < externalJT.perfectCliqueSequence.size(); ++q )
             {
+                Sep_q = externalJT.perfectCliqueSequence[q]->getSeparator();
+                Prime_q = externalJT.perfectCliqueSequence[q]->getNodes();
+                Res_q.clear();
+                std::set_difference(Prime_q.begin(), Prime_q.end(),
+                        Sep_q.begin(), Sep_q.end(),
+                    std::inserter(Res_q, Res_q.begin()));;
 
-                if( Sep_q.size() > 0 )
-                    conditioninIndexes(arma::span(0,Sep_q.size()-1)) = arma::conv_to<arma::uvec>::from( Sep_q );
-
-                for( unsigned int inner_l=0; inner_l<t; ++inner_l )
+                for( unsigned int t=0; t<Res_q.size(); ++t )
                 {
-                    conditioninIndexes( Sep_q.size() + inner_l ) = Res_q[inner_l];
-                }
-                /*test = */arma::inv_sympd( rhoVar , Sigma(conditioninIndexes,conditioninIndexes) ) ;
-                rhoMean = Sigma( singleIdx_l , conditioninIndexes ) * rhoVar ;
-                thisSigmaTT -= arma::as_scalar( rhoMean * Sigma( conditioninIndexes , singleIdx_l ) );
-            }
+                    l = Res_q[t];
+                    singleIdx_l(0) = l;
 
-            // *** Diagonal Element
+                    // start computing interesting things
+                    thisSigmaTT = Sigma(l,l);
 
-            // Compute parameters
-            a = 0.5 * ( nObservations/temperature + nu - nOutcomes + nConditioninIndexes + 1. ) ;
-            b = 0.5 * thisSigmaTT ;
+                    nConditioninIndexes = Sep_q.size() + t;
+                    conditioninIndexes.zeros( nConditioninIndexes );
 
-            mutantSigmaRho(l,l) = Distributions::randIGamma( a , b );
+                    if( nConditioninIndexes > 0 )
+                    {
 
-            logP += Distributions::logPDFIGamma( mutantSigmaRho(l,l), a , b );
+                        if( Sep_q.size() > 0 )
+                            conditioninIndexes(arma::span(0,Sep_q.size()-1)) = arma::conv_to<arma::uvec>::from( Sep_q );
+
+                        for( unsigned int inner_l=0; inner_l<t; ++inner_l )
+                        {
+                            conditioninIndexes( Sep_q.size() + inner_l ) = Res_q[inner_l];
+                        }
+                        /*test = */arma::inv_sympd( rhoVar , Sigma(conditioninIndexes,conditioninIndexes) ) ;
+                        rhoMean = Sigma( singleIdx_l , conditioninIndexes ) * rhoVar ;
+                        thisSigmaTT -= arma::as_scalar( rhoMean * Sigma( conditioninIndexes , singleIdx_l ) );
+                    }
+
+                    // *** Diagonal Element
+
+                    // Compute parameters
+                    a = 0.5 * ( nObservations/temperature + nu - nOutcomes + nConditioninIndexes + 1. ) ;
+                    b = 0.5 * thisSigmaTT ;
+
+                    mutantSigmaRho(l,l) = Distributions::randIGamma( a , b );
+
+                    logP += Distributions::logPDFIGamma( mutantSigmaRho(l,l), a , b );
 
 
-            // *** Off-Diagonal Element(s)
-            if( nConditioninIndexes > 0 )
+                    // *** Off-Diagonal Element(s)
+                    if( nConditioninIndexes > 0 )
+                    {
+                        
+                        mutantSigmaRho( conditioninIndexes , singleIdx_l ) = 
+                            Distributions::randMvNormal( rhoMean.t() , mutantSigmaRho(l,l) * rhoVar );
+
+                        mutantSigmaRho( singleIdx_l , conditioninIndexes ) = 
+                            mutantSigmaRho( conditioninIndexes , singleIdx_l ).t();
+
+                        logP += Distributions::logPDFNormal( mutantSigmaRho( conditioninIndexes , singleIdx_l ) , 
+                            rhoMean.t() , mutantSigmaRho(l,l) * rhoVar );
+                    }
+
+                    // add zeros were set at the beginning with the SigmaRho reset, so no need to act now
+
+                } // end loop over elements inside components
+            } // end loop over components
+            break;
+        }
+
+        case Covariance_Type::dense :
+        {
+            arma::uvec singleIdx_k(1); // needed for convention with arma::submat
+            for( unsigned int k=0; k<nOutcomes; ++k )
             {
-                
-                mutantSigmaRho( conditioninIndexes , singleIdx_l ) = 
-                    Distributions::randMvNormal( rhoMean.t() , mutantSigmaRho(l,l) * rhoVar );
+                singleIdx_k(0) = k;
 
-                mutantSigmaRho( singleIdx_l , conditioninIndexes ) = 
-                    mutantSigmaRho( conditioninIndexes , singleIdx_l ).t();
+                // start computing interesting things
+                thisSigmaTT = Sigma(k,k);
 
-                logP += Distributions::logPDFNormal( mutantSigmaRho( conditioninIndexes , singleIdx_l ) , 
-                    rhoMean.t() , mutantSigmaRho(l,l) * rhoVar );
-            }
+                nConditioninIndexes = k;
+                conditioninIndexes.zeros( nConditioninIndexes );
 
-            // add zeros were set at the beginning with the SigmaRho reset, so no need to act now
+                if( nConditioninIndexes > 0 )
+                {
+                    conditioninIndexes = arma::regspace<arma::uvec>(0, k-1);
 
-        } // end loop over elements inside components
-    } // end loop over components
+                    /*test = */arma::inv_sympd( rhoVar , Sigma(conditioninIndexes,conditioninIndexes) ) ;
+                    rhoMean = Sigma( singleIdx_k , conditioninIndexes ) * rhoVar ;
+                    thisSigmaTT -= arma::as_scalar( rhoMean * Sigma( conditioninIndexes , singleIdx_k ) );
+                }
+
+                // *** Diagonal Element
+
+                // Compute parameters
+                a = 0.5 * ( nObservations/temperature + nu - nOutcomes + nConditioninIndexes + 1. ) ;
+                b = 0.5 * thisSigmaTT ;
+
+                mutantSigmaRho(k,k) = Distributions::randIGamma( a , b );
+
+                logP += Distributions::logPDFIGamma( mutantSigmaRho(k,k), a , b );
+
+
+                // *** Off-Diagonal Element(s)
+                if( nConditioninIndexes > 0 )
+                {
+                    
+                    mutantSigmaRho( conditioninIndexes , singleIdx_k ) = 
+                        Distributions::randMvNormal( rhoMean.t() , mutantSigmaRho(k,k) * rhoVar );
+
+                    mutantSigmaRho( singleIdx_k , conditioninIndexes ) = 
+                        mutantSigmaRho( conditioninIndexes , singleIdx_k ).t();
+
+                    logP += Distributions::logPDFNormal( mutantSigmaRho( conditioninIndexes , singleIdx_k ) , 
+                        rhoMean.t() , mutantSigmaRho(k,k) * rhoVar );
+                }
+
+                // add zeros were set at the beginning with the SigmaRho reset, so no need to act now
+
+            } // end loop over all elements
+            break;
+        }
+
+        default:
+            throw Bad_Covariance_Type{};
+    }
 
     // modify useful quantities, only rhoU impacted
-    //recompute crossU as the rhos have changed
+    //recompute rhoU as the rhos have changed
     mutantRhoU = createRhoU( externalU , mutantSigmaRho , externalJT );
 
     return logP;
 }
 
-double SSUR_Chain::sampleBetaGivenSigmaRho( arma::mat& mutantBeta , const arma::mat&  externalSigmaRho , const JunctionTree& externalJT ,
+double SUR_Chain::sampleBetaGivenSigmaRho( arma::mat& mutantBeta , const arma::mat&  externalSigmaRho , const JunctionTree& externalJT ,
                 const arma::umat&  externalGammaMask , arma::mat& mutantXB , arma::mat& mutantU , arma::mat& mutantRhoU )
 {
     double logP = 0.;
@@ -1169,58 +1272,69 @@ double SSUR_Chain::sampleBetaGivenSigmaRho( arma::mat& mutantBeta , const arma::
         VS_IN_k =  externalGammaMask( arma::find(  externalGammaMask.col(1) == k) , arma::zeros<arma::uvec>(1) );
         singleIdx_k(0) = k;
 
-        if( gPrior )
+        switch ( beta_type )
         {
-            varianceFactor = ( 1./ externalSigmaRho(k,k) + xtxMultiplier(k) );
-
-            if( preComputedXtX )
+            case Beta_Type::gprior :
             {
-                arma::inv_sympd( iXtX , XtX(VS_IN_k,VS_IN_k) );
-                // W_k = iXtX * ( (w*temperature)/(w + temperature) ) / varianceFactor;
-            }else{
-                arma::inv_sympd( iXtX , data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) );
-                // W_k = iXtX * ( (w*temperature)/(w + temperature) ) / varianceFactor;          
+                varianceFactor = ( 1./ externalSigmaRho(k,k) + xtxMultiplier(k) );
+
+                if( preComputedXtX )
+                {
+                    arma::inv_sympd( iXtX , XtX(VS_IN_k,VS_IN_k) );
+                    // W_k = iXtX * ( (w*temperature)/(w + temperature) ) / varianceFactor;
+                }else{
+                    arma::inv_sympd( iXtX , data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) );
+                    // W_k = iXtX * ( (w*temperature)/(w + temperature) ) / varianceFactor;          
+                }
+
+                mu_k = ( (w*temperature)/(w + temperature) / varianceFactor ) * iXtX *
+                    ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * y_tilde.col(k) / temperature );
+
+                tmpVec = Distributions::randMvNormal( mu_k , ( (w*temperature)/(w + temperature) / varianceFactor ) * iXtX );
+                logP += Distributions::logPDFNormal( tmpVec , mu_k , ( (w*temperature)/(w + temperature) / varianceFactor ) * iXtX );
+
+                logPrior += logPBetaMaskgPriorK( tmpVec , w , 
+                        iXtX , varianceFactor );
+
+                // to be sure
+                mutantBeta.col(k).fill( 0. );
+
+                for(unsigned int j=0 ; j<VS_IN_k.n_elem ; ++j)
+                    mutantBeta(VS_IN_k(j),k) = tmpVec(j);
+                
+                break;
             }
 
-            mu_k = ( (w*temperature)/(w + temperature) / varianceFactor ) * iXtX *
-                 ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * y_tilde.col(k) / temperature );
+            case Beta_Type::independent :
+            {
+                
+                if( preComputedXtX )
+                    arma::inv_sympd( W_k ,  ( XtX(VS_IN_k,VS_IN_k) / temperature ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier(k) ) + (1./w)*arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
+                else                
+                    arma::inv_sympd( W_k ,  ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier(k) ) + (1./w)*arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
 
-            tmpVec = Distributions::randMvNormal( mu_k , ( (w*temperature)/(w + temperature) / varianceFactor ) * iXtX );
-            logP += Distributions::logPDFNormal( tmpVec , mu_k , ( (w*temperature)/(w + temperature) / varianceFactor ) * iXtX );
+                mu_k = W_k * ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * y_tilde.col(k) / temperature ) ;
 
-            logPrior += logPBetaMaskgPriorK( tmpVec , w , 
-                    iXtX , varianceFactor );
+                tmpVec = Distributions::randMvNormal( mu_k , W_k );
+                logP += Distributions::logPDFNormal( tmpVec , mu_k , W_k );
 
-            // to be sure
-            mutantBeta.col(k).fill( 0. );
+                // to be sure
+                mutantBeta.col(k).fill( 0. );
 
-            for(unsigned int j=0 ; j<VS_IN_k.n_elem ; ++j)
-                mutantBeta(VS_IN_k(j),k) = tmpVec(j);
-            
-        }else{
-            
-            if( preComputedXtX )
-                arma::inv_sympd( W_k ,  ( XtX(VS_IN_k,VS_IN_k) / temperature ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier(k) ) + (1./w)*arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
-            else                
-                arma::inv_sympd( W_k ,  ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier(k) ) + (1./w)*arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
+                for(unsigned int j=0 ; j<VS_IN_k.n_elem ; ++j)
+                    mutantBeta(VS_IN_k(j),k) = tmpVec(j);
 
-            mu_k = W_k * ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * y_tilde.col(k) / temperature ) ;
+                break;   
+            }
 
-            tmpVec = Distributions::randMvNormal( mu_k , W_k );
-            logP += Distributions::logPDFNormal( tmpVec , mu_k , W_k );
-
-            // to be sure
-            mutantBeta.col(k).fill( 0. );
-
-            for(unsigned int j=0 ; j<VS_IN_k.n_elem ; ++j)
-                mutantBeta(VS_IN_k(j),k) = tmpVec(j);
-            
+            default:
+                throw Bad_Beta_Type{};
         }
 
     }
 
     // if not gPrior, update the prior value here
-    if( !gPrior )
+    if( beta_type != Beta_Type::gprior )
         logPrior = logPBetaMask( mutantBeta , externalGammaMask , w );
 
     // Now the beta have changed so X*B is changed as well as U, compute it to update it for the logLikelihood
@@ -1233,7 +1347,7 @@ double SSUR_Chain::sampleBetaGivenSigmaRho( arma::mat& mutantBeta , const arma::
 
 }   
 
-double SSUR_Chain::sampleBetaKGivenSigmaRho( const unsigned int k , arma::mat& mutantBeta , const arma::mat&  externalSigmaRho , const JunctionTree& externalJT ,
+double SUR_Chain::sampleBetaKGivenSigmaRho( const unsigned int k , arma::mat& mutantBeta , const arma::mat&  externalSigmaRho , const JunctionTree& externalJT ,
                 const arma::umat&  externalGammaMask , arma::mat& mutantXB , arma::mat& mutantU , arma::mat& mutantRhoU )
 {
     double logP;
@@ -1272,15 +1386,43 @@ double SSUR_Chain::sampleBetaKGivenSigmaRho( const unsigned int k , arma::mat& m
 
     if( preComputedXtX )
     {
-        if( gPrior )
-            W_k = (w*temperature)/(w + temperature) * arma::inv_sympd( XtX(VS_IN_k,VS_IN_k) ) / ( 1./ externalSigmaRho(k,k) + xtxMultiplier );
-        else
-            arma::inv_sympd( W_k ,  ( XtX(VS_IN_k,VS_IN_k) / temperature ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier ) + (1./w)*arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
+        switch ( beta_type )
+        {
+            case Beta_Type::gprior :
+            {
+                W_k = (w*temperature)/(w + temperature) * arma::inv_sympd( XtX(VS_IN_k,VS_IN_k) ) / ( 1./ externalSigmaRho(k,k) + xtxMultiplier );                
+                break;
+            }
+
+            case Beta_Type::independent :
+            {
+                arma::inv_sympd( W_k ,  ( XtX(VS_IN_k,VS_IN_k) / temperature ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier ) + (1./w)*arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
+                break;
+            }
+        
+            default:
+                throw Bad_Beta_Type{};
+        }
+
     }else{
-        if( gPrior )
-            W_k = (w*temperature)/(w + temperature) * arma::inv_sympd( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) / ( 1./ externalSigmaRho(k,k) + xtxMultiplier );
-        else                
-            arma::inv_sympd( W_k ,  ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier ) + (1./w)*arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
+
+        switch ( beta_type )
+        {
+            case Beta_Type::gprior :
+            {
+                W_k = (w*temperature)/(w + temperature) * arma::inv_sympd( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) / ( 1./ externalSigmaRho(k,k) + xtxMultiplier );                
+                break;
+            }
+
+            case Beta_Type::independent :
+            {
+                arma::inv_sympd( W_k ,  ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier ) + (1./w)*arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
+                break;
+            }
+        
+            default:
+                throw Bad_Beta_Type{};
+        }
     }
 
     mu_k = W_k * ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * y_tilde / temperature ) ;
@@ -1306,7 +1448,7 @@ double SSUR_Chain::sampleBetaKGivenSigmaRho( const unsigned int k , arma::mat& m
 
 //logProbabilities of the above samplers (for the reverse moves)
 // this function "simulate" a gibbs move and compute its proposal probability
-double SSUR_Chain::logPSigmaRhoGivenBeta( const arma::mat&  externalBeta , const arma::mat& mutantSigmaRho , const JunctionTree& externalJT ,
+double SUR_Chain::logPSigmaRhoGivenBeta( const arma::mat&  externalBeta , const arma::mat& mutantSigmaRho , const JunctionTree& externalJT ,
                                             const arma::umat&  externalGammaMask , const arma::mat& externalXB , const arma::mat& externalU , const arma::mat& mutantRhoU )
 {
     double logP = 0.;
@@ -1318,76 +1460,128 @@ double SSUR_Chain::logPSigmaRhoGivenBeta( const arma::mat&  externalBeta , const
     arma::uvec connectedNodes;
     arma::uvec conditioninIndexes;
     unsigned int nConditioninIndexes;
-    arma::uvec singleIdx_l(1); // needed for convention with arma::submat
 
     double a,b;
     arma::mat rhoVar; // inverse matrix of the residual elements of Sigma in the component 
     arma::rowvec rhoMean; // this is the partial Schur complement, needed for the sampler 
 
-    //bool test;
-
-    std::vector<unsigned int> Prime_q,Res_q, Sep_q;
-    unsigned int l;
-
-    for( unsigned q=0; q < externalJT.perfectCliqueSequence.size(); ++q )
+    switch ( covariance_type )
     {
-        Sep_q = externalJT.perfectCliqueSequence[q]->getSeparator();
-        Prime_q = externalJT.perfectCliqueSequence[q]->getNodes();
-        Res_q.clear();
-        std::set_difference(Prime_q.begin(), Prime_q.end(),
-                Sep_q.begin(), Sep_q.end(),
-            std::inserter(Res_q, Res_q.begin()));;
-
-        for( unsigned int t=0; t<Res_q.size(); ++t )
+        case Covariance_Type::sparse :
         {
-            l = Res_q[t];
-            singleIdx_l(0) = l;
+            arma::uvec singleIdx_l(1); // needed for convention with arma::submat
+            std::vector<unsigned int> Prime_q,Res_q, Sep_q;
+            unsigned int l;
 
-            // start computing interesting things
-            thisSigmaTT = Sigma(l,l);
-
-            nConditioninIndexes = Sep_q.size() + t;
-            conditioninIndexes.zeros( nConditioninIndexes );
-
-            if( nConditioninIndexes > 0 )
+            for( unsigned q=0; q < externalJT.perfectCliqueSequence.size(); ++q )
             {
-                if( Sep_q.size() > 0 )
-                    conditioninIndexes(arma::span(0,Sep_q.size()-1)) = arma::conv_to<arma::uvec>::from( Sep_q );
+                Sep_q = externalJT.perfectCliqueSequence[q]->getSeparator();
+                Prime_q = externalJT.perfectCliqueSequence[q]->getNodes();
+                Res_q.clear();
+                std::set_difference(Prime_q.begin(), Prime_q.end(),
+                        Sep_q.begin(), Sep_q.end(),
+                    std::inserter(Res_q, Res_q.begin()));;
 
-                for( unsigned int inner_l=0; inner_l<t; ++inner_l )
+                for( unsigned int t=0; t<Res_q.size(); ++t )
                 {
-                    conditioninIndexes( Sep_q.size() + inner_l ) = Res_q[inner_l];
-                }
-                /*test = */arma::inv_sympd( rhoVar , Sigma(conditioninIndexes,conditioninIndexes) ) ;
-                rhoMean = Sigma( singleIdx_l , conditioninIndexes ) * rhoVar ;
-                thisSigmaTT -= arma::as_scalar( rhoMean * Sigma( conditioninIndexes , singleIdx_l ) );
-            }
+                    l = Res_q[t];
+                    singleIdx_l(0) = l;
 
-            // *** Diagonal Element
+                    // start computing interesting things
+                    thisSigmaTT = Sigma(l,l);
 
-            // Compute parameters
-            a = 0.5 * ( nObservations/temperature + nu - nOutcomes + nConditioninIndexes + 1. ) ;
-            b = 0.5 * thisSigmaTT ;
+                    nConditioninIndexes = Sep_q.size() + t;
+                    conditioninIndexes.zeros( nConditioninIndexes );
 
-            logP += Distributions::logPDFIGamma( mutantSigmaRho(l,l), a , b );
+                    if( nConditioninIndexes > 0 )
+                    {
+                        if( Sep_q.size() > 0 )
+                            conditioninIndexes(arma::span(0,Sep_q.size()-1)) = arma::conv_to<arma::uvec>::from( Sep_q );
+
+                        for( unsigned int inner_l=0; inner_l<t; ++inner_l )
+                        {
+                            conditioninIndexes( Sep_q.size() + inner_l ) = Res_q[inner_l];
+                        }
+                        /*test = */arma::inv_sympd( rhoVar , Sigma(conditioninIndexes,conditioninIndexes) ) ;
+                        rhoMean = Sigma( singleIdx_l , conditioninIndexes ) * rhoVar ;
+                        thisSigmaTT -= arma::as_scalar( rhoMean * Sigma( conditioninIndexes , singleIdx_l ) );
+                    }
+
+                    // *** Diagonal Element
+
+                    // Compute parameters
+                    a = 0.5 * ( nObservations/temperature + nu - nOutcomes + nConditioninIndexes + 1. ) ;
+                    b = 0.5 * thisSigmaTT ;
+
+                    logP += Distributions::logPDFIGamma( mutantSigmaRho(l,l), a , b );
 
 
-            // *** Off-Diagonal Element(s)
-            if( nConditioninIndexes > 0 )
+                    // *** Off-Diagonal Element(s)
+                    if( nConditioninIndexes > 0 )
+                    {
+                        logP += Distributions::logPDFNormal( mutantSigmaRho( conditioninIndexes , singleIdx_l ) , 
+                            rhoMean.t() , mutantSigmaRho(l,l) * rhoVar );
+                    }
+
+                    // add zeros were set at the beginning with the SigmaRho reset, so no need to act now
+
+                } // end loop over elements inside components
+            } // end loop over components
+            break;
+        }
+
+        case Covariance_Type::dense :
+        {
+            arma::uvec singleIdx_k(1); // needed for convention with arma::submat
+            for( unsigned int k=0; k<nOutcomes; ++k )
             {
-                logP += Distributions::logPDFNormal( mutantSigmaRho( conditioninIndexes , singleIdx_l ) , 
-                    rhoMean.t() , mutantSigmaRho(l,l) * rhoVar );
-            }
+                singleIdx_k(0) = k;
 
-            // add zeros were set at the beginning with the SigmaRho reset, so no need to act now
+                // start computing interesting things
+                thisSigmaTT = Sigma(k,k);
 
-        } // end loop over elements inside components
-    } // end loop over components
+                nConditioninIndexes = k;
+                conditioninIndexes.zeros( nConditioninIndexes );
 
+                if( nConditioninIndexes > 0 )
+                {
+
+                    conditioninIndexes = arma::regspace<arma::uvec>(0,k-1);
+
+                    /*test = */arma::inv_sympd( rhoVar , Sigma(conditioninIndexes,conditioninIndexes) ) ;
+                    rhoMean = Sigma( singleIdx_k , conditioninIndexes ) * rhoVar ;
+                    thisSigmaTT -= arma::as_scalar( rhoMean * Sigma( conditioninIndexes , singleIdx_k ) );
+                }
+
+                // *** Diagonal Element
+
+                // Compute parameters
+                a = 0.5 * ( nObservations/temperature + nu - nOutcomes + nConditioninIndexes + 1. ) ;
+                b = 0.5 * thisSigmaTT ;
+
+                logP += Distributions::logPDFIGamma( mutantSigmaRho(k,k), a , b );
+
+
+                // *** Off-Diagonal Element(s)
+                if( nConditioninIndexes > 0 )
+                {
+                    logP += Distributions::logPDFNormal( mutantSigmaRho( conditioninIndexes , singleIdx_k ) , 
+                        rhoMean.t() , mutantSigmaRho(k,k) * rhoVar );
+                }
+
+                // add zeros were set at the beginning with the SigmaRho reset, so no need to act now
+
+            } // end loop over elements inside components            
+            break;
+        }
+    
+        default:
+            throw Bad_Covariance_Type{};
+    }
     return logP;
 }
 
-double SSUR_Chain::logPBetaGivenSigmaRho( const arma::mat& mutantBeta , const arma::mat&  externalSigmaRho , const JunctionTree& externalJT ,
+double SUR_Chain::logPBetaGivenSigmaRho( const arma::mat& mutantBeta , const arma::mat&  externalSigmaRho , const JunctionTree& externalJT ,
                 const arma::umat& externalGammaMask , const arma::mat& mutantXB , const arma::mat& mutantU , const arma::mat& mutantRhoU )
 {
     double logP = 0.;
@@ -1429,15 +1623,43 @@ double SSUR_Chain::logPBetaGivenSigmaRho( const arma::mat& mutantBeta , const ar
 
         if( preComputedXtX )
         {
-            if( gPrior )
-                W_k = (w*temperature)/(w + temperature) * arma::inv_sympd( XtX(VS_IN_k,VS_IN_k) ) / ( 1./ externalSigmaRho(k,k) + xtxMultiplier(k) );
-            else
-                arma::inv_sympd( W_k ,  ( XtX(VS_IN_k,VS_IN_k) / temperature ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier(k) ) + (1./w)*arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
+            switch ( beta_type )
+            {
+                case Beta_Type::gprior :
+                {
+                    W_k = (w*temperature)/(w + temperature) * arma::inv_sympd( XtX(VS_IN_k,VS_IN_k) ) / ( 1./ externalSigmaRho(k,k) + xtxMultiplier(k) );
+                    break;
+                }
+
+                case Beta_Type::independent :
+                {
+                    arma::inv_sympd( W_k ,  ( XtX(VS_IN_k,VS_IN_k) / temperature ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier(k) ) + (1./w)*arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
+                    break;
+                }
+            
+                default:
+                    throw Bad_Beta_Type{};
+            }
+
         }else{
-            if( gPrior )
-                W_k = (w*temperature)/(w + temperature) * arma::inv_sympd( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) / ( 1./ externalSigmaRho(k,k) + xtxMultiplier(k) );
-            else                
-                arma::inv_sympd( W_k ,  ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier(k) ) + (1./w)*arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
+
+            switch ( beta_type )
+            {
+                case Beta_Type::gprior :
+                {
+                    W_k = (w*temperature)/(w + temperature) * arma::inv_sympd( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) / ( 1./ externalSigmaRho(k,k) + xtxMultiplier(k) );
+                    break;
+                }
+
+                case Beta_Type::independent :
+                {
+                    arma::inv_sympd( W_k ,  ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier(k) ) + (1./w)*arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
+                    break;
+                }
+            
+                default:
+                    throw Bad_Beta_Type{};
+            }
         }
 
         mu_k = W_k * ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * y_tilde.col(k) / temperature ) ;
@@ -1448,7 +1670,7 @@ double SSUR_Chain::logPBetaGivenSigmaRho( const arma::mat& mutantBeta , const ar
     return logP;
 }   
 
-double SSUR_Chain::logPBetaKGivenSigmaRho( const unsigned int k , const arma::mat& mutantBeta , const arma::mat&  externalSigmaRho , const JunctionTree& externalJT ,
+double SUR_Chain::logPBetaKGivenSigmaRho( const unsigned int k , const arma::mat& mutantBeta , const arma::mat&  externalSigmaRho , const JunctionTree& externalJT ,
                 const arma::umat&  externalGammaMask , const arma::mat& mutantXB , const arma::mat& mutantU , const arma::mat& mutantRhoU )
 {
     double logP;
@@ -1484,15 +1706,43 @@ double SSUR_Chain::logPBetaKGivenSigmaRho( const unsigned int k , const arma::ma
 
     if( preComputedXtX )
     {
-        if( gPrior )
-            W_k = (w*temperature)/(w + temperature) * arma::inv_sympd( XtX(VS_IN_k,VS_IN_k) ) / ( 1./ externalSigmaRho(k,k) + xtxMultiplier );
-        else
-            arma::inv_sympd( W_k ,  ( XtX(VS_IN_k,VS_IN_k) / temperature ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier ) + (1./w)*arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
+        switch ( beta_type )
+        {
+            case Beta_Type::gprior :
+            {
+                W_k = (w*temperature)/(w + temperature) * arma::inv_sympd( XtX(VS_IN_k,VS_IN_k) ) / ( 1./ externalSigmaRho(k,k) + xtxMultiplier );
+                break;
+            }
+
+            case Beta_Type::independent :
+            {
+                arma::inv_sympd( W_k ,  ( XtX(VS_IN_k,VS_IN_k) / temperature ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier ) + (1./w)*arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
+                break;
+            }
+        
+            default:
+                throw Bad_Beta_Type{};
+        }
+
     }else{
-        if( gPrior )
-            W_k = (w*temperature)/(w + temperature) * arma::inv_sympd( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) / ( 1./ externalSigmaRho(k,k) + xtxMultiplier );
-        else                
-            arma::inv_sympd( W_k ,  ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier ) + (1./w)*arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
+
+        switch ( beta_type )
+        {
+            case Beta_Type::gprior :
+            {
+                W_k = (w*temperature)/(w + temperature) * arma::inv_sympd( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) / ( 1./ externalSigmaRho(k,k) + xtxMultiplier );
+                break;
+            }
+
+            case Beta_Type::independent :
+            {
+                arma::inv_sympd( W_k ,  ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier ) + (1./w)*arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
+                break;
+            }
+        
+            default:
+                throw Bad_Beta_Type{};
+        }         
     }
 
     mu_k = W_k * ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * y_tilde / temperature ) ;
@@ -1506,12 +1756,12 @@ double SSUR_Chain::logPBetaKGivenSigmaRho( const unsigned int k , const arma::ma
 
 // sample sigmaRho given Beta or Beta given sigmaRho
 // simple interface to gibbs sampling that updates the internal states (given the internal states) from the full conditional
-void SSUR_Chain::sampleSigmaRhoGivenBeta()
+void SUR_Chain::sampleSigmaRhoGivenBeta()
 {
     sampleSigmaRhoGivenBeta( beta , sigmaRho , jt , gammaMask , XB , U , rhoU );
 }
 
-void SSUR_Chain::sampleBetaGivenSigmaRho()
+void SUR_Chain::sampleBetaGivenSigmaRho()
 {
     sampleBetaGivenSigmaRho( beta , sigmaRho , jt , gammaMask , XB , U , rhoU );
 }
@@ -1520,7 +1770,7 @@ void SSUR_Chain::sampleBetaGivenSigmaRho()
 // I'm to update coefficients for one outcome at a time
 
 // sampler for proposed updates on gamma
-double SSUR_Chain::gammaBanditProposal( arma::umat& mutantGamma , arma::uvec& updateIdx , unsigned int& outcomeUpdateIdx )
+double SUR_Chain::gammaBanditProposal( arma::umat& mutantGamma , arma::uvec& updateIdx , unsigned int& outcomeUpdateIdx )
 {
 
     double logProposalRatio;
@@ -1603,7 +1853,7 @@ double SSUR_Chain::gammaBanditProposal( arma::umat& mutantGamma , arma::uvec& up
     return logProposalRatio; // pass this to the outside
 }
                 
-double SSUR_Chain::gammaMC3Proposal( arma::umat& mutantGamma , arma::uvec& updateIdx  , unsigned int& outcomeUpdateIdx )
+double SUR_Chain::gammaMC3Proposal( arma::umat& mutantGamma , arma::uvec& updateIdx  , unsigned int& outcomeUpdateIdx )
 {
     updateIdx = arma::uvec(n_updates_MC3);
 
@@ -1626,7 +1876,7 @@ double SSUR_Chain::gammaMC3Proposal( arma::umat& mutantGamma , arma::uvec& updat
 
 
 // MH update, Normal in the log-space as tau is positive (with gamma prior)
-void SSUR_Chain::stepTau()
+void SUR_Chain::stepTau()
 {
     double proposedTau = std::exp( std::log(tau) + Distributions::randNormal(0.0, var_tau_proposal) );
 
@@ -1646,7 +1896,7 @@ void SSUR_Chain::stepTau()
 }
 
 // Here we have a full conditional available
-void SSUR_Chain::stepEta()
+void SUR_Chain::stepEta()
 {
     double a = a_eta + 0.5*(arma::accu(jt.getAdjMat())/2. ) ; // divide by temperature if the prior on G is tempered
     double b = b_eta + ( (double)(nOutcomes * (nOutcomes-1.) * 0.5) - 0.5*(arma::accu(jt.getAdjMat())/2. ) ); // /temperature
@@ -1657,7 +1907,7 @@ void SSUR_Chain::stepEta()
     logPJT(); // update JT's pror value as it's impacted by the new eta
 }
 
-void SSUR_Chain::stepJT()
+void SUR_Chain::stepJT()
 {
     JunctionTree proposedJT;
     std::pair<bool,double> updated;
@@ -1796,7 +2046,7 @@ void SSUR_Chain::stepJT()
 }
 
 // MH update (log-normal) -- update one value at each iteration TODO worth doing more?
-void SSUR_Chain::stepOneO()
+void SUR_Chain::stepOneO()
 {
     
     unsigned int k = Distributions::randIntUniform(0,nOutcomes-1);
@@ -1828,7 +2078,7 @@ void SSUR_Chain::stepOneO()
 
 }
 
-void SSUR_Chain::stepO()
+void SUR_Chain::stepO()
 {
     
     arma::vec proposedO = o;
@@ -1865,7 +2115,7 @@ void SSUR_Chain::stepO()
 }
 
 // MH update (log-normal) -- update one value at each iteration TODO worth doing more?
-void SSUR_Chain::stepOnePi()
+void SUR_Chain::stepOnePi()
 {
     unsigned int j = Distributions::randIntUniform(0,nVSPredictors-1);
     arma::vec proposedPi = pi;
@@ -1894,7 +2144,7 @@ void SSUR_Chain::stepOnePi()
 
 }
 
-void SSUR_Chain::stepPi()
+void SUR_Chain::stepPi()
 {
     arma::vec proposedPi = pi;
 
@@ -1926,17 +2176,30 @@ void SSUR_Chain::stepPi()
     }
 }
 
-void SSUR_Chain::stepW()
+void SUR_Chain::stepW()
 {
-    if( gPrior )
-        stepWMH();
-    else    
-        stepWGibbs();
+    switch ( beta_type )
+    {
+        case Beta_Type::gprior :
+        {
+            stepWMH();
+            break;
+        }
+
+        case Beta_Type::independent :
+        {
+            stepWGibbs();
+            break;
+        }
+    
+        default:
+            throw Bad_Beta_Type{};
+    }
 }
 
 
 // Gibbs sampler available here again for w given all the current betas and the gammas -- TODO keep an eye on this
-void SSUR_Chain::stepWGibbs()
+void SUR_Chain::stepWGibbs()
 {
     double a = a_w + 0.5*( /*arma::accu(gamma) + intercept */ /*or*/ gammaMask.n_rows ); // divide by temperature if the prior on gamma is tempered
     double b = b_w + 0.5*( arma::accu( arma::square(arma::nonzeros(beta)) ) );   // all the beta_jk w/ gamma_jk=0 are 0 already // /temperature
@@ -1950,7 +2213,7 @@ void SSUR_Chain::stepWGibbs()
     logPBeta(); // update beta's log prior as it's impacted by the change in w
 }
 
-void SSUR_Chain::stepWMH()
+void SUR_Chain::stepWMH()
 {
     double proposedW = std::exp( std::log(w) + Distributions::randNormal(0.0, var_w_proposal) );
 
@@ -1970,7 +2233,7 @@ void SSUR_Chain::stepWMH()
 }
 
 
-void SSUR_Chain::stepGamma()
+void SUR_Chain::stepGamma()
 {
     arma::umat proposedGamma = gamma;
     arma::uvec updateIdx;
@@ -2065,7 +2328,7 @@ void SSUR_Chain::stepGamma()
     }
 }
 
-void SSUR_Chain::stepSigmaRhoAndBeta()
+void SUR_Chain::stepSigmaRhoAndBeta()
 {
     sampleSigmaRhoGivenBeta();
     sampleBetaGivenSigmaRho();
@@ -2077,12 +2340,11 @@ void SSUR_Chain::stepSigmaRhoAndBeta()
 
 
 // this updates all the internal states
-void SSUR_Chain::step()
+void SUR_Chain::step()
 {
 
     // Update HyperParameters
     stepTau();
-    stepEta();
     stepW();
     
     for( auto i=0; i<5; ++i){
@@ -2090,9 +2352,13 @@ void SSUR_Chain::step()
         stepOnePi();
     }
     
-    // Update JT
-    if( internalIterationCounter >= jtStartIteration )
-        stepJT();
+    if ( covariance_type == Covariance_Type::sparse )
+    {
+        stepEta();
+        // Update JT
+        if( internalIterationCounter >= jtStartIteration )
+            stepJT();
+    }
 
     // update gamma
     stepGamma();
@@ -2110,7 +2376,7 @@ void SSUR_Chain::step()
 // update all the internal proposal RW variances based on their acceptance rate
 // note that for o and pi, even though they're vectors, the proposal is independent and common for all elements
 // see Roberts  & Rosenthal 2008
-void SSUR_Chain::updateProposalVariances()
+void SUR_Chain::updateProposalVariances()
 {
     double delta, delta2;
     arma::vec deltaVec, delta2Vec;
@@ -2131,7 +2397,7 @@ void SSUR_Chain::updateProposalVariances()
         var_o_proposal_init = var_o_proposal;
         var_pi_proposal_init = var_pi_proposal;
 
-        if( gPrior )
+        if( beta_type == Beta_Type::gprior )
         {
             wEmpiricalMean = w;
             wEmpiricalM2 = 0.;
@@ -2161,7 +2427,7 @@ void SSUR_Chain::updateProposalVariances()
         piEmpiricalM2 = piEmpiricalM2 + deltaVec % delta2Vec ;
 
         // w
-        if( gPrior )
+        if( beta_type == Beta_Type::gprior )
         {
             delta = w - wEmpiricalMean;
             wEmpiricalMean = wEmpiricalMean + ( delta / internalIterationCounter );
@@ -2179,7 +2445,7 @@ void SSUR_Chain::updateProposalVariances()
         var_tau_proposal = adaptationFactor * var_tau_proposal_init + (1. - adaptationFactor) * (2.38*2.38) * tauEmpiricalM2/(internalIterationCounter-1);
         var_o_proposal = adaptationFactor * var_o_proposal_init + (1. - adaptationFactor) * (2.38*2.38) * arma::mean( oEmpiricalM2/(internalIterationCounter-1) );
         var_pi_proposal = adaptationFactor * var_pi_proposal_init + (1. - adaptationFactor) * (2.38*2.38) * arma::mean( piEmpiricalM2/(internalIterationCounter-1) );
-        if( gPrior )
+        if( beta_type == Beta_Type::gprior )
             var_w_proposal = adaptationFactor * var_w_proposal_init + (1. - adaptationFactor) * (2.38*2.38) * wEmpiricalM2/(internalIterationCounter-1);
     }
 }
@@ -2188,12 +2454,12 @@ void SSUR_Chain::updateProposalVariances()
 // but this as a baseline is good to have.
 
 
-// *******************************
+// *************************************
 // Global operators between two chains
-// *******************************
+// *************************************
 // asuming nu and other fixed hyperparameters are the same across chains, woudn;t make sense otherwise I think 
 
-void SSUR_Chain::swapTau( std::shared_ptr<SSUR_Chain>& that )
+void SUR_Chain::swapTau( std::shared_ptr<SUR_Chain>& that )
 {
     double par = this->getTau();
 
@@ -2201,7 +2467,7 @@ void SSUR_Chain::swapTau( std::shared_ptr<SSUR_Chain>& that )
     that->setTau( par );
 }
 
-void SSUR_Chain::swapEta( std::shared_ptr<SSUR_Chain>& that )
+void SUR_Chain::swapEta( std::shared_ptr<SUR_Chain>& that )
 {
     double par = this->getEta();
 
@@ -2209,14 +2475,14 @@ void SSUR_Chain::swapEta( std::shared_ptr<SSUR_Chain>& that )
     that->setEta( par );
 }
 
-void SSUR_Chain::swapJT( std::shared_ptr<SSUR_Chain>& that )
+void SUR_Chain::swapJT( std::shared_ptr<SUR_Chain>& that )
 {
     JunctionTree par = this->getJT();
 
     this->setJT( that->getJT() );
 }
 
-void SSUR_Chain::swapSigmaRho( std::shared_ptr<SSUR_Chain>& that )
+void SUR_Chain::swapSigmaRho( std::shared_ptr<SUR_Chain>& that )
 {
     arma::mat par = this->getSigmaRho();
 
@@ -2224,7 +2490,7 @@ void SSUR_Chain::swapSigmaRho( std::shared_ptr<SSUR_Chain>& that )
     that->setSigmaRho( par );
 }
 
-void SSUR_Chain::swapO( std::shared_ptr<SSUR_Chain>& that )
+void SUR_Chain::swapO( std::shared_ptr<SUR_Chain>& that )
 {
     arma::vec par = this->getO();
 
@@ -2232,7 +2498,7 @@ void SSUR_Chain::swapO( std::shared_ptr<SSUR_Chain>& that )
     that->setO( par );
 }
 
-void SSUR_Chain::swapPi( std::shared_ptr<SSUR_Chain>& that )
+void SUR_Chain::swapPi( std::shared_ptr<SUR_Chain>& that )
 {
     arma::vec par = this->getPi();
 
@@ -2240,7 +2506,7 @@ void SSUR_Chain::swapPi( std::shared_ptr<SSUR_Chain>& that )
     that->setPi( par );
 }
 
-void SSUR_Chain::swapGamma( std::shared_ptr<SSUR_Chain>& that )
+void SUR_Chain::swapGamma( std::shared_ptr<SUR_Chain>& that )
 {
     arma::umat par = this->getGamma();
 
@@ -2248,7 +2514,7 @@ void SSUR_Chain::swapGamma( std::shared_ptr<SSUR_Chain>& that )
     that->setGamma( par );
 }
 
-void SSUR_Chain::swapW( std::shared_ptr<SSUR_Chain>& that )
+void SUR_Chain::swapW( std::shared_ptr<SUR_Chain>& that )
 {
     double par = this->getW();
 
@@ -2256,7 +2522,7 @@ void SSUR_Chain::swapW( std::shared_ptr<SSUR_Chain>& that )
     that->setW( par );
 }
 
-void SSUR_Chain::swapBeta( std::shared_ptr<SSUR_Chain>& that )
+void SUR_Chain::swapBeta( std::shared_ptr<SUR_Chain>& that )
 {
     arma::mat par = this->getBeta();
 
@@ -2264,7 +2530,7 @@ void SSUR_Chain::swapBeta( std::shared_ptr<SSUR_Chain>& that )
     that->setBeta( par );
 }
 
-int SSUR_Chain::exchangeGamma_step( std::shared_ptr<SSUR_Chain>& that )
+int SUR_Chain::exchangeGamma_step( std::shared_ptr<SUR_Chain>& that )
 {
     // I'm exchanging the gammas AND the betas. So gammaMask, XB and U will follow and we will have to re-compute rhoU for both chains
     arma::umat swapGammaMask;
@@ -2309,7 +2575,7 @@ int SSUR_Chain::exchangeGamma_step( std::shared_ptr<SSUR_Chain>& that )
         return 0;
 }
 
-int SSUR_Chain::exchangeJT_step( std::shared_ptr<SSUR_Chain>& that )
+int SUR_Chain::exchangeJT_step( std::shared_ptr<SUR_Chain>& that )
 {
     // I'm exchanging the JT, sigmas and rhos.
     // So gammaMask, XB and U will stay the same and we will have to to re-compute rhoU for both chains
@@ -2340,7 +2606,7 @@ int SSUR_Chain::exchangeJT_step( std::shared_ptr<SSUR_Chain>& that )
         return 0;
 }
 
-int SSUR_Chain::adapt_crossOver_step( std::shared_ptr<SSUR_Chain>& that )
+int SUR_Chain::adapt_crossOver_step( std::shared_ptr<SUR_Chain>& that )
 {
     double pCrossOver;
 
@@ -2472,7 +2738,7 @@ int SSUR_Chain::adapt_crossOver_step( std::shared_ptr<SSUR_Chain>& that )
 
 }
 
-int SSUR_Chain::uniform_crossOver_step( std::shared_ptr<SSUR_Chain>& that )
+int SUR_Chain::uniform_crossOver_step( std::shared_ptr<SUR_Chain>& that )
 {
     double pCrossOver;
 
@@ -2579,7 +2845,7 @@ int SSUR_Chain::uniform_crossOver_step( std::shared_ptr<SSUR_Chain>& that )
 
 }
 
-int SSUR_Chain::block_crossOver_step( std::shared_ptr<SSUR_Chain>& that , arma::mat& corrMatX , double threshold )
+int SUR_Chain::block_crossOver_step( std::shared_ptr<SUR_Chain>& that , arma::mat& corrMatX , double threshold )
 {
     double pCrossOver;
 
@@ -2701,7 +2967,7 @@ int SSUR_Chain::block_crossOver_step( std::shared_ptr<SSUR_Chain>& that , arma::
 
 }
 
-void SSUR_Chain::swapAll( std::shared_ptr<SSUR_Chain>& thatChain )
+void SUR_Chain::swapAll( std::shared_ptr<SUR_Chain>& thatChain )
 {
     
     // HARD SWAP cause swapping "this" is not an option
@@ -2727,9 +2993,13 @@ void SSUR_Chain::swapAll( std::shared_ptr<SSUR_Chain>& thatChain )
 
     // parameters and priors
     this->swapTau( thatChain );
-    this->swapEta( thatChain );
-    
-    this->swapJT( thatChain );
+
+    if ( covariance_type == Covariance_Type::sparse )
+    {
+        this->swapEta( thatChain );
+        this->swapJT( thatChain );
+    }
+
     this->swapSigmaRho( thatChain );
 
     this->swapO( thatChain );
@@ -2745,10 +3015,23 @@ void SSUR_Chain::swapAll( std::shared_ptr<SSUR_Chain>& thatChain )
 
 }
 
-int SSUR_Chain::globalStep( std::shared_ptr<SSUR_Chain>& that )
+int SUR_Chain::globalStep( std::shared_ptr<SUR_Chain>& that )
 {
 
-    unsigned int globalType = Distributions::randIntUniform(0,5);
+    unsigned int globalType;
+    switch ( covariance_type )
+    {
+        case Covariance_Type::sparse :
+            globalType = Distributions::randIntUniform(0,5);
+            break;
+    
+        case Covariance_Type::dense :
+            globalType = Distributions::randIntUniform(0,4);
+            break;
+    
+        default:
+            break;
+    }
 
     // std::cout << globalType << std::flush;
 
@@ -2772,11 +3055,11 @@ int SSUR_Chain::globalStep( std::shared_ptr<SSUR_Chain>& that )
             break;
         
         case 4: 
-            return this -> exchangeJT_step( that );
+            return this -> exchangeAll_step( that );
             break;
         
         case 5: 
-            return this -> exchangeAll_step( that );
+            return this -> exchangeJT_step( that );
             break;
         
         default: 
@@ -2786,7 +3069,7 @@ int SSUR_Chain::globalStep( std::shared_ptr<SSUR_Chain>& that )
     return 0;
 }
 
-int SSUR_Chain::exchangeAll_step( std::shared_ptr<SSUR_Chain>& thatChain )
+int SUR_Chain::exchangeAll_step( std::shared_ptr<SUR_Chain>& thatChain )
 {
 
     double logPExchange = ( this->getLogLikelihood() * this->getTemperature() -
@@ -2811,7 +3094,7 @@ int SSUR_Chain::exchangeAll_step( std::shared_ptr<SSUR_Chain>& thatChain )
 // *******************************
 
 // update relavant quantities
-arma::umat SSUR_Chain::createGammaMask( const arma::umat& gamma )
+arma::umat SUR_Chain::createGammaMask( const arma::umat& gamma )
 {
 
     // CREATE HERE THE GAMMA "MASK"
@@ -2843,7 +3126,7 @@ arma::umat SSUR_Chain::createGammaMask( const arma::umat& gamma )
 }
 
 
-void SSUR_Chain::updateGammaMask()
+void SUR_Chain::updateGammaMask()
 {
     // CREATE HERE THE GAMMA "MASK"
     // INITIALISE THE INDEXES FOR THE GAMMA MASK
@@ -2871,7 +3154,7 @@ void SSUR_Chain::updateGammaMask()
     // Gamma mask updated
 }
 
-arma::mat SSUR_Chain::createXB( const arma::umat&  externalGammaMask , const arma::mat&  externalBeta )
+arma::mat SUR_Chain::createXB( const arma::umat&  externalGammaMask , const arma::mat&  externalBeta )
 {
     arma::uvec singleIdx_k(1), VS_IN_k;
     arma::mat externalXB(nObservations,nOutcomes);
@@ -2885,7 +3168,7 @@ arma::mat SSUR_Chain::createXB( const arma::umat&  externalGammaMask , const arm
     return externalXB;
 }
 
-void SSUR_Chain::updateXB()
+void SUR_Chain::updateXB()
 {
     arma::uvec singleIdx_k(1), VS_IN_k;
     XB.set_size(nObservations,nOutcomes); // reset without initialising nor preserving data
@@ -2899,51 +3182,100 @@ void SSUR_Chain::updateXB()
 
 }
 
-arma::mat SSUR_Chain::createU( const arma::mat& externalXB )
+arma::mat SUR_Chain::createU( const arma::mat& externalXB )
 {
     arma::mat externalU = data->cols( *outcomesIdx ) - externalXB;
     return externalU;
 }
 
-void SSUR_Chain::updateU()
+void SUR_Chain::updateU()
 {
     U = data->cols( *outcomesIdx ) - XB;
 }
 
-arma::mat SSUR_Chain::createRhoU( const arma::mat& externalU , const arma::mat&  externalSigmaRho , const JunctionTree& externalJT )
+arma::mat SUR_Chain::createRhoU( const arma::mat& externalU , const arma::mat&  externalSigmaRho , const JunctionTree& externalJT )
 {
-    arma::uvec xi = arma::conv_to<arma::uvec>::from(externalJT.perfectEliminationOrder);
+
     arma::mat externalRhoU = arma::zeros<arma::mat>(nObservations,nOutcomes);
 
-    for( unsigned int k=1; k < nOutcomes; ++k)
+    switch ( covariance_type )
     {
-        for(unsigned int l=0 ; l<k ; ++l)
+        case Covariance_Type::sparse :
         {
-            if(  externalSigmaRho(xi(k),xi(l)) != 0 )
-                externalRhoU.col(xi(k)) += externalU.col(xi(l)) *  externalSigmaRho(xi(k),xi(l));
+            arma::uvec xi = arma::conv_to<arma::uvec>::from(externalJT.perfectEliminationOrder);
+
+            for( unsigned int k=1; k < nOutcomes; ++k)
+            {
+                for(unsigned int l=0 ; l<k ; ++l)
+                {
+                    if(  externalSigmaRho(xi(k),xi(l)) != 0 )
+                        externalRhoU.col(xi(k)) += externalU.col(xi(l)) *  externalSigmaRho(xi(k),xi(l));
+                }
+            }
+            break;
+        }    
+
+        case Covariance_Type::dense :
+        {
+            for( unsigned int k=1; k < nOutcomes; ++k)
+            {
+                for(unsigned int l=0 ; l<k ; ++l)
+                {
+                    if(  externalSigmaRho(k,l) != 0 )
+                        externalRhoU.col(k) += externalU.col(l) *  externalSigmaRho(k,l);
+                }
+            }
+            break;
         }
+    
+        default:
+            throw Bad_Covariance_Type{};
     }
 
     return externalRhoU;
 }
 
 
-void SSUR_Chain::updateRhoU()
+void SUR_Chain::updateRhoU()
 {
-    arma::uvec xi = arma::conv_to<arma::uvec>::from(jt.perfectEliminationOrder);
     rhoU.zeros(nObservations,nOutcomes);
 
-    for( unsigned int k=1; k < nOutcomes; ++k)
+    switch ( covariance_type )
     {
-        for(unsigned int l=0 ; l<k ; ++l)
+        case Covariance_Type::sparse :
         {
-            if(  sigmaRho(xi(k),xi(l)) != 0 )
-                rhoU.col(xi(k)) += U.col(xi(l)) * sigmaRho(xi(k),xi(l));
+            arma::uvec xi = arma::conv_to<arma::uvec>::from(jt.perfectEliminationOrder);
+            for( unsigned int k=1; k < nOutcomes; ++k)
+            {
+                for(unsigned int l=0 ; l<k ; ++l)
+                {
+                    if(  sigmaRho(xi(k),xi(l)) != 0 )
+                        rhoU.col(xi(k)) += U.col(xi(l)) * sigmaRho(xi(k),xi(l));
+                }
+            }
+            break;
         }
+
+        case Covariance_Type::dense :
+        {
+            for( unsigned int k=1; k < nOutcomes; ++k)
+            {
+                for(unsigned int l=0 ; l<k ; ++l)
+                {
+                    if(  sigmaRho(k,l) != 0 )
+                        rhoU.col(k) += U.col(l) * sigmaRho(k,l);
+                }
+            }
+            break;
+        }
+    
+        default:
+            break;
     }
+
 }
 
-void SSUR_Chain::createQuantities( arma::umat&  externalGammaMask , arma::mat& externalXB , arma::mat& externalU , arma::mat& externalRhoU ,
+void SUR_Chain::createQuantities( arma::umat&  externalGammaMask , arma::mat& externalXB , arma::mat& externalU , arma::mat& externalRhoU ,
                                     const arma::umat& externalGamma , const arma::mat&  externalBeta ,
                                     const arma::mat&  externalSigmaRho , const JunctionTree& externalJT )
 {
@@ -2953,7 +3285,7 @@ void SSUR_Chain::createQuantities( arma::umat&  externalGammaMask , arma::mat& e
     externalRhoU = createRhoU( externalU ,  externalSigmaRho , externalJT );
 }
 
-void SSUR_Chain::updateQuantities()
+void SUR_Chain::updateQuantities()
 {
     updateGammaMask();
     updateXB();
@@ -2964,7 +3296,7 @@ void SSUR_Chain::updateQuantities()
 
 
 // Bandit-sampling related methods
-void SSUR_Chain::banditInit()// initialise all the private memebers
+void SUR_Chain::banditInit()// initialise all the private memebers
 {
     banditZeta = arma::vec(nVSPredictors);
 
@@ -2985,7 +3317,7 @@ void SSUR_Chain::banditInit()// initialise all the private memebers
 }
 
 // MC3 init
-void SSUR_Chain::MC3Init()
+void SUR_Chain::MC3Init()
 {
     n_updates_MC3 = std::ceil( nVSPredictors/40 ); //arbitrary number, should I use something different?
 }
