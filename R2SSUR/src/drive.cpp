@@ -517,7 +517,7 @@ int drive( const std::string& dataFile, const std::string& blockFile, const std:
 
 		// chainData.mrfG = THE OBJECT YOU JUST READ and want to pass on to the samplers
 
-	}
+	}structureGraph
 	else
 	{
 		std::cerr << "ERROR: Wrong type of Gamma prior given";

@@ -42,7 +42,7 @@
 #' @export
 runSSUR = function(data, blockList, varType=NULL, structureGraph=NULL, outFilePath="", 
                 nIter=10, burnin=0, nChains=1, 
-                method="SUR", sparse = TRUE , 
+                method="SUR", sparse = TRUE, 
                 gammaPrior="hotspot",gammaSampler="bandit", gammaInit="MLE", mrfGFile="",
                 betaPrior="independent")
 {

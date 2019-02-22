@@ -682,17 +682,17 @@ double HESS_Chain::logPGamma( const arma::umat& externalGamma )
     switch ( gamma_type )
     {
         case Gamma_Type::hotspot :
-            logP = logPGamma( gamma , o , pi );
+            logP = logPGamma( externalGamma , o , pi );
             break;
     
         case Gamma_Type::hierarchical :
-            logP = logPGamma( gamma , pi );
+            logP = logPGamma( externalGamma , pi );
             break;
     
         case Gamma_Type::mrf :
         {
             double d = -3. , e = 0.2;    
-            logP = logPGamma( gamma , d , e , mrfG );
+            logP = logPGamma( externalGamma , d , e , mrfG );
             break;
         }
         default:

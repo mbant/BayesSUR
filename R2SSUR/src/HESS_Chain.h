@@ -409,7 +409,7 @@ class HESS_Chain : public ESS_Atom<HESS_Chain>
         MRFGObject mrfG;
 
         // GAMMA - variable selection binary indexes
-        // gamma_jk ~ Bernulli( omega_jk ), with omega_jk = v_k * u_j
+        // gamma_jk ~ Bernulli( omega_jk ), with omega_jk = o_k * pi_j
         // its proposal distribution is either classic MC3 or the adaptive Bandit sampler
         arma::umat gamma;
         // prior hyperparameters are all already defined
