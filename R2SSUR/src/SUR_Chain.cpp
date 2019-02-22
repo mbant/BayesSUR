@@ -57,9 +57,9 @@ SUR_Chain::SUR_Chain( std::shared_ptr<arma::mat> data_, unsigned int nObservatio
                 break;
 
             default:
-                throw Bad_Gamma_Sampler_Type ( gamma_sampler_type );
+                throw Bad_Gamma_Type ( gamma_type );
         }
-        
+
         gammaInit();
         wInit();
 
@@ -678,6 +678,7 @@ void SUR_Chain::piInit()
 
         case Gamma_Type::hierarchical :
             piInit( init , 1. , (double)nOutcomes-1. );
+            break;
     
         default:
             throw Bad_Gamma_Type ( gamma_type );
@@ -694,6 +695,7 @@ void SUR_Chain::piInit( arma::vec& pi_init )
 
         case Gamma_Type::hierarchical :
             piInit( pi_init , 1. , (double)nOutcomes-1. );
+            break;
     
         default:
             throw Bad_Gamma_Type ( gamma_type );
@@ -1022,7 +1024,7 @@ double SUR_Chain::logPGamma( const arma::umat& externalGamma , const arma::vec& 
     double logP = 0.;
     for(unsigned int j=0; j<nVSPredictors; ++j)
     {
-        logP += Distributions::logPDFBernoulli( externalGamma.row(j) , pi_(j) );
+        logP += Distributions::logPDFBernoulli( externalGamma.row(j).t() , pi_(j) );
         // logP += Distributions::logPDFBinomial( arma::sum( externalGamma.row(j) ) , nOutcomes , pi_(j) ); // do we care about the binomial coeff? I don't think so..
     }
     return logP;
@@ -2633,12 +2635,12 @@ void SUR_Chain::updateProposalVariances()
         tauEmpiricalM2 = 0.;
         var_tau_proposal_init = var_tau_proposal;
 
-        oEmpiricalMean = arma::log(o);
-        oEmpiricalM2 = arma::zeros<arma::vec>(nOutcomes);
-        var_o_proposal_init = var_o_proposal;
-
         if ( gamma_type == Gamma_Type::hotspot )
         {
+            oEmpiricalMean = arma::log(o);
+            oEmpiricalM2 = arma::zeros<arma::vec>(nOutcomes);
+            var_o_proposal_init = var_o_proposal;
+
             piEmpiricalMean = arma::log(pi);
             piEmpiricalM2 = arma::zeros<arma::vec>(nVSPredictors);
             var_pi_proposal_init = var_pi_proposal;
@@ -2661,15 +2663,15 @@ void SUR_Chain::updateProposalVariances()
         delta2 = std::log(tau) - tauEmpiricalMean;
         tauEmpiricalM2 = tauEmpiricalM2 + delta * delta2;
 
-        // o
-        deltaVec = arma::log(o) - oEmpiricalMean;
-        oEmpiricalMean = oEmpiricalMean + ( deltaVec / internalIterationCounter );
-        delta2Vec = arma::log(o) - oEmpiricalMean;
-        oEmpiricalM2 = oEmpiricalM2 + deltaVec % delta2Vec ;
-
-        // pi
         if ( gamma_type == Gamma_Type::hotspot )
         {
+            // o
+            deltaVec = arma::log(o) - oEmpiricalMean;
+            oEmpiricalMean = oEmpiricalMean + ( deltaVec / internalIterationCounter );
+            delta2Vec = arma::log(o) - oEmpiricalMean;
+            oEmpiricalM2 = oEmpiricalM2 + deltaVec % delta2Vec ;
+
+            // pi
             deltaVec = arma::log(pi) - piEmpiricalMean;
             piEmpiricalMean = piEmpiricalMean + ( deltaVec  / internalIterationCounter );
             delta2Vec = arma::log(pi) - piEmpiricalMean;
@@ -2693,9 +2695,11 @@ void SUR_Chain::updateProposalVariances()
 
         // update proposal variances
         var_tau_proposal = adaptationFactor * var_tau_proposal_init + (1. - adaptationFactor) * (2.38*2.38) * tauEmpiricalM2/(internalIterationCounter-1);
-        var_o_proposal = adaptationFactor * var_o_proposal_init + (1. - adaptationFactor) * (2.38*2.38) * arma::mean( oEmpiricalM2/(internalIterationCounter-1) );
         if ( gamma_type == Gamma_Type::hotspot )
+        {
+            var_o_proposal = adaptationFactor * var_o_proposal_init + (1. - adaptationFactor) * (2.38*2.38) * arma::mean( oEmpiricalM2/(internalIterationCounter-1) );
             var_pi_proposal = adaptationFactor * var_pi_proposal_init + (1. - adaptationFactor) * (2.38*2.38) * arma::mean( piEmpiricalM2/(internalIterationCounter-1) );
+        }
         if( beta_type == Beta_Type::gprior )
             var_w_proposal = adaptationFactor * var_w_proposal_init + (1. - adaptationFactor) * (2.38*2.38) * wEmpiricalM2/(internalIterationCounter-1);
     }

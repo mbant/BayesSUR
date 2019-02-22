@@ -61,9 +61,27 @@ int drive_SUR( Chain_Data& chainData )
 	logPOutFile.open( outFilePrefix+"logP_out.txt" , std::ios_base::app); // note we don't close!
 	// open avg files in trunc mode to cut previous content
 	std::ofstream gammaOutFile; gammaOutFile.open( outFilePrefix+"gamma_out.txt" , std::ios_base::trunc); gammaOutFile.close();
-	std::ofstream gOutFile; gOutFile.open( outFilePrefix+"G_out.txt" , std::ios_base::trunc); gOutFile.close();
-	std::ofstream piOutFile; piOutFile.open( outFilePrefix+"pi_out.txt" , std::ios_base::trunc); piOutFile.close();
-	std::ofstream htpOutFile; htpOutFile.open( outFilePrefix+"hotspot_tail_p_out.txt" , std::ios_base::trunc); htpOutFile.close();
+	
+	std::ofstream gOutFile; 
+	if ( chainData.covariance_type == Covariance_Type::sparse )
+	{
+		gOutFile.open( outFilePrefix+"G_out.txt" , std::ios_base::trunc); 
+		gOutFile.close();
+	}
+	
+	std::ofstream piOutFile; 
+	if ( chainData.gamma_type == Gamma_Type::hotspot || chainData.gamma_type == Gamma_Type::hierarchical )
+	{
+		piOutFile.open( outFilePrefix+"pi_out.txt" , std::ios_base::trunc); 
+		piOutFile.close();
+	}
+	
+	std::ofstream htpOutFile; 
+	if ( chainData.gamma_type == Gamma_Type::hotspot )
+	{
+		htpOutFile.open( outFilePrefix+"hotspot_tail_p_out.txt" , std::ios_base::trunc); 
+		htpOutFile.close();
+	}
 
 	// Output to file the initial state (if burnin=0)
 	arma::umat gamma_out; // out var for the gammas
@@ -78,21 +96,34 @@ int drive_SUR( Chain_Data& chainData )
 	if( chainData.burnin == 0 )
 	{
 		gamma_out = sampler[0] -> getGamma(); 
-		g_out = arma::umat( sampler[0] -> getGAdjMat() );
+	
+		if ( chainData.covariance_type == Covariance_Type::sparse )
+			g_out = arma::umat( sampler[0] -> getGAdjMat() );
+	
 		beta_out = sampler[0] -> getBeta();
 		sigmaRho_out  = sampler[0] -> getSigmaRho();
-		tmpVec = sampler[0] -> getPi();
-		pi_out = tmpVec;
-		tmpVec.for_each( [](arma::vec::elem_type& val) { if(val>1.0) val = 1.0; else val=0.0; } );
-		hotspot_tail_prob_out = tmpVec;
+
+		if ( chainData.gamma_type == Gamma_Type::hotspot || chainData.gamma_type == Gamma_Type::hierarchical )
+		{
+			tmpVec = sampler[0] -> getPi();
+			pi_out = tmpVec;
+			if ( chainData.gamma_type == Gamma_Type::hotspot )
+			{
+				tmpVec.for_each( [](arma::vec::elem_type& val) { if(val>1.0) val = 1.0; else val=0.0; } );
+				hotspot_tail_prob_out = tmpVec;
+			}
+		}
 
 		gammaOutFile.open( outFilePrefix+"gamma_out.txt" , std::ios_base::trunc);
 		gammaOutFile << (arma::conv_to<arma::mat>::from(gamma_out)) << std::flush;
 		gammaOutFile.close();
 
-		gOutFile.open( outFilePrefix+"G_out.txt" , std::ios_base::trunc);
-		gOutFile << ( arma::conv_to<arma::mat>::from(g_out) ) << std::flush;   // this might be quite long...
-		gOutFile.close();
+		if ( chainData.covariance_type == Covariance_Type::sparse )
+		{
+			gOutFile.open( outFilePrefix+"G_out.txt" , std::ios_base::trunc);
+			gOutFile << ( arma::conv_to<arma::mat>::from(g_out) ) << std::flush;   // this might be quite long...
+			gOutFile.close();
+		}
 
 		logPOutFile << 	sampler[0] -> getLogPTau() << " ";
 		logPOutFile << 	sampler[0] -> getLogPEta() <<  " ";
@@ -106,13 +137,18 @@ int drive_SUR( Chain_Data& chainData )
 		logPOutFile << 	sampler[0] -> getLogLikelihood();
 		logPOutFile << 	endl << std::flush;
 
-		piOutFile.open( outFilePrefix+"pi_out.txt" , std::ios_base::trunc);
-		piOutFile << pi_out << std::flush;
-		piOutFile.close();
-
-		htpOutFile.open( outFilePrefix+"hotspot_tail_p_out.txt" , std::ios_base::trunc);
-		htpOutFile << hotspot_tail_prob_out << std::flush;
-		htpOutFile.close();
+		if ( chainData.gamma_type == Gamma_Type::hotspot || chainData.gamma_type == Gamma_Type::hierarchical )
+		{
+			piOutFile.open( outFilePrefix+"pi_out.txt" , std::ios_base::trunc);
+			piOutFile << pi_out << std::flush;
+			piOutFile.close();
+			if ( chainData.gamma_type == Gamma_Type::hotspot )
+			{
+				htpOutFile.open( outFilePrefix+"hotspot_tail_p_out.txt" , std::ios_base::trunc);
+				htpOutFile << hotspot_tail_prob_out << std::flush;
+				htpOutFile.close();
+			}
+		}
 	}
 					
 
@@ -128,7 +164,7 @@ int drive_SUR( Chain_Data& chainData )
 
 	for(unsigned int i=1; i < chainData.nIter ; ++i)
 	{
-
+		
 		sampler.step();
 		
 		// #################### END LOCAL MOVES
@@ -140,15 +176,23 @@ int drive_SUR( Chain_Data& chainData )
 		if( i >= chainData.burnin )
 		{
 			gamma_out += sampler[0] -> getGamma(); // the result of the whole procedure is now my new mcmc point, so add that up
-			g_out += arma::umat( sampler[0] -> getGAdjMat() );
+
+			if ( chainData.covariance_type == Covariance_Type::sparse )
+				g_out += arma::umat( sampler[0] -> getGAdjMat() );
 
 			beta_out += sampler[0] -> getBeta();
 			sigmaRho_out += sampler[0] -> getSigmaRho();	
 
-			tmpVec = sampler[0] -> getPi();
-			pi_out += tmpVec;
-			tmpVec.for_each( [](arma::vec::elem_type& val) { if(val>1.0) val = 1.0; else val=0.0; } );
-			hotspot_tail_prob_out += tmpVec;
+			if ( chainData.gamma_type == Gamma_Type::hotspot || chainData.gamma_type == Gamma_Type::hierarchical )
+			{
+				tmpVec = sampler[0] -> getPi();
+				pi_out += tmpVec;
+				if ( chainData.gamma_type == Gamma_Type::hotspot )
+				{
+					tmpVec.for_each( [](arma::vec::elem_type& val) { if(val>1.0) val = 1.0; else val=0.0; } );
+					hotspot_tail_prob_out += tmpVec;
+				}
+			}
 		}
 
 		// Print something on how the chain is going
@@ -171,9 +215,12 @@ int drive_SUR( Chain_Data& chainData )
 				gammaOutFile << (arma::conv_to<arma::mat>::from(gamma_out))/(double)(i+1.0-chainData.burnin) << std::flush;
 				gammaOutFile.close();
 
-				gOutFile.open( outFilePrefix+"G_out.txt" , std::ios_base::trunc);
-				gOutFile << ( arma::conv_to<arma::mat>::from(g_out) )/((double)(i-jtStartIteration-chainData.burnin)+1.0) << std::flush;   // this might be quite long...
-				gOutFile.close();
+				if ( chainData.covariance_type == Covariance_Type::sparse )
+				{
+					gOutFile.open( outFilePrefix+"G_out.txt" , std::ios_base::trunc);
+					gOutFile << ( arma::conv_to<arma::mat>::from(g_out) )/((double)(i-jtStartIteration-chainData.burnin)+1.0) << std::flush;   // this might be quite long...
+					gOutFile.close();
+				}
 
 				logPOutFile << 	sampler[0] -> getLogPTau() << " ";
 				logPOutFile << 	sampler[0] -> getLogPEta() <<  " ";
@@ -187,13 +234,19 @@ int drive_SUR( Chain_Data& chainData )
 				logPOutFile << 	sampler[0] -> getLogLikelihood();
 				logPOutFile << 	endl << std::flush;
 
-				piOutFile.open( outFilePrefix+"pi_out.txt" , std::ios_base::trunc);
-				piOutFile << pi_out/(double)(i+1.0-chainData.burnin) << std::flush;
-				piOutFile.close();
+				if ( chainData.gamma_type == Gamma_Type::hotspot || chainData.gamma_type == Gamma_Type::hierarchical )
+				{
+					piOutFile.open( outFilePrefix+"pi_out.txt" , std::ios_base::trunc);
+					piOutFile << pi_out/(double)(i+1.0-chainData.burnin) << std::flush;
+					piOutFile.close();
+				}
 
-				htpOutFile.open( outFilePrefix+"hotspot_tail_p_out.txt" , std::ios_base::trunc);
-				htpOutFile << hotspot_tail_prob_out/(double)(i+1.0-chainData.burnin) << std::flush;
-				htpOutFile.close();
+				if ( chainData.gamma_type == Gamma_Type::hotspot )
+				{
+					htpOutFile.open( outFilePrefix+"hotspot_tail_p_out.txt" , std::ios_base::trunc);
+					htpOutFile << hotspot_tail_prob_out/(double)(i+1.0-chainData.burnin) << std::flush;
+					htpOutFile.close();
+				}
 
 				#ifndef CCODE
 				Rcpp::checkUserInterrupt(); // this checks for interrupts from R ... or does it?
@@ -214,9 +267,12 @@ int drive_SUR( Chain_Data& chainData )
 	gammaOutFile << (arma::conv_to<arma::mat>::from(gamma_out))/(double)(chainData.nIter-chainData.burnin+1.) << std::flush;
 	gammaOutFile.close();
 
-	gOutFile.open( outFilePrefix+"G_out.txt" , std::ios_base::trunc);
-	gOutFile << ( arma::conv_to<arma::mat>::from(g_out) )/(double)(chainData.nIter-jtStartIteration-chainData.burnin+1.) << std::flush;   // this might be quite long...
-	gOutFile.close();
+	if ( chainData.covariance_type == Covariance_Type::sparse )
+	{
+		gOutFile.open( outFilePrefix+"G_out.txt" , std::ios_base::trunc);
+		gOutFile << ( arma::conv_to<arma::mat>::from(g_out) )/(double)(chainData.nIter-jtStartIteration-chainData.burnin+1.) << std::flush;   // this might be quite long...
+		gOutFile.close();
+	}
 
 	logPOutFile << 	sampler[0] -> getLogPTau() << " ";
 	logPOutFile << 	sampler[0] -> getLogPEta() <<  " ";
@@ -240,22 +296,27 @@ int drive_SUR( Chain_Data& chainData )
 	// -----
 
 	// -----
-	piOutFile.open( outFilePrefix+"pi_out.txt" , std::ios_base::trunc);
-	piOutFile << pi_out/(double)(chainData.nIter-chainData.burnin+1) << std::flush;
-	piOutFile.close();
+	if ( chainData.gamma_type == Gamma_Type::hotspot || chainData.gamma_type == Gamma_Type::hierarchical )
+	{
+		piOutFile.open( outFilePrefix+"pi_out.txt" , std::ios_base::trunc);
+		piOutFile << pi_out/(double)(chainData.nIter-chainData.burnin+1) << std::flush;
+		piOutFile.close();
+	}
 
-	htpOutFile.open( outFilePrefix+"hotspot_tail_p_out.txt" , std::ios_base::trunc);
-	htpOutFile << hotspot_tail_prob_out/(double)(chainData.nIter-chainData.burnin+1) << std::flush;
-	htpOutFile.close();
+	if ( chainData.gamma_type == Gamma_Type::hotspot )
+	{
+		htpOutFile.open( outFilePrefix+"hotspot_tail_p_out.txt" , std::ios_base::trunc);
+		htpOutFile << hotspot_tail_prob_out/(double)(chainData.nIter-chainData.burnin+1) << std::flush;
+		htpOutFile.close();
+	}
 	// -----
 
 
 	cout << "Saved to :   "+outFilePrefix+"****_out.txt" << endl;
 	cout << "Final w : " << sampler[0] -> getW() <<  endl;
 	cout << "Final tau : " << sampler[0] -> getTau() << "    w/ proposal variance: " << sampler[0] -> getVarTauProposal() << endl;
-	cout << "Final eta : " << sampler[0] -> getEta() <<  endl;
-	// cout << "Final o : " << sampler[0] -> getO().t() << "       w/ proposal variance: " << sampler[0] -> getVarOProposal() << endl;  
-	// cout << "Final pi : " << sampler[0] -> getPi().t() << "       w/ proposal variance: " << sampler[0] -> getVarPiProposal() << endl;
+	if ( chainData.covariance_type == Covariance_Type::sparse )
+		cout << "Final eta : " << sampler[0] -> getEta() <<  endl;
 	cout << "  -- Average Omega : " << arma::accu( sampler[0] -> getO() * sampler[0] -> getPi().t() )/((double)(sampler[0]->getP()*sampler[0]->getS())) <<  endl;
 	if( chainData.nChains > 1 ) 
 		cout << "Final temperature ratio : " << sampler[1]->getTemperature() <<  endl << endl ;
@@ -304,8 +365,20 @@ int drive_HESS( Chain_Data& chainData )
 	logPOutFile.open( outFilePrefix+"logP_out.txt" , std::ios_base::app); // note we don't close!
 	// open avg files in trunc mode to cut previous content
 	std::ofstream gammaOutFile; gammaOutFile.open( outFilePrefix+"gamma_out.txt" , std::ios_base::trunc); gammaOutFile.close();
-	std::ofstream piOutFile; piOutFile.open( outFilePrefix+"pi_out.txt" , std::ios_base::trunc); piOutFile.close();
-	std::ofstream htpOutFile; htpOutFile.open( outFilePrefix+"hotspot_tail_p_out.txt" , std::ios_base::trunc); htpOutFile.close();
+	std::ofstream piOutFile; 
+
+	if ( chainData.gamma_type == Gamma_Type::hotspot || chainData.gamma_type == Gamma_Type::hierarchical )
+	{
+		piOutFile.open( outFilePrefix+"pi_out.txt" , std::ios_base::trunc); 
+		piOutFile.close();
+	}	
+
+	std::ofstream htpOutFile; 
+	if ( chainData.gamma_type == Gamma_Type::hotspot )
+	{
+		htpOutFile.open( outFilePrefix+"hotspot_tail_p_out.txt" , std::ios_base::trunc); 
+		htpOutFile.close();
+	}
 
 	// Output to file the initial state (if burnin=0)
 	arma::umat gamma_out; // out var for the gammas
@@ -317,10 +390,17 @@ int drive_HESS( Chain_Data& chainData )
 	if( chainData.burnin == 0 )
 	{
 		gamma_out = sampler[0] -> getGamma(); 
-		tmpVec = sampler[0] -> getPi();
-		pi_out = tmpVec;
-		tmpVec.for_each( [](arma::vec::elem_type& val) { if(val>1.0) val = 1.0; else val=0.0; } );
-		hotspot_tail_prob_out = tmpVec;
+
+		if ( chainData.gamma_type == Gamma_Type::hotspot || chainData.gamma_type == Gamma_Type::hierarchical )
+		{
+			tmpVec = sampler[0] -> getPi();
+			pi_out = tmpVec;
+			if ( chainData.gamma_type == Gamma_Type::hotspot )
+			{
+				tmpVec.for_each( [](arma::vec::elem_type& val) { if(val>1.0) val = 1.0; else val=0.0; } );
+				hotspot_tail_prob_out = tmpVec;
+			}
+		}
 
 		gammaOutFile.open( outFilePrefix+"gamma_out.txt" , std::ios_base::trunc);
 		gammaOutFile << (arma::conv_to<arma::mat>::from(gamma_out)) << std::flush;
@@ -333,13 +413,19 @@ int drive_HESS( Chain_Data& chainData )
 		logPOutFile << 	sampler[0] -> getLogLikelihood();
 		logPOutFile << 	endl << std::flush;
 
-		piOutFile.open( outFilePrefix+"pi_out.txt" , std::ios_base::trunc);
-		piOutFile << pi_out << std::flush;
-		piOutFile.close();
+		if ( chainData.gamma_type == Gamma_Type::hotspot || chainData.gamma_type == Gamma_Type::hierarchical )
+		{
+			piOutFile.open( outFilePrefix+"pi_out.txt" , std::ios_base::trunc);
+			piOutFile << pi_out << std::flush;
+			piOutFile.close();
+		}
 
-		htpOutFile.open( outFilePrefix+"hotspot_tail_p_out.txt" , std::ios_base::trunc);
-		htpOutFile << hotspot_tail_prob_out << std::flush;
-		htpOutFile.close();
+		if ( chainData.gamma_type == Gamma_Type::hotspot )
+		{
+			htpOutFile.open( outFilePrefix+"hotspot_tail_p_out.txt" , std::ios_base::trunc);
+			htpOutFile << hotspot_tail_prob_out << std::flush;
+			htpOutFile.close();
+		}
 	}
 
 
@@ -349,7 +435,7 @@ int drive_HESS( Chain_Data& chainData )
 	// ########
 	// ########
 
-	cout << "Starting "<< chainData.nChains <<" (parallel) chain(s) for " << chainData.nIter << " iterations:" << endl << std::flush;
+	cout << "DONE! \n\nStarting "<< chainData.nChains <<" (parallel) chain(s) for " << chainData.nIter << " iterations:" << endl << std::flush;
 
 	unsigned int tick = 1000; // how many iter for each print?
 
@@ -368,10 +454,16 @@ int drive_HESS( Chain_Data& chainData )
 		{
 			gamma_out += sampler[0] -> getGamma(); // the result of the whole procedure is now my new mcmc point, so add that up
 
-			tmpVec = sampler[0] -> getPi();
-			pi_out += tmpVec;
-			tmpVec.for_each( [](arma::vec::elem_type& val) { if(val>1.0) val = 1.0; else val=0.0; } );
-			hotspot_tail_prob_out += tmpVec;
+			if ( chainData.gamma_type == Gamma_Type::hotspot || chainData.gamma_type == Gamma_Type::hierarchical )
+			{
+				tmpVec = sampler[0] -> getPi();
+				pi_out += tmpVec;
+				if ( chainData.gamma_type == Gamma_Type::hotspot )
+				{
+					tmpVec.for_each( [](arma::vec::elem_type& val) { if(val>1.0) val = 1.0; else val=0.0; } );
+					hotspot_tail_prob_out += tmpVec;
+				}
+			}
 		}
 
 		// Print something on how the chain is going
@@ -400,13 +492,19 @@ int drive_HESS( Chain_Data& chainData )
 				logPOutFile << 	sampler[0] -> getLogLikelihood();
 				logPOutFile << 	endl << std::flush;
 
-				piOutFile.open( outFilePrefix+"pi_out.txt" , std::ios_base::trunc);
-				piOutFile << pi_out/(double)(i+1.0-chainData.burnin) << std::flush;
-				piOutFile.close();
+				if ( chainData.gamma_type == Gamma_Type::hotspot || chainData.gamma_type == Gamma_Type::hierarchical )
+				{
+					piOutFile.open( outFilePrefix+"pi_out.txt" , std::ios_base::trunc);
+					piOutFile << pi_out/(double)(i+1.0-chainData.burnin) << std::flush;
+					piOutFile.close();
+				}
 
-				htpOutFile.open( outFilePrefix+"hotspot_tail_p_out.txt" , std::ios_base::trunc);
-				htpOutFile << hotspot_tail_prob_out/(double)(i+1.0-chainData.burnin) << std::flush;
-				htpOutFile.close();
+				if ( chainData.gamma_type == Gamma_Type::hotspot )
+				{
+					htpOutFile.open( outFilePrefix+"hotspot_tail_p_out.txt" , std::ios_base::trunc);
+					htpOutFile << hotspot_tail_prob_out/(double)(i+1.0-chainData.burnin) << std::flush;
+					htpOutFile.close();
+				}
 
 				#ifndef CCODE
 				Rcpp::checkUserInterrupt(); // this checks for interrupts from R ... or does it?
@@ -436,13 +534,19 @@ int drive_HESS( Chain_Data& chainData )
 	logPOutFile.close();
 
 	// -----
-	piOutFile.open( outFilePrefix+"pi_out.txt" , std::ios_base::trunc);
-	piOutFile << pi_out/(double)(chainData.nIter-chainData.burnin+1) << std::flush;
-	piOutFile.close();
+	if ( chainData.gamma_type == Gamma_Type::hotspot || chainData.gamma_type == Gamma_Type::hierarchical )
+	{
+		piOutFile.open( outFilePrefix+"pi_out.txt" , std::ios_base::trunc);
+		piOutFile << pi_out/(double)(chainData.nIter-chainData.burnin+1) << std::flush;
+		piOutFile.close();
+	}
 
-	htpOutFile.open( outFilePrefix+"hotspot_tail_p_out.txt" , std::ios_base::trunc);
-	htpOutFile << hotspot_tail_prob_out/(double)(chainData.nIter-chainData.burnin+1) << std::flush;
-	htpOutFile.close();
+	if ( chainData.gamma_type == Gamma_Type::hotspot )
+	{
+		htpOutFile.open( outFilePrefix+"hotspot_tail_p_out.txt" , std::ios_base::trunc);
+		htpOutFile << hotspot_tail_prob_out/(double)(chainData.nIter-chainData.burnin+1) << std::flush;
+		htpOutFile.close();
+	}
 	// -----
 
 	cout << "Saved to :   "+outFilePrefix+"****_out.txt" << endl;
@@ -469,8 +573,8 @@ int drive_HESS( Chain_Data& chainData )
 int drive( const std::string& dataFile, const std::string& blockFile, const std::string& structureGraphFile, const std::string& outFilePath,  
 			unsigned int nIter, unsigned int burnin, unsigned int nChains,
 			const std::string& method, const bool sparse, 
-			const std::string& gammaPrior, const std::string& gammaSampler, const std::string& gammaInit, 
-			const std::string& betaPrior , const std::string& mrfGFile )
+			const std::string& gammaPrior, const std::string& gammaSampler, const std::string& gammaInit, const std::string& mrfGFile ,
+			const std::string& betaPrior )
 {
 
 	cout << "R2SSUR -- Bayesian Sparse Seemingly Unrelated Regression Modelling" << endl;
@@ -517,13 +621,12 @@ int drive( const std::string& dataFile, const std::string& blockFile, const std:
 
 		// chainData.mrfG = THE OBJECT YOU JUST READ and want to pass on to the samplers
 
-	}structureGraph
+	}
 	else
 	{
-		std::cerr << "ERROR: Wrong type of Gamma prior given";
+		std::cerr << "ERROR: Wrong type of Gamma prior given\n";
 		return 1;
 	}
-
 
 
 	// Gamma Sampler
@@ -534,7 +637,7 @@ int drive( const std::string& dataFile, const std::string& blockFile, const std:
 		chainData.gamma_sampler_type = Gamma_Sampler_Type::mc3 ;
 	else
 	{
-		std::cerr << "ERROR: Wrong type of Gamma Sampler given";
+		std::cerr << "ERROR: Wrong type of Gamma Sampler given\n";
 		return 1;
 	}
 
@@ -546,14 +649,15 @@ int drive( const std::string& dataFile, const std::string& blockFile, const std:
 		chainData.beta_type = Beta_Type::independent ;
 	else
 	{
-		std::cerr << "ERROR: Wrong type of Beta prior given";
+		std::cerr << betaPrior << "\n";
+		std::cerr << "ERROR: Wrong type of Beta prior given\n";
 		return 1;
 	}
 
 	// need this untill g-prior code is not finalised
 	if( chainData.beta_type == Beta_Type::gprior )
 	{
-		std::cerr << "ERROR: GPrior not implemented yet";
+		std::cerr << "ERROR: GPrior not implemented yet\n";
 		return 1;
 	}
 

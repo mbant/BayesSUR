@@ -34,8 +34,8 @@ BVS_DEBUG: $(OBJECTS_BVS)
 
 clean: 
 	@echo [Cleaning: ]
-	rm $(SOURCE_DIR)/*.o ; rm *_Reg ; rm simul* ; rm blocks* ; rm structureGraph* ; rm call.sh ; rm -R results ;
+	rm *.o; rm $(SOURCE_DIR)/*.o ; rm *_Reg ; rm data* ; rm blocks* ; rm structureGraph* ; rm call.sh ; rm -R results ;
 
 remake: 
 	@echo [Cleaning compilation objets only: ]
-	rm $(SOURCE_DIR)/*.o ; rm *_Reg ;
+	rm *.o; rm $(SOURCE_DIR)/*.o ; rm *_Reg ;

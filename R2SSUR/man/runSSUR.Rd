@@ -6,8 +6,9 @@
 \usage{
 runSSUR(data, blockList, varType = NULL, structureGraph = NULL,
   outFilePath = "", nIter = 10, burnin = 0, nChains = 1,
-  method = "SUR", sparse = TRUE, gammaSampler = "Bandit",
-  gammaInit = "MLE", usingGPrior = FALSE)
+  method = "SUR", sparse = TRUE, gammaPrior = "hotspot",
+  gammaSampler = "bandit", gammaInit = "MLE", mrfGFile = "",
+  betaPrior = "independent")
 }
 \arguments{
 \item{data}{either a matrix/dataframe or the path to (a plain text) data file with variables on the columns and observations on the rows}
@@ -26,9 +27,15 @@ runSSUR(data, blockList, varType = NULL, structureGraph = NULL,
 
 \item{nChains}{number of parallel chains to run}
 
-\item{method}{a string indicating the model type, either "SUR" for sparse and dense Seemingly Unrelated Regressions, or "HESS" for independent outcomes.}
+\item{method}{a string indicating the model type, either "SUR" for sparse and dense Seemingly Unrelated Regressions, or "HESS" for hierarchical regression with independent outcomes.}
+
+\item{gammaPrior}{string indicating the gamma prior to use, either "hotspot" for the Hotspot prior of Bottolo (2011), "MRF" for the Markov Random Field prior or "hierarchical" for a simpler hierarchical prior}
+
+\item{gammaSampler}{string indicating the type of sampler for gamma, either "bandit" for the Thompson sampling inspired samper or "MC3" for the usual $MC^3$ sampler}
 
 \item{gammaInit}{gamma initialisation to either all-zeros ("0"), all ones ("1"), randomly ("R") or (default) MLE-informed ("MLE").}
+
+\item{mrfGFile}{path to the file containing the G matrix for the MRF prior on gamma (if necessary)}
 }
 \description{
 Run a SUR Bayesian sampler
