@@ -11,6 +11,7 @@
 #include "junction_tree.h"
 
 #include "ESS_Atom.h"
+#include "Parameter_types.h"
 
 /************************************
  * HESS class that works with the ESS_Sampler class
@@ -77,8 +78,8 @@ class HESS_Chain : public ESS_Atom<HESS_Chain>
         unsigned int getinternalIterationCounter() const;
         //no need to set anything for this, updated by the step function
 
-        std::string getGammaSamplerType();
-        void setGammaSamplerType( std::string& );
+        Gamma_Sampler_Type getGammaSamplerType();
+        void setGammaSamplerType( Gamma_Sampler_Type gamma_sampler_type_ );
 
         // Bandit-sampling related quantities
         unsigned int getNUpdatesBandit() const;
@@ -154,6 +155,10 @@ class HESS_Chain : public ESS_Atom<HESS_Chain>
         double getLogPPi() const;
         // no setter for this, dedicated setter below
 
+        // MRF
+        inline MRFGObject& getMRFG() { return mrfG; }
+        void setMRFG( MRFGObject& mrfG_ ) { mrfG = mrfG_; logPGamma(); }
+
         // GAMMA (bandit defined above)
         arma::umat& getGamma();
         void setGamma( arma::umat& );
@@ -210,7 +215,11 @@ class HESS_Chain : public ESS_Atom<HESS_Chain>
 
         void piInit();
         void piInit( arma::vec& );
+        void piInit( arma::vec& , double , double );
         void piInit( arma::vec& , double , double , double );
+
+        void mrfGInit();
+        void mrfGInit( MRFGObject& mrfG_ );
 
         void gammaInit();
         void gammaInit( arma::umat& );
@@ -244,6 +253,8 @@ class HESS_Chain : public ESS_Atom<HESS_Chain>
         double logPGamma( );
         double logPGamma( const arma::umat& );
         double logPGamma( const arma::umat& , const arma::vec& , const arma::vec& );
+        double logPGamma( const arma::umat& , const arma::vec& );
+        double logPGamma( const arma::umat& , double , double , const MRFGObject& );
 
         // W
         double logPW( );
@@ -393,6 +404,9 @@ class HESS_Chain : public ESS_Atom<HESS_Chain>
         double var_pi_proposal;
         double pi_acc_count;
         double logP_pi;
+
+        // MRF PRIOR
+        MRFGObject mrfG;
 
         // GAMMA - variable selection binary indexes
         // gamma_jk ~ Bernulli( omega_jk ), with omega_jk = v_k * u_j

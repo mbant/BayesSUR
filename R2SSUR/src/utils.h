@@ -6,6 +6,7 @@
 #include <memory>
 #include <armadillo>
 
+
 namespace Utils{
 
 	struct SUR_Data

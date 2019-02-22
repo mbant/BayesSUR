@@ -27,16 +27,44 @@ HESS_Chain::HESS_Chain( std::shared_ptr<arma::mat> data_, unsigned int nObservat
     {
 
         if( covariance_type != Covariance_Type::dense )
-            throw Bad_Covariance_Type{};
+            throw Bad_Covariance_Type ( covariance_type );
 
         predictorsIdx = std::make_shared<arma::uvec>(arma::join_vert( *fixedPredictorsIdx, *VSPredictorsIdx ));
         setXtX();
 
-        banditInit();
-        MC3Init();    
+        switch ( gamma_sampler_type )
+        {
+            case Gamma_Sampler_Type::bandit :
+                banditInit();
+                break;
+        
+            case Gamma_Sampler_Type::mc3 :
+                MC3Init();
+                break;
+        
+            default:
+                throw Bad_Gamma_Sampler_Type ( gamma_sampler_type ) ;
+        }  
 
-        oInit();
-        piInit();
+        switch ( gamma_type )
+        {
+            case Gamma_Type::hotspot :
+                oInit();
+                piInit();
+                break;
+
+            case Gamma_Type::hierarchical :
+                piInit();
+                break;
+
+            case Gamma_Type::mrf :
+                mrfGInit();
+                break;
+
+            default:
+                throw Bad_Gamma_Sampler_Type ( gamma_sampler_type );
+        }
+
         gammaInit();
         wInit();
 
@@ -120,26 +148,29 @@ void HESS_Chain::setTemperature( double temp_ )
 
 unsigned int HESS_Chain::getinternalIterationCounter() const{ return internalIterationCounter ; }
 
-std::string HESS_Chain::getGammaSamplerType(){ return gammaSamplerType ; }
-
-void HESS_Chain::setGammaSamplerType( std::string& gammaSamplerType_ )
+Gamma_Sampler_Type HESS_Chain::getGammaSamplerType(){ return gamma_sampler_type ; }
+void HESS_Chain::setGammaSamplerType( Gamma_Sampler_Type gamma_sampler_type_ )
 {
-    if( gammaSamplerType != gammaSamplerType_ )
+    if( gamma_sampler_type != gamma_sampler_type_ )
     {
-        gammaSamplerType = gammaSamplerType_ ; 
-        if( gammaSamplerType == "B" || gammaSamplerType == "bandit" || gammaSamplerType == "Bandit" || gammaSamplerType == "b" )
-        {
-            banditInit();
+        gamma_sampler_type = gamma_sampler_type_ ; 
 
-        }else if( gammaSamplerType == "MC3" || gammaSamplerType == "mc3" )
+        switch ( gamma_sampler_type )
         {
-            MC3Init();
-
-        }else{
-            throw std::runtime_error(std::string("Sampler type can only be Bandit or MC3"));
+            case Gamma_Sampler_Type::bandit :
+                banditInit();
+                break;
+        
+            case Gamma_Sampler_Type::mc3 :
+                MC3Init();
+                break;
+        
+            default:
+                throw Bad_Gamma_Sampler_Type ( gamma_sampler_type );
         }
     }
 }
+
 
 // Bandit-sampling related quantities
 unsigned int HESS_Chain::getNUpdatesBandit() const{ return n_updates_bandit ; }
@@ -346,6 +377,10 @@ double HESS_Chain::getJointLogPosterior() const
 // different version help in selecting different values for fixed hyperameters etc..
 void HESS_Chain::oInit( arma::vec& o_init , double a_o_ , double b_o_ , double var_o_proposal_ )
 {
+
+    if( gamma_type != Gamma_Type::hotspot )
+        throw Bad_Gamma_Type ( gamma_type );
+
     o = o_init;
     a_o = a_o_;
     b_o = b_o_;
@@ -357,35 +392,101 @@ void HESS_Chain::oInit( arma::vec& o_init , double a_o_ , double b_o_ , double v
 
 void HESS_Chain::oInit()
 {
+    if( gamma_type != Gamma_Type::hotspot )
+        throw Bad_Gamma_Type ( gamma_type );
+
     arma::vec init = arma::ones<arma::vec>(nOutcomes) / std::max( 500. , (double)nVSPredictors ) ;
-    oInit( init , 2. , std::max(500.,(double)nVSPredictors)-2. , 0.005 );
+    oInit( init , 2. , (double)nVSPredictors-2. , 0.005 );
 }
 
 void HESS_Chain::oInit( arma::vec& o_init )
 {
-    oInit( o_init , 2. , std::max(500.,(double)nVSPredictors)-2. , 0.005 );
+    if( gamma_type != Gamma_Type::hotspot )
+        throw Bad_Gamma_Type ( gamma_type );
+
+    oInit( o_init , 2. , (double)nVSPredictors-2. , 0.005 );
 }
 
+
+// this is only for the hotspot
 void HESS_Chain::piInit( arma::vec& pi_init , double a_pi_ , double b_pi_ , double var_pi_proposal_ )
 {
+    if ( gamma_type != Gamma_Type::hotspot )
+        throw Bad_Gamma_Type ( gamma_type );
+    
     pi = pi_init;
     a_pi = a_pi_;
     b_pi = b_pi_;
     var_pi_proposal = var_pi_proposal_;
     pi_acc_count = 0.;
-    
     logPPi();
 }
 
+// this is only for the hierarchical
+void HESS_Chain::piInit( arma::vec& pi_init , double a_pi_ , double b_pi_ )
+{
+    if ( gamma_type != Gamma_Type::hierarchical )
+        throw Bad_Gamma_Type ( gamma_type );
+    
+    pi = pi_init;
+    a_pi = a_pi_;
+    b_pi = b_pi_;
+    logPPi();
+}
+
+// this is either hotspot or hierarchical
 void HESS_Chain::piInit()
 {
     arma::vec init = arma::ones<arma::vec>(nVSPredictors) ;
-    piInit( init , 2. , 1. , 0.02 );
+    switch ( gamma_type )
+    {
+        case Gamma_Type::hotspot :
+            piInit( init , 2. , 1. , 0.02 );
+            break;
+
+        case Gamma_Type::hierarchical :
+            piInit( init , 1. , (double)nOutcomes-1. );
+    
+        default:
+            throw Bad_Gamma_Type ( gamma_type );
+    }
 }
 
 void HESS_Chain::piInit( arma::vec& pi_init )
 {
-    piInit( pi_init , 2. , 1. , 0.02 );
+    switch ( gamma_type )
+    {
+        case Gamma_Type::hotspot :
+            piInit( pi_init , 2. , 1. , 0.02 );
+            break;
+
+        case Gamma_Type::hierarchical :
+            piInit( pi_init , 1. , (double)nOutcomes-1. );
+    
+        default:
+            throw Bad_Gamma_Type ( gamma_type );
+    }
+}
+
+
+void HESS_Chain::mrfGInit()
+{
+    if( gamma_type != Gamma_Type::mrf )
+        throw Bad_Gamma_Type ( gamma_type );
+
+    /****
+    * Here George's code
+    ****/
+
+}
+void HESS_Chain::mrfGInit( MRFGObject& mrfG_ )
+{
+    if( gamma_type != Gamma_Type::mrf )
+        throw Bad_Gamma_Type ( gamma_type );
+
+    /****
+    * Here George's code
+    ****/
 }
 
 void HESS_Chain::gammaInit( arma::umat& gamma_init )
@@ -467,25 +568,48 @@ double HESS_Chain::logPO( const arma::vec& o_ )
 double HESS_Chain::logPPi( arma::vec& pi_ , double a_pi_ , double b_pi_ )
 {
     double logP = 0.;
-    for(unsigned int j=0; j<nVSPredictors; ++j)
-        logP += Distributions::logPDFGamma( pi_(j) , a_pi_, b_pi_ );
 
+    switch ( gamma_type )
+    {
+        case Gamma_Type::hotspot :
+            for(unsigned int j=0; j<nVSPredictors; ++j)
+                logP += Distributions::logPDFGamma( pi_(j) , a_pi_, b_pi_ );
+            break;
+    
+        case Gamma_Type::hierarchical :
+            for(unsigned int j=0; j<nVSPredictors; ++j)
+                logP += Distributions::logPDFBeta( pi_(j) , a_pi_, b_pi_ );
+            break;
+    
+        default:
+            throw Bad_Gamma_Type ( gamma_type );
+    }
     return logP;    
 }
 
 double HESS_Chain::logPPi( )
 {
+    if ( gamma_type != Gamma_Type::hotspot && gamma_type != Gamma_Type::hierarchical )
+        throw Bad_Gamma_Type ( gamma_type );
+
     logP_pi = logPPi( pi , a_pi , b_pi );
     return logP_pi;
 }
 double HESS_Chain::logPPi( arma::vec& pi_ )
 {
+    if ( gamma_type != Gamma_Type::hotspot && gamma_type != Gamma_Type::hierarchical )
+        throw Bad_Gamma_Type ( gamma_type );
+
     return logPPi( pi_ , a_pi , b_pi );
 }
 
 // GAMMA
+// this is the hotspot prior
 double HESS_Chain::logPGamma( const arma::umat& externalGamma , const arma::vec& o_ , const arma::vec& pi_ )
 {
+    if( gamma_type != Gamma_Type::hotspot )
+        throw Bad_Gamma_Type ( gamma_type );
+
     double logP = 0.;
     for(unsigned int j=0; j<nVSPredictors; ++j)
     {
@@ -500,15 +624,82 @@ double HESS_Chain::logPGamma( const arma::umat& externalGamma , const arma::vec&
     return logP;
 }
 
+// this is the simpler hierarchical prior
+double HESS_Chain::logPGamma( const arma::umat& externalGamma , const arma::vec& pi_ )
+{
+    if( gamma_type != Gamma_Type::hierarchical )
+        throw Bad_Gamma_Type ( gamma_type );
+
+    double logP = 0.;
+    for(unsigned int j=0; j<nVSPredictors; ++j)
+    {
+        logP += Distributions::logPDFBernoulli( externalGamma.row(j) , pi_(j) );
+        // logP += Distributions::logPDFBinomial( arma::sum( externalGamma.row(j) ) , nOutcomes , pi_(j) ); // do we care about the binomial coeff? I don't think so..
+    }
+    return logP;
+}
+
+// this is the MRF prior
+double HESS_Chain::logPGamma( const arma::umat& externalGamma , double d, double e, const MRFGObject& externalMRFG )
+{
+    if( gamma_type != Gamma_Type::mrf )
+        throw Bad_Gamma_Type ( gamma_type );
+
+    /****
+    * Here George's code
+    ****/
+}
+
+// these below are general interfaces
 double HESS_Chain::logPGamma( )
 {
-    logP_gamma = logPGamma( gamma , o , pi );
+    switch ( gamma_type )
+    {
+        case Gamma_Type::hotspot :
+            logP_gamma = logPGamma( gamma , o , pi );
+            break;
+    
+        case Gamma_Type::hierarchical :
+            logP_gamma = logPGamma( gamma , pi );
+            break;
+    
+        case Gamma_Type::mrf :
+        {
+            double d = -3. , e = 0.2;    
+            logP_gamma = logPGamma( gamma , d , e , mrfG );
+            break;
+        }
+        default:
+            throw Bad_Gamma_Type ( gamma_type );
+    }
     return logP_gamma;
 }
 
 double HESS_Chain::logPGamma( const arma::umat& externalGamma )
 {
-    return logPGamma( externalGamma , o , pi );
+    double logP {0} ;
+
+    switch ( gamma_type )
+    {
+        case Gamma_Type::hotspot :
+            logP = logPGamma( gamma , o , pi );
+            break;
+    
+        case Gamma_Type::hierarchical :
+            logP = logPGamma( gamma , pi );
+            break;
+    
+        case Gamma_Type::mrf :
+        {
+            double d = -3. , e = 0.2;    
+            logP = logPGamma( gamma , d , e , mrfG );
+            break;
+        }
+        default:
+            throw Bad_Gamma_Type ( gamma_type );
+    }
+
+    return logP;
 }
 
 // W
@@ -563,7 +754,7 @@ double HESS_Chain::logLikelihood( )
                 }
             
                 default:
-                    throw Bad_Beta_Type{};
+                    throw Bad_Beta_Type ( beta_type );
             }
         }
         else
@@ -583,7 +774,7 @@ double HESS_Chain::logLikelihood( )
                 }
             
                 default:
-                    throw Bad_Beta_Type{};
+                    throw Bad_Beta_Type ( beta_type );
             }
         }
 
@@ -642,7 +833,7 @@ double HESS_Chain::logLikelihood( const arma::umat&  externalGammaMask )
                 }
             
                 default:
-                    throw Bad_Beta_Type{};
+                    throw Bad_Beta_Type ( beta_type );
             }
         }
         else
@@ -662,7 +853,7 @@ double HESS_Chain::logLikelihood( const arma::umat&  externalGammaMask )
                 }
             
                 default:
-                    throw Bad_Beta_Type{};
+                    throw Bad_Beta_Type ( beta_type );
             }
         }
 
@@ -723,7 +914,7 @@ double HESS_Chain::logLikelihood( arma::umat& externalGammaMask , const arma::um
                 }
             
                 default:
-                    throw Bad_Beta_Type{};
+                    throw Bad_Beta_Type ( beta_type );
             }
         }
         else
@@ -743,7 +934,7 @@ double HESS_Chain::logLikelihood( arma::umat& externalGammaMask , const arma::um
                 }
             
                 default:
-                    throw Bad_Beta_Type{};
+                    throw Bad_Beta_Type ( beta_type );
             }
         }
 
@@ -801,7 +992,7 @@ double HESS_Chain::logLikelihood( const arma::umat& externalGammaMask , const do
                 }
             
                 default:
-                    throw Bad_Beta_Type{};
+                    throw Bad_Beta_Type ( beta_type );
             }
         }
         else
@@ -821,7 +1012,7 @@ double HESS_Chain::logLikelihood( const arma::umat& externalGammaMask , const do
                 }
             
                 default:
-                    throw Bad_Beta_Type{};
+                    throw Bad_Beta_Type ( beta_type );
             }
         }
 
@@ -1027,66 +1218,100 @@ void HESS_Chain::stepO()
 void HESS_Chain::stepOnePi()
 {
     unsigned int j = Distributions::randIntUniform(0,nVSPredictors-1);
-    arma::vec proposedPi = pi;
 
-    double proposedPiPrior, proposedGammaPrior, logAccProb;
-
-    proposedPi(j) = std::exp( std::log( pi(j) ) + Distributions::randNormal(0.0, var_pi_proposal) );
-
-    if( arma::all( ( o * proposedPi(j) ) <= 1 ) )
+    switch ( gamma_type )
     {
-        proposedPiPrior = logPPi( proposedPi );
-        proposedGammaPrior = logPGamma( gamma, o, proposedPi);
-
-        // A/R
-        logAccProb = (proposedPiPrior + proposedGammaPrior) - (logP_pi + logP_gamma);
-
-        if( Distributions::randLogU01() < logAccProb )
+        case Gamma_Type::hotspot :
         {
-            pi(j) = proposedPi(j);
-            logP_pi = proposedPiPrior;
-            logP_gamma = proposedGammaPrior;
+            arma::vec proposedPi = pi;
+            double proposedPiPrior, proposedGammaPrior, logAccProb;
 
-            ++pi_acc_count;
+            proposedPi(j) = std::exp( std::log( pi(j) ) + Distributions::randNormal(0.0, var_pi_proposal) );
+
+            if( arma::all( ( o * proposedPi(j) ) <= 1 ) )
+            {
+                proposedPiPrior = logPPi( proposedPi );
+                proposedGammaPrior = logPGamma( gamma, o, proposedPi);
+
+                // A/R
+                logAccProb = (proposedPiPrior + proposedGammaPrior) - (logP_pi + logP_gamma);
+
+                if( Distributions::randLogU01() < logAccProb )
+                {
+                    pi(j) = proposedPi(j);
+                    logP_pi = proposedPiPrior;
+                    logP_gamma = proposedGammaPrior;
+
+                    ++pi_acc_count;
+                }
+            }
+            break;
+        }    
+
+        case Gamma_Type::hierarchical : // in this case it's conjugate
+        {
+            unsigned int k = arma::sum( gamma.row(j) );
+            pi(j) = Distributions::randBeta( a_pi + k , b_pi + nOutcomes - k );
+            break;
         }
+        
+        default:
+            throw Bad_Gamma_Type ( gamma_type );
     }
 
 }
 
 void HESS_Chain::stepPi()
 {
-    arma::vec proposedPi = pi;
-
-    double proposedPiPrior, proposedGammaPrior, logAccProb;
-
-    for( unsigned int j=0; j < nVSPredictors ; ++j )
+    switch ( gamma_type )
     {
-        proposedPi(j) = std::exp( std::log( pi(j) ) + Distributions::randNormal(0.0, var_pi_proposal) );
-
-        if( arma::all( ( o * proposedPi(j) ) <= 1 ) )
-        {
-            proposedPiPrior = logPPi( proposedPi );
-            proposedGammaPrior = logPGamma( gamma, o, proposedPi);
-
-            // A/R
-            logAccProb = (proposedPiPrior + proposedGammaPrior) - (logP_pi + logP_gamma);
-
-            if( Distributions::randLogU01() < logAccProb )
+        case Gamma_Type::hotspot :
+        {    
+            arma::vec proposedPi = pi;
+            double proposedPiPrior, proposedGammaPrior, logAccProb;
+            for( unsigned int j=0; j < nVSPredictors ; ++j )
             {
-                pi(j) = proposedPi(j);
-                logP_pi = proposedPiPrior;
-                logP_gamma = proposedGammaPrior;
+                proposedPi(j) = std::exp( std::log( pi(j) ) + Distributions::randNormal(0.0, var_pi_proposal) );
 
-                pi_acc_count += pi_acc_count / (double)nVSPredictors;
-            }else
-                proposedPi(j) = pi(j);
-        }else
-            proposedPi(j) = pi(j);
+                if( arma::all( ( o * proposedPi(j) ) <= 1 ) )
+                {
+                    proposedPiPrior = logPPi( proposedPi );
+                    proposedGammaPrior = logPGamma( gamma, o, proposedPi);
+
+                    // A/R
+                    logAccProb = (proposedPiPrior + proposedGammaPrior) - (logP_pi + logP_gamma);
+
+                    if( Distributions::randLogU01() < logAccProb )
+                    {
+                        pi(j) = proposedPi(j);
+                        logP_pi = proposedPiPrior;
+                        logP_gamma = proposedGammaPrior;
+
+                        pi_acc_count += pi_acc_count / (double)nVSPredictors;
+                    }else
+                        proposedPi(j) = pi(j);
+                }else
+                    proposedPi(j) = pi(j);
+            }
+            break;
+        }
+
+        case Gamma_Type::hierarchical : // in this case it's conjugate
+        {
+            for( unsigned int j=0; j < nVSPredictors ; ++j )
+            {
+                unsigned int k = arma::sum( gamma.row(j) );
+                pi(j) = Distributions::randBeta( a_pi + k , b_pi + nOutcomes - k );
+            }
+            break;
+        }
+
+        default:
+            throw Bad_Gamma_Type ( gamma_type );
     }
+
 }
 
-// Gibbs sampler NOT available here
-// so MH sampler
 void HESS_Chain::stepW()
 {
     double proposedW = std::exp( std::log(w) + Distributions::randNormal(0.0, var_w_proposal) );
@@ -1115,25 +1340,24 @@ void HESS_Chain::stepGamma()
     double logProposalRatio = 0;
 
     // Update the proposed Gamma
-    if( gammaSamplerType == "B" || gammaSamplerType == "bandit" || gammaSamplerType == "Bandit" || gammaSamplerType == "b" )
+    switch ( gamma_sampler_type )
     {
-        logProposalRatio += gammaBanditProposal( proposedGamma , updateIdx , outcomeUpdateIdx );
-
-    }else if( gammaSamplerType == "MC3" || gammaSamplerType == "mc3" )
-    {
-        logProposalRatio += gammaMC3Proposal( proposedGamma , updateIdx , outcomeUpdateIdx );
-
-    }else{
-        logProposalRatio += gammaBanditProposal( proposedGamma , updateIdx , outcomeUpdateIdx ); // default
+        case Gamma_Sampler_Type::bandit :
+            logProposalRatio += gammaBanditProposal( proposedGamma , updateIdx , outcomeUpdateIdx );
+            break;
+    
+        case Gamma_Sampler_Type::mc3 :
+            logProposalRatio += gammaMC3Proposal( proposedGamma , updateIdx , outcomeUpdateIdx );
+            break;
+    
+        default:
+            break;
     }
-
 
     // given proposedGamma now, sample a new proposedBeta matrix and corresponging quantities
     arma::umat proposedGammaMask = createGammaMask( proposedGamma );
 
-    // now only one outcome is updated
-    // arma::uvec updatedOutcomesIdx = arma::unique( arma::floor( updateIdx / p )); // every p I get to the new column, and as columns correspond to outcomes ... 
-    
+    // note only one outcome is updated
     // update log probabilities
     double proposedGammaPrior = logPGamma( proposedGamma );
     double proposedLikelihood = logLikelihood( proposedGammaMask );
@@ -1155,7 +1379,7 @@ void HESS_Chain::stepGamma()
     }
 
     // after A/R, update bandit Related variables
-    if(!( gammaSamplerType == "MC3" || gammaSamplerType == "mc3" ))
+    if( gamma_sampler_type == Gamma_Sampler_Type::bandit )
     {
         for(arma::uvec::iterator iter = updateIdx.begin(); iter != updateIdx.end(); ++iter)
         {
@@ -1166,16 +1390,18 @@ void HESS_Chain::stepGamma()
                 banditBeta(*iter,outcomeUpdateIdx) += banditIncrement * (1-gamma(*iter,outcomeUpdateIdx));
             }
 
-            // // CONTINUOUS UPDATE
+            // // CONTINUOUS UPDATE, alternative to the above, at most one has to be uncommented
+
             // banditAlpha(*iter,outcomeUpdateIdx) += banditIncrement * gamma(*iter,outcomeUpdateIdx);
             // banditBeta(*iter,outcomeUpdateIdx) += banditIncrement * (1-gamma(*iter,outcomeUpdateIdx));
 
-            // // then renormalise them
+            // // renormalise
             // if( banditAlpha(*iter,outcomeUpdateIdx) + banditBeta(*iter) > banditLimit )
             // {
             //     banditAlpha(*iter,outcomeUpdateIdx) = banditLimit * ( banditAlpha(*iter,outcomeUpdateIdx) / ( banditAlpha(*iter,outcomeUpdateIdx) + banditBeta(*iter,outcomeUpdateIdx) ));
             //     banditBeta(*iter,outcomeUpdateIdx) = banditLimit * (1. - ( banditAlpha(*iter,outcomeUpdateIdx) / ( banditAlpha(*iter,outcomeUpdateIdx) + banditBeta(*iter,outcomeUpdateIdx) )) );
             // }
+
         }
     }
 }
@@ -1187,11 +1413,25 @@ void HESS_Chain::step()
     // Update HyperParameters
     stepW();
     
-    for( auto i=0; i<5; ++i){
-        stepOneO();
-        stepOnePi();
-    }
+   switch ( gamma_type )
+    {
+        case Gamma_Type::hotspot :
+            for( auto i=0; i<5; ++i)
+            {
+                stepOneO();
+                stepOnePi();
+            }
+            break;
+
+        case Gamma_Type::hierarchical :
+            for( auto i=0; i<5; ++i)
+                stepOnePi();
+            break;
     
+        default:
+            throw Bad_Gamma_Type ( gamma_type );
+    }
+
     // update gamma
     stepGamma();
 
@@ -1214,39 +1454,44 @@ void HESS_Chain::updateProposalVariances()
 
     if( internalIterationCounter == 1 ) // init the mean and second moment
     {
-        wEmpiricalMean = std::log(w);
         oEmpiricalMean = arma::log(o);
-        piEmpiricalMean = arma::log(pi);
-
-        wEmpiricalM2 = 0.;
         oEmpiricalM2 = arma::zeros<arma::vec>(nOutcomes);
-        piEmpiricalM2 = arma::zeros<arma::vec>(nVSPredictors);
-
-        var_w_proposal_init = var_w_proposal;
         var_o_proposal_init = var_o_proposal;
-        var_pi_proposal_init = var_pi_proposal;
+
+        if ( gamma_type == Gamma_Type::hotspot )
+        {
+            piEmpiricalMean = arma::log(pi);
+            piEmpiricalM2 = arma::zeros<arma::vec>(nVSPredictors);
+            var_pi_proposal_init = var_pi_proposal;
+        }
+
+        wEmpiricalMean = w;
+        wEmpiricalM2 = 0.;
+        var_w_proposal_init = var_w_proposal;
 
     }else if( internalIterationCounter > 1 ) 
     {
         // update running averages
-
-        // tau
-        delta = std::log(w) - wEmpiricalMean;
-        wEmpiricalMean = wEmpiricalMean + ( delta / internalIterationCounter );
-        delta2 = std::log(w) - wEmpiricalMean;
-        wEmpiricalM2 = wEmpiricalM2 + delta * delta2;
-
-        // o
+       // o
         deltaVec = arma::log(o) - oEmpiricalMean;
         oEmpiricalMean = oEmpiricalMean + ( deltaVec / internalIterationCounter );
         delta2Vec = arma::log(o) - oEmpiricalMean;
         oEmpiricalM2 = oEmpiricalM2 + deltaVec % delta2Vec ;
 
         // pi
-        deltaVec = arma::log(pi) - piEmpiricalMean;
-        piEmpiricalMean = piEmpiricalMean + ( deltaVec  / internalIterationCounter );
-        delta2Vec = arma::log(pi) - piEmpiricalMean;
-        piEmpiricalM2 = piEmpiricalM2 + deltaVec % delta2Vec ;
+        if ( gamma_type == Gamma_Type::hotspot )
+        {
+            deltaVec = arma::log(pi) - piEmpiricalMean;
+            piEmpiricalMean = piEmpiricalMean + ( deltaVec  / internalIterationCounter );
+            delta2Vec = arma::log(pi) - piEmpiricalMean;
+            piEmpiricalM2 = piEmpiricalM2 + deltaVec % delta2Vec ;
+        }
+
+        // w
+        delta = w - wEmpiricalMean;
+        wEmpiricalMean = wEmpiricalMean + ( delta / internalIterationCounter );
+        delta2 = w - wEmpiricalMean;
+        wEmpiricalM2 = wEmpiricalM2 + delta * delta2;
     }
 
     // Then if it's actually > n update the proposal variances
@@ -1255,10 +1500,10 @@ void HESS_Chain::updateProposalVariances()
     {
 
         // update proposal variances
-        var_w_proposal = adaptationFactor * var_w_proposal_init + (1. - adaptationFactor) * (2.38*2.38) * wEmpiricalM2/(internalIterationCounter-1);
         var_o_proposal = adaptationFactor * var_o_proposal_init + (1. - adaptationFactor) * (2.38*2.38) * arma::mean( oEmpiricalM2/(internalIterationCounter-1) );
-        var_pi_proposal = adaptationFactor * var_pi_proposal_init + (1. - adaptationFactor) * (2.38*2.38) * arma::mean( piEmpiricalM2/(internalIterationCounter-1) );
-
+        if ( gamma_type == Gamma_Type::hotspot )
+            var_pi_proposal = adaptationFactor * var_pi_proposal_init + (1. - adaptationFactor) * (2.38*2.38) * arma::mean( piEmpiricalM2/(internalIterationCounter-1) );
+        var_w_proposal = adaptationFactor * var_w_proposal_init + (1. - adaptationFactor) * (2.38*2.38) * wEmpiricalM2/(internalIterationCounter-1);
     }
 }
 

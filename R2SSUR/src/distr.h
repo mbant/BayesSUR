@@ -64,6 +64,8 @@ namespace Distributions{
 	double lBeta(double a,double b);
 	double logPDFBeta(double x, double a, double b);
 	double logPDFBernoulli(unsigned int x, double pi);
+	double logPDFBernoulli(const arma::uvec& x, double pi);
+	double logPDFBinomial(unsigned int k, unsigned int n, double pi);
 	double logPDFTruncNorm(double x, double m, double sd, double lower, double upper);
 	double logPDFGamma(double x, double a, double b);
 	double logPDFIGamma(double x, double a, double b);

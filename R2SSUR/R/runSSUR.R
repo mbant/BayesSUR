@@ -11,8 +11,11 @@
 #' @param nIter number of iterations for the MCMC procedure
 #' @param burnin number of iterations (or fraction of iterations) to discard at the start of the chain; Default = 0
 #' @param nChains number of parallel chains to run
+#' @param method a string indicating the model type, either "SUR" for sparse and dense Seemingly Unrelated Regressions, or "HESS" for hierarchical regression with independent outcomes.
+#' @param gammaPrior string indicating the gamma prior to use, either "hotspot" for the Hotspot prior of Bottolo (2011), "MRF" for the Markov Random Field prior or "hierarchical" for a simpler hierarchical prior
+#' @param gammaSampler string indicating the type of sampler for gamma, either "bandit" for the Thompson sampling inspired samper or "MC3" for the usual $MC^3$ sampler
 #' @param gammaInit gamma initialisation to either all-zeros ("0"), all ones ("1"), randomly ("R") or (default) MLE-informed ("MLE").
-#' @param method a string indicating the model type, either "SUR" for sparse and dense Seemingly Unrelated Regressions, or "HESS" for independent outcomes.
+#' @param mrfGFile path to the file containing the G matrix for the MRF prior on gamma (if necessary)
 #'
 #' @examples
 #' \donttest{
@@ -38,7 +41,10 @@
 #' 
 #' @export
 runSSUR = function(data, blockList, varType=NULL, structureGraph=NULL, outFilePath="", 
-                nIter=10, burnin=0, nChains=1, method="SUR", sparse = TRUE , gammaSampler="Bandit", gammaInit="MLE", usingGPrior=FALSE)
+                nIter=10, burnin=0, nChains=1, 
+                method="SUR", sparse = TRUE , 
+                gammaPrior="hotspot",gammaSampler="bandit", gammaInit="MLE", mrfGFile="",
+                betaPrior="independent")
 {
   
   dir.create("tmp/")
@@ -171,7 +177,8 @@ runSSUR = function(data, blockList, varType=NULL, structureGraph=NULL, outFilePa
   
   dir.create(outFilePath)
   
-  status = R2SSUR_internal(data, blockList, structureGraph, outFilePath, nIter, burnin, nChains, method, sparse, gammaSampler, gammaInit, usingGPrior)
+  status = R2SSUR_internal(data, blockList, structureGraph, outFilePath, nIter, burnin, nChains, 
+            method, sparse, gammaPrior, gammaSampler, gammaInit, mrfGFile, betaPrior)
 
   if(outFilePath != "tmp/")
     unlink("tmp",recursive = TRUE)

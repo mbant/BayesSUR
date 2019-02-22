@@ -35,6 +35,8 @@ struct Chain_Data
 	Beta_Type beta_type;
 	Gamma_Sampler_Type gamma_sampler_type;
 
+	MRFGObject mrfG;
+
 	// init for some variables
 	arma::mat betaInit;
 	arma::umat gammaInit;
@@ -51,6 +53,8 @@ int drive_HESS( Chain_Data& chainData );
 
 int drive( const std::string& dataFile, const std::string& blockFile, const std::string& structureGraphFile, const std::string& outFilePath,  
 			unsigned int nIter, unsigned int burnin, unsigned int nChains,
-			const std::string& method, const bool sparse, const std::string& gammaSampler, const std::string& gammaInit, bool usingGPrior );
+			const std::string& method, const bool sparse, 
+			const std::string& gammaPrior, const std::string& gammaSampler, const std::string& gammaInit, 
+			const std::string& betaPrior , const std::string& mrfGFile );
 
 #endif

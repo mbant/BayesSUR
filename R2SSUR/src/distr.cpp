@@ -7,7 +7,9 @@
 #include <limits>
 #include <vector>
 #include <random>
+
 #include <boost/math/special_functions/erf.hpp> // can I do this?
+#include <boost/math/special_functions/binomial.hpp>
 
 #ifdef _OPENMP
    #include <omp.h>
@@ -614,6 +616,22 @@ namespace Distributions{
 			return -std::numeric_limits<double>::infinity();
 		else
 			return x*log(pi) + (1-x)*log(1.-pi);
+	}
+
+	double logPDFBernoulli(const arma::uvec& x, double pi)
+	{
+		double n = (double)x.n_elem;
+		double k = arma::sum(x);
+
+		return k*log(pi) + (n-k)*log(1.-pi);
+	}
+
+	double logPDFBinomial(unsigned int k, unsigned int n, double pi)
+	{
+		if ( n < k )
+			return -std::numeric_limits<double>::infinity();
+		else
+			return log(boost::math::binomial_coefficient<double>(n, k) ) + k*log(pi) + (n-k)*log(1.-pi) ; // need double template https://www.boost.org/doc/libs/1_69_0/libs/math/doc/html/math_toolkit/factorials/sf_binomial.html
 	}
 
 	double CDFNormal(double x, double m, double sd)

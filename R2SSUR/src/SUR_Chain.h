@@ -11,6 +11,7 @@
 #include "junction_tree.h"
 
 #include "ESS_Atom.h"
+#include "Parameter_types.h"
 
 /************************************
  * SSUR class that works with the ESS_Sampler class
@@ -86,8 +87,8 @@ class SUR_Chain : public ESS_Atom<SUR_Chain>
         void setJTStartIteration( const unsigned int );
 
 
-        std::string getGammaSamplerType();
-        void setGammaSamplerType( std::string& );
+        Gamma_Sampler_Type getGammaSamplerType();
+        void setGammaSamplerType( Gamma_Sampler_Type );
 
         // Bandit-sampling related quantities
         unsigned int getNUpdatesBandit() const;
@@ -213,6 +214,10 @@ class SUR_Chain : public ESS_Atom<SUR_Chain>
         double getLogPPi() const;
         // no setter for this, dedicated setter below
 
+        // MRF
+        inline MRFGObject& getMRFG() { return mrfG; }
+        void setMRFG( MRFGObject& mrfG_ ) { mrfG = mrfG_; logPGamma(); }
+
         // GAMMA (bandit defined above)
         arma::umat& getGamma();
         void setGamma( arma::umat& );
@@ -287,7 +292,11 @@ class SUR_Chain : public ESS_Atom<SUR_Chain>
 
         void piInit();
         void piInit( arma::vec& );
+        void piInit( arma::vec& , double , double );
         void piInit( arma::vec& , double , double , double );
+
+        void mrfGInit();
+        void mrfGInit( MRFGObject& mrfG_ );
 
         void gammaInit();
         void gammaInit( arma::umat& );
@@ -344,6 +353,9 @@ class SUR_Chain : public ESS_Atom<SUR_Chain>
         double logPGamma( );
         double logPGamma( const arma::umat& );
         double logPGamma( const arma::umat& , const arma::vec& , const arma::vec& );
+        double logPGamma( const arma::umat& , const arma::vec& );
+        double logPGamma( const arma::umat& , double , double , const MRFGObject& );
+
 
         // W
         double logPW( );
@@ -515,7 +527,6 @@ class SUR_Chain : public ESS_Atom<SUR_Chain>
         // MCMC related tuning parameters
         double temperature;
         unsigned int internalIterationCounter;
-        std::string gammaSamplerType;
 
         // empirical mean/variances to adapt the proposal distribution
         double tauEmpiricalMean, wEmpiricalMean;
@@ -585,6 +596,9 @@ class SUR_Chain : public ESS_Atom<SUR_Chain>
         double logP_pi;
 
         unsigned int jtStartIteration;
+
+        // MRF PRIOR
+        MRFGObject mrfG;
 
         // GAMMA - variable selection binary indexes
         // gamma_jk ~ Bernulli( omega_jk ), with omega_jk = v_k * u_j

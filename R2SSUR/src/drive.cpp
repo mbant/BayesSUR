@@ -25,6 +25,15 @@ int drive_SUR( Chain_Data& chainData )
 
 	// *****************************
 
+	// extra step needed for MRF prior
+	if ( chainData.gamma_type == Gamma_Type::mrf )
+	{
+		for( unsigned int i=0; i< chainData.nChains; ++i)
+			sampler[i]->mrfGInit( chainData.mrfG );
+	}
+
+	// *****************************
+
 	sampler[0] -> gammaInit( chainData.gammaInit );
 	sampler[0] -> betaInit( chainData.betaInit );
     sampler[0] -> updateQuantities();
@@ -270,6 +279,15 @@ int drive_HESS( Chain_Data& chainData )
 
 	// *****************************
 	
+	// extra step needed for MRF prior
+	if ( chainData.gamma_type == Gamma_Type::mrf )
+	{
+		for( unsigned int i=0; i< chainData.nChains; ++i)
+			sampler[i]->mrfGInit( chainData.mrfG );
+	}
+
+	// *****************************
+
 	sampler[0] -> gammaInit( chainData.gammaInit ); // this updates gammaMask as well
 	sampler[0] -> logLikelihood();
 
@@ -450,7 +468,9 @@ int drive_HESS( Chain_Data& chainData )
 
 int drive( const std::string& dataFile, const std::string& blockFile, const std::string& structureGraphFile, const std::string& outFilePath,  
 			unsigned int nIter, unsigned int burnin, unsigned int nChains,
-			const std::string& method, const bool sparse, const std::string& gammaSampler, const std::string& gammaInit, bool usingGPrior )
+			const std::string& method, const bool sparse, 
+			const std::string& gammaPrior, const std::string& gammaSampler, const std::string& gammaInit, 
+			const std::string& betaPrior , const std::string& mrfGFile )
 {
 
 	cout << "R2SSUR -- Bayesian Sparse Seemingly Unrelated Regression Modelling" << endl;
@@ -475,30 +495,80 @@ int drive( const std::string& dataFile, const std::string& blockFile, const std:
 
 	chainData.outFilePath = outFilePath;
 
-	if ( gammaSampler == "Bandit" )
+
+	// ****************************************************
+	// ***  DEFINE CHAIN / PARAMETER TYPES
+	// ****************************************************
+
+	// Gamma Prior
+	// ****************************************************
+	if ( gammaPrior == "hotspot" )
+		chainData.gamma_type = Gamma_Type::hotspot ;
+	else if ( gammaPrior == "hierarchical" )
+		chainData.gamma_type = Gamma_Type::hierarchical ;
+	else if ( gammaPrior == "MRF" )
+	{
+		chainData.gamma_type = Gamma_Type::mrf ;
+
+		// ****
+		// * George's code here
+		// * read from mrfGFile, return error if not read well
+		// ****
+
+		// chainData.mrfG = THE OBJECT YOU JUST READ and want to pass on to the samplers
+
+	}
+	else
+	{
+		std::cerr << "ERROR: Wrong type of Gamma prior given";
+		return 1;
+	}
+
+
+
+	// Gamma Sampler
+	// ****************************************************
+	if ( gammaSampler == "bandit" )
 		chainData.gamma_sampler_type = Gamma_Sampler_Type::bandit ;
 	else if ( gammaSampler == "MC3" )
 		chainData.gamma_sampler_type = Gamma_Sampler_Type::mc3 ;
 	else
-		throw Bad_Gamma_Sampler_Type{};
+	{
+		std::cerr << "ERROR: Wrong type of Gamma Sampler given";
+		return 1;
+	}
 
-	if ( usingGPrior )
-		chainData.beta_type = Beta_Type::gprior ;
-	else 
-		chainData.beta_type = Beta_Type::independent ;
-
+	// Beta Prior
 	// *****************************************************
+	if ( betaPrior == "g-prior" )
+		chainData.beta_type = Beta_Type::gprior ;
+	else if ( betaPrior == "independent" )
+		chainData.beta_type = Beta_Type::independent ;
+	else
+	{
+		std::cerr << "ERROR: Wrong type of Beta prior given";
+		return 1;
+	}
+
+	// need this untill g-prior code is not finalised
 	if( chainData.beta_type == Beta_Type::gprior )
 	{
 		std::cerr << "ERROR: GPrior not implemented yet";
 		return 1;
 	}
+
+	// Covariance type for SUR method
 	// *****************************************************
 
 	if ( method == "SUR" && sparse == true )
 		chainData.covariance_type = Covariance_Type::sparse;
 	else
 		chainData.covariance_type = Covariance_Type::dense;
+
+
+	// ***********************************
+	// ***********************************
+
 
 	// read Data and format into usables
 	cout << "Reading input ... ";
