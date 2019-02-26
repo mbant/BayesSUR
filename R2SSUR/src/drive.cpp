@@ -345,6 +345,7 @@ int drive_HESS( Chain_Data& chainData )
 	{
 		for( unsigned int i=0; i< chainData.nChains; ++i)
 			sampler[i]->mrfGInit( chainData.mrfG );
+			sampler[i]->logPGamma();
 	}
 
 	// *****************************
