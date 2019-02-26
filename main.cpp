@@ -22,7 +22,7 @@ int main(int argc, char *  argv[])
 	std::string outFilePath = "";
 
 	std::string method = "SUR";
-	bool sparse = false;
+	bool sparse = true;
 
 	std::string gammaPrior = "hotspot";
 	std::string gammaSampler = "bandit";
@@ -45,6 +45,12 @@ int main(int argc, char *  argv[])
 			    return(1);
 			}
 
+			if (na+1==argc) break; // in case it's last, break
+			++na; // otherwise augment counter
+		}
+		else if ( 0 == std::string{argv[na]}.compare(std::string{"--dense"}) )
+		{
+			sparse = false;
 			if (na+1==argc) break; // in case it's last, break
 			++na; // otherwise augment counter
 		}
