@@ -1436,7 +1436,6 @@ void HESS_Chain::step()
         
         case Gamma_Type::mrf :
             break; // nothing to do for this one yet
-        
     
         default:
             throw Bad_Gamma_Type ( gamma_type );
