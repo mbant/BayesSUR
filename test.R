@@ -11,9 +11,11 @@ install.packages("R2SSUR_0.1.3.tar.gz",repos = NULL,type = "source")
 ## Test the installation
 data(example_data, package = "R2SSUR")
 
+mrfGFile = as.matrix( read.table("mrf.txt") )
+
 R2SSUR::runSSUR(example_data[["data"]],outFilePath = "results/",
                 blockList = example_data[["blockList"]], structureGraph = example_data[["structureGraph"]],
-                nIter = 100, nChains = 2, method = "SUR", sparse = TRUE )
+                nIter = 100, nChains = 2, method = "SUR", sparse = TRUE , mrfG = mrfGFile )
 
 ## check output
 greyscale = grey((1000:0)/1000)

@@ -3288,7 +3288,7 @@ void SUR_Chain::swapAll( std::shared_ptr<SUR_Chain>& thatChain )
 int SUR_Chain::globalStep( std::shared_ptr<SUR_Chain>& that )
 {
 
-    unsigned int globalType;
+    unsigned int globalType {6};  // the default skips the global step
     switch ( covariance_type )
     {
         case Covariance_Type::sparse :

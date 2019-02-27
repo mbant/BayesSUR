@@ -183,7 +183,7 @@ runSSUR = function(data, blockList, varType=NULL, structureGraph=NULL, outFilePa
     {
       mrfG=""
     }else{
-      write.table(mrfG,"tmp/mrfG,txt", row.names = FALSE, col.names = FALSE)
+      write.table(mrfG,"tmp/mrfG.txt", row.names = FALSE, col.names = FALSE)
       mrfG = "tmp/mrfG.txt"
     }    
   }
