@@ -6,8 +6,8 @@
 \usage{
 runSSUR(data, blockList, varType = NULL, structureGraph = NULL,
   outFilePath = "", nIter = 10, burnin = 0, nChains = 1,
-  method = "SUR", sparse = TRUE, gammaPrior = "hotspot",
-  gammaSampler = "bandit", gammaInit = "MLE", mrfGFile = "",
+  method = "SUR", sparse = TRUE, gammaPrior = "",
+  gammaSampler = "bandit", gammaInit = "MLE", mrfG = NULL,
   betaPrior = "independent")
 }
 \arguments{
@@ -35,7 +35,7 @@ runSSUR(data, blockList, varType = NULL, structureGraph = NULL,
 
 \item{gammaInit}{gamma initialisation to either all-zeros ("0"), all ones ("1"), randomly ("R") or (default) MLE-informed ("MLE").}
 
-\item{mrfGFile}{path to the file containing the G matrix for the MRF prior on gamma (if necessary)}
+\item{mrfG}{either a matrix or a path to the file containing the G matrix for the MRF prior on gamma (if necessary)}
 }
 \description{
 Run a SUR Bayesian sampler

@@ -156,8 +156,8 @@ class HESS_Chain : public ESS_Atom<HESS_Chain>
         // no setter for this, dedicated setter below
 
         // MRF
-        inline MRFGObject& getMRFG() { return mrfG; }
-        void setMRFG( MRFGObject& mrfG_ ) { mrfG = mrfG_; logPGamma(); }
+        inline arma::mat& getMRFG() { return mrfG; }
+        void setMRFG( arma::mat& mrfG_ ) { mrfG = mrfG_; logPGamma(); }
 
         // GAMMA (bandit defined above)
         arma::umat& getGamma();
@@ -219,7 +219,7 @@ class HESS_Chain : public ESS_Atom<HESS_Chain>
         void piInit( arma::vec& , double , double , double );
 
         void mrfGInit();
-        void mrfGInit( MRFGObject& mrfG_ );
+        void mrfGInit( arma::mat& mrfG_ );
 
         void gammaInit();
         void gammaInit( arma::umat& );
@@ -254,7 +254,7 @@ class HESS_Chain : public ESS_Atom<HESS_Chain>
         double logPGamma( const arma::umat& );
         double logPGamma( const arma::umat& , const arma::vec& , const arma::vec& );
         double logPGamma( const arma::umat& , const arma::vec& );
-        double logPGamma( const arma::umat& , double , double , const MRFGObject& );
+        double logPGamma( const arma::umat& , double , double , const arma::mat& );
 
         // W
         double logPW( );
@@ -406,7 +406,7 @@ class HESS_Chain : public ESS_Atom<HESS_Chain>
         double logP_pi;
 
         // MRF PRIOR
-        MRFGObject mrfG;
+        arma::mat mrfG;
 
         // GAMMA - variable selection binary indexes
         // gamma_jk ~ Bernulli( omega_jk ), with omega_jk = o_k * pi_j

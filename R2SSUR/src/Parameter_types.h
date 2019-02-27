@@ -7,11 +7,6 @@
  * Parameter types, to be used in all derived classes 
  * ****************************************************/
 
-// Temporary, just to allow compiling - to be removed as soon as the MRF implementation is finished
-/*struct MRFGObject {
-    int i {0};
-};*/ // * George's code here, or just delete if you use an arma:: object
-
 enum class Covariance_Type {
     sparse=1, dense
 };

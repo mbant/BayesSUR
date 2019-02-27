@@ -15,7 +15,7 @@
 #' @param gammaPrior string indicating the gamma prior to use, either "hotspot" for the Hotspot prior of Bottolo (2011), "MRF" for the Markov Random Field prior or "hierarchical" for a simpler hierarchical prior
 #' @param gammaSampler string indicating the type of sampler for gamma, either "bandit" for the Thompson sampling inspired samper or "MC3" for the usual $MC^3$ sampler
 #' @param gammaInit gamma initialisation to either all-zeros ("0"), all ones ("1"), randomly ("R") or (default) MLE-informed ("MLE").
-#' @param mrfGFile path to the file containing the G matrix for the MRF prior on gamma (if necessary)
+#' @param mrfG either a matrix or a path to the file containing the G matrix for the MRF prior on gamma (if necessary)
 #'
 #' @examples
 #' \donttest{
@@ -43,7 +43,7 @@
 runSSUR = function(data, blockList, varType=NULL, structureGraph=NULL, outFilePath="", 
                 nIter=10, burnin=0, nChains=1, 
                 method="SUR", sparse = TRUE, 
-                gammaPrior="hotspot",gammaSampler="bandit", gammaInit="MLE", mrfGFile="",
+                gammaPrior="",gammaSampler="bandit", gammaInit="MLE", mrfG=NULL,
                 betaPrior="independent")
 {
   
@@ -174,11 +174,40 @@ runSSUR = function(data, blockList, varType=NULL, structureGraph=NULL, outFilePa
   }else{ if ( burnin < 1 ){ # given as a fraction
     burnin = ceiling(nIter * burnin) # the zero case is taken into account here as well
   }}} # else assume is given as an absolute number
+
+  
+  # mrfG
+  if( !(is.character(mrfG) & length(mrfG) == 1) )
+  {
+    if( is.null(mrfG) )
+    {
+      mrfG=""
+    }else{
+      write.table(mrfG,"tmp/mrfG,txt", row.names = FALSE, col.names = FALSE)
+      mrfG = "tmp/mrfG.txt"
+    }    
+  }
+
+  if( gammaPrior == "" )
+	{
+		if ( is.null(mrfG) )
+		{
+			cat( "Using default prior for Gamma - hotspot prior\n");
+			mrfG=""
+			gammaPrior = "hotspot";
+		}
+		else
+		{
+			cat( "No value for gammaPrior was specified, but mrfG was given - choosing MRF prior\n");
+			gammaPrior = "MRF";
+		}
+		
+	}
   
   dir.create(outFilePath)
   
   status = R2SSUR_internal(data, blockList, structureGraph, outFilePath, nIter, burnin, nChains, 
-            method, sparse, gammaPrior, gammaSampler, gammaInit, mrfGFile, betaPrior)
+            method, sparse, gammaPrior, gammaSampler, gammaInit, mrfG, betaPrior)
 
   if(outFilePath != "tmp/")
     unlink("tmp",recursive = TRUE)

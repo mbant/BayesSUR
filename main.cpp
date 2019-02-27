@@ -24,10 +24,10 @@ int main(int argc, char *  argv[])
 	std::string method = "SUR";
 	bool sparse = true;
 
-	std::string gammaPrior = "hotspot";
+	std::string gammaPrior = "";
+	std::string mrfGFile = "";
 	std::string gammaSampler = "bandit";
 	std::string gammaInit = "MLE";
-	std::string mrfGFile = "";
 
 	std::string betaPrior = "independent";
 
@@ -45,6 +45,12 @@ int main(int argc, char *  argv[])
 			    return(1);
 			}
 
+			if (na+1==argc) break; // in case it's last, break
+			++na; // otherwise augment counter
+		}
+		else if ( 0 == std::string{argv[na]}.compare(std::string{"--mrfGFile"}) )
+		{
+			mrfGFile = ""+std::string(argv[++na]); // use the next
 			if (na+1==argc) break; // in case it's last, break
 			++na; // otherwise augment counter
 		}
@@ -99,7 +105,7 @@ int main(int argc, char *  argv[])
 		}
 		else if ( 0 == std::string{argv[na]}.compare(std::string{"--gammaInit"}) )
 		{
-			gammaSampler = std::string(argv[++na]); // use the next
+			gammaInit = std::string(argv[++na]); // use the next
 
 			if( gammaInit != "R" && gammaInit != "0" && gammaInit != "1" && gammaInit != "MLE")
 			{
@@ -175,6 +181,21 @@ int main(int argc, char *  argv[])
 			return(1);
     	}
     }//end reading from command line
+
+	if( gammaPrior == "" )
+	{
+		if ( mrfGFile == "" )
+		{
+			std::cout << "Using default prior for Gamma - hotspot prior" << std::endl;
+			gammaPrior = "hotspot";
+		}
+		else
+		{
+			std::cout << "No value for gammaPrior was specified, but mrfG was given - choosing MRF prior" << std::endl;
+			gammaPrior = "MRF";
+		}
+		
+	}
 
 	int status{1};
 	

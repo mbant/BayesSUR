@@ -165,7 +165,6 @@ int drive_SUR( Chain_Data& chainData )
 
 	for(unsigned int i=1; i < chainData.nIter ; ++i)
 	{
-		
 		sampler.step();
 		
 		// #################### END LOCAL MOVES
@@ -345,10 +344,10 @@ int drive_HESS( Chain_Data& chainData )
 	if ( chainData.gamma_type == Gamma_Type::mrf )
 	{
 		for( unsigned int i=0; i< chainData.nChains; ++i)
-                {
-                        sampler[i]->mrfGInit( chainData.mrfG );
-                        sampler[i]->logPGamma();
-                }
+		{
+			sampler[i]->mrfGInit( chainData.mrfG );
+			sampler[i]->logPGamma();
+		}
 	}
 
 	// *****************************
@@ -618,21 +617,16 @@ int drive( const std::string& dataFile, const std::string& blockFile, const std:
 	{
 		chainData.gamma_type = Gamma_Type::mrf ;
 
-		// ****
-		// * George's code here
-		// * read from mrfGFile, return error if not read well
-		// ****
-        arma::mat mrfG;
-        if( Utils::readGmrf(mrfGFile, mrfG) ){
-            std::cout << "Reading successfull!" << std::endl;
-        }else{
-            std::cout << "OUCH! EXITING --- " << std::endl;
-            return 1;
-        }
-
-		// chainData.mrfG = THE OBJECT YOU JUST READ and want to pass on to the samplers
-        chainData.mrfG = mrfG;
-
+		try
+		{
+			if ( mrfGFile != "" )
+	        	Utils::readGmrf(mrfGFile, chainData.mrfG);
+		}
+		catch(const std::exception& e)
+		{
+			std::cerr << e.what() << '\n';
+			return 1;
+		}	
 	}
 	else
 	{
@@ -689,7 +683,15 @@ int drive( const std::string& dataFile, const std::string& blockFile, const std:
 	// read Data and format into usables
 	cout << "Reading input ... ";
 
-	Utils::formatData(dataFile, blockFile, structureGraphFile, chainData.surData );
+	try
+	{
+		Utils::formatData(dataFile, blockFile, structureGraphFile, chainData.surData );
+	}
+	catch(const std::exception& e)
+	{
+		std::cerr << e.what() << '\n';
+		return 1;
+	}	
 
 	cout << " successfull!" << endl;
 

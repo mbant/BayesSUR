@@ -19,7 +19,8 @@
 int R2SSUR_internal(const std::string& dataFile, const std::string& blockFile, const std::string& structureGraphFile, const std::string& outFilePath,  
                     unsigned int nIter=10, unsigned int burnin=0, unsigned int nChains=1,
                     const std::string& method="SUR", bool sparse = true , 
-                    const std::string& gammaPrior="hotspot", const std::string& gammaSampler="bandit", const std::string& gammaInit = "MLE", const std::string& mrfGFile="",
+                    const std::string& gammaPrior="hotspot", const std::string& gammaSampler="bandit", 
+                    const std::string& gammaInit = "MLE", const std::string& mrfGFile="",
                     const std::string& betaPrior="independent" )
 {
   int status {1};

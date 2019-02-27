@@ -707,21 +707,17 @@ void SUR_Chain::mrfGInit()
     if( gamma_type != Gamma_Type::mrf )
         throw Bad_Gamma_Type ( gamma_type );
 
-    /****
-    * Here George's code
-    ****/
-    arma::mat init = arma::zeros<arma::mat>(2,2);
+    mrfG = arma::zeros<arma::mat>(0,2);
+
 }
 void SUR_Chain::mrfGInit( arma::mat& mrfG_ )
 {
     if( gamma_type != Gamma_Type::mrf )
         throw Bad_Gamma_Type ( gamma_type );
 
-    /****
-    * Here George's code
-    ****/
-    mrfG = mrfG_ ;
+    mrfG = mrfG_;
 }
+
 
 void SUR_Chain::gammaInit( arma::umat& gamma_init )
 {
@@ -1021,7 +1017,6 @@ double SUR_Chain::logPGamma( const arma::umat& externalGamma , const arma::vec& 
 {
     if( gamma_type != Gamma_Type::hierarchical )
         throw Bad_Gamma_Type ( gamma_type );
-
     double logP = 0.;
     for(unsigned int j=0; j<nVSPredictors; ++j)
     {
@@ -1037,18 +1032,14 @@ double SUR_Chain::logPGamma( const arma::umat& externalGamma , double d, double 
     if( gamma_type != Gamma_Type::mrf )
         throw Bad_Gamma_Type ( gamma_type );
 
-    /****
-    * Here George's code
-    ****/
     double logP = 0.;
     // calculate the quadratic form in MRF by using all edges of G
     arma::vec gammaVec = arma::conv_to< arma::vec >::from(arma::vectorise(externalGamma));
     double quad_mrf = 0;
     for( unsigned i=0; i < (externalMRFG).n_rows; ++i )
     {
-        quad_mrf += gammaVec( (externalMRFG)(i,0)-1 ) * gammaVec( (externalMRFG)(i,1)-1 );
+        quad_mrf += gammaVec( (externalMRFG)(i,0) ) * gammaVec( (externalMRFG)(i,1) );
     }
-    std::cout << "\n SUR_Chain::logPGamma: " << mrfG.submat(0,0,1,1) << std::endl;
     logP = arma::as_scalar( d * arma::accu( externalGamma ) + e * 2.0 * quad_mrf );
     
     return logP;
@@ -1064,6 +1055,7 @@ double SUR_Chain::logPGamma( )
             break;
     
         case Gamma_Type::hierarchical :
+
             logP_gamma = logPGamma( gamma , pi );
             break;
     
@@ -2587,7 +2579,6 @@ void SUR_Chain::stepSigmaRhoAndBeta()
 // this updates all the internal states
 void SUR_Chain::step()
 {
-
     // Update HyperParameters
     stepTau();
     stepW();
@@ -2606,6 +2597,9 @@ void SUR_Chain::step()
             for( auto i=0; i<5; ++i)
                 stepOnePi();
             break;
+        
+        case Gamma_Type::mrf :
+            break; // nothing to do for this one yet
     
         default:
             throw Bad_Gamma_Type ( gamma_type );
@@ -3270,8 +3264,16 @@ void SUR_Chain::swapAll( std::shared_ptr<SUR_Chain>& thatChain )
 
     this->swapSigmaRho( thatChain );
 
-    this->swapO( thatChain );
-    this->swapPi( thatChain );
+    if ( gamma_type == Gamma_Type::hotspot )
+    {
+        this->swapO( thatChain );
+        this->swapPi( thatChain );
+    }
+    else if ( gamma_type == Gamma_Type::hierarchical )
+    {
+        this->swapPi( thatChain );
+    }
+
     this->swapGamma( thatChain );
 
     this->swapW( thatChain );

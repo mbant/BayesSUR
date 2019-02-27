@@ -76,7 +76,7 @@ namespace Utils{
 
 	bool readData(const std::string& dataFileName, std::shared_ptr<arma::mat> data);
     
-        bool readGmrf(const std::string& mrfGFileName, arma::mat& mrfG);
+	bool readGmrf(const std::string& mrfGFileName, arma::mat& mrfG);
 
 	bool readGraph(const std::string& graphFileName, arma::umat& graph);
 

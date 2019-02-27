@@ -35,7 +35,7 @@ struct Chain_Data
 	Beta_Type beta_type;
 	Gamma_Sampler_Type gamma_sampler_type;
 
-	MRFGObject mrfG;
+	arma::mat mrfG;
 
 	// init for some variables
 	arma::mat betaInit;
