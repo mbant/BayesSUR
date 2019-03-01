@@ -59,8 +59,8 @@ fit = R2SSUR::runSSUR(example_data[["data"]],outFilePath = "results/",
 greyscale = grey((1000:0)/1000)
 data(example_ground_truth, package = "R2SSUR")
 
-est_gamma = as.matrix( read.table("results/data_SSUR_gamma_out.txt") )
-est_G = as.matrix( read.table("results/data_SSUR_G_out.txt") )
+est_gamma = as.matrix( read.table(fit$output$gamma) )
+est_G = as.matrix( read.table(fit$output$G) )
 s = ncol(est_G)
 
 par(mfrow=c(2,2))
