@@ -12,25 +12,27 @@
 #' @param burnin number of iterations (or fraction of iterations) to discard at the start of the chain; Default = 0
 #' @param nChains number of parallel chains to run
 #' @param method a string indicating the model type, either "SUR" for sparse and dense Seemingly Unrelated Regressions, or "HESS" for hierarchical regression with independent outcomes.
+#' @param sparse,dense bool indicating wether the SUR model should have sparse or dense covariance ( not defined for HESS )
 #' @param gammaPrior string indicating the gamma prior to use, either "hotspot" for the Hotspot prior of Bottolo (2011), "MRF" for the Markov Random Field prior or "hierarchical" for a simpler hierarchical prior
 #' @param gammaSampler string indicating the type of sampler for gamma, either "bandit" for the Thompson sampling inspired samper or "MC3" for the usual $MC^3$ sampler
 #' @param gammaInit gamma initialisation to either all-zeros ("0"), all ones ("1"), randomly ("R") or (default) MLE-informed ("MLE").
 #' @param mrfG either a matrix or a path to the file containing the G matrix for the MRF prior on gamma (if necessary)
+#' @param tmpFilder the path to a temporary folder where intermediate data files are stored (will be erased at the end of the chain); default to local tmpFolder
 #'
 #' @examples
 #' \donttest{
 #' data(example_data, package = "R2SSUR")
 #' 
-#' R2SSUR::runSSUR(example_data[["data"]],outFilePath = "results/",
-#'                 blockList = example_data[["blockList"]], structureGraph = example_data[["structureGraph"]],
-#'                 nIter = 20000,nChains = 2, method = "SUR" , sparse = TRUE )
+#' fit = R2SSUR::runSSUR(example_data[["data"]],outFilePath = "results/",
+#'                       blockList = example_data[["blockList"]], structureGraph = example_data[["structureGraph"]],
+#'                       nIter = 100, nChains = 2, method = "SUR", gammaPrior = "hotspot" )
 #' 
 #' ## check output
 #' greyscale = grey((1000:0)/1000)
 #' data(example_ground_truth, package = "R2SSUR")
 #' 
-#' est_gamma = as.matrix( read.table("results/data_SSUR_gamma_out.txt") )
-#' est_G = as.matrix( read.table("results/data_SSUR_G_out.txt") )
+#' est_gamma = as.matrix( read.table(fit$output$gamma) )
+#' est_G = as.matrix( read.table(fit$output$G) )
 #' s = ncol(est_G)
 #' 
 #' par(mfrow=c(2,2))
@@ -42,12 +44,20 @@
 #' @export
 runSSUR = function(data, blockList, varType=NULL, structureGraph=NULL, outFilePath="", 
                 nIter=10, burnin=0, nChains=1, 
-                method="SUR", sparse = TRUE, 
+                method="SUR", sparse = NULL, dense=NULL,
                 gammaPrior="",gammaSampler="bandit", gammaInit="MLE", mrfG=NULL,
-                betaPrior="independent")
+                betaPrior="independent",
+                tmpFolder="tmp/")
 {
   
-  dir.create("tmp/")
+  if ( !( method %in% c("HESS","SUR") ) )
+    stop("Method needs tobe either HESS or SUR")
+  methodString = method
+  if( methodString == "SUR" )
+    methodString = paste( ifelse(sparse,"S","d") , methodString , sep="")
+  
+  if( ! dir.exists(tmpFolder) )
+    dir.create(tmpFolder)
   
   # is the data given as matrix?
   if( ! (is.character(data) & length(data) == 1) )
@@ -56,8 +66,8 @@ runSSUR = function(data, blockList, varType=NULL, structureGraph=NULL, outFilePa
       stop("Please provide either the path to a plain-text (.txt) file or a matrix for 'data'")
     
     ## If it's valid matrix, simply write it and re-assign the variable data to hold its path
-    write.table(data,"tmp/data.txt", row.names = FALSE, col.names = FALSE)
-    data = "tmp/data.txt"
+    write.table(data,paste(sep="",tmpFolder,"data.txt"), row.names = FALSE, col.names = FALSE)
+    data = paste(sep="",tmpFolder,"data.txt")
   }
   
   # cleanup file PATHS
@@ -74,6 +84,8 @@ runSSUR = function(data, blockList, varType=NULL, structureGraph=NULL, outFilePa
     if( substr(outFilePath,outFilePathLength,outFilePathLength) != "/" )
       paste( outFilePath , "/" , sep="" )
   }
+  
+  dataString = head( strsplit( tail( strsplit(data,split = c("/"))[[1]] , 1 ) , ".txt" )[[1]] , 1 ) # magic stripping / and .txt from the data file name
   
   # blockList
   if( ! (is.character(blockList) & length(blockList) == 1) )
@@ -104,8 +116,8 @@ runSSUR = function(data, blockList, varType=NULL, structureGraph=NULL, outFilePa
     }
     
     blockListLength = length(blockList)
-    write.table(blockLabels,"tmp/blockLabels.txt", row.names = FALSE, col.names = FALSE)
-    blockList = "tmp/blockLabels.txt"
+    write.table(blockLabels,paste(sep="",tmpFolder,"blockLabels.txt"), row.names = FALSE, col.names = FALSE)
+    blockList = paste(sep="",tmpFolder,"blockLabels.txt")
     
   }else{ # else assume it's already a valid path, should we do checks on this as well?
   
@@ -132,7 +144,8 @@ runSSUR = function(data, blockList, varType=NULL, structureGraph=NULL, outFilePa
 #       }# else is fine
 #     }
 #   }
-#   write.table(varType,"tmp/varType.txt", row.names = FALSE, col.names = FALSE)
+#   write.table(varType,paste(sep="",tmpFolder,"varType.txt"), row.names = FALSE, col.names = FALSE)
+#   varType = paste(sep="",tmpFolder,"varType.txt") 
 ###### END ######### ZOMBIE CODE! WILL NEED AD SOME POINT WHEN WE INTRODUCE IMPUTATION
   
   ## structure graph
@@ -161,8 +174,8 @@ runSSUR = function(data, blockList, varType=NULL, structureGraph=NULL, outFilePa
       stop("The graph structure must have the same number of blocks as blockList")
     
     ## else is fine       
-    write.table(structureGraph,"tmp/structureGraph.txt", row.names = FALSE, col.names = FALSE)
-    structureGraph = "tmp/structureGraph.txt"
+    write.table(structureGraph, paste(sep="",tmpFolder,"structureGraph.txt"), row.names = FALSE, col.names = FALSE)
+    structureGraph = paste(sep="",tmpFolder,"structureGraph.txt")
   
   }# else assume it's already a valid path, should we do checks on this as well?
 
@@ -176,6 +189,25 @@ runSSUR = function(data, blockList, varType=NULL, structureGraph=NULL, outFilePa
   }}} # else assume is given as an absolute number
 
   
+  if( is.null(dense) )
+  {
+    
+    if( is.null(sparse))
+      sparse = TRUE ## default
+
+    dense = !sparse
+    
+  }else{
+    
+      if ( is.null(sparse) )
+        sparse = !dense
+      
+      if( dense == sparse )
+      {
+        stop("Only sparse or only dense can be set to ",dense)
+      }
+  }
+  
   # mrfG
   if( !(is.character(mrfG) & length(mrfG) == 1) )
   {
@@ -183,8 +215,8 @@ runSSUR = function(data, blockList, varType=NULL, structureGraph=NULL, outFilePa
     {
       mrfG=""
     }else{
-      write.table(mrfG,"tmp/mrfG.txt", row.names = FALSE, col.names = FALSE)
-      mrfG = "tmp/mrfG.txt"
+      write.table(mrfG,paste(sep="",tmpFolder,"mrfG.txt"), row.names = FALSE, col.names = FALSE)
+      mrfG =  paste(sep="",tmpFolder,"mrfG.txt")
     }    
   }
 
@@ -204,13 +236,38 @@ runSSUR = function(data, blockList, varType=NULL, structureGraph=NULL, outFilePa
 		
 	}
   
+  ## Create the directory for the results
   dir.create(outFilePath)
   
-  status = R2SSUR_internal(data, blockList, structureGraph, outFilePath, nIter, burnin, nChains, 
+  ## Create the return object
+  ret = list( status=1, output = list() )
+  class(ret) = "R2SSUR"
+  
+  ret$output["logP"] = paste(sep="", outFilePath , dataString , "_",  methodString , "_logP_out.txt")
+  ret$output["gamma"] = paste(sep="", outFilePath , dataString , "_",  methodString , "_gamma_out.txt")
+  
+  if( gammaPrior %in% c("hierarchical","hotspot"))
+    ret$output["pi"] = paste(sep="", outFilePath , dataString , "_",  methodString , "_pi_out.txt")
+
+  if( gammaPrior == "hotspot")
+    ret$output["tail"] = paste(sep="", outFilePath , dataString , "_",  methodString , "_hotspot_tail_p_out.txt")
+  
+  if( method == "SUR" )
+  {
+    if ( sparse )
+      ret$output["G"] = paste(sep="", outFilePath , dataString , "_",  methodString , "_G_out.txt")
+    
+    ret$output["beta"] = paste(sep="", outFilePath , dataString , "_",  methodString , "_beta_out.txt")
+    ret$output["sigmaRho"] = paste(sep="", outFilePath , dataString , "_",  methodString , "_sigmaRho_out.txt")
+    
+  }
+    
+  
+  ret$status = R2SSUR_internal(data, blockList, structureGraph, outFilePath, nIter, burnin, nChains, 
             method, sparse, gammaPrior, gammaSampler, gammaInit, mrfG, betaPrior)
 
-  if(outFilePath != "tmp/")
-    unlink("tmp",recursive = TRUE)
+  if(outFilePath != tmpFolder)
+    unlink(tmpFolder,recursive = TRUE)
   
-  return(status)
+  return(ret)
 }

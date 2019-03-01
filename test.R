@@ -4,25 +4,25 @@ Rcpp::compileAttributes(pkgdir = "R2SSUR/"); devtools::document("R2SSUR")
 devtools::build("R2SSUR")#,vignettes=TRUE)
 
 ## Install the package
-install.packages("R2SSUR_0.1.3.tar.gz",repos = NULL,type = "source")
+install.packages("R2SSUR_0.1.4.tar.gz",repos = NULL,type = "source")
 
 
 #####################################################################################################
 ## Test the installation
 data(example_data, package = "R2SSUR")
 
-mrfGFile = as.matrix( read.table("mrf.txt") )
+# mrfGFile = as.matrix( read.table("mrf.txt") )
 
-R2SSUR::runSSUR(example_data[["data"]],outFilePath = "results/",
+fit = R2SSUR::runSSUR(example_data[["data"]],outFilePath = "results/",
                 blockList = example_data[["blockList"]], structureGraph = example_data[["structureGraph"]],
-                nIter = 100, nChains = 2, method = "SUR", sparse = TRUE , mrfG = mrfGFile )
+                nIter = 100, nChains = 2, method = "SUR", sparse = TRUE , gammaPrior = "hotspot" )
 
 ## check output
 greyscale = grey((1000:0)/1000)
 data(example_ground_truth, package = "R2SSUR")
 
-est_gamma = as.matrix( read.table("results/data_SSUR_gamma_out.txt") )
-est_G = as.matrix( read.table("results/data_SSUR_G_out.txt") )
+est_gamma = as.matrix( read.table(fit$output$gamma) )
+est_G = as.matrix( read.table(fit$output$G) )
 s = ncol(est_G)
 
 par(mfrow=c(2,2))
