@@ -728,20 +728,16 @@ double HESS_Chain::logPW( double w_ )
 // LOG LIKELIHOODS
 double HESS_Chain::logLikelihood( )
 {
-    double logP, sign, tmp; //sign is needed for the implementation, but we 'assume' that all the matrices are (semi-)positive-definite (-> det>=0)
 
-    logP = -log(M_PI)*((double)nObservations*(double)nOutcomes*0.5); // initialise with the normalising constant remaining from the likelhood
+    double logP {0};
 
-    arma::uvec VS_IN_k;
-    arma::mat W_k;
-    arma::vec mu_k;
-    double a_sigma_k, b_sigma_k;
-
-    // HERE WOULD BE A CANDIDATE FOR private(VS_IN_k, W_k, mu_k, a_sigma_k, b_sigma_k, tmp, sign) reduction(+:logP)
-    // but it introduces random arma::inv_sympd errors and problems with the logP =/
+    #ifdef _OPENMP
+    #pragma omp parallel for default(shared) reduction(+:logP)
+    #endif
     for( unsigned int k=0; k<nOutcomes; ++k)
     {
-        VS_IN_k = gammaMask( arma::find(  gammaMask.col(1) == k) , arma::zeros<arma::uvec>(1) );
+        arma::uvec VS_IN_k = gammaMask( arma::find(  gammaMask.col(1) == k) , arma::zeros<arma::uvec>(1) );
+        arma::mat W_k;
         
         if( preComputedXtX )
         {
@@ -784,11 +780,12 @@ double HESS_Chain::logLikelihood( )
             }
         }
 
-        mu_k = W_k * ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->col( (*outcomesIdx)(k) ) ); // we divide by temp later
+        arma::vec mu_k = W_k * ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->col( (*outcomesIdx)(k) ) ); // we divide by temp later
 
-        a_sigma_k = a_sigma + 0.5*(double)nObservations/temperature;
-        b_sigma_k = b_sigma + 0.5* arma::as_scalar( (data->col( (*outcomesIdx)(k) ).t() * data->col( (*outcomesIdx)(k) )) - ( mu_k.t() * data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->col( (*outcomesIdx)(k) ) ) )/temperature;
+        double a_sigma_k = a_sigma + 0.5*(double)nObservations/temperature;
+        double b_sigma_k = b_sigma + 0.5* arma::as_scalar( (data->col( (*outcomesIdx)(k) ).t() * data->col( (*outcomesIdx)(k) )) - ( mu_k.t() * data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->col( (*outcomesIdx)(k) ) ) )/temperature;
 
+        double sign, tmp;
         arma::log_det(tmp, sign, W_k );
         logP += 0.5*tmp; 
 
@@ -800,6 +797,7 @@ double HESS_Chain::logLikelihood( )
         logP += std::lgamma(a_sigma_k) - std::lgamma(a_sigma);
     }
 
+    logP += -log(M_PI)*((double)nObservations*(double)nOutcomes*0.5); // normalising constant remaining from the likelhood
     log_likelihood = logP; // update internal state
 
     return logP;
@@ -807,20 +805,15 @@ double HESS_Chain::logLikelihood( )
 
 double HESS_Chain::logLikelihood( const arma::umat&  externalGammaMask )
 {
-    double logP, sign, tmp; //sign is needed for the implementation, but we 'assume' that all the matrices are (semi-)positive-definite (-> det>=0)
+    double logP {0};
 
-    logP = -log(M_PI)*((double)nObservations*(double)nOutcomes*0.5); // initialise with the normalising constant remaining from the likelhood
-
-    arma::uvec VS_IN_k;
-    arma::mat W_k;
-    arma::vec mu_k;
-    double a_sigma_k, b_sigma_k;
-
-    // HERE WOULD BE A CANDIDATE FOR private(VS_IN_k, W_k, mu_k, a_sigma_k, b_sigma_k, tmp, sign) reduction(+:logP)
-    // but it introduces random arma::inv_sympd errors and problems with the logP =/
+    #ifdef _OPENMP
+    #pragma omp parallel for default(shared) reduction(+:logP)
+    #endif
     for( unsigned int k=0; k<nOutcomes; ++k)
     {
-        VS_IN_k = externalGammaMask( arma::find(  externalGammaMask.col(1) == k) , arma::zeros<arma::uvec>(1) );
+        arma::uvec VS_IN_k = externalGammaMask( arma::find(  externalGammaMask.col(1) == k) , arma::zeros<arma::uvec>(1) );
+        arma::mat W_k;
 
         if( preComputedXtX )
         {
@@ -863,11 +856,12 @@ double HESS_Chain::logLikelihood( const arma::umat&  externalGammaMask )
             }
         }
 
-        mu_k = W_k * ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->col( (*outcomesIdx)(k) ) ); // we divide by temp later
+        arma::vec mu_k = W_k * ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->col( (*outcomesIdx)(k) ) ); // we divide by temp later
 
-        a_sigma_k = a_sigma + 0.5*(double)nObservations/temperature;
-        b_sigma_k = b_sigma + 0.5* arma::as_scalar( (data->col( (*outcomesIdx)(k) ).t() * data->col( (*outcomesIdx)(k) )) - ( mu_k.t() * data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->col( (*outcomesIdx)(k) ) ) )/temperature;
+        double a_sigma_k = a_sigma + 0.5*(double)nObservations/temperature;
+        double b_sigma_k = b_sigma + 0.5* arma::as_scalar( (data->col( (*outcomesIdx)(k) ).t() * data->col( (*outcomesIdx)(k) )) - ( mu_k.t() * data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->col( (*outcomesIdx)(k) ) ) )/temperature;
 
+        double sign, tmp; //sign is needed for the implementation, but we 'assume' that all the matrices are (semi-)positive-definite (-> det>=0)
         arma::log_det(tmp, sign, W_k );
         logP += 0.5*tmp; 
 
@@ -879,6 +873,7 @@ double HESS_Chain::logLikelihood( const arma::umat&  externalGammaMask )
         logP += std::lgamma(a_sigma_k) - std::lgamma(a_sigma);
     }
 
+    logP += -log(M_PI)*((double)nObservations*(double)nOutcomes*0.5); // normalising constant remaining from the likelhood
     return logP;
 
 }                                 
@@ -886,23 +881,18 @@ double HESS_Chain::logLikelihood( const arma::umat&  externalGammaMask )
 double HESS_Chain::logLikelihood( arma::umat& externalGammaMask , const arma::umat& externalGamma ) // gammaMask , gamma 
 {
 
-    double logP, sign, tmp; //sign is needed for the implementation, but we 'assume' that all the matrices are (semi-)positive-definite (-> det>=0)
-
+    double logP{0};
     externalGammaMask = createGammaMask(externalGamma);
 
-    logP = -log(M_PI)*((double)nObservations*(double)nOutcomes*0.5); // initialise with the normalising constant remaining from the likelhood
 
-    arma::uvec VS_IN_k;
-    arma::mat W_k;
-    arma::vec mu_k;
-    double a_sigma_k, b_sigma_k;
-
-    // HERE WOULD BE A CANDIDATE FOR private(VS_IN_k, W_k, mu_k, a_sigma_k, b_sigma_k, tmp, sign) reduction(+:logP)
-    // but it introduces random arma::inv_sympd errors and problems with the logP =/
+    #ifdef _OPENMP
+    #pragma omp parallel for default(shared) reduction(+:logP)
+    #endif
     for( unsigned int k=0; k<nOutcomes; ++k)
     {
-        VS_IN_k = externalGammaMask( arma::find(  externalGammaMask.col(1) == k) , arma::zeros<arma::uvec>(1) );
+        arma::uvec VS_IN_k = externalGammaMask( arma::find(  externalGammaMask.col(1) == k) , arma::zeros<arma::uvec>(1) );
 
+        arma::mat W_k;
         if( preComputedXtX )
         {
             switch ( beta_type )
@@ -944,11 +934,12 @@ double HESS_Chain::logLikelihood( arma::umat& externalGammaMask , const arma::um
             }
         }
 
-        mu_k = W_k * ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->col( (*outcomesIdx)(k) ) ); // we divide by temp later
+        arma::vec mu_k = W_k * ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->col( (*outcomesIdx)(k) ) ); // we divide by temp later
 
-        a_sigma_k = a_sigma + 0.5*(double)nObservations/temperature;
-        b_sigma_k = b_sigma + 0.5* arma::as_scalar( (data->col( (*outcomesIdx)(k) ).t() * data->col( (*outcomesIdx)(k) )) - ( mu_k.t() * data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->col( (*outcomesIdx)(k) ) ) )/temperature;
+        double a_sigma_k = a_sigma + 0.5*(double)nObservations/temperature;
+        double b_sigma_k = b_sigma + 0.5* arma::as_scalar( (data->col( (*outcomesIdx)(k) ).t() * data->col( (*outcomesIdx)(k) )) - ( mu_k.t() * data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->col( (*outcomesIdx)(k) ) ) )/temperature;
 
+        double sign, tmp; //sign is needed for the implementation, but we 'assume' that all the matrices are (semi-)positive-definite (-> det>=0)
         arma::log_det(tmp, sign, W_k );
         logP += 0.5*tmp; 
 
@@ -960,6 +951,7 @@ double HESS_Chain::logLikelihood( arma::umat& externalGammaMask , const arma::um
         logP += std::lgamma(a_sigma_k) - std::lgamma(a_sigma);
     }
 
+    logP += -log(M_PI)*((double)nObservations*(double)nOutcomes*0.5); // normalising constant remaining from the likelhood
     return logP;
 
 }   
@@ -967,20 +959,16 @@ double HESS_Chain::logLikelihood( arma::umat& externalGammaMask , const arma::um
 double HESS_Chain::logLikelihood( const arma::umat& externalGammaMask , const double externalW , const double externalA_sigma, const double externalB_sigma)
 {
 
-    double logP, sign, tmp; //sign is needed for the implementation, but we 'assume' that all the matrices are (semi-)positive-definite (-> det>=0)
-    logP = -log(M_PI)*((double)nObservations*(double)nOutcomes*0.5); // initialise with the normalising constant remaining from the likelhood
+    double logP{0}; 
 
-    arma::uvec VS_IN_k;
-    arma::mat W_k;
-    arma::vec mu_k;
-    double a_sigma_k, b_sigma_k;
-
-    // HERE WOULD BE A CANDIDATE FOR private(VS_IN_k, W_k, mu_k, a_sigma_k, b_sigma_k, tmp, sign) reduction(+:logP)
-    // but it introduces random arma::inv_sympd errors and problems with the logP =/
+    #ifdef _OPENMP
+    #pragma omp parallel for default(shared) reduction(+:logP)
+    #endif
     for( unsigned int k=0; k<nOutcomes; ++k)
     {
-        VS_IN_k = externalGammaMask( arma::find(  externalGammaMask.col(1) == k) , arma::zeros<arma::uvec>(1) );
+        arma::uvec VS_IN_k = externalGammaMask( arma::find(  externalGammaMask.col(1) == k) , arma::zeros<arma::uvec>(1) );
 
+        arma::mat W_k;
         if( preComputedXtX )
         {
             switch ( beta_type )
@@ -1023,11 +1011,12 @@ double HESS_Chain::logLikelihood( const arma::umat& externalGammaMask , const do
         }
 
 
-        mu_k = W_k * ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->col( (*outcomesIdx)(k) ) );
+        arma::vec mu_k = W_k * ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->col( (*outcomesIdx)(k) ) );
 
-        a_sigma_k = externalA_sigma + 0.5*(double)nObservations/temperature;
-        b_sigma_k = externalB_sigma + 0.5* arma::as_scalar( data->col( (*outcomesIdx)(k) ).t() * data->col( (*outcomesIdx)(k) ) - ( mu_k.t() * ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->col( (*outcomesIdx)(k) ) ) ) )/temperature;
+        double a_sigma_k = externalA_sigma + 0.5*(double)nObservations/temperature;
+        double b_sigma_k = externalB_sigma + 0.5* arma::as_scalar( data->col( (*outcomesIdx)(k) ).t() * data->col( (*outcomesIdx)(k) ) - ( mu_k.t() * ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->col( (*outcomesIdx)(k) ) ) ) )/temperature;
 
+        double sign, tmp; //sign is needed for the implementation, but we 'assume' that all the matrices are (semi-)positive-definite (-> det>=0)
         arma::log_det(tmp, sign, W_k );
         logP += 0.5*tmp; 
 
@@ -1039,6 +1028,7 @@ double HESS_Chain::logLikelihood( const arma::umat& externalGammaMask , const do
         logP += std::lgamma(a_sigma_k) - std::lgamma(externalA_sigma);
     }
 
+    logP += -log(M_PI)*((double)nObservations*(double)nOutcomes*0.5); // initialise with the normalising constant remaining from the likelhood
     return logP;
 }  
 // *********************

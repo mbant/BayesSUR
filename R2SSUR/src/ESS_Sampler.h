@@ -123,11 +123,9 @@ void ESS_Sampler<T>::step()
 template<typename T>
 void ESS_Sampler<T>::localStep()
 {
-    // OMP GIVES RUNTIME ERRORS, PROBABLY DUE TO SOME VARIABLE ACCESSED AT THE SAME TIME OR SOMRTHING :/
-    // TODO but leave it out for now -- ideally use MPI or similar to distribute the different chains -- shared variables will be a pain though
-    // #ifdef _OPENMP    
-    // #pragma omp parallel for schedule(static,1)
-    // #endif
+    #ifdef _OPENMP    
+    #pragma omp parallel for schedule(static,1)
+    #endif
     for( auto i = chain.begin(); i < chain.end(); ++i )
         (*i) -> step();
 
@@ -254,33 +252,34 @@ int ESS_Sampler<T>::allExchangeAll_step()
 {
     unsigned int nChainCombinations = ((nChains)*(nChains-1)/2);
 
+    // build the index table
     arma::vec pExchange( nChainCombinations +1 );
-    unsigned int swapIdx, firstChain, secondChain;
-
     arma::umat indexTable( pExchange.n_elem, 2);
-    unsigned int tabIndex = 0;
-    indexTable(tabIndex,0) = 0; indexTable(tabIndex,1) = 0;
-    tabIndex++;
+
+    unsigned int idx = 0;
+    indexTable(idx,0) = 0; indexTable(idx,1) = 0;
+    idx++;
 
     for(unsigned int c=1; c<nChains; ++c)
     {
         for(unsigned int r=0; r<c; ++r)
         {
-            indexTable(tabIndex,0) = r; indexTable(tabIndex,1) = c;
-            tabIndex++;
+            indexTable(idx,0) = r; indexTable(idx,1) = c;
+            idx++;
         }
     }
 
-
+    // Compute the swap probabilities
     pExchange(0) = 0.; // these are log probabilities, remember!
-    // #ifdef _OPENMP
-    // #pragma omp parallel for private(tabIndex, firstChain, secondChain)
-    // #endif
-    for(tabIndex = 1; tabIndex <= nChainCombinations; ++tabIndex)
+    
+    #ifdef _OPENMP
+    #pragma omp parallel for
+    #endif
+    for(unsigned int tabIndex = 1; tabIndex <= nChainCombinations; ++tabIndex)
     {
 
-        firstChain = indexTable(tabIndex,0);
-        secondChain  = indexTable(tabIndex,1);
+        unsigned int firstChain = indexTable(tabIndex,0);
+        unsigned int secondChain = indexTable(tabIndex,1);
 
         // Swap probability
         pExchange(tabIndex) = ( chain[firstChain]->getLogLikelihood() * chain[firstChain]->getTemperature() -
@@ -296,7 +295,7 @@ int ESS_Sampler<T>::allExchangeAll_step()
     // Now select which swap happens
     double val = Distributions::randU01();
 
-    swapIdx = 0;
+    unsigned int swapIdx = 0;
     while( val > cumulPExchange(swapIdx) )
     {
         swapIdx++;
@@ -304,8 +303,8 @@ int ESS_Sampler<T>::allExchangeAll_step()
 
     if( swapIdx != 0 )
     {
-        firstChain = indexTable(swapIdx,0);
-        secondChain  = indexTable(swapIdx,1);
+        unsigned int firstChain = indexTable(swapIdx,0);
+        unsigned int secondChain  = indexTable(swapIdx,1);
 
         swapAll( chain[firstChain] , chain[secondChain] );
 

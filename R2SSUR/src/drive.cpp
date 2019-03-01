@@ -585,6 +585,11 @@ int drive( const std::string& dataFile, const std::string& blockFile, const std:
 	#ifdef _OPENMP
 	std::cout << "Using OpenMP" << std::endl;
 	omp_init_lock(&RNGlock);  // init RNG lock for the parallel part
+
+	// ENABLING NESTED PARALLELISM SEEMS TO SLOW DOWN CODE MORE THAN ANYTHING, 
+	// I SUSPECT THE THREAD MANAGING OVERHEAD IS GREATER THAN EXPECTED
+	omp_set_nested(0); // 1=enable, 0=disable nested parallelism (run chains in parallel + compute likelihoods in parallel at least wrt to outcomes + wrt to individuals)
+	// MOST OF THE PARALLELISATION IMPROVEMENTS COME FROM OPENBLAS ANYWAY .. I WONDER IF ACCELERATING LA THOURGH GPU WOULD CHANGE THAT ..
 	#endif
 
 	// ###########################################################

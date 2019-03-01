@@ -18,6 +18,7 @@ BVS_NVIDIA: $(OBJECTS_BVS)
 	@echo [Linking and producing executable]:
 	if [ -e /usr/lib/libnvblas.so -o -e /usr/lib64/libnvblas.so ] ; then $(CC) $(OBJECTS_BVS) -o BVS_Reg $(NVLDFLAGS) ; else $(CC) $(OBJECTS_BVS) -o BVS_Reg $(OPENLDFLAGS) ; fi
 # I hate that this is searching only in the standard path, the correct way is with automake ./config, but that will come later...
+# if you compile against nvblas run with LD_PRELOAD=/usr/lib64/libnvblas.so or similar path to libnvblas.so
 
 BVS_NONVIDIA: OPTIM_FLAGS := -O3
 BVS_NONVIDIA: $(OBJECTS_BVS)

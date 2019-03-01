@@ -1231,7 +1231,7 @@ double SUR_Chain::logLikelihood( const arma::umat&  externalGammaMask , const ar
         #endif
 		for( unsigned int k=0; k<nOutcomes; ++k)
 		{
-			logP += Distributions::logPDFNormal( data->col( (*outcomesIdx)(k) ) , (externalXB.col(k) + externalRhoU.col(k)) ,  externalSigmaRho(k,k));
+            logP += Distributions::logPDFNormal( data->col( (*outcomesIdx)(k) ) , (externalXB.col(k) + externalRhoU.col(k)) ,  externalSigmaRho(k,k));
 		}
 
 		return logP/temperature;

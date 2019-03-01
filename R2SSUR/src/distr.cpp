@@ -570,10 +570,10 @@ namespace Distributions{
 
 	}
 
-	double logPDFNormal(const arma::vec& x, const arma::vec& m,const  double& Sigma)
+	double logPDFNormal(const arma::vec& x, const arma::vec& m, const double& Sigma)
 	{
-
-		//this is more a lok likelihood here, since the input vector is indep realisations with same sigma and (possibly) different means
+		//this is more a log likelihood rather than logPDF here, since the input vector is indep realisations with same sigma and (possibly) different means
+		// we rely on amradillo for parallelisation wrt to individuals
 		unsigned int n = x.n_elem;
 
 		return -0.5*(double)n*log(2*M_PI) -0.5*n*log(Sigma) -0.5/Sigma * arma::as_scalar( (x-m).t() * (x-m) );
