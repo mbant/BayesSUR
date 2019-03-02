@@ -2,7 +2,7 @@ SOURCE_DIR=R2SSUR/src
 VPATH=$(SOURCE_DIR)
 
 CC=g++
-CFLAGS= -c -Wall -Wno-reorder -std=c++11 -fopenmp -I$(SOURCE_DIR)/ -DCCODE
+CFLAGS= -c -Wall -Wno-reorder -std=c++11 -I$(SOURCE_DIR)/ -DCCODE -fopenmp
 
 OPENLDFLAGS= -larmadillo -lpthread -lopenblas -fopenmp
 NVLDFLAGS= -larmadillo -lpthread -lnvblas -fopenmp
@@ -25,9 +25,10 @@ BVS_NONVIDIA: $(OBJECTS_BVS)
 	@echo [Linking and producing executable]:
 	$(CC) $(OBJECTS_BVS) -o BVS_Reg $(OPENLDFLAGS)
 
+BVS_DEBUG: OPTIM_FLAGS := -O0 #maybe O1 ? -pg ? linker as well?
 BVS_DEBUG: $(OBJECTS_BVS)
 	@echo [Linking and producing executable]:
-	$(CC) $(OBJECTS_BVS) -o BVS_DEBUG_Reg $(LDFLAGS) -ggdb3
+	$(CC) $(OBJECTS_BVS) -o BVS_DEBUG_Reg $(OPENLDFLAGS) -ggdb3 -g -lprofiler 
 
 %.o: %.cpp
 	@echo [Compiling]: $<

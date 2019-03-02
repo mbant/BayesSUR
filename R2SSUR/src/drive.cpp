@@ -733,8 +733,8 @@ int drive( const std::string& dataFile, const std::string& blockFile, const std:
 	unsigned int nThreads{1};
 	
 	#ifdef _OPENMP
-		nThreads = omp_get_max_threads();
-		omp_set_num_threads( std::min( (unsigned int)16, nThreads ) ); //make 16 as parameter TODO
+		nThreads = std::min( (unsigned int)16, omp_get_max_threads()-1 ); //TODO: make 16 as parameter, note I still use -1 to allow PC to do work in the meantime
+		omp_set_num_threads(  nThreads ); 
 	#endif
 
 	rng.reserve(nThreads);  // reserve the correct space for the vector of rng engines

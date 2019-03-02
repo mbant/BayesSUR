@@ -18,6 +18,17 @@
  * CRTP used for global exchanges
  ***********************************/
 
+
+/******************
+ * Note that we can go back and forth between parameterisation using (for example)
+ * arma::mat originalC =
+            arma::inv( arma::eye<arma::mat>(nOutcomes,nOutcomes) - arma::trimatl(sigmaRho,-1) ) *
+            arma::diagmat(sigmaRho) *
+            arma::inv( arma::eye<arma::mat>(nOutcomes,nOutcomes) - arma::trimatl(sigmaRho,-1) ).t() ;
+ *
+ * but we don't need to...            
+ * ***************/
+
 class SUR_Chain : public ESS_Atom<SUR_Chain>
 { 
 

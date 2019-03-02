@@ -820,6 +820,9 @@ double SUR_Chain::logPEta( double eta_ )
 // JT
 double SUR_Chain::logPJT( const JunctionTree& externalJT , double eta_ )
 {
+    if ( covariance_type != Covariance_Type::sparse )
+        throw Bad_Covariance_Type ( covariance_type );
+
     double logP = 0.;
     for(unsigned int k=0; k<(nOutcomes-1); ++k)
     {
@@ -834,12 +837,18 @@ double SUR_Chain::logPJT( const JunctionTree& externalJT , double eta_ )
 
 double SUR_Chain::logPJT( )
 {
+    if ( covariance_type != Covariance_Type::sparse )
+        throw Bad_Covariance_Type ( covariance_type );
+
     logP_jt = logPJT( jt , eta );
     return logP_jt;
 }
 
 double SUR_Chain::logPJT( const JunctionTree& externalJT )
 {
+    if ( covariance_type != Covariance_Type::sparse )
+        throw Bad_Covariance_Type ( covariance_type );
+
     return logPJT( externalJT , eta );
 }
 
@@ -932,6 +941,9 @@ double SUR_Chain::logPSigmaRho( const arma::mat&  externalSigmaRho )
 // o_k
 double SUR_Chain::logPO( const arma::vec& o_ , double a_o_ , double b_o_ )
 {
+    if ( gamma_type != Gamma_Type::hotspot )
+        throw Bad_Gamma_Type ( gamma_type );
+
     double logP = 0.;
     for(unsigned int k=0; k<nOutcomes; ++k)
         logP += Distributions::logPDFBeta( o_(k) , a_o_, b_o_ );
@@ -941,12 +953,18 @@ double SUR_Chain::logPO( const arma::vec& o_ , double a_o_ , double b_o_ )
 
 double SUR_Chain::logPO( )
 {
+    if ( gamma_type != Gamma_Type::hotspot )
+        throw Bad_Gamma_Type ( gamma_type );
+
     logP_o = logPO( o , a_o , b_o );
     return logP_o;
 }
 
 double SUR_Chain::logPO( const arma::vec& o_ )
 {
+    if ( gamma_type != Gamma_Type::hotspot )
+        throw Bad_Gamma_Type ( gamma_type );
+
     return logPO( o_ , a_o , b_o );
 }
 
@@ -954,6 +972,9 @@ double SUR_Chain::logPO( const arma::vec& o_ )
 // pi_j
 double SUR_Chain::logPPi( arma::vec& pi_ , double a_pi_ , double b_pi_ )
 {
+    if ( gamma_type != Gamma_Type::hotspot && gamma_type != Gamma_Type::hierarchical )
+        throw Bad_Gamma_Type ( gamma_type );
+
     double logP = 0.;
 
     switch ( gamma_type )
@@ -2244,7 +2265,10 @@ void SUR_Chain::stepJT()
     } // end for n_updates_jt
 }
 
-// MH update (log-normal) -- update one value at each iteration TODO worth doing more?
+// MH update (log-normal)
+// it might seems wastefull to recompute every logP_jk, but at the end you'd need to compute column J for the new value,
+// recopute it for the old value to compare and then recompute the whole thing to replace the whole prior if accepted!
+// The only solution would be to keep track of the whole matrix of values, funny idea but is it worth it memory-wise ?
 void SUR_Chain::stepOneO()
 {
     

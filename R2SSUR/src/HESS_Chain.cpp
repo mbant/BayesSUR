@@ -543,6 +543,9 @@ void HESS_Chain::wInit()
 // o_k
 double HESS_Chain::logPO( const arma::vec& o_ , double a_o_ , double b_o_ )
 {
+    if ( gamma_type != Gamma_Type::hotspot )
+        throw Bad_Gamma_Type ( gamma_type );
+
     double logP = 0.;
     for(unsigned int k=0; k<nOutcomes; ++k)
         logP += Distributions::logPDFBeta( o_(k) , a_o_, b_o_ );
@@ -552,12 +555,18 @@ double HESS_Chain::logPO( const arma::vec& o_ , double a_o_ , double b_o_ )
 
 double HESS_Chain::logPO( )
 {
+    if ( gamma_type != Gamma_Type::hotspot )
+        throw Bad_Gamma_Type ( gamma_type );
+
     logP_o = logPO( o , a_o , b_o );
     return logP_o;
 }
 
 double HESS_Chain::logPO( const arma::vec& o_ )
 {
+    if ( gamma_type != Gamma_Type::hotspot )
+        throw Bad_Gamma_Type ( gamma_type );
+
     return logPO( o_ , a_o , b_o );
 }
 
@@ -565,6 +574,9 @@ double HESS_Chain::logPO( const arma::vec& o_ )
 // pi_j
 double HESS_Chain::logPPi( arma::vec& pi_ , double a_pi_ , double b_pi_ )
 {
+    if ( gamma_type != Gamma_Type::hotspot && gamma_type != Gamma_Type::hierarchical )
+        throw Bad_Gamma_Type ( gamma_type );
+
     double logP = 0.;
 
     switch ( gamma_type )
