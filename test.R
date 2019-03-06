@@ -4,7 +4,7 @@ Rcpp::compileAttributes(pkgdir = "R2SSUR/"); devtools::document("R2SSUR")
 devtools::build("R2SSUR")#,vignettes=TRUE)
 
 ## Install the package
-install.packages("R2SSUR_0.1.4.tar.gz",repos = NULL,type = "source")
+install.packages("R2SSUR_0.1.5.tar.gz",repos = NULL,type = "source")
 
 
 #####################################################################################################
@@ -13,9 +13,10 @@ data(example_data, package = "R2SSUR")
 
 # mrfGFile = as.matrix( read.table("mrf.txt") )
 
-fit = R2SSUR::runSSUR(example_data[["data"]],outFilePath = "results/",
-                blockList = example_data[["blockList"]], structureGraph = example_data[["structureGraph"]],
-                nIter = 100, nChains = 2, method = "SUR", sparse = TRUE , gammaPrior = "hotspot" )
+fit = R2SSUR::runSSUR(data = example_data[["data"]],
+                Y = example_data[["blockList"]][[1]],X = example_data[["blockList"]][[2]],
+                outFilePath = "results/",
+                nIter = 100, nChains = 2, covariancePrior = "IW", gammaPrior = "hotspot" )
 
 ## check output
 greyscale = grey((1000:0)/1000)

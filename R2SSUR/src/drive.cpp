@@ -18,10 +18,11 @@ int drive_SUR( Chain_Data& chainData )
 	// ****************************************
 	// **********  INIT THE CHAIN *************
 	// ****************************************
-	cout << "Initialising the (SUR) MCMC Chain ... " << std::flush;
+	cout << "Initialising the (SUR) MCMC Chain" << std::flush;
 	ESS_Sampler<SUR_Chain> sampler( chainData.surData , chainData.nChains , 1.2 ,
         	chainData.gamma_sampler_type, chainData.gamma_type, chainData.beta_type, chainData.covariance_type);
 	// *****************************
+	cout << " ... " << std::flush;
 
 	// extra step needed for MRF prior
 	if ( chainData.gamma_type == Gamma_Type::mrf )
@@ -64,7 +65,7 @@ int drive_SUR( Chain_Data& chainData )
 	std::ofstream gammaOutFile; gammaOutFile.open( outFilePrefix+"gamma_out.txt" , std::ios_base::trunc); gammaOutFile.close();
 	
 	std::ofstream gOutFile; 
-	if ( chainData.covariance_type == Covariance_Type::sparse )
+	if ( chainData.covariance_type == Covariance_Type::HIW )
 	{
 		gOutFile.open( outFilePrefix+"G_out.txt" , std::ios_base::trunc); 
 		gOutFile.close();
@@ -98,7 +99,7 @@ int drive_SUR( Chain_Data& chainData )
 	{
 		gamma_out = sampler[0] -> getGamma(); 
 	
-		if ( chainData.covariance_type == Covariance_Type::sparse )
+		if ( chainData.covariance_type == Covariance_Type::HIW )
 			g_out = arma::umat( sampler[0] -> getGAdjMat() );
 	
 		beta_out = sampler[0] -> getBeta();
@@ -119,7 +120,7 @@ int drive_SUR( Chain_Data& chainData )
 		gammaOutFile << (arma::conv_to<arma::mat>::from(gamma_out)) << std::flush;
 		gammaOutFile.close();
 
-		if ( chainData.covariance_type == Covariance_Type::sparse )
+		if ( chainData.covariance_type == Covariance_Type::HIW )
 		{
 			gOutFile.open( outFilePrefix+"G_out.txt" , std::ios_base::trunc);
 			gOutFile << ( arma::conv_to<arma::mat>::from(g_out) ) << std::flush;   // this might be quite long...
@@ -177,7 +178,7 @@ int drive_SUR( Chain_Data& chainData )
 		{
 			gamma_out += sampler[0] -> getGamma(); // the result of the whole procedure is now my new mcmc point, so add that up
 
-			if ( chainData.covariance_type == Covariance_Type::sparse )
+			if ( chainData.covariance_type == Covariance_Type::HIW )
 				g_out += arma::umat( sampler[0] -> getGAdjMat() );
 
 			beta_out += sampler[0] -> getBeta();
@@ -215,7 +216,7 @@ int drive_SUR( Chain_Data& chainData )
 				gammaOutFile << (arma::conv_to<arma::mat>::from(gamma_out))/(double)(i+1.0-chainData.burnin) << std::flush;
 				gammaOutFile.close();
 
-				if ( chainData.covariance_type == Covariance_Type::sparse )
+				if ( chainData.covariance_type == Covariance_Type::HIW )
 				{
 					gOutFile.open( outFilePrefix+"G_out.txt" , std::ios_base::trunc);
 					gOutFile << ( arma::conv_to<arma::mat>::from(g_out) )/((double)(i-jtStartIteration-chainData.burnin)+1.0) << std::flush;   // this might be quite long...
@@ -267,7 +268,7 @@ int drive_SUR( Chain_Data& chainData )
 	gammaOutFile << (arma::conv_to<arma::mat>::from(gamma_out))/(double)(chainData.nIter-chainData.burnin+1.) << std::flush;
 	gammaOutFile.close();
 
-	if ( chainData.covariance_type == Covariance_Type::sparse )
+	if ( chainData.covariance_type == Covariance_Type::HIW )
 	{
 		gOutFile.open( outFilePrefix+"G_out.txt" , std::ios_base::trunc);
 		gOutFile << ( arma::conv_to<arma::mat>::from(g_out) )/(double)(chainData.nIter-jtStartIteration-chainData.burnin+1.) << std::flush;   // this might be quite long...
@@ -315,7 +316,7 @@ int drive_SUR( Chain_Data& chainData )
 	cout << "Saved to :   "+outFilePrefix+"****_out.txt" << endl;
 	cout << "Final w : " << sampler[0] -> getW() <<  endl;
 	cout << "Final tau : " << sampler[0] -> getTau() << "    w/ proposal variance: " << sampler[0] -> getVarTauProposal() << endl;
-	if ( chainData.covariance_type == Covariance_Type::sparse )
+	if ( chainData.covariance_type == Covariance_Type::HIW )
 		cout << "Final eta : " << sampler[0] -> getEta() <<  endl;
 	cout << "  -- Average Omega : " << arma::accu( sampler[0] -> getO() * sampler[0] -> getPi().t() )/((double)(sampler[0]->getP()*sampler[0]->getS())) <<  endl;
 	if( chainData.nChains > 1 ) 
@@ -575,7 +576,7 @@ int drive_HESS( Chain_Data& chainData )
 
 int drive( const std::string& dataFile, const std::string& blockFile, const std::string& structureGraphFile, const std::string& outFilePath,  
 			unsigned int nIter, unsigned int burnin, unsigned int nChains,
-			const std::string& method, const bool sparse, 
+			const std::string& covariancePrior, 
 			const std::string& gammaPrior, const std::string& gammaSampler, const std::string& gammaInit, const std::string& mrfGFile ,
 			const std::string& betaPrior )
 {
@@ -611,6 +612,21 @@ int drive( const std::string& dataFile, const std::string& blockFile, const std:
 	// ****************************************************
 	// ***  DEFINE CHAIN / PARAMETER TYPES
 	// ****************************************************
+
+	// Covariance type
+	// *****************************************************
+
+	if ( covariancePrior == "HIW" )
+		chainData.covariance_type = Covariance_Type::HIW;
+	else if ( covariancePrior == "IW" )
+		chainData.covariance_type = Covariance_Type::IW;
+	else if ( covariancePrior == "IG" )
+		chainData.covariance_type = Covariance_Type::IG;
+	else
+	{
+		std::cerr << "ERROR: Wrong type of Covariance prior given\n";
+		return 1;
+	}
 
 	// Gamma Prior
 	// ****************************************************
@@ -672,15 +688,6 @@ int drive( const std::string& dataFile, const std::string& blockFile, const std:
 		return 1;
 	}
 
-	// Covariance type for SUR method
-	// *****************************************************
-
-	if ( method == "SUR" && sparse == true )
-		chainData.covariance_type = Covariance_Type::sparse;
-	else
-		chainData.covariance_type = Covariance_Type::dense;
-
-
 	// ***********************************
 	// ***********************************
 
@@ -717,14 +724,24 @@ int drive( const std::string& dataFile, const std::string& blockFile, const std:
 
 	// Update the "outFilePath" (filePrefix variable) with the method's name
 	chainData.filePrefix += "_";
-	if( method == "SUR" )
+
+	switch ( chainData.covariance_type )
 	{
-		if( sparse )
-			chainData.filePrefix += "S";
-		else
-			chainData.filePrefix += "d";
+		case Covariance_Type::HIW :
+			chainData.filePrefix += "SSUR";
+			break;
+	
+		case Covariance_Type::IW :
+			chainData.filePrefix += "dSUR";
+			break;
+
+		case Covariance_Type::IG :
+			chainData.filePrefix += "HESS";
+			break;
+
+		default:
+			throw Bad_Covariance_Type( chainData.covariance_type );
 	}
-	chainData.filePrefix += method+"_";
 
 	cout << "Init RNG engine .. ";
 
@@ -733,7 +750,7 @@ int drive( const std::string& dataFile, const std::string& blockFile, const std:
 	unsigned int nThreads{1};
 	
 	#ifdef _OPENMP
-		nThreads = std::min( (unsigned int)16, omp_get_max_threads()-1 ); //TODO: make 16 as parameter, note I still use -1 to allow PC to do work in the meantime
+		nThreads = std::min( 16, omp_get_max_threads()-1 ); //TODO: make 16 as parameter, note I still use -1 to allow PC to do work in the meantime
 		omp_set_num_threads(  nThreads ); 
 	#endif
 
@@ -802,13 +819,21 @@ int drive( const std::string& dataFile, const std::string& blockFile, const std:
 	// at runtime so this seems fair (given that the different drive functions have their differences in output and stuff...)
 	// still if there's a more elegant solution I'd like to find it
 
-	if( method == "SUR" )
-		status = drive_SUR(chainData);
-	else if( method == "HESS" )
-		status = drive_HESS(chainData);
-	else
-		status = drive_SUR(chainData); // this makes a default
-			// you should't reach here even if method is wrongly specified, but still...
+	switch ( chainData.covariance_type )
+	{
+		case Covariance_Type::HIW : 
+		case Covariance_Type::IW :
+			status = drive_SUR(chainData);
+			break;
+
+		case Covariance_Type::IG :
+			status = drive_HESS(chainData);
+			break;
+
+		default:
+			throw Bad_Covariance_Type( chainData.covariance_type );
+			return 1;
+	}
 
 	return status;
 }

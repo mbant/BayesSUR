@@ -26,7 +26,7 @@ HESS_Chain::HESS_Chain( std::shared_ptr<arma::mat> data_, unsigned int nObservat
     temperature(externalTemperature),internalIterationCounter(0)
     {
 
-        if( covariance_type != Covariance_Type::dense )
+        if( covariance_type != Covariance_Type::IG )
             throw Bad_Covariance_Type ( covariance_type );
 
         predictorsIdx = std::make_shared<arma::uvec>(arma::join_vert( *fixedPredictorsIdx, *VSPredictorsIdx ));
@@ -88,7 +88,7 @@ HESS_Chain::HESS_Chain( Utils::SUR_Data& surData,
 HESS_Chain::HESS_Chain( Utils::SUR_Data& surData, double externalTemperature ):
     HESS_Chain(surData.data,surData.nObservations,surData.nOutcomes,surData.nVSPredictors,surData.nFixedPredictors,
         surData.outcomesIdx,surData.VSPredictorsIdx,surData.fixedPredictorsIdx,surData.missingDataArrayIdx,surData.completeCases,
-        Gamma_Sampler_Type::bandit , Gamma_Type::hotspot , Beta_Type::independent , Covariance_Type::sparse , 
+        Gamma_Sampler_Type::bandit , Gamma_Type::hotspot , Beta_Type::independent , Covariance_Type::IG , 
         externalTemperature){ }
 
 // *******************************

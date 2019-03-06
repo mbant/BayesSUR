@@ -8,7 +8,7 @@
  * ****************************************************/
 
 enum class Covariance_Type {
-    sparse=1, dense
+    HIW=1, IW, IG
 };
 
 enum class Gamma_Type {
@@ -32,12 +32,15 @@ class Bad_Covariance_Type : public std::exception{
     {
       switch ( ct_ )
       {
-        case Covariance_Type::dense :
-          return "The DENSE COVARIANCE type is not valid here";
+        case Covariance_Type::IW :
+          return "The DENSE (IW) COVARIANCE type is not valid here";
       
-        case Covariance_Type::sparse :
-          return "The SPARSE COVARIANCE type is not valid here";
+        case Covariance_Type::HIW :
+          return "The SPARSE (HIW) COVARIANCE type is not valid here";
       
+        case Covariance_Type::IG :
+          return "The INDEPENDENT (IG) COVARIANCES type is not valid here";
+
         default:
           return "The covariance type here is not valid -- unknown type";
       }

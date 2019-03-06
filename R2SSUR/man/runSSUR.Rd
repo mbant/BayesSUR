@@ -2,20 +2,19 @@
 % Please edit documentation in R/runSSUR.R
 \name{runSSUR}
 \alias{runSSUR}
+\alias{my_stop}
 \title{runSSUR}
 \usage{
-runSSUR(data, blockList, varType = NULL, structureGraph = NULL,
-  outFilePath = "", nIter = 10, burnin = 0, nChains = 1,
-  method = "SUR", sparse = NULL, dense = NULL, gammaPrior = "",
-  gammaSampler = "bandit", gammaInit = "MLE", mrfG = NULL,
-  betaPrior = "independent", tmpFolder = "tmp/")
+my_stop(msg, tmpFolder)
 }
 \arguments{
+\item{tmpFolder}{the path to a temporary folder where intermediate data files are stored (will be erased at the end of the chain) default to local tmpFolder}
+
 \item{data}{either a matrix/dataframe or the path to (a plain text) data file with variables on the columns and observations on the rows}
 
-\item{blockList}{list of blocks in the model; each element of the list contains the (column) indices of the variables in each block, with respect to the data file}
+\item{blockList}{list of blocks in the model each element of the list contains the (column) indices of the variables in each block, with respect to the data file}
 
-\item{varType}{variable type for each column in the data file; coded as: 0 - continuous, 1- binary, 2 - categorical. Note that categorical variables cannot be imputed}
+\item{varType}{variable type for each column in the data file coded as: 0 - continuous, 1- binary, 2 - categorical. Note that categorical variables cannot be imputed}
 
 \item{structureGraph}{graph adjacency matrix representing the structure between the blocks. Edges represented as 2 indicate variables that will be always included in the regression model}
 
@@ -23,7 +22,7 @@ runSSUR(data, blockList, varType = NULL, structureGraph = NULL,
 
 \item{nIter}{number of iterations for the MCMC procedure}
 
-\item{burnin}{number of iterations (or fraction of iterations) to discard at the start of the chain; Default = 0}
+\item{burnin}{number of iterations (or fraction of iterations) to discard at the start of the chain Default = 0}
 
 \item{nChains}{number of parallel chains to run}
 
@@ -38,8 +37,6 @@ runSSUR(data, blockList, varType = NULL, structureGraph = NULL,
 \item{gammaInit}{gamma initialisation to either all-zeros ("0"), all ones ("1"), randomly ("R") or (default) MLE-informed ("MLE").}
 
 \item{mrfG}{either a matrix or a path to the file containing the G matrix for the MRF prior on gamma (if necessary)}
-
-\item{tmpFilder}{the path to a temporary folder where intermediate data files are stored (will be erased at the end of the chain); default to local tmpFolder}
 }
 \description{
 Run a SUR Bayesian sampler
@@ -64,8 +61,8 @@ est_G = as.matrix( read.table(fit$output$G) )
 s = ncol(est_G)
 
 par(mfrow=c(2,2))
-image(est_gamma,col=greyscale); image(example_ground_truth[["gamma"]],col=greyscale)
-image((est_G+diag(s))[s:1,],col=greyscale); image(example_ground_truth[["G"]][s:1,],col=greyscale)
+image(est_gamma,col=greyscale) image(example_ground_truth[["gamma"]],col=greyscale)
+image((est_G+diag(s))[s:1,],col=greyscale) image(example_ground_truth[["G"]][s:1,],col=greyscale)
 par(mfrow=c(1,1))
 }
 

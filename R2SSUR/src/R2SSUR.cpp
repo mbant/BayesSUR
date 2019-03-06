@@ -18,7 +18,7 @@
 // [[Rcpp::export(rng=false)]]
 int R2SSUR_internal(const std::string& dataFile, const std::string& blockFile, const std::string& structureGraphFile, const std::string& outFilePath,  
                     unsigned int nIter=10, unsigned int burnin=0, unsigned int nChains=1,
-                    const std::string& method="SUR", bool sparse = true , 
+                    const std::string& covariancePrior="HIW", 
                     const std::string& gammaPrior="hotspot", const std::string& gammaSampler="bandit", 
                     const std::string& gammaInit = "MLE", const std::string& mrfGFile="",
                     const std::string& betaPrior="independent" )
@@ -28,7 +28,7 @@ int R2SSUR_internal(const std::string& dataFile, const std::string& blockFile, c
   try
   {
     status =  drive(dataFile,blockFile,structureGraphFile,outFilePath,nIter,burnin,nChains,
-                    method,sparse,gammaPrior,gammaSampler,gammaInit,mrfGFile,betaPrior);
+                    covariancePrior,gammaPrior,gammaSampler,gammaInit,mrfGFile,betaPrior);
   }
   catch(const std::exception& e)
   {

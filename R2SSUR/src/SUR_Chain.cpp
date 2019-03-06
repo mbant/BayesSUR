@@ -19,7 +19,6 @@ SUR_Chain::SUR_Chain( std::shared_ptr<arma::mat> data_, unsigned int nObservatio
     temperature(externalTemperature),internalIterationCounter(0),jtStartIteration(0)
     {
 
-
         predictorsIdx = std::make_shared<arma::uvec>(arma::join_vert( *fixedPredictorsIdx, *VSPredictorsIdx ));
         setXtX();
 
@@ -38,6 +37,7 @@ SUR_Chain::SUR_Chain( std::shared_ptr<arma::mat> data_, unsigned int nObservatio
         } 
 
         tauInit();
+
         etaInit();
         jtInit();
 
@@ -87,7 +87,7 @@ SUR_Chain::SUR_Chain( Utils::SUR_Data& surData,
 SUR_Chain::SUR_Chain( Utils::SUR_Data& surData, double externalTemperature ):
     SUR_Chain(surData.data,surData.nObservations,surData.nOutcomes,surData.nVSPredictors,surData.nFixedPredictors,
         surData.outcomesIdx,surData.VSPredictorsIdx,surData.fixedPredictorsIdx,surData.missingDataArrayIdx,surData.completeCases,
-        Gamma_Sampler_Type::bandit , Gamma_Type::hotspot , Beta_Type::independent , Covariance_Type::sparse , 
+        Gamma_Sampler_Type::bandit , Gamma_Type::hotspot , Beta_Type::independent , Covariance_Type::HIW , 
         externalTemperature){ }
 
 
@@ -281,7 +281,8 @@ arma::sp_umat SUR_Chain::getGAdjMat() const{ return jt.getAdjMat(); }  // need t
 void SUR_Chain::setJT( JunctionTree& externalJT )
 { 
     jt = externalJT ; // old jt gets destroyed as there's no reference to him anymore, new jt "points" to the foreign object
-    logPJT();
+    if ( covariance_type == Covariance_Type::HIW )
+        logPJT();
 } 
 
 void SUR_Chain::setJT( JunctionTree& externalJT , double logP_jt_ )
@@ -549,19 +550,18 @@ void SUR_Chain::jtInit( JunctionTree& jt_init )
 
     switch ( covariance_type )
     {
-        case Covariance_Type::sparse :
+        case Covariance_Type::HIW :
             n_updates_jt = 5; // default value, should I pick something different?
+            logPJT();
             break;
 
-        case Covariance_Type::dense :
+        case Covariance_Type::IW :
             n_updates_jt = 0;
             break;
 
         default:
             throw Bad_Covariance_Type ( covariance_type );
     }
-
-    logPJT();
 }
 
 void SUR_Chain::jtInit()
@@ -570,12 +570,13 @@ void SUR_Chain::jtInit()
 
     switch ( covariance_type )
     {
-        case Covariance_Type::sparse :
+        case Covariance_Type::HIW :
             jt = JunctionTree( nOutcomes , "empty" ); //empty constructor, diagonal adj matrix of dimension s
             n_updates_jt = 5; // default value, should I pick something different?
+            logPJT();
             break;
 
-        case Covariance_Type::dense :
+        case Covariance_Type::IW :
             jt = JunctionTree( nOutcomes , "full" ); // full constructor, dense adj matrix of dimension s
             n_updates_jt = 0; 
             break;
@@ -583,8 +584,6 @@ void SUR_Chain::jtInit()
         default:
             break;
     }
-
-    logPJT();
 }
 // end different from the rest
 
@@ -820,7 +819,7 @@ double SUR_Chain::logPEta( double eta_ )
 // JT
 double SUR_Chain::logPJT( const JunctionTree& externalJT , double eta_ )
 {
-    if ( covariance_type != Covariance_Type::sparse )
+    if ( covariance_type != Covariance_Type::HIW )
         throw Bad_Covariance_Type ( covariance_type );
 
     double logP = 0.;
@@ -837,7 +836,7 @@ double SUR_Chain::logPJT( const JunctionTree& externalJT , double eta_ )
 
 double SUR_Chain::logPJT( )
 {
-    if ( covariance_type != Covariance_Type::sparse )
+    if ( covariance_type != Covariance_Type::HIW )
         throw Bad_Covariance_Type ( covariance_type );
 
     logP_jt = logPJT( jt , eta );
@@ -846,7 +845,7 @@ double SUR_Chain::logPJT( )
 
 double SUR_Chain::logPJT( const JunctionTree& externalJT )
 {
-    if ( covariance_type != Covariance_Type::sparse )
+    if ( covariance_type != Covariance_Type::HIW )
         throw Bad_Covariance_Type ( covariance_type );
 
     return logPJT( externalJT , eta );
@@ -1308,7 +1307,7 @@ double SUR_Chain::sampleSigmaRhoGivenBeta( const arma::mat&  externalBeta , arma
 
     switch ( covariance_type )
     {
-        case Covariance_Type::sparse :
+        case Covariance_Type::HIW :
         {
             arma::uvec singleIdx_l(1); // needed for convention with arma::submat
             std::vector<unsigned int> Prime_q,Res_q, Sep_q;
@@ -1380,7 +1379,7 @@ double SUR_Chain::sampleSigmaRhoGivenBeta( const arma::mat&  externalBeta , arma
             break;
         }
 
-        case Covariance_Type::dense :
+        case Covariance_Type::IW :
         {
             arma::uvec singleIdx_k(1); // needed for convention with arma::submat
             for( unsigned int k=0; k<nOutcomes; ++k )
@@ -1687,7 +1686,7 @@ double SUR_Chain::logPSigmaRhoGivenBeta( const arma::mat&  externalBeta , const 
 
     switch ( covariance_type )
     {
-        case Covariance_Type::sparse :
+        case Covariance_Type::HIW :
         {
             arma::uvec singleIdx_l(1); // needed for convention with arma::submat
             std::vector<unsigned int> Prime_q,Res_q, Sep_q;
@@ -1750,7 +1749,7 @@ double SUR_Chain::logPSigmaRhoGivenBeta( const arma::mat&  externalBeta , const 
             break;
         }
 
-        case Covariance_Type::dense :
+        case Covariance_Type::IW :
         {
             arma::uvec singleIdx_k(1); // needed for convention with arma::submat
             for( unsigned int k=0; k<nOutcomes; ++k )
@@ -2629,7 +2628,7 @@ void SUR_Chain::step()
             throw Bad_Gamma_Type ( gamma_type );
     }
 
-    if ( covariance_type == Covariance_Type::sparse )
+    if ( covariance_type == Covariance_Type::HIW )
     {
         stepEta();
         // Update JT
@@ -3280,7 +3279,7 @@ void SUR_Chain::swapAll( std::shared_ptr<SUR_Chain>& thatChain )
     // parameters and priors
     this->swapTau( thatChain );
 
-    if ( covariance_type == Covariance_Type::sparse )
+    if ( covariance_type == Covariance_Type::HIW )
     {
         this->swapEta( thatChain );
         this->swapJT( thatChain );
@@ -3315,11 +3314,11 @@ int SUR_Chain::globalStep( std::shared_ptr<SUR_Chain>& that )
     unsigned int globalType {6};  // the default skips the global step
     switch ( covariance_type )
     {
-        case Covariance_Type::sparse :
+        case Covariance_Type::HIW :
             globalType = Distributions::randIntUniform(0,5);
             break;
     
-        case Covariance_Type::dense :
+        case Covariance_Type::IW :
             globalType = Distributions::randIntUniform(0,4);
             break;
     
@@ -3494,7 +3493,7 @@ arma::mat SUR_Chain::createRhoU( const arma::mat& externalU , const arma::mat&  
 
     switch ( covariance_type )
     {
-        case Covariance_Type::sparse :
+        case Covariance_Type::HIW :
         {
             arma::uvec xi = arma::conv_to<arma::uvec>::from(externalJT.perfectEliminationOrder);
 
@@ -3509,7 +3508,7 @@ arma::mat SUR_Chain::createRhoU( const arma::mat& externalU , const arma::mat&  
             break;
         }    
 
-        case Covariance_Type::dense :
+        case Covariance_Type::IW :
         {
             for( unsigned int k=1; k < nOutcomes; ++k)
             {
@@ -3536,7 +3535,7 @@ void SUR_Chain::updateRhoU()
 
     switch ( covariance_type )
     {
-        case Covariance_Type::sparse :
+        case Covariance_Type::HIW :
         {
             arma::uvec xi = arma::conv_to<arma::uvec>::from(jt.perfectEliminationOrder);
             for( unsigned int k=1; k < nOutcomes; ++k)
@@ -3550,7 +3549,7 @@ void SUR_Chain::updateRhoU()
             break;
         }
 
-        case Covariance_Type::dense :
+        case Covariance_Type::IW :
         {
             for( unsigned int k=1; k < nOutcomes; ++k)
             {

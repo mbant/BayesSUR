@@ -27,7 +27,7 @@ class ESS_Sampler{
 
         ESS_Sampler( Utils::SUR_Data& surData , unsigned int nChains_ , double temperatureRatio ) : 
             ESS_Sampler( surData , nChains_ , temperatureRatio , 
-               Gamma_Sampler_Type::bandit, Gamma_Type::hotspot , Beta_Type::independent , Covariance_Type::sparse){}
+               Gamma_Sampler_Type::bandit, Gamma_Type::hotspot , Beta_Type::independent , Covariance_Type::HIW){}
 
         ESS_Sampler( Utils::SUR_Data& surData , unsigned int nChains_ ) : ESS_Sampler( surData , nChains_ , 1.2 ){}
         

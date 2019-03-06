@@ -4,7 +4,7 @@
 // redeclare the drive funciton
 int drive( const std::string& dataFile, const std::string& blockFile, const std::string& structureGraphFile, const std::string& outFilePath,  
 			unsigned int nIter, unsigned int burnin, unsigned int nChains,
-			const std::string& method, const bool sparse, 
+			const std::string& covariancePrior, 
 			const std::string& gammaPrior, const std::string& gammaSampler, const std::string& gammaInit, const std::string& mrfGFile ,
 			const std::string& betaPrior );
 
@@ -21,9 +21,7 @@ int main(int argc, char *  argv[])
 
 	std::string outFilePath = "";
 
-	std::string method = "SUR";
-	bool sparse = true;
-
+	std::string covariancePrior = "";
 	std::string gammaPrior = "";
 	std::string mrfGFile = "";
 	std::string gammaSampler = "bandit";
@@ -35,15 +33,21 @@ int main(int argc, char *  argv[])
     int na = 1;
     while(na < argc)
     {
-		if ( 0 == std::string{argv[na]}.compare(std::string{"--method"}) )
+		if ( 0 == std::string{argv[na]}.compare(std::string{"--covariancePrior"}) )
 		{
-			method = std::string(argv[++na]); // use the next
+			covariancePrior = std::string(argv[++na]); // use the next
 
-			if ( method != "SUR" && method != "HESS" )
+			if ( covariancePrior == "sparse" || covariancePrior == "Sparse" || covariancePrior == "SPARSE" || covariancePrior == "HIW" || covariancePrior == "hiw" )
+				covariancePrior = "HIW";
+			else if ( covariancePrior == "dense" || covariancePrior == "Dense" || covariancePrior == "DENSE" || covariancePrior == "IW" || covariancePrior == "iw" ) 
+				covariancePrior = "IW";
+			else if ( covariancePrior == "independent" || covariancePrior == "Independent" || covariancePrior == "INDEPENDENT" || covariancePrior == "INDEP" || covariancePrior == "indep" || covariancePrior == "IG" || covariancePrior == "ig" ) 
+				covariancePrior = "IG";
+			else
 			{
-				std::cout << "Unknown method: only SUR or HESS are available" << std::endl;
+				std::cout << "Unknown covariancePrior argument: only sparse (HIW), dense(IW) or independent (IG) are available" << std::endl;
 			    return(1);
-			}
+			}		
 
 			if (na+1==argc) break; // in case it's last, break
 			++na; // otherwise augment counter
@@ -51,18 +55,6 @@ int main(int argc, char *  argv[])
 		else if ( 0 == std::string{argv[na]}.compare(std::string{"--mrfGFile"}) )
 		{
 			mrfGFile = ""+std::string(argv[++na]); // use the next
-			if (na+1==argc) break; // in case it's last, break
-			++na; // otherwise augment counter
-		}
-		else if ( 0 == std::string{argv[na]}.compare(std::string{"--dense"}) )
-		{
-			sparse = false;
-			if (na+1==argc) break; // in case it's last, break
-			++na; // otherwise augment counter
-		}
-		else if ( 0 == std::string{argv[na]}.compare(std::string{"--sparse"}) )
-		{
-			sparse = true;
 			if (na+1==argc) break; // in case it's last, break
 			++na; // otherwise augment counter
 		}
@@ -79,7 +71,7 @@ int main(int argc, char *  argv[])
 
 			else
 			{
-				std::cout << "Unknown gammaPrior method: only hotspot, MRF or hierarchical are available" << std::endl;
+				std::cout << "Unknown gammaPrior argument: only hotspot, MRF or hierarchical are available" << std::endl;
 			    return(1);
 			}
 
@@ -202,7 +194,7 @@ int main(int argc, char *  argv[])
 	try
 	{
 		status =  drive(dataFile,blockFile,structureGraphFile,outFilePath,nIter,burnin,nChains,
-			method,sparse,gammaPrior,gammaSampler,gammaInit,mrfGFile,betaPrior);
+			covariancePrior,gammaPrior,gammaSampler,gammaInit,mrfGFile,betaPrior);
 	}
 	catch(const std::exception& e)
 	{
