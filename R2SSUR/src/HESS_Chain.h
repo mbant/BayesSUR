@@ -71,6 +71,8 @@ class HESS_Chain : public ESS_Atom<HESS_Chain>
         arma::umat& getGammaMask();
         void setGammaMask( arma::umat );
 
+        arma::urowvec& getModelSize() const;
+
         // MCMC related tuning parameters
         double getTemperature() const;
         void setTemperature( double );

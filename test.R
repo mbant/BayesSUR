@@ -18,7 +18,7 @@ fit = R2SSUR::runSSUR(data = example_data[["data"]],
                 X = example_data[["blockList"]][[2]][11:150],
                 X_0 = example_data[["blockList"]][[2]][1:10],
                 outFilePath = "results/",
-                nIter = 1000, nChains = 2, covariancePrior = "HIW", gammaPrior = "hotspot" )
+                nIter = 3000, nChains = 2, covariancePrior = "IW", gammaPrior = "hotspot" )
 
 ## check output
 greyscale = grey((1000:0)/1000)
@@ -35,3 +35,6 @@ image(est_beta,col=greyscale)
 #image((est_G+diag(s))[s:1,],col=greyscale); image(example_ground_truth[["G"]][s:1,],col=greyscale)
 par(mfrow=c(1,1))
 
+
+plot( read.table(fit$output$model_size)[,1] , type="l",ylim = c(0,150))
+points(1:ncol(example_ground_truth[["gamma"]]),colSums(example_ground_truth[["gamma"]]),col="red",pch=20)

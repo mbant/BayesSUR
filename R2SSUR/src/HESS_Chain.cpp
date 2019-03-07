@@ -138,6 +138,13 @@ void HESS_Chain::setGammaMask( arma::umat  externalGammaMask )
     gammaMask =  externalGammaMask ; 
 }
 
+arma::urowvec& HESS_Chain::getModelSize() const
+{
+    static arma::urowvec modelSize;
+    modelSize = nFixedPredictors + arma::sum( gamma , 0 ); // 0 is to get the sum of the elements in each column
+    return modelSize;
+}
+
 // MCMC related tuning parameters
 double HESS_Chain::getTemperature() const{ return temperature; }
 void HESS_Chain::setTemperature( double temp_ )

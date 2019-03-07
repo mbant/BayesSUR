@@ -88,6 +88,8 @@ class SUR_Chain : public ESS_Atom<SUR_Chain>
         arma::mat& getRhoU();
         void setRhoU( arma::mat );
 
+        arma::urowvec& getModelSize() const;
+
         // MCMC related tuning parameters
         double getTemperature() const;
         void setTemperature( double );

@@ -147,6 +147,13 @@ void SUR_Chain::setU( arma::mat externalU ){ U = externalU ; }
 arma::mat& SUR_Chain::getRhoU(){ return rhoU ; }
 void SUR_Chain::setRhoU( arma::mat externalRhoU ){ rhoU = externalRhoU ; }
 
+arma::urowvec& SUR_Chain::getModelSize() const
+{
+    static arma::urowvec modelSize;
+    modelSize = nFixedPredictors + arma::sum( gamma , 0 ); // 0 is to get the sum of the elements in each column
+    return modelSize;
+}
+
 // MCMC related tuning parameters
 double SUR_Chain::getTemperature() const{ return temperature; }
 void SUR_Chain::setTemperature( double temp_ )

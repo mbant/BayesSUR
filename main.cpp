@@ -7,7 +7,7 @@ int drive( const std::string& dataFile, const std::string& blockFile, const std:
 			const std::string& covariancePrior, 
 			const std::string& gammaPrior, const std::string& gammaSampler, const std::string& gammaInit, const std::string& mrfGFile ,
 			const std::string& betaPrior,
-			bool output_gamma, bool output_beta, bool output_G, bool output_sigmaRho, bool output_pi, bool output_tail );
+			bool output_gamma, bool output_beta, bool output_G, bool output_sigmaRho, bool output_pi, bool output_tail, bool output_model_size );
 
 int main(int argc, char *  argv[])
 {
@@ -32,7 +32,8 @@ int main(int argc, char *  argv[])
 	std::string betaPrior = "independent";
 
 	bool out_gamma = true, out_beta = true, out_G = true,
-		 out_sigmaRho = true, out_pi = true, out_tail = true;
+		 out_sigmaRho = true, out_pi = true, out_tail = true,
+		 out_model_size = true;
 
     // ### Read and interpret command line (to put in a separate file / function?)
     int na = 1;
@@ -244,6 +245,18 @@ int main(int argc, char *  argv[])
 			if (na+1==argc) break;
 			++na;
 		}
+		else if ( 0 == std::string{argv[na]}.compare(std::string{"--modelSizeOut"}) ) 
+		{
+			out_model_size = true;
+			if (na+1==argc) break;
+			++na;
+		}
+		else if ( 0 == std::string{argv[na]}.compare(std::string{"--NOModelSizeOut"}) )
+		{
+			out_model_size = false;
+			if (na+1==argc) break;
+			++na;
+		}
 		else
 		{
 			std::cout << "Unknown option: " << argv[na] << std::endl;
@@ -272,7 +285,7 @@ int main(int argc, char *  argv[])
 	{
 		status =  drive(dataFile,blockFile,structureGraphFile,outFilePath,nIter,burnin,nChains,
 			covariancePrior,gammaPrior,gammaSampler,gammaInit,mrfGFile,betaPrior,
-			out_gamma,out_beta,out_G,out_sigmaRho,out_pi,out_tail);
+			out_gamma,out_beta,out_G,out_sigmaRho,out_pi,out_tail,out_model_size);
 	}
 	catch(const std::exception& e)
 	{

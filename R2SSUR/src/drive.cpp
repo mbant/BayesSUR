@@ -91,6 +91,13 @@ int drive_SUR( Chain_Data& chainData )
 		htpOutFile.close();
 	}
 
+	std::ofstream ModelSizeOutFile;
+	if ( chainData.output_model_size )
+	{
+		ModelSizeOutFile.open( outFilePrefix+"model_size_out.txt", std::ios::out | std::ios::trunc); ModelSizeOutFile.close();
+		ModelSizeOutFile.open( outFilePrefix+"model_size_out.txt" , std::ios_base::app); // note we don't close!
+	}
+
 	// Output to file the initial state (if burnin=0)
 	arma::umat gamma_out; // out var for the gammas
 	arma::umat g_out; // out var for G
@@ -157,7 +164,13 @@ int drive_SUR( Chain_Data& chainData )
 			beta_out = sampler[0] -> getBeta();
 
 		if ( chainData.output_sigmaRho )
-			sigmaRho_out  = sampler[0] -> getSigmaRho();
+			sigmaRho_out = sampler[0] -> getSigmaRho();
+
+		if ( chainData.output_model_size )
+		{
+			ModelSizeOutFile << sampler[0]->getModelSize() << " " << std::flush;
+			ModelSizeOutFile << endl << std::flush;
+		}
 
 	}
 					
@@ -209,6 +222,8 @@ int drive_SUR( Chain_Data& chainData )
 					hotspot_tail_prob_out += tmpVec;
 				}
 			}
+
+			// Nothing to update for model size
 		}
 
 		// Print something on how the chain is going
@@ -268,6 +283,12 @@ int drive_SUR( Chain_Data& chainData )
 					htpOutFile.close();
 				}
 
+				if ( chainData.output_model_size )
+				{
+					ModelSizeOutFile << sampler[0]->getModelSize() << " " << std::flush;
+					ModelSizeOutFile << endl << std::flush;
+				}
+
 				#ifndef CCODE
 				Rcpp::checkUserInterrupt(); // this checks for interrupts from R
 				#endif
@@ -309,6 +330,13 @@ int drive_SUR( Chain_Data& chainData )
 	logPOutFile << 	sampler[0] -> getLogLikelihood();
 	logPOutFile << 	endl << std::flush;
 	logPOutFile.close();
+
+	if ( chainData.output_model_size )
+	{
+		ModelSizeOutFile << sampler[0]->getModelSize() << std::flush;
+		ModelSizeOutFile << endl << std::flush;
+		ModelSizeOutFile.close();
+	}
 
 	// ----
 	if ( chainData.output_beta )
@@ -418,6 +446,12 @@ int drive_HESS( Chain_Data& chainData )
 		htpOutFile.close();
 	}
 
+	std::ofstream ModelSizeOutFile;
+	if ( chainData.output_model_size )
+	{
+		ModelSizeOutFile.open(outFilePrefix+"model_size_out.txt", std::ios::out | std::ios::trunc); ModelSizeOutFile.close(); // clear out previous content
+		ModelSizeOutFile.open( outFilePrefix+"model_size_out.txt" , std::ios_base::app); //note we don't close it
+	}
 
 	// Output to file the initial state (if burnin=0)
 	arma::umat gamma_out; // out var for the gammas
@@ -469,6 +503,12 @@ int drive_HESS( Chain_Data& chainData )
 
 		if ( chainData.output_beta )
 			beta_out = sampler[0] -> getBeta();
+		
+		if ( chainData.output_model_size )
+		{
+			ModelSizeOutFile << sampler[0]->getModelSize() << " " << std::flush;
+			ModelSizeOutFile << endl << std::flush;
+		}
 
 	}
 
@@ -515,6 +555,8 @@ int drive_HESS( Chain_Data& chainData )
 					hotspot_tail_prob_out += tmpVec;
 				}
 			}
+
+			// Nothing to update for model size
 		}
 
 		// Print something on how the chain is going
@@ -561,6 +603,12 @@ int drive_HESS( Chain_Data& chainData )
 					htpOutFile.close();
 				}
 
+				if ( chainData.output_model_size )
+				{
+					ModelSizeOutFile << sampler[0]->getModelSize() << " " << std::flush;
+					ModelSizeOutFile << endl << std::flush;
+				}
+
 				#ifndef CCODE
 				Rcpp::checkUserInterrupt(); // this checks for interrupts from R ... or does it?
 				#endif
@@ -591,6 +639,14 @@ int drive_HESS( Chain_Data& chainData )
 	logPOutFile << 	sampler[0] -> getLogLikelihood();
 	logPOutFile << 	endl << std::flush;
 	logPOutFile.close();
+
+
+	if ( chainData.output_model_size )
+	{
+		ModelSizeOutFile << sampler[0]->getModelSize() << std::flush;
+		ModelSizeOutFile.close();
+	}
+
 	// ----
 	if ( chainData.output_beta )
 	{
@@ -640,7 +696,7 @@ int drive( const std::string& dataFile, const std::string& blockFile, const std:
 			const std::string& covariancePrior, 
 			const std::string& gammaPrior, const std::string& gammaSampler, const std::string& gammaInit, const std::string& mrfGFile ,
 			const std::string& betaPrior,
-			bool output_gamma, bool output_beta, bool output_G, bool output_sigmaRho, bool output_pi, bool output_tail )
+			bool output_gamma, bool output_beta, bool output_G, bool output_sigmaRho, bool output_pi, bool output_tail, bool output_model_size )
 {
 
 	cout << "R2SSUR -- Bayesian Sparse Seemingly Unrelated Regression Modelling" << endl;
@@ -759,6 +815,7 @@ int drive( const std::string& dataFile, const std::string& blockFile, const std:
 	chainData.output_sigmaRho = output_sigmaRho;
 	chainData.output_pi = output_pi;
 	chainData.output_tail = output_tail;
+	chainData.output_model_size = output_model_size;
 
 	// ***********************************
 	// ***********************************

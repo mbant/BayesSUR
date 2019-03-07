@@ -54,7 +54,8 @@ runSSUR = function(data, Y, X, X_0=NULL,
                 covariancePrior="HIW",
                 gammaPrior="",gammaSampler="bandit", gammaInit="MLE", mrfG=NULL,
                 betaPrior="independent",
-                output_gamma = TRUE, output_beta = TRUE, output_G = TRUE, output_sigmaRho = TRUE, output_pi = TRUE, output_tail = TRUE,
+                output_gamma = TRUE, output_beta = TRUE, output_G = TRUE, output_sigmaRho = TRUE,
+                output_pi = TRUE, output_tail = TRUE, output_model_size = TRUE,
                 tmpFolder="tmp/")
 {
   
@@ -320,11 +321,14 @@ runSSUR = function(data, Y, X, X_0=NULL,
     
   if ( covariancePrior %in% c("HIW","IW") & output_sigmaRho )
     ret$output["sigmaRho"] = paste(sep="", outFilePath , dataString , "_",  methodString , "_sigmaRho_out.txt")
-    
+
+  if ( output_beta )
+    ret$output["model_size"] = paste(sep="", outFilePath , dataString , "_",  methodString , "_model_size_out.txt")
+  
   
   ret$status = R2SSUR_internal(data, blockList, structureGraph, outFilePath, nIter, burnin, nChains, 
             covariancePrior, gammaPrior, gammaSampler, gammaInit, mrfG, betaPrior,
-            output_gamma, output_beta, output_G, output_sigmaRho, output_pi, output_tail)
+            output_gamma, output_beta, output_G, output_sigmaRho, output_pi, output_tail, output_model_size)
 
   if(outFilePath != tmpFolder)
     unlink(tmpFolder,recursive = TRUE)

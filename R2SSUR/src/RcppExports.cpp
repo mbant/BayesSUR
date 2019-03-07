@@ -7,8 +7,8 @@
 using namespace Rcpp;
 
 // R2SSUR_internal
-int R2SSUR_internal(const std::string& dataFile, const std::string& blockFile, const std::string& structureGraphFile, const std::string& outFilePath, unsigned int nIter, unsigned int burnin, unsigned int nChains, const std::string& covariancePrior, const std::string& gammaPrior, const std::string& gammaSampler, const std::string& gammaInit, const std::string& mrfGFile, const std::string& betaPrior, bool output_gamma, bool output_beta, bool output_G, bool output_sigmaRho, bool output_pi, bool output_tail);
-RcppExport SEXP _R2SSUR_R2SSUR_internal(SEXP dataFileSEXP, SEXP blockFileSEXP, SEXP structureGraphFileSEXP, SEXP outFilePathSEXP, SEXP nIterSEXP, SEXP burninSEXP, SEXP nChainsSEXP, SEXP covariancePriorSEXP, SEXP gammaPriorSEXP, SEXP gammaSamplerSEXP, SEXP gammaInitSEXP, SEXP mrfGFileSEXP, SEXP betaPriorSEXP, SEXP output_gammaSEXP, SEXP output_betaSEXP, SEXP output_GSEXP, SEXP output_sigmaRhoSEXP, SEXP output_piSEXP, SEXP output_tailSEXP) {
+int R2SSUR_internal(const std::string& dataFile, const std::string& blockFile, const std::string& structureGraphFile, const std::string& outFilePath, unsigned int nIter, unsigned int burnin, unsigned int nChains, const std::string& covariancePrior, const std::string& gammaPrior, const std::string& gammaSampler, const std::string& gammaInit, const std::string& mrfGFile, const std::string& betaPrior, bool output_gamma, bool output_beta, bool output_G, bool output_sigmaRho, bool output_pi, bool output_tail, bool output_model_size);
+RcppExport SEXP _R2SSUR_R2SSUR_internal(SEXP dataFileSEXP, SEXP blockFileSEXP, SEXP structureGraphFileSEXP, SEXP outFilePathSEXP, SEXP nIterSEXP, SEXP burninSEXP, SEXP nChainsSEXP, SEXP covariancePriorSEXP, SEXP gammaPriorSEXP, SEXP gammaSamplerSEXP, SEXP gammaInitSEXP, SEXP mrfGFileSEXP, SEXP betaPriorSEXP, SEXP output_gammaSEXP, SEXP output_betaSEXP, SEXP output_GSEXP, SEXP output_sigmaRhoSEXP, SEXP output_piSEXP, SEXP output_tailSEXP, SEXP output_model_sizeSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::traits::input_parameter< const std::string& >::type dataFile(dataFileSEXP);
@@ -30,13 +30,14 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< bool >::type output_sigmaRho(output_sigmaRhoSEXP);
     Rcpp::traits::input_parameter< bool >::type output_pi(output_piSEXP);
     Rcpp::traits::input_parameter< bool >::type output_tail(output_tailSEXP);
-    rcpp_result_gen = Rcpp::wrap(R2SSUR_internal(dataFile, blockFile, structureGraphFile, outFilePath, nIter, burnin, nChains, covariancePrior, gammaPrior, gammaSampler, gammaInit, mrfGFile, betaPrior, output_gamma, output_beta, output_G, output_sigmaRho, output_pi, output_tail));
+    Rcpp::traits::input_parameter< bool >::type output_model_size(output_model_sizeSEXP);
+    rcpp_result_gen = Rcpp::wrap(R2SSUR_internal(dataFile, blockFile, structureGraphFile, outFilePath, nIter, burnin, nChains, covariancePrior, gammaPrior, gammaSampler, gammaInit, mrfGFile, betaPrior, output_gamma, output_beta, output_G, output_sigmaRho, output_pi, output_tail, output_model_size));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_R2SSUR_R2SSUR_internal", (DL_FUNC) &_R2SSUR_R2SSUR_internal, 19},
+    {"_R2SSUR_R2SSUR_internal", (DL_FUNC) &_R2SSUR_R2SSUR_internal, 20},
     {NULL, NULL, 0}
 };
 

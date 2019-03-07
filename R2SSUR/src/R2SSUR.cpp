@@ -22,7 +22,8 @@ int R2SSUR_internal(const std::string& dataFile, const std::string& blockFile, c
                     const std::string& gammaPrior="hotspot", const std::string& gammaSampler="bandit", 
                     const std::string& gammaInit = "MLE", const std::string& mrfGFile="",
                     const std::string& betaPrior="independent",
-                    bool output_gamma = true, bool output_beta = true, bool output_G = true, bool output_sigmaRho = true, bool output_pi = true, bool output_tail = true )
+                    bool output_gamma = true, bool output_beta = true, bool output_G = true, bool output_sigmaRho = true, 
+                    bool output_pi = true, bool output_tail = true, bool output_model_size = true )
 {
   int status {1};
   
@@ -30,7 +31,7 @@ int R2SSUR_internal(const std::string& dataFile, const std::string& blockFile, c
   {
     status =  drive(dataFile,blockFile,structureGraphFile,outFilePath,nIter,burnin,nChains,
                     covariancePrior,gammaPrior,gammaSampler,gammaInit,mrfGFile,betaPrior,
-                    output_gamma, output_beta, output_G, output_sigmaRho, output_pi, output_tail);
+                    output_gamma, output_beta, output_G, output_sigmaRho, output_pi, output_tail, output_model_size);
   }
   catch(const std::exception& e)
   {
