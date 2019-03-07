@@ -11,7 +11,7 @@
 #' @param nChains number of parallel chains to run
 NULL
 
-R2SSUR_internal <- function(dataFile, blockFile, structureGraphFile, outFilePath, nIter = 10L, burnin = 0L, nChains = 1L, covariancePrior = "HIW", gammaPrior = "hotspot", gammaSampler = "bandit", gammaInit = "MLE", mrfGFile = "", betaPrior = "independent") {
-    .Call('_R2SSUR_R2SSUR_internal', PACKAGE = 'R2SSUR', dataFile, blockFile, structureGraphFile, outFilePath, nIter, burnin, nChains, covariancePrior, gammaPrior, gammaSampler, gammaInit, mrfGFile, betaPrior)
+R2SSUR_internal <- function(dataFile, blockFile, structureGraphFile, outFilePath, nIter = 10L, burnin = 0L, nChains = 1L, covariancePrior = "HIW", gammaPrior = "hotspot", gammaSampler = "bandit", gammaInit = "MLE", mrfGFile = "", betaPrior = "independent", output_gamma = TRUE, output_beta = TRUE, output_G = TRUE, output_sigmaRho = TRUE, output_pi = TRUE, output_tail = TRUE) {
+    .Call('_R2SSUR_R2SSUR_internal', PACKAGE = 'R2SSUR', dataFile, blockFile, structureGraphFile, outFilePath, nIter, burnin, nChains, covariancePrior, gammaPrior, gammaSampler, gammaInit, mrfGFile, betaPrior, output_gamma, output_beta, output_G, output_sigmaRho, output_pi, output_tail)
 }
 

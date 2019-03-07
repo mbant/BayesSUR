@@ -21,14 +21,16 @@ int R2SSUR_internal(const std::string& dataFile, const std::string& blockFile, c
                     const std::string& covariancePrior="HIW", 
                     const std::string& gammaPrior="hotspot", const std::string& gammaSampler="bandit", 
                     const std::string& gammaInit = "MLE", const std::string& mrfGFile="",
-                    const std::string& betaPrior="independent" )
+                    const std::string& betaPrior="independent",
+                    bool output_gamma = true, bool output_beta = true, bool output_G = true, bool output_sigmaRho = true, bool output_pi = true, bool output_tail = true )
 {
   int status {1};
   
   try
   {
     status =  drive(dataFile,blockFile,structureGraphFile,outFilePath,nIter,burnin,nChains,
-                    covariancePrior,gammaPrior,gammaSampler,gammaInit,mrfGFile,betaPrior);
+                    covariancePrior,gammaPrior,gammaSampler,gammaInit,mrfGFile,betaPrior,
+                    output_gamma, output_beta, output_G, output_sigmaRho, output_pi, output_tail);
   }
   catch(const std::exception& e)
   {

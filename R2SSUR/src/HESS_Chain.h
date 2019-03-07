@@ -191,6 +191,9 @@ class HESS_Chain : public ESS_Atom<HESS_Chain>
 
         double getLogPW() const;
         // no setter for this, dedicated setter below
+        
+        // get Beta, here we get asample from the posterior for output reasons
+        arma::mat& getBeta() const;
 
         // LOG-LIKELIHOOD FOR THE SSUR MODEL
         double getLogLikelihood() const;

@@ -6,7 +6,8 @@ int drive( const std::string& dataFile, const std::string& blockFile, const std:
 			unsigned int nIter, unsigned int burnin, unsigned int nChains,
 			const std::string& covariancePrior, 
 			const std::string& gammaPrior, const std::string& gammaSampler, const std::string& gammaInit, const std::string& mrfGFile ,
-			const std::string& betaPrior );
+			const std::string& betaPrior,
+			bool output_gamma, bool output_beta, bool output_G, bool output_sigmaRho, bool output_pi, bool output_tail );
 
 int main(int argc, char *  argv[])
 {
@@ -22,12 +23,16 @@ int main(int argc, char *  argv[])
 	std::string outFilePath = "";
 
 	std::string covariancePrior = "";
+	
 	std::string gammaPrior = "";
 	std::string mrfGFile = "";
 	std::string gammaSampler = "bandit";
 	std::string gammaInit = "MLE";
 
 	std::string betaPrior = "independent";
+
+	bool out_gamma = true, out_beta = true, out_G = true,
+		 out_sigmaRho = true, out_pi = true, out_tail = true;
 
     // ### Read and interpret command line (to put in a separate file / function?)
     int na = 1;
@@ -167,6 +172,78 @@ int main(int argc, char *  argv[])
 			if (na+1==argc) break; // in case it's last, break
 			++na; // otherwise augment counter
 		}
+		else if ( 0 == std::string{argv[na]}.compare(std::string{"--gammaOut"}) )  //  From here set outputs
+		{
+			out_gamma = true;
+			if (na+1==argc) break;
+			++na;
+		}
+		else if ( 0 == std::string{argv[na]}.compare(std::string{"--NOGammaOut"}) )
+		{
+			out_gamma = false;
+			if (na+1==argc) break;
+			++na;
+		}
+		else if ( 0 == std::string{argv[na]}.compare(std::string{"--betaOut"}) ) 
+		{
+			out_beta = true;
+			if (na+1==argc) break;
+			++na;
+		}
+		else if ( 0 == std::string{argv[na]}.compare(std::string{"--NOBetaOut"}) )
+		{
+			out_beta = false;
+			if (na+1==argc) break;
+			++na;
+		}
+		else if ( 0 == std::string{argv[na]}.compare(std::string{"--GOut"}) ) 
+		{
+			out_G = true;
+			if (na+1==argc) break;
+			++na;
+		}
+		else if ( 0 == std::string{argv[na]}.compare(std::string{"--NOGOut"}) )
+		{
+			out_G = false;
+			if (na+1==argc) break;
+			++na;
+		}
+		else if ( 0 == std::string{argv[na]}.compare(std::string{"--sigmaRhoOut"}) ) 
+		{
+			out_sigmaRho = true;
+			if (na+1==argc) break;
+			++na;
+		}
+		else if ( 0 == std::string{argv[na]}.compare(std::string{"--NOSigmaRhoOut"}) )
+		{
+			out_sigmaRho = false;
+			if (na+1==argc) break;
+			++na;
+		}
+		else if ( 0 == std::string{argv[na]}.compare(std::string{"--piOut"}) ) 
+		{
+			out_pi = true;
+			if (na+1==argc) break;
+			++na;
+		}
+		else if ( 0 == std::string{argv[na]}.compare(std::string{"--NOPiOut"}) )
+		{
+			out_pi = false;
+			if (na+1==argc) break;
+			++na;
+		}
+		else if ( 0 == std::string{argv[na]}.compare(std::string{"--tailOut"}) ) 
+		{
+			out_tail = true;
+			if (na+1==argc) break;
+			++na;
+		}
+		else if ( 0 == std::string{argv[na]}.compare(std::string{"--NOTailOut"}) )
+		{
+			out_tail = false;
+			if (na+1==argc) break;
+			++na;
+		}
 		else
 		{
 			std::cout << "Unknown option: " << argv[na] << std::endl;
@@ -194,7 +271,8 @@ int main(int argc, char *  argv[])
 	try
 	{
 		status =  drive(dataFile,blockFile,structureGraphFile,outFilePath,nIter,burnin,nChains,
-			covariancePrior,gammaPrior,gammaSampler,gammaInit,mrfGFile,betaPrior);
+			covariancePrior,gammaPrior,gammaSampler,gammaInit,mrfGFile,betaPrior,
+			out_gamma,out_beta,out_G,out_sigmaRho,out_pi,out_tail);
 	}
 	catch(const std::exception& e)
 	{

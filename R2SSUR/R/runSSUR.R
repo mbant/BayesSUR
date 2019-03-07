@@ -54,6 +54,7 @@ runSSUR = function(data, Y, X, X_0=NULL,
                 covariancePrior="HIW",
                 gammaPrior="",gammaSampler="bandit", gammaInit="MLE", mrfG=NULL,
                 betaPrior="independent",
+                output_gamma = TRUE, output_beta = TRUE, output_G = TRUE, output_sigmaRho = TRUE, output_pi = TRUE, output_tail = TRUE,
                 tmpFolder="tmp/")
 {
   
@@ -279,7 +280,7 @@ runSSUR = function(data, Y, X, X_0=NULL,
   dir.create(outFilePath)
   
   ## Create the return object
-  ret = list( status=1,inupt=list() ,output = list() )
+  ret = list( status=1, input=list(), output = list() )
   class(ret) = "R2SSUR"
   
   # Copy the inputs
@@ -301,26 +302,29 @@ runSSUR = function(data, Y, X, X_0=NULL,
 
   # Prepare path to outputs
   ret$output["logP"] = paste(sep="", outFilePath , dataString , "_",  methodString , "_logP_out.txt")
-  ret$output["gamma"] = paste(sep="", outFilePath , dataString , "_",  methodString , "_gamma_out.txt")
+
+  if ( output_gamma )
+    ret$output["gamma"] = paste(sep="", outFilePath , dataString , "_",  methodString , "_gamma_out.txt")
   
-  if( gammaPrior %in% c("hierarchical","hotspot"))
+  if( gammaPrior %in% c("hierarchical","hotspot") & output_pi )
     ret$output["pi"] = paste(sep="", outFilePath , dataString , "_",  methodString , "_pi_out.txt")
 
-  if( gammaPrior == "hotspot")
+  if( gammaPrior == "hotspot" & output_tail )
     ret$output["tail"] = paste(sep="", outFilePath , dataString , "_",  methodString , "_hotspot_tail_p_out.txt")
   
-  if ( covariancePrior %in% c("HIW","IW") ) # not implemented yet for HESS
+  if ( output_beta )
     ret$output["beta"] = paste(sep="", outFilePath , dataString , "_",  methodString , "_beta_out.txt")
   
-  if ( covariancePrior == "HIW" )
+  if ( covariancePrior == "HIW" & output_G )
     ret$output["G"] = paste(sep="", outFilePath , dataString , "_",  methodString , "_G_out.txt")
     
-  if ( covariancePrior %in% c("HIW","IW") )
+  if ( covariancePrior %in% c("HIW","IW") & output_sigmaRho )
     ret$output["sigmaRho"] = paste(sep="", outFilePath , dataString , "_",  methodString , "_sigmaRho_out.txt")
     
   
   ret$status = R2SSUR_internal(data, blockList, structureGraph, outFilePath, nIter, burnin, nChains, 
-            covariancePrior, gammaPrior, gammaSampler, gammaInit, mrfG, betaPrior)
+            covariancePrior, gammaPrior, gammaSampler, gammaInit, mrfG, betaPrior,
+            output_gamma, output_beta, output_G, output_sigmaRho, output_pi, output_tail)
 
   if(outFilePath != tmpFolder)
     unlink(tmpFolder,recursive = TRUE)

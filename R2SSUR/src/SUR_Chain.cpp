@@ -1515,12 +1515,6 @@ double SUR_Chain::sampleBetaGivenSigmaRho( arma::mat& mutantBeta , const arma::m
                 logPrior += logPBetaMaskgPriorK( tmpVec , w , 
                         iXtX , varianceFactor );
 
-                // to be sure
-                mutantBeta.col(k).fill( 0. );
-
-                for(unsigned int j=0 ; j<VS_IN_k.n_elem ; ++j)
-                    mutantBeta(VS_IN_k(j),k) = tmpVec(j);
-                
                 break;
             }
 
@@ -1537,18 +1531,19 @@ double SUR_Chain::sampleBetaGivenSigmaRho( arma::mat& mutantBeta , const arma::m
                 tmpVec = Distributions::randMvNormal( mu_k , W_k );
                 logP += Distributions::logPDFNormal( tmpVec , mu_k , W_k );
 
-                // to be sure
-                mutantBeta.col(k).fill( 0. );
-
-                for(unsigned int j=0 ; j<VS_IN_k.n_elem ; ++j)
-                    mutantBeta(VS_IN_k(j),k) = tmpVec(j);
-
                 break;   
             }
 
             default:
                 throw Bad_Beta_Type ( beta_type );
         }
+
+        // to be sure
+        mutantBeta.col(k).fill( 0. );
+        mutantBeta(VS_IN_k,singleIdx_k) = tmpVec;
+
+        // for(unsigned int j=0 ; j<VS_IN_k.n_elem ; ++j)
+        //     mutantBeta(VS_IN_k(j),k) = tmpVec(j);
 
     }
 
@@ -1651,9 +1646,10 @@ double SUR_Chain::sampleBetaKGivenSigmaRho( const unsigned int k , arma::mat& mu
 
     // to be sure
     mutantBeta.col(k).fill( 0. );
-
-    for(unsigned int j=0 ; j<VS_IN_k.n_elem ; ++j)
-        mutantBeta(VS_IN_k(j),k) = tmpVec(j);
+    mutantBeta(VS_IN_k,singleIdx_k) = tmpVec;
+    
+    // for(unsigned int j=0 ; j<VS_IN_k.n_elem ; ++j)
+    //     mutantBeta(VS_IN_k(j),k) = tmpVec(j);
 
     // Now the beta have changed so X*B is changed as well as U, compute it to update it for the logLikelihood
     // finally as U changed, rhoU changes as well

@@ -44,6 +44,9 @@ struct Chain_Data
 	// file names and paths
 	std::string filePrefix , outFilePath;
 
+	// outputs
+	bool output_gamma, output_beta, output_sigmaRho,
+		output_G, output_pi, output_tail, output_model_size;
 };
 	
 
@@ -55,6 +58,7 @@ int drive( const std::string& dataFile, const std::string& blockFile, const std:
 			unsigned int nIter, unsigned int burnin, unsigned int nChains,
 			const std::string& covariancePrior, 
 			const std::string& gammaPrior, const std::string& gammaSampler, const std::string& gammaInit, const std::string& mrfGFile ,
-			const std::string& betaPrior );
+			const std::string& betaPrior,
+			bool output_gamma, bool output_beta, bool output_G, bool output_sigmaRho, bool output_pi, bool output_tail );
 
 #endif

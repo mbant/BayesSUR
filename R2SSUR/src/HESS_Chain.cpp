@@ -353,6 +353,66 @@ double HESS_Chain::getWAccRate() const{ return w_acc_count/(double)internalItera
 double HESS_Chain::getLogPW() const{ return logP_w; }
 // no setter for this, dedicated setter below
 
+arma::mat& HESS_Chain::getBeta() const
+{
+    // Init to zero
+    static arma::mat beta = arma::zeros<arma::mat>(nFixedPredictors+nVSPredictors,nOutcomes); // note the static here
+
+    for( unsigned int k=0; k<nOutcomes; ++k)
+    {
+		arma::uvec singleIdx_k = { k };
+        arma::uvec VS_IN = gammaMask( arma::find( gammaMask.col(1) == k ) , arma::zeros<arma::uvec>(1) );
+        arma::mat W_k;
+        
+        if( preComputedXtX )
+        {
+            switch ( beta_type )
+            {
+                case Beta_Type::gprior :
+                {
+                    W_k = (w*temperature)/(w+temperature) * arma::inv_sympd( XtX(VS_IN,VS_IN) );
+                    break;
+                }
+
+                case Beta_Type::independent :
+                {
+                    W_k = arma::inv_sympd( XtX(VS_IN,VS_IN)/temperature + 1./w * arma::eye<arma::mat>(VS_IN.n_elem,VS_IN.n_elem) );
+                    break;
+                }
+            
+                default:
+                    throw Bad_Beta_Type ( beta_type );
+            }
+        }
+        else
+        {
+            switch ( beta_type )
+            {
+                case Beta_Type::gprior :
+                {
+                   W_k = (w*temperature)/(w+temperature) * arma::inv_sympd( ( data->cols( (*predictorsIdx)(VS_IN) ).t() * data->cols( (*predictorsIdx)(VS_IN) ) ) );
+                    break;
+                }
+
+                case Beta_Type::independent :
+                {
+                    W_k = arma::inv_sympd( ( data->cols( (*predictorsIdx)(VS_IN) ).t() * data->cols( (*predictorsIdx)(VS_IN) ) )/temperature + 1./w * arma::eye<arma::mat>(VS_IN.n_elem,VS_IN.n_elem) );
+                    break;
+                }
+            
+                default:
+                    throw Bad_Beta_Type ( beta_type );
+            }
+        }
+
+        arma::vec mu_k = W_k * ( data->cols( VS_IN ).t() * data->col( (*outcomesIdx)(k) ) ); // we divide by temp later
+
+        beta.submat(VS_IN,singleIdx_k) = Distributions::randMvNormal( mu_k , W_k );
+    }
+
+    return beta;
+}
+
 // LOG-LIKELIHOOD FOR THE HESS MODEL
 double HESS_Chain::getLogLikelihood() const{ return log_likelihood ; }
 void HESS_Chain::setLogLikelihood( double log_likelihood_ ){ log_likelihood = log_likelihood_ ; }
