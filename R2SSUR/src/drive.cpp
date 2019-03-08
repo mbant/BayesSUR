@@ -12,6 +12,8 @@ extern omp_lock_t RNGlock; //defined in global.h
 #endif
 extern std::vector<std::mt19937_64> rng;
 
+using Utils::Chain_Data;
+
 int drive_SUR( Chain_Data& chainData )
 {
 
@@ -19,35 +21,47 @@ int drive_SUR( Chain_Data& chainData )
 	// **********  INIT THE CHAIN *************
 	// ****************************************
 	cout << "Initialising the (SUR) MCMC Chain" << std::flush;
+	
 	ESS_Sampler<SUR_Chain> sampler( chainData.surData , chainData.nChains , 1.2 ,
         	chainData.gamma_sampler_type, chainData.gamma_type, chainData.beta_type, chainData.covariance_type);
-	// *****************************
+	
 	cout << " ... " << std::flush;
+	// *****************************
 
-	// extra step needed for MRF prior
+	// extra step needed to read in the MRF prior G matrix if needed
+	// ************************************
 	if ( chainData.gamma_type == Gamma_Type::mrf )
 	{
-		for( unsigned int i=0; i< chainData.nChains; ++i)
+		for( unsigned int i=0; i< chainData.nChains; ++i )
 		{
 			sampler[i]->mrfGInit( chainData.mrfG );
 			sampler[i]->logPGamma();
 		}
 	}
 
+	// Init all parameters
+	// *****************************
+	sampler.setHyperParameters( chainData );
+
 	// *****************************
 
+	// set when the JT move should start
+	unsigned int jtStartIteration = 0;
+	if( chainData.covariance_type == Covariance_Type::HIW )
+	{
+		jtStartIteration = chainData.nIter/10;
+		for( unsigned int i=0; i< chainData.nChains; ++i )
+			sampler[i]->setJTStartIteration( jtStartIteration );
+	}
+
+	// Init gamma and beta for the main chain
+	// *****************************
 	sampler[0] -> gammaInit( chainData.gammaInit );
 	sampler[0] -> betaInit( chainData.betaInit );
     sampler[0] -> updateQuantities();
     sampler[0] -> logLikelihood();
 	sampler[0] -> stepSigmaRhoAndBeta();
 
-	// *****************************
-
-	// set when the JT move should start
-	unsigned int jtStartIteration = chainData.nIter/10;
-	for( unsigned int i=0; i< chainData.nChains; ++i)
-		sampler[i]->setJTStartIteration( jtStartIteration );
 
 	// ****************************************
 
@@ -390,14 +404,16 @@ int drive_HESS( Chain_Data& chainData )
 	// ****************************************
 	// **********  INIT THE CHAIN *************
 	// ****************************************
-	cout << "Initialising the (HESS) MCMC Chain ... " << std::flush;
+	cout << "Initialising the (HESS) MCMC Chain " << std::flush;
 
 	ESS_Sampler<HESS_Chain> sampler( chainData.surData , chainData.nChains , 1.2 ,
         	chainData.gamma_sampler_type, chainData.gamma_type, chainData.beta_type, chainData.covariance_type);
 
+	cout << " ... " << std::flush;
 	// *****************************
 	
-	// extra step needed for MRF prior
+	// extra step needed to read in the MRF prior G matrix if needed
+	// **********************************
 	if ( chainData.gamma_type == Gamma_Type::mrf )
 	{
 		for( unsigned int i=0; i< chainData.nChains; ++i)
@@ -407,10 +423,16 @@ int drive_HESS( Chain_Data& chainData )
 		}
 	}
 
+	// Init all parameters
+	// *****************************
+	sampler.setHyperParameters( chainData );
+
+	// Init gamma for the main chain
 	// *****************************
 
 	sampler[0] -> gammaInit( chainData.gammaInit ); // this updates gammaMask as well
 	sampler[0] -> logLikelihood();
+
 
 	// ****************************************
 
@@ -691,7 +713,7 @@ int drive_HESS( Chain_Data& chainData )
 // *******************************************************************************
 
 
-int drive( const std::string& dataFile, const std::string& blockFile, const std::string& structureGraphFile, const std::string& outFilePath,  
+int drive( const std::string& dataFile, const std::string& blockFile, const std::string& structureGraphFile, const std::string& hyperParFile, const std::string& outFilePath,  
 			unsigned int nIter, unsigned int burnin, unsigned int nChains,
 			const std::string& covariancePrior, 
 			const std::string& gammaPrior, const std::string& gammaSampler, const std::string& gammaInit, const std::string& mrfGFile ,
@@ -822,7 +844,7 @@ int drive( const std::string& dataFile, const std::string& blockFile, const std:
 
 
 	// read Data and format into usables
-	cout << "Reading input ... ";
+	cout << "Reading input files ... ";
 
 	try
 	{
@@ -833,6 +855,17 @@ int drive( const std::string& dataFile, const std::string& blockFile, const std:
 		std::cerr << e.what() << '\n';
 		return 1;
 	}	
+
+	try
+	{
+		Utils::readHyperPar(hyperParFile, chainData );
+	}
+	catch(const std::exception& e)
+	{
+		std::cerr << e.what() << '\n';
+		return 1;
+	}	
+
 
 	cout << " successfull!" << endl;
 

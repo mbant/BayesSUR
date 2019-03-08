@@ -114,6 +114,7 @@ class HESS_Chain : public ESS_Atom<HESS_Chain>
         void setSigmaB( double ); 
         
         void sigmaABInit();
+        void setSigmaAB( double, double );
 
         // no setter for this, dedicated setter below
 
@@ -127,6 +128,8 @@ class HESS_Chain : public ESS_Atom<HESS_Chain>
 
         double getOB() const;
         void setOB( double );
+
+        void setOAB( double, double );
 
         double getVarOProposal() const;
         void setVarOProposal( double );
@@ -148,6 +151,8 @@ class HESS_Chain : public ESS_Atom<HESS_Chain>
         double getPiB() const;
         void setPiB( double );
 
+        void setPiAB( double, double );
+
         double getVarPiProposal() const;
         void setVarPiProposal( double );
 
@@ -158,8 +163,16 @@ class HESS_Chain : public ESS_Atom<HESS_Chain>
         // no setter for this, dedicated setter below
 
         // MRF
-        inline arma::mat& getMRFG() { return mrfG; }
-        void setMRFG( arma::mat& mrfG_ ) { mrfG = mrfG_; logPGamma(); }
+        inline arma::mat& getMRFG() { return mrf_G; }
+        void setMRFG( arma::mat& mrf_G_ ) { mrf_G = mrf_G_; logPGamma(); }
+
+        double getGammaD() const;
+        void setGammaD( double );
+
+        double getGammaE() const;
+        void setGammaE( double );
+
+        void setGammaDE( double, double );
 
         // GAMMA (bandit defined above)
         arma::umat& getGamma();
@@ -186,6 +199,8 @@ class HESS_Chain : public ESS_Atom<HESS_Chain>
         double getWB() const;
         void setWB( double );
 
+        void setWAB( double, double );
+
         double getVarWProposal() const;
         void setVarWProposal( double );
 
@@ -194,7 +209,7 @@ class HESS_Chain : public ESS_Atom<HESS_Chain>
         double getLogPW() const;
         // no setter for this, dedicated setter below
         
-        // get Beta, here we get asample from the posterior for output reasons
+        // get Beta, here we get a sample from the posterior for output reasons
         arma::mat& getBeta() const;
 
         // LOG-LIKELIHOOD FOR THE SSUR MODEL
@@ -205,6 +220,14 @@ class HESS_Chain : public ESS_Atom<HESS_Chain>
         // log prior and log posterior
         double getJointLogPrior() const;
         double getJointLogPosterior() const;
+
+        void setNu( double ){ throw Bad_Covariance_Type( covariance_type ) ; }
+        void setTauA( double ){ throw Bad_Covariance_Type( covariance_type ) ; }
+        void setTauB( double ){ throw Bad_Covariance_Type( covariance_type ) ; }
+        void setTauAB( double , double ){ throw Bad_Covariance_Type( covariance_type ) ; }
+        void setEtaA( double ){ throw Bad_Covariance_Type( covariance_type ) ; }
+        void setEtaB( double ){ throw Bad_Covariance_Type( covariance_type ) ; }
+        void setEtaAB( double , double ){ throw Bad_Covariance_Type( covariance_type ) ; }
 
         // ******************************
         // Init Methods
@@ -224,7 +247,7 @@ class HESS_Chain : public ESS_Atom<HESS_Chain>
         void piInit( arma::vec& , double , double , double );
 
         void mrfGInit();
-        void mrfGInit( arma::mat& mrfG_ );
+        void mrfGInit( arma::mat& );
 
         void gammaInit();
         void gammaInit( arma::umat& );
@@ -411,7 +434,8 @@ class HESS_Chain : public ESS_Atom<HESS_Chain>
         double logP_pi;
 
         // MRF PRIOR
-        arma::mat mrfG;
+        arma::mat mrf_G;
+        double mrf_d, mrf_e;
 
         // GAMMA - variable selection binary indexes
         // gamma_jk ~ Bernulli( omega_jk ), with omega_jk = o_k * pi_j

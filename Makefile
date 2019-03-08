@@ -11,7 +11,10 @@ SOURCES_BVS=$(SOURCE_DIR)/global.cpp $(SOURCE_DIR)/utils.cpp $(SOURCE_DIR)/distr
 #ESS_Atom.h and Parameters_type.h are interface only
 OBJECTS_BVS=$(SOURCES_BVS:.cpp=.o)
 
-all:$(SOURCES_BVS) BVS_NONVIDIA
+SOURCES_XML=$(SOURCE_DIR)/pugixml.cpp
+OBJECTS_XML=$(SOURCES_XML:.cpp=.o)
+
+all:$(SOURCES_XML) $(SOURCES_BVS) BVS_NONVIDIA
 
 BVS_NVIDIA: OPTIM_FLAGS := -O3
 BVS_NVIDIA: $(OBJECTS_BVS)
@@ -21,14 +24,14 @@ BVS_NVIDIA: $(OBJECTS_BVS)
 # if you compile against nvblas run with LD_PRELOAD=/usr/lib64/libnvblas.so or similar path to libnvblas.so
 
 BVS_NONVIDIA: OPTIM_FLAGS := -O3
-BVS_NONVIDIA: $(OBJECTS_BVS)
+BVS_NONVIDIA: $(OBJECTS_XML) $(OBJECTS_BVS)
 	@echo [Linking and producing executable]:
-	$(CC) $(OBJECTS_BVS) -o BVS_Reg $(OPENLDFLAGS)
+	$(CC) $(OBJECTS_XML) $(OBJECTS_BVS) -o BVS_Reg $(OPENLDFLAGS)
 
 BVS_DEBUG: OPTIM_FLAGS := -O0 #maybe O1 ? -pg ? linker as well?
-BVS_DEBUG: $(OBJECTS_BVS)
+BVS_DEBUG: $(OBJECTS_XML) $(OBJECTS_BVS)
 	@echo [Linking and producing executable]:
-	$(CC) $(OBJECTS_BVS) -o BVS_DEBUG_Reg $(OPENLDFLAGS) -ggdb3 -g -lprofiler 
+	$(CC) $(OBJECTS_XML) $(OBJECTS_BVS) -o BVS_DEBUG_Reg $(OPENLDFLAGS) -ggdb3 -g -lprofiler 
 
 %.o: %.cpp
 	@echo [Compiling]: $<

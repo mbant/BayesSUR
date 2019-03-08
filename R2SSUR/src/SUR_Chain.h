@@ -138,6 +138,8 @@ class SUR_Chain : public ESS_Atom<SUR_Chain>
         double getTauB() const;
         void setTauB( double );
 
+        void setTauAB( double, double );
+
         double getVarTauProposal() const;
         void setVarTauProposal( double );
 
@@ -157,6 +159,8 @@ class SUR_Chain : public ESS_Atom<SUR_Chain>
 
         double getEtaB() const;
         void setEtaB( double );
+
+        void setEtaAB( double, double );
 
         double getLogPEta() const;
         // no setter for this, dedicated setter below
@@ -198,6 +202,8 @@ class SUR_Chain : public ESS_Atom<SUR_Chain>
         double getOB() const;
         void setOB( double );
 
+        void setOAB( double, double );
+
         double getVarOProposal() const;
         void setVarOProposal( double );
 
@@ -218,6 +224,8 @@ class SUR_Chain : public ESS_Atom<SUR_Chain>
         double getPiB() const;
         void setPiB( double );
 
+        void setPiAB( double, double );
+
         double getVarPiProposal() const;
         void setVarPiProposal( double );
 
@@ -228,13 +236,21 @@ class SUR_Chain : public ESS_Atom<SUR_Chain>
         // no setter for this, dedicated setter below
 
         // MRF
-        inline arma::mat& getMRFG() { return mrfG; }
-        void setMRFG( arma::mat& mrfG_ ) { mrfG = mrfG_; logPGamma(); }
+        inline arma::mat& getMRFG() { return mrf_G; }
+        void setMRFG( arma::mat& mrf_G_ ) { mrf_G = mrf_G_; logPGamma(); }
 
         // GAMMA (bandit defined above)
         arma::umat& getGamma();
         void setGamma( arma::umat& );
         void setGamma( arma::umat& , double );
+
+        double getGammaD() const;
+        void setGammaD( double );
+
+        double getGammaE() const;
+        void setGammaE( double );
+
+        void setGammaDE( double, double );        
         
         unsigned int getNUpdatesMC3() const;
         void setNUpdatesMC3( unsigned int );
@@ -256,6 +272,8 @@ class SUR_Chain : public ESS_Atom<SUR_Chain>
         double getWB() const;
         void setWB( double );
 
+        void setWAB( double, double );        
+
         double getLogPW() const;
         // no setter for this, dedicated setter below
 
@@ -275,6 +293,10 @@ class SUR_Chain : public ESS_Atom<SUR_Chain>
         // log prior and log posterior
         double getJointLogPrior() const;
         double getJointLogPosterior() const;
+
+        void setSigmaA( double ){ throw Bad_Covariance_Type( covariance_type ) ; }
+        void setSigmaB( double ){ throw Bad_Covariance_Type( covariance_type ) ; }
+        void setSigmaAB( double , double ){ throw Bad_Covariance_Type( covariance_type ) ; }
 
         // ******************************
         // Init Methods
@@ -309,7 +331,7 @@ class SUR_Chain : public ESS_Atom<SUR_Chain>
         void piInit( arma::vec& , double , double , double );
 
         void mrfGInit();
-        void mrfGInit( arma::mat& mrfG_ );
+        void mrfGInit( arma::mat& );
 
         void gammaInit();
         void gammaInit( arma::umat& );
@@ -611,7 +633,8 @@ class SUR_Chain : public ESS_Atom<SUR_Chain>
         unsigned int jtStartIteration;
 
         // MRF PRIOR
-        arma::mat mrfG;
+        arma::mat mrf_G;
+        double mrf_d, mrf_e;
 
         // GAMMA - variable selection binary indexes
         // gamma_jk ~ Bernulli( omega_jk ), with omega_jk = o_k * pi_j

@@ -134,7 +134,7 @@ void SUR_Chain::gPriorInit() // g Prior can only be init at the start, so no pro
 
 }
 
-// usefull quantities to keep track of
+// useful quantities to keep track of
 arma::umat& SUR_Chain::getGammaMask(){ return gammaMask; }
 void SUR_Chain::setGammaMask( arma::umat  externalGammaMask ){ gammaMask =  externalGammaMask ; }
 
@@ -242,6 +242,16 @@ void SUR_Chain::setTauB( double b_tau_ )
     logPTau();
 }
 
+void SUR_Chain::setTauAB( double a_tau_ , double b_tau_ )
+{
+    if ( covariance_type != Covariance_Type::HIW || covariance_type != Covariance_Type::IW )
+        throw Bad_Covariance_Type( covariance_type );
+        
+    a_tau = a_tau_ ;
+    b_tau = b_tau_ ; 
+    logPTau();
+}
+
 double SUR_Chain::getVarTauProposal() const{ return var_tau_proposal ; }
 void SUR_Chain::setVarTauProposal( double var_tau_proposal_ ){ var_tau_proposal = var_tau_proposal_ ; }
 
@@ -275,6 +285,16 @@ void SUR_Chain::setEtaA( double a_eta_ )
 double SUR_Chain::getEtaB() const{ return b_eta ; }
 void SUR_Chain::setEtaB( double b_eta_ )
 {
+    b_eta = b_eta_ ; 
+    logPEta();
+}
+
+void SUR_Chain::setEtaAB( double a_eta_ , double b_eta_ )
+{
+    if( covariance_type != Covariance_Type::HIW )
+        throw Bad_Covariance_Type( covariance_type );
+
+    a_eta = a_eta_ ; 
     b_eta = b_eta_ ; 
     logPEta();
 }
@@ -361,6 +381,16 @@ void SUR_Chain::setOB( double b_o_ )
     logPO();
 }
 
+void SUR_Chain::setOAB( double a_o_ , double b_o_ )
+{
+    if ( gamma_type != Gamma_Type::hotspot )
+        throw Bad_Gamma_Type( gamma_type );
+
+    a_o = a_o_ ;
+    b_o = b_o_ ;
+    logPO();
+}
+
 double SUR_Chain::getVarOProposal() const{ return var_o_proposal ; }
 void SUR_Chain::setVarOProposal( double var_o_proposal_ ){ var_o_proposal = var_o_proposal_ ; }
 
@@ -398,6 +428,16 @@ void SUR_Chain::setPiB( double b_pi_ )
     logPPi();
 }
 
+void SUR_Chain::setPiAB( double a_pi_ , double b_pi_ )
+{
+    if ( gamma_type != Gamma_Type::hotspot || gamma_type != Gamma_Type::hierarchical )
+        throw Bad_Gamma_Type( gamma_type );
+
+    a_pi = a_pi_ ;
+    b_pi = b_pi_ ;
+    logPPi();
+}
+
 double SUR_Chain::getVarPiProposal() const{ return var_pi_proposal ; }
 void SUR_Chain::setVarPiProposal( double var_pi_proposal_ ){ var_pi_proposal = var_pi_proposal_ ; }
 
@@ -419,6 +459,36 @@ void SUR_Chain::setGamma( arma::umat& externalGamma , double logP_gamma_ )
 {
     gamma = externalGamma ; 
     logP_gamma = logP_gamma_ ;
+}
+
+double SUR_Chain::getGammaD() const{ return mrf_d ; }
+void SUR_Chain::setGammaD( double mrf_d_ )
+{
+    if( gamma_type != Gamma_Type::mrf )
+        throw Bad_Gamma_Type( gamma_type );
+
+    mrf_d = mrf_d_ ;
+    logPGamma();
+}
+
+double SUR_Chain::getGammaE() const{ return mrf_e ; }
+void SUR_Chain::setGammaE( double mrf_e_ )
+{
+    if( gamma_type != Gamma_Type::mrf )
+        throw Bad_Gamma_Type( gamma_type );
+
+    mrf_e = mrf_e_ ;
+    logPGamma();
+}
+
+void SUR_Chain::setGammaDE( double mrf_d_ , double mrf_e_ )
+{
+    if( gamma_type != Gamma_Type::mrf )
+        throw Bad_Gamma_Type( gamma_type );
+
+    mrf_d = mrf_d_ ;
+    mrf_e = mrf_e_ ;
+    logPGamma();
 }
 
 unsigned int SUR_Chain::getNUpdatesMC3() const{ return n_updates_MC3 ; }
@@ -454,6 +524,13 @@ void SUR_Chain::setWA( double a_w_ )
 double SUR_Chain::getWB() const{ return b_w ; }
 void SUR_Chain::setWB( double b_w_ )
 { 
+    b_w = b_w_ ;
+    logPW();
+}
+
+void SUR_Chain::setWAB( double a_w_ , double b_w_ )
+{
+    a_w = a_w_ ;
     b_w = b_w_ ;
     logPW();
 }
@@ -713,15 +790,19 @@ void SUR_Chain::mrfGInit()
     if( gamma_type != Gamma_Type::mrf )
         throw Bad_Gamma_Type ( gamma_type );
 
-    mrfG = arma::zeros<arma::mat>(0,2);
-
+    mrf_G = arma::zeros<arma::mat>(0,2);
+    mrf_d = -3. ;
+    mrf_e = 0.2 ;
 }
-void SUR_Chain::mrfGInit( arma::mat& mrfG_ )
+
+void SUR_Chain::mrfGInit( arma::mat& mrf_G_ )
 {
     if( gamma_type != Gamma_Type::mrf )
         throw Bad_Gamma_Type ( gamma_type );
 
-    mrfG = mrfG_;
+    mrf_G = mrf_G_;
+    mrf_d = -3. ;
+    mrf_e = 0.2 ;
 }
 
 
@@ -1088,8 +1169,7 @@ double SUR_Chain::logPGamma( )
     
         case Gamma_Type::mrf :
         {
-            double d = -3. , e = 0.2;    
-            logP_gamma = logPGamma( gamma , d , e , mrfG );
+            logP_gamma = logPGamma( gamma , mrf_d , mrf_e , mrf_G );
             break;
         }
         default:
@@ -1114,8 +1194,7 @@ double SUR_Chain::logPGamma( const arma::umat& externalGamma )
     
         case Gamma_Type::mrf :
         {
-            double d = -3. , e = 0.2;    
-            logP = logPGamma( externalGamma , d , e , mrfG );
+            logP = logPGamma( externalGamma , mrf_d , mrf_e , mrf_G );
             break;
         }
         default:

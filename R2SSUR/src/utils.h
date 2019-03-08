@@ -6,6 +6,8 @@
 #include <memory>
 #include <armadillo>
 
+#include "Parameter_types.h"
+#include "pugixml.hpp"
 
 namespace Utils{
 
@@ -31,6 +33,44 @@ namespace Utils{
 			missingDataArrayIdx = std::make_shared<arma::umat>();
 			completeCases = std::make_shared<arma::uvec>();
 		}
+	};
+
+	struct Chain_Data
+	{
+		// Data
+		Utils::SUR_Data surData;
+
+		// Misc MCMC quantities
+		unsigned int nChains = 1 , nIter = 10 , burnin = 0;
+		
+		// Parameter and sampler types
+		Covariance_Type covariance_type;
+		Gamma_Type gamma_type;
+		Beta_Type beta_type;
+		Gamma_Sampler_Type gamma_sampler_type;
+
+		// hyperparameters
+		arma::mat mrfG;
+
+		double mrfD		= std::nan("0"), mrfE 	= std::nan("0") ;
+		double sigmaA 	= std::nan("0"), sigmaB = std::nan("0") ;
+		double tauA 	= std::nan("0"), tauB 	= std::nan("0") ;
+		double nu		= std::nan("0");
+		double etaA 	= std::nan("0"), etaB 	= std::nan("0") ;
+		double oA 		= std::nan("0"), oB 	= std::nan("0") ;
+		double piA 		= std::nan("0"), piB 	= std::nan("0") ;
+		double wA 		= std::nan("0"), wB 	= std::nan("0") ;
+
+		// init for some variables
+		arma::mat betaInit;
+		arma::umat gammaInit;
+
+		// file names and paths
+		std::string filePrefix , outFilePath;
+
+		// outputs
+		bool output_gamma, output_beta, output_sigmaRho,
+			output_G, output_pi, output_tail, output_model_size;
 	};
 
 	class badFile : public std::exception
@@ -97,6 +137,8 @@ namespace Utils{
 
 	void formatData(const std::string& dataFileName, const std::string& blockFileName, const std::string& structureGraphFileName, 
 					SUR_Data& surData );
+
+	void readHyperPar(const std::string& hyperParFile, Chain_Data& chainData );
 
 	template <typename T> int sgn(T val)
 	{

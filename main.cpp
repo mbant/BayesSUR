@@ -1,15 +1,16 @@
 #include <iostream>
 #include <string>
+#include <cmath>
 
 // redeclare the drive funciton
-int drive( const std::string& dataFile, const std::string& blockFile, const std::string& structureGraphFile, const std::string& outFilePath,  
+int drive( const std::string& dataFile, const std::string& blockFile, const std::string& structureGraphFile, const std::string& hyperParFile, const std::string& outFilePath,  
 			unsigned int nIter, unsigned int burnin, unsigned int nChains,
 			const std::string& covariancePrior, 
 			const std::string& gammaPrior, const std::string& gammaSampler, const std::string& gammaInit, const std::string& mrfGFile ,
 			const std::string& betaPrior,
 			bool output_gamma, bool output_beta, bool output_G, bool output_sigmaRho, bool output_pi, bool output_tail, bool output_model_size );
 
-int main(int argc, char *  argv[])
+int main(int argc, char* argv[])
 {
 
 	unsigned int nIter = 10; // default number of iterations
@@ -19,6 +20,7 @@ int main(int argc, char *  argv[])
 	std::string dataFile = "data.txt";
 	std::string blockFile = "blocks.txt";
 	std::string structureGraphFile = "structureGraph.txt";
+	std::string hpFile = "model.xml";
 
 	std::string outFilePath = "";
 
@@ -167,6 +169,12 @@ int main(int argc, char *  argv[])
 			if (na+1==argc) break; // in case it's last, break
 			++na; // otherwise augment counter
 		}
+		else if ( 0 == std::string{argv[na]}.compare(std::string{"--parFile"}) || 0 == std::string{argv[na]}.compare(std::string{"--hyperparFile"}) )
+		{
+			hpFile = ""+std::string(argv[++na]); // use the next
+			if (na+1==argc) break; // in case it's last, break
+			++na; // otherwise augment counter
+		}
 		else if ( 0 == std::string{argv[na]}.compare(std::string{"--outFilePath"}) )
 		{
 			outFilePath = std::string(argv[++na]); // use the next
@@ -283,7 +291,8 @@ int main(int argc, char *  argv[])
 	
 	try
 	{
-		status =  drive(dataFile,blockFile,structureGraphFile,outFilePath,nIter,burnin,nChains,
+		status =  drive(dataFile,blockFile,structureGraphFile,hpFile,outFilePath,
+			nIter,burnin,nChains,
 			covariancePrior,gammaPrior,gammaSampler,gammaInit,mrfGFile,betaPrior,
 			out_gamma,out_beta,out_G,out_sigmaRho,out_pi,out_tail,out_model_size);
 	}

@@ -12,11 +12,10 @@ my_stop(msg, tmpFolder)
 
 \item{data}{either a matrix/dataframe or the path to (a plain text) data file with variables on the columns and observations on the rows}
 
-\item{blockList}{list of blocks in the model each element of the list contains the (column) indices of the variables in each block, with respect to the data file}
+\item{Y, X, X_0}{vectors of indexes (with respect to the data matrix) for the outcomes, the covariates to select and the fixed covariates respectively if data is either a path to a file or a matrix;
+if the 'data' argument is not provided, these needs to be matrices containing the data instead.}
 
 \item{varType}{variable type for each column in the data file coded as: 0 - continuous, 1- binary, 2 - categorical. Note that categorical variables cannot be imputed}
-
-\item{structureGraph}{graph adjacency matrix representing the structure between the blocks. Edges represented as 2 indicate variables that will be always included in the regression model}
 
 \item{outFilePath}{path to where the output files are to be written}
 
@@ -26,9 +25,8 @@ my_stop(msg, tmpFolder)
 
 \item{nChains}{number of parallel chains to run}
 
-\item{method}{a string indicating the model type, either "SUR" for sparse and dense Seemingly Unrelated Regressions, or "HESS" for hierarchical regression with independent outcomes.}
-
-\item{sparse, dense}{bool indicating wether the SUR model should have sparse or dense covariance ( not defined for HESS )}
+\item{covariancePrior}{string indicating the prior for the covariance $C$; it has to be either "HIW" for the hyper-inverse-Wishar (which will result in a sparse covariance matrix),
+"IW" for the inverse-Wishart prior ( dense covariance ) or "IG" for independent inverse-Gamma on all the diagonal elements and 0 otherwise.}
 
 \item{gammaPrior}{string indicating the gamma prior to use, either "hotspot" for the Hotspot prior of Bottolo (2011), "MRF" for the Markov Random Field prior or "hierarchical" for a simpler hierarchical prior}
 
@@ -37,6 +35,8 @@ my_stop(msg, tmpFolder)
 \item{gammaInit}{gamma initialisation to either all-zeros ("0"), all ones ("1"), randomly ("R") or (default) MLE-informed ("MLE").}
 
 \item{mrfG}{either a matrix or a path to the file containing the G matrix for the MRF prior on gamma (if necessary)}
+
+\item{hyperpar}{a list of named hypeparameters to use instead of the default values}
 }
 \description{
 Run a SUR Bayesian sampler
@@ -48,12 +48,16 @@ R2SSUR -- Bayesian Sparse Seemingly Unrelated Regression
 \donttest{
 data(example_data, package = "R2SSUR")
 
+# set some non-default hyperparameters
+hyperpar = list( a_w = 2 , b_w = 5 )
+
 fit = R2SSUR::runSSUR(example_data[["data"]],outFilePath = "results/",
-                      blockList = example_data[["blockList"]], structureGraph = example_data[["structureGraph"]],
-                      nIter = 100, nChains = 2, method = "SUR", gammaPrior = "hotspot" )
+                      Y = example_data[["blockList"]][[1]],
+                      X = example_data[["blockList"]][[2]],
+                      nIter = 100, nChains = 2, method = "SUR", gammaPrior = "hotspot",hyperpar = hyperpar )
 
 ## check output
-greyscale = grey((1000:0)/1000)
+greyscale = grey((100:0)/100)
 data(example_ground_truth, package = "R2SSUR")
 
 est_gamma = as.matrix( read.table(fit$output$gamma) )

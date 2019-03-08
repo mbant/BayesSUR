@@ -223,6 +223,17 @@ void HESS_Chain::setSigmaB( double b_sigma_ )
     logLikelihood();
 }
 
+void HESS_Chain::setSigmaAB( double a_sigma_ , double b_sigma_ )
+{
+    if ( covariance_type != Covariance_Type::IG )
+        throw Bad_Covariance_Type( covariance_type );
+        
+    a_sigma = a_sigma_ ;
+    b_sigma = b_sigma_ ; 
+    logLikelihood();
+}
+
+
 // o_k
 arma::vec& HESS_Chain::getO(){ return o ; }
 void HESS_Chain::setO( arma::vec& o_ )
@@ -247,6 +258,16 @@ void HESS_Chain::setOA( double a_o_ )
 double HESS_Chain::getOB() const{ return b_o ; }
 void HESS_Chain::setOB( double b_o_ )
 {
+    b_o = b_o_ ;
+    logPO();
+}
+
+void HESS_Chain::setOAB( double a_o_ , double b_o_ )
+{
+    if ( gamma_type != Gamma_Type::hotspot )
+        throw Bad_Gamma_Type( gamma_type );
+
+    a_o = a_o_ ;
     b_o = b_o_ ;
     logPO();
 }
@@ -288,6 +309,16 @@ void HESS_Chain::setPiB( double b_pi_ )
     logPPi();
 }
 
+void HESS_Chain::setPiAB( double a_pi_ , double b_pi_ )
+{
+    if ( gamma_type != Gamma_Type::hotspot || gamma_type != Gamma_Type::hierarchical )
+        throw Bad_Gamma_Type( gamma_type );
+
+    a_pi = a_pi_ ;
+    b_pi = b_pi_ ;
+    logPPi();
+}
+
 double HESS_Chain::getVarPiProposal() const{ return var_pi_proposal ; }
 void HESS_Chain::setVarPiProposal( double var_pi_proposal_ ){ var_pi_proposal = var_pi_proposal_ ; }
 
@@ -311,6 +342,36 @@ void HESS_Chain::setGamma( arma::umat& externalGamma , double logP_gamma_ )
     gamma = externalGamma ; 
     logP_gamma = logP_gamma_ ;
     log_likelihood = logLikelihood( gammaMask , gamma ); // update internal state
+}
+
+double HESS_Chain::getGammaD() const{ return mrf_d ; }
+void HESS_Chain::setGammaD( double mrf_d_ )
+{
+    if( gamma_type != Gamma_Type::mrf )
+        throw Bad_Gamma_Type( gamma_type );
+
+    mrf_d = mrf_d_ ;
+    logPGamma();
+}
+
+double HESS_Chain::getGammaE() const{ return mrf_e ; }
+void HESS_Chain::setGammaE( double mrf_e_ )
+{
+    if( gamma_type != Gamma_Type::mrf )
+        throw Bad_Gamma_Type( gamma_type );
+
+    mrf_e = mrf_e_ ;
+    logPGamma();
+}
+
+void HESS_Chain::setGammaDE( double mrf_d_ , double mrf_e_ )
+{
+    if( gamma_type != Gamma_Type::mrf )
+        throw Bad_Gamma_Type( gamma_type );
+
+    mrf_d = mrf_d_ ;
+    mrf_e = mrf_e_ ;
+    logPGamma();
 }
 
 unsigned int HESS_Chain::getNUpdatesMC3() const{ return n_updates_MC3 ; }
@@ -348,6 +409,13 @@ void HESS_Chain::setWA( double a_w_ )
 double HESS_Chain::getWB() const{ return b_w ; }
 void HESS_Chain::setWB( double b_w_ )
 { 
+    b_w = b_w_ ;
+    logPW();
+}
+
+void HESS_Chain::setWAB( double a_w_ , double b_w_ )
+{
+    a_w = a_w_ ;
     b_w = b_w_ ;
     logPW();
 }
@@ -543,15 +611,19 @@ void HESS_Chain::mrfGInit()
     if( gamma_type != Gamma_Type::mrf )
         throw Bad_Gamma_Type ( gamma_type );
 
-    mrfG = arma::zeros<arma::mat>(2,2);
-
+    mrf_G = arma::zeros<arma::mat>(2,2);
+    mrf_d = -3. ;
+    mrf_e = 0.2 ;
 }
-void HESS_Chain::mrfGInit( arma::mat& mrfG_ )
+
+void HESS_Chain::mrfGInit( arma::mat& mrf_G_ )
 {
     if( gamma_type != Gamma_Type::mrf )
         throw Bad_Gamma_Type ( gamma_type );
 
-    mrfG = mrfG_;
+    mrf_G = mrf_G_ ;
+    mrf_d = -3. ;
+    mrf_e = 0.2 ;
 }
 
 void HESS_Chain::gammaInit( arma::umat& gamma_init )
@@ -717,7 +789,7 @@ double HESS_Chain::logPGamma( const arma::umat& externalGamma , const arma::vec&
 }
 
 // this is the MRF prior
-double HESS_Chain::logPGamma( const arma::umat& externalGamma , double d, double e, const arma::mat& externalMRFG )
+double HESS_Chain::logPGamma( const arma::umat& externalGamma , double external_d , double external_e, const arma::mat& externalMRFG )
 {
     if( gamma_type != Gamma_Type::mrf )
         throw Bad_Gamma_Type ( gamma_type );
@@ -730,7 +802,7 @@ double HESS_Chain::logPGamma( const arma::umat& externalGamma , double d, double
     {
         quad_mrf += gammaVec( (externalMRFG)(i,0) ) * gammaVec( (externalMRFG)(i,1) );
     }
-    logP = arma::as_scalar( d * arma::accu( externalGamma ) + e * 2.0 * quad_mrf );
+    logP = arma::as_scalar( external_d * arma::accu( externalGamma ) + external_e * 2.0 * quad_mrf );
     
     return logP;
 }
@@ -750,8 +822,7 @@ double HESS_Chain::logPGamma( )
     
         case Gamma_Type::mrf :
         {
-            double d = -3. , e = 0.2;    
-            logP_gamma = logPGamma( gamma , d , e , mrfG );
+            logP_gamma = logPGamma( gamma , mrf_d , mrf_e , mrf_G );
             break;
         }
         default:
@@ -776,8 +847,7 @@ double HESS_Chain::logPGamma( const arma::umat& externalGamma )
     
         case Gamma_Type::mrf :
         {
-            double d = -3. , e = 0.2;    
-            logP = logPGamma( externalGamma , d , e , mrfG );
+            logP = logPGamma( externalGamma , mrf_d , mrf_e , mrf_G );
             break;
         }
         default:

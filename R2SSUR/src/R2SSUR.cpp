@@ -16,7 +16,7 @@
 #include "drive.h"
 
 // [[Rcpp::export(rng=false)]]
-int R2SSUR_internal(const std::string& dataFile, const std::string& blockFile, const std::string& structureGraphFile, const std::string& outFilePath,  
+int R2SSUR_internal(const std::string& dataFile, const std::string& blockFile, const std::string& structureGraphFile, const std::string& hyperParFile, const std::string& outFilePath,  
                     unsigned int nIter=10, unsigned int burnin=0, unsigned int nChains=1,
                     const std::string& covariancePrior="HIW", 
                     const std::string& gammaPrior="hotspot", const std::string& gammaSampler="bandit", 
@@ -29,7 +29,7 @@ int R2SSUR_internal(const std::string& dataFile, const std::string& blockFile, c
   
   try
   {
-    status =  drive(dataFile,blockFile,structureGraphFile,outFilePath,nIter,burnin,nChains,
+    status =  drive(dataFile,blockFile,structureGraphFile,hyperParFile,outFilePath,nIter,burnin,nChains,
                     covariancePrior,gammaPrior,gammaSampler,gammaInit,mrfGFile,betaPrior,
                     output_gamma, output_beta, output_G, output_sigmaRho, output_pi, output_tail, output_model_size);
   }

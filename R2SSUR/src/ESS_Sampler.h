@@ -63,6 +63,8 @@ class ESS_Sampler{
 
         void updateTemperatures(); // we will need extra tracking of the global acceptance rate of the moves
 
+        void setHyperParameters( const Utils::Chain_Data& chainData );
+
     private:
 
         unsigned int nChains;
@@ -327,5 +329,175 @@ void ESS_Sampler<T>::swapAll( std::shared_ptr<T>& thisChain , std::shared_ptr<T>
 
 }
 
+template<typename T>
+void ESS_Sampler<T>::setHyperParameters( const Utils::Chain_Data& chainData )
+{
+    // MRF Prior
+    if ( chainData.gamma_type == Gamma_Type::mrf )
+    {
+        if ( ! std::isnan( chainData.mrfD ) )
+        {
+            if ( ! std::isnan( chainData.mrfE ) )
+            {
+                for( auto c : chain )
+                    c->setGammaDE( chainData.mrfD, chainData.mrfE );
+            }
+            else
+            {
+                for( auto c : chain )
+                    c->setGammaD( chainData.mrfD );
+            }
+        }
+        else if ( ! std::isnan( chainData.mrfE ) )
+        {
+            for( auto c : chain )
+                    c->setGammaE( chainData.mrfE );
+        }
+    }
+
+    // Hierarchical and Hotspot
+    if ( chainData.gamma_type == Gamma_Type::hierarchical || chainData.gamma_type == Gamma_Type::hotspot )
+    {
+        // a_pi and b_pi
+        if ( ! std::isnan( chainData.piA ) )
+        {
+            if ( ! std::isnan( chainData.piB ) )
+            {
+                for( auto c : chain )
+                    c->setPiAB( chainData.piA, chainData.piB );
+            }
+            else
+            {
+                for( auto c : chain )
+                    c->setPiA( chainData.piA );
+            }
+        }
+        else if ( ! std::isnan( chainData.piB ) )
+        {
+            for( auto c : chain )
+                    c->setPiB( chainData.piB );
+        }     
+
+        // HOTSPOT only
+        if ( chainData.gamma_type == Gamma_Type::hotspot )
+        {
+            // a_o and b_o
+            if ( ! std::isnan( chainData.oA ) )
+            {
+                if ( ! std::isnan( chainData.oB ) )
+                {
+                    for( auto c : chain )
+                        c->setOAB( chainData.oA, chainData.oB );
+                }
+                else
+                {
+                    for( auto c : chain )
+                        c->setOA( chainData.oA );
+                }
+            }
+            else if ( ! std::isnan( chainData.oB ) )
+            {
+                for( auto c : chain )
+                        c->setOB( chainData.oB );
+            }   
+        }
+    }
+
+
+    // Covariance Prior
+    if ( chainData.covariance_type == Covariance_Type::IG )  // HESS
+    {
+        // A_Sigma and B_Sigma
+        if ( ! std::isnan( chainData.sigmaA ) )
+        {
+            if ( ! std::isnan( chainData.sigmaB ) )
+            {
+                for( auto c : chain )
+                    c->setSigmaAB( chainData.sigmaA, chainData.sigmaB );
+            }
+            else
+            {
+                for( auto c : chain )
+                    c->setSigmaA( chainData.sigmaA );
+            }
+        }
+        else if ( ! std::isnan( chainData.sigmaB ) )
+        {
+            for( auto c : chain )
+                    c->setSigmaB( chainData.sigmaB );
+        }
+    }
+    else // SUR
+    {
+        // A_tau and B_tau
+        if ( ! std::isnan( chainData.tauA ) )
+        {
+            if ( ! std::isnan( chainData.tauB ) )
+            {
+                for( auto c : chain )
+                    c->setTauAB( chainData.tauA, chainData.tauB );
+            }
+            else
+            {
+                for( auto c : chain )
+                    c->setTauA( chainData.tauA );
+            }
+        }
+        else if ( ! std::isnan( chainData.tauB ) )
+        {
+            for( auto c : chain )
+                    c->setTauB( chainData.tauB );
+        }        
+
+        // NU
+        if ( ! std::isnan( chainData.nu ) )
+            for( auto c : chain )
+                c->setNu( chainData.nu );
+    }
+
+    if ( chainData.covariance_type == Covariance_Type::HIW )  // Sparse SUR
+    {
+        // A_eta and B_eta
+        if ( ! std::isnan( chainData.etaA ) )
+        {
+            if ( ! std::isnan( chainData.etaB ) )
+            {
+                for( auto c : chain )
+                    c->setEtaAB( chainData.etaA, chainData.etaB );
+            }
+            else
+            {
+                for( auto c : chain )
+                    c->setEtaA( chainData.etaA );
+            }
+        }
+        else if ( ! std::isnan( chainData.etaB ) )
+        {
+            for( auto c : chain )
+                    c->setEtaB( chainData.etaB );
+        }     
+    }
+
+    // a_w and b_w
+    if ( ! std::isnan( chainData.wA ) )
+    {
+        if ( ! std::isnan( chainData.wB ) )
+        {
+            for( auto c : chain )
+                c->setWAB( chainData.wA, chainData.wB );
+        }
+        else
+        {
+            for( auto c : chain )
+                c->setWA( chainData.wA );
+        }
+    }
+    else if ( ! std::isnan( chainData.wB ) )
+    {
+        for( auto c : chain )
+                c->setWB( chainData.wB );
+    }   
+
+}
 
 #endif

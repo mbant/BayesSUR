@@ -19,42 +19,17 @@
 #include "ESS_Sampler.h"
 #include "HESS_Chain.h"
 #include "SUR_Chain.h"
-
-
-struct Chain_Data
-{
-	// Data
-	Utils::SUR_Data surData;
-
-	// Misc MCMC quantities
-	unsigned int nChains = 1 , nIter = 10 , burnin = 0;
 	
-	// Parameter and sampler types
-	Covariance_Type covariance_type;
-	Gamma_Type gamma_type;
-	Beta_Type beta_type;
-	Gamma_Sampler_Type gamma_sampler_type;
+using Utils::Chain_Data;
 
-	arma::mat mrfG;
-
-	// init for some variables
-	arma::mat betaInit;
-	arma::umat gammaInit;
-
-	// file names and paths
-	std::string filePrefix , outFilePath;
-
-	// outputs
-	bool output_gamma, output_beta, output_sigmaRho,
-		output_G, output_pi, output_tail, output_model_size;
-};
-	
+template<typename T>
+void setHyperParameters( ESS_Sampler<T>& chain, const Chain_Data& chainData );
 
 int drive_SUR( Chain_Data& chainData );
 
 int drive_HESS( Chain_Data& chainData );
 
-int drive( const std::string& dataFile, const std::string& blockFile, const std::string& structureGraphFile, const std::string& outFilePath,  
+int drive( const std::string& dataFile, const std::string& blockFile, const std::string& structureGraphFile, const std::string& hyperParFile, const std::string& outFilePath,  
 			unsigned int nIter, unsigned int burnin, unsigned int nChains,
 			const std::string& covariancePrior, 
 			const std::string& gammaPrior, const std::string& gammaSampler, const std::string& gammaInit, const std::string& mrfGFile ,

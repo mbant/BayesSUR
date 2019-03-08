@@ -4,31 +4,36 @@
 #' Run a SUR Bayesian sampler
 #' @name runSSUR
 #' @param data either a matrix/dataframe or the path to (a plain text) data file with variables on the columns and observations on the rows 
-#' @param blockList list of blocks in the model each element of the list contains the (column) indices of the variables in each block, with respect to the data file
+#' @param Y,X,X_0 vectors of indexes (with respect to the data matrix) for the outcomes, the covariates to select and the fixed covariates respectively if data is either a path to a file or a matrix;
+#' if the 'data' argument is not provided, these needs to be matrices containing the data instead.
 #' @param varType variable type for each column in the data file coded as: 0 - continuous, 1- binary, 2 - categorical. Note that categorical variables cannot be imputed
-#' @param structureGraph graph adjacency matrix representing the structure between the blocks. Edges represented as 2 indicate variables that will be always included in the regression model
 #' @param outFilePath path to where the output files are to be written
 #' @param nIter number of iterations for the MCMC procedure
 #' @param burnin number of iterations (or fraction of iterations) to discard at the start of the chain Default = 0
 #' @param nChains number of parallel chains to run
-#' @param method a string indicating the model type, either "SUR" for sparse and dense Seemingly Unrelated Regressions, or "HESS" for hierarchical regression with independent outcomes.
-#' @param sparse,dense bool indicating wether the SUR model should have sparse or dense covariance ( not defined for HESS )
+#' @param covariancePrior string indicating the prior for the covariance $C$; it has to be either "HIW" for the hyper-inverse-Wishar (which will result in a sparse covariance matrix),
+#' "IW" for the inverse-Wishart prior ( dense covariance ) or "IG" for independent inverse-Gamma on all the diagonal elements and 0 otherwise.
 #' @param gammaPrior string indicating the gamma prior to use, either "hotspot" for the Hotspot prior of Bottolo (2011), "MRF" for the Markov Random Field prior or "hierarchical" for a simpler hierarchical prior
 #' @param gammaSampler string indicating the type of sampler for gamma, either "bandit" for the Thompson sampling inspired samper or "MC3" for the usual $MC^3$ sampler
 #' @param gammaInit gamma initialisation to either all-zeros ("0"), all ones ("1"), randomly ("R") or (default) MLE-informed ("MLE").
 #' @param mrfG either a matrix or a path to the file containing the G matrix for the MRF prior on gamma (if necessary)
+#' @param hyperpar a list of named hypeparameters to use instead of the default values
 #' @param tmpFolder the path to a temporary folder where intermediate data files are stored (will be erased at the end of the chain) default to local tmpFolder
 #'
 #' @examples
 #' \donttest{
 #' data(example_data, package = "R2SSUR")
 #' 
+#' # set some non-default hyperparameters
+#' hyperpar = list( a_w = 2 , b_w = 5 )
+#' 
 #' fit = R2SSUR::runSSUR(example_data[["data"]],outFilePath = "results/",
-#'                       blockList = example_data[["blockList"]], structureGraph = example_data[["structureGraph"]],
-#'                       nIter = 100, nChains = 2, method = "SUR", gammaPrior = "hotspot" )
+#'                       Y = example_data[["blockList"]][[1]],
+#'                       X = example_data[["blockList"]][[2]],
+#'                       nIter = 100, nChains = 2, method = "SUR", gammaPrior = "hotspot",hyperpar = hyperpar )
 #' 
 #' ## check output
-#' greyscale = grey((1000:0)/1000)
+#' greyscale = grey((100:0)/100)
 #' data(example_ground_truth, package = "R2SSUR")
 #' 
 #' est_gamma = as.matrix( read.table(fit$output$gamma) )
@@ -48,7 +53,7 @@ my_stop = function( msg , tmpFolder )
 }
 
 #' @export
-runSSUR = function(data, Y, X, X_0=NULL,
+runSSUR = function(data=NULL, Y, X, X_0=NULL,
                 varType=NULL, structureGraph=NULL, outFilePath="", 
                 nIter=10, burnin=0, nChains=1, 
                 covariancePrior="HIW",
@@ -56,7 +61,7 @@ runSSUR = function(data, Y, X, X_0=NULL,
                 betaPrior="independent",
                 output_gamma = TRUE, output_beta = TRUE, output_G = TRUE, output_sigmaRho = TRUE,
                 output_pi = TRUE, output_tail = TRUE, output_model_size = TRUE,
-                tmpFolder="tmp/")
+                hyperpar=list(),tmpFolder="tmp/")
 {
   
   # Create temporary directory
@@ -277,6 +282,20 @@ runSSUR = function(data, Y, X, X_0=NULL,
     my_stop("Unknown betaPrior method: only independent is available as of yet",tmpFolder) # g prior is accepted but will return an error later
 
   
+  ## Set up the XML file for hyperparameters
+  if ( length(hyperpar) > 0 )
+  {
+    if("xml2" %in% rownames(installed.packages()) == FALSE)
+      my_stop("Using non-default hyperparameters require an XML file to be written, please install the \"xml2\" package.",tmpFolder)
+      
+    xml  = xml2::as_xml_document(
+      list( hyperparameters = list(
+        lapply(hyperpar,function(x) list(x)) # every element in the list should be a list
+      )))
+    hyperParFile = paste(sep="",tmpFolder,"hyperpar.xml")
+    xml2::write_xml(xml,file = hyperParFile)
+  }
+  
   ## Create the directory for the results
   dir.create(outFilePath)
   
@@ -294,6 +313,8 @@ runSSUR = function(data, Y, X, X_0=NULL,
   ret$input["gammaInit"] = gammaInit
   ret$input["mrfG"] = mrfG
   ret$input["betaPrior"] = betaPrior
+  
+  ret$input$hyperParameters = hyperpar
 
   methodString = 
     switch( covariancePrior,
@@ -326,7 +347,8 @@ runSSUR = function(data, Y, X, X_0=NULL,
     ret$output["model_size"] = paste(sep="", outFilePath , dataString , "_",  methodString , "_model_size_out.txt")
   
   
-  ret$status = R2SSUR_internal(data, blockList, structureGraph, outFilePath, nIter, burnin, nChains, 
+  ret$status = R2SSUR_internal(data, blockList, structureGraph, hyperParFile, outFilePath, 
+            nIter, burnin, nChains, 
             covariancePrior, gammaPrior, gammaSampler, gammaInit, mrfG, betaPrior,
             output_gamma, output_beta, output_G, output_sigmaRho, output_pi, output_tail, output_model_size)
 

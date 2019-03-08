@@ -7,6 +7,7 @@
 
 #include <limits>
 
+
 namespace Utils{
 
 	bool readData(const std::string& dataFileName, std::shared_ptr<arma::mat> data)
@@ -212,6 +213,66 @@ namespace Utils{
 		initMissingData( surData.data, surData.missingDataArrayIdx, surData.completeCases, false );
 
 		standardiseData( surData.data, surData.outcomesIdx, surData.VSPredictorsIdx, surData.fixedPredictorsIdx );
+
+	}
+
+	void readHyperPar(const std::string& hyperParFile, Chain_Data& chainData )
+	{
+		pugi::xml_document doc;
+		pugi::xml_parse_result result = doc.load_file( hyperParFile.c_str() );
+
+		if ( result )
+		{
+			// We'll use Xpaths to get variables
+			// the results of empty queries will be a nan after the evaluate_number() and thus we'll preserve NANs for non specified parameters
+			pugi::xpath_query query_mrf_d("/hyperparameters/mrf_d");
+			pugi::xpath_query query_mrf_e("/hyperparameters/mrf_e");
+
+			pugi::xpath_query query_a_sigma("/hyperparameters/a_sigma");
+			pugi::xpath_query query_b_sigma("/hyperparameters/b_sigma");
+
+			pugi::xpath_query query_a_tau("/hyperparameters/a_tau");
+			pugi::xpath_query query_b_tau("/hyperparameters/b_tau");
+			pugi::xpath_query query_nu("/hyperparameters/nu");
+
+			pugi::xpath_query query_a_eta("/hyperparameters/a_eta");
+			pugi::xpath_query query_b_eta("/hyperparameters/b_eta");
+
+			pugi::xpath_query query_a_o("/hyperparameters/a_o");
+			pugi::xpath_query query_b_o("/hyperparameters/b_o");
+
+			pugi::xpath_query query_a_pi("/hyperparameters/a_pi");
+			pugi::xpath_query query_b_pi("/hyperparameters/b_pi");
+
+			pugi::xpath_query query_a_w("/hyperparameters/a_w");
+			pugi::xpath_query query_b_w("/hyperparameters/b_w");
+
+			// get results
+			chainData.mrfD = query_mrf_d.evaluate_number(doc);
+			chainData.mrfE = query_mrf_e.evaluate_number(doc);
+
+			chainData.sigmaA = query_a_sigma.evaluate_number(doc);
+			chainData.sigmaB = query_b_sigma.evaluate_number(doc);
+
+			chainData.tauA = query_a_tau.evaluate_number(doc);
+			chainData.tauB = query_b_tau.evaluate_number(doc);
+			chainData.nu = query_nu.evaluate_number(doc);
+
+			chainData.etaA = query_a_eta.evaluate_number(doc);
+			chainData.etaB = query_b_eta.evaluate_number(doc);
+
+			chainData.oA  = query_a_o.evaluate_number(doc);
+			chainData.oB = query_b_o.evaluate_number(doc);
+
+			chainData.piA  = query_a_pi.evaluate_number(doc);
+			chainData.piB = query_b_pi.evaluate_number(doc);
+
+			chainData.wA  = query_a_w.evaluate_number(doc);
+			chainData.wB = query_b_w.evaluate_number(doc);
+
+		}
+		else
+			std::cout << std::endl << "No hyperparameter input file was given (or wrong format detected), so default values will be used." << std::endl;
 
 	}
 
