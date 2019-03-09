@@ -17,20 +17,21 @@
 #' @param gammaSampler string indicating the type of sampler for gamma, either "bandit" for the Thompson sampling inspired samper or "MC3" for the usual $MC^3$ sampler
 #' @param gammaInit gamma initialisation to either all-zeros ("0"), all ones ("1"), randomly ("R") or (default) MLE-informed ("MLE").
 #' @param mrfG either a matrix or a path to the file containing the G matrix for the MRF prior on gamma (if necessary)
-#' @param hyperpar a list of named hypeparameters to use instead of the default values
+#' @param hyperpar a list of named hypeparameters to use instead of the default values; valid names are mrf_d, mrf_e, a_sigma, b_sigma, a_tau, b_tau, nu, a_eta, b_eta, a_o, b_o, a_pi, b_pi, a_w and b_w; see Documentation for more details
+#' @param output_* allow ( TRUE ) or suppress ( FALSE ) the outut for *; possible outputs are gamma, G, beta, sigmaRho, pi, tail (hotspot tail probability) or model_size
 #' @param tmpFolder the path to a temporary folder where intermediate data files are stored (will be erased at the end of the chain) default to local tmpFolder
 #'
 #' @examples
 #' \donttest{
-#' data(example_data, package = "R2SSUR")
 #' 
-#' # set some non-default hyperparameters
+#' data(example_data, package = "R2SSUR")
 #' hyperpar = list( a_w = 2 , b_w = 5 )
 #' 
 #' fit = R2SSUR::runSSUR(example_data[["data"]],outFilePath = "results/",
-#'                       Y = example_data[["blockList"]][[1]],
-#'                       X = example_data[["blockList"]][[2]],
-#'                       nIter = 100, nChains = 2, method = "SUR", gammaPrior = "hotspot",hyperpar = hyperpar )
+#'                      Y = example_data[["blockList"]][[1]],
+#'                      X = example_data[["blockList"]][[2]],
+#'                      nIter = 100, nChains = 2, gammaPrior = "hotspot",
+#'                      hyperpar = hyperpar, tmpFolder="tmp/" )
 #' 
 #' ## check output
 #' greyscale = grey((100:0)/100)
@@ -41,9 +42,12 @@
 #' s = ncol(est_G)
 #' 
 #' par(mfrow=c(2,2))
-#' image(est_gamma,col=greyscale) image(example_ground_truth[["gamma"]],col=greyscale)
-#' image((est_G+diag(s))[s:1,],col=greyscale) image(example_ground_truth[["G"]][s:1,],col=greyscale)
+#' image(est_gamma,col=greyscale)
+#' image(example_ground_truth[["gamma"]],col=greyscale)
+#' image((est_G+diag(s))[s:1,],col=greyscale)
+#' image(example_ground_truth[["G"]][s:1,],col=greyscale)
 #' par(mfrow=c(1,1))
+#' 
 #' }
 #' 
 my_stop = function( msg , tmpFolder )

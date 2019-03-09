@@ -270,6 +270,25 @@ namespace Utils{
 			chainData.wA  = query_a_w.evaluate_number(doc);
 			chainData.wB = query_b_w.evaluate_number(doc);
 
+
+			std::vector<std::string> valid_top_level = {"hyperparameters"}; // ,"model","chain"}; ?
+			std::vector<std::string> valid_nodes = {"mrf_d","mrf_e","a_sigma","b_sigma","a_tau","b_tau","nu","a_eta","b_eta","a_o","b_o","a_pi","b_pi","a_w","b_w"};
+
+			for (pugi::xml_node node = doc.first_child(); node; node = node.next_sibling())
+			{
+				if ( std::find(valid_top_level.begin(), valid_top_level.end(), node.name() ) == valid_top_level.end() )
+					std::cout << "\n\tWarning: " << node.name() << " not recognised as a valid top level node - only hyperparameters is valid" << std::endl; // ,model and chain 
+			}
+
+			for (pugi::xml_node node = doc.child("hyperparameters").first_child(); node; node = node.next_sibling())
+			{
+				if ( std::find(valid_nodes.begin(), valid_nodes.end(), node.name() ) == valid_nodes.end() )
+				{
+					std::cout << "\n\tWarning: " << node.name() << " not recognised as a valid hyperaparameter - see the documentation for more details" << std::endl;
+					std::cout << node.name() << ": " << node.child_value() << " disregarded .. " << std::endl;
+				}
+			}
+
 		}
 		else
 			std::cout << std::endl << "No hyperparameter input file was given (or wrong format detected), so default values will be used." << std::endl;

@@ -12,7 +12,7 @@ install.packages("R2SSUR_0.1.6.tar.gz",repos = NULL,type = "source")
 data(example_data, package = "R2SSUR")
 
 mrfGFile = as.matrix( read.table("mrf.txt") )
-hyperpar = list( d = -3 , e = 0.2 )
+hyperpar = list( mrf_d = -3 , mrf_e = 0.2 , some_wrong_name = -999 )
 
 fit = R2SSUR::runSSUR(data = example_data[["data"]],
                 Y = example_data[["blockList"]][[1]],

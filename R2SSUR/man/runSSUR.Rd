@@ -36,7 +36,9 @@ if the 'data' argument is not provided, these needs to be matrices containing th
 
 \item{mrfG}{either a matrix or a path to the file containing the G matrix for the MRF prior on gamma (if necessary)}
 
-\item{hyperpar}{a list of named hypeparameters to use instead of the default values}
+\item{hyperpar}{a list of named hypeparameters to use instead of the default values; valid names are mrf_d, mrf_e, a_sigma, b_sigma, a_tau, b_tau, nu, a_eta, b_eta, a_o, b_o, a_pi, b_pi, a_w and b_w; see Documentation for more details}
+
+\item{output_*}{allow ( TRUE ) or suppress ( FALSE ) the outut for *; possible outputs are gamma, G, beta, sigmaRho, pi, tail (hotspot tail probability) or model_size}
 }
 \description{
 Run a SUR Bayesian sampler
@@ -46,15 +48,15 @@ R2SSUR -- Bayesian Sparse Seemingly Unrelated Regression
 }
 \examples{
 \donttest{
-data(example_data, package = "R2SSUR")
 
-# set some non-default hyperparameters
+data(example_data, package = "R2SSUR")
 hyperpar = list( a_w = 2 , b_w = 5 )
 
 fit = R2SSUR::runSSUR(example_data[["data"]],outFilePath = "results/",
-                      Y = example_data[["blockList"]][[1]],
-                      X = example_data[["blockList"]][[2]],
-                      nIter = 100, nChains = 2, method = "SUR", gammaPrior = "hotspot",hyperpar = hyperpar )
+                     Y = example_data[["blockList"]][[1]],
+                     X = example_data[["blockList"]][[2]],
+                     nIter = 100, nChains = 2, gammaPrior = "hotspot",
+                     hyperpar = hyperpar, tmpFolder="tmp/" )
 
 ## check output
 greyscale = grey((100:0)/100)
@@ -65,9 +67,12 @@ est_G = as.matrix( read.table(fit$output$G) )
 s = ncol(est_G)
 
 par(mfrow=c(2,2))
-image(est_gamma,col=greyscale) image(example_ground_truth[["gamma"]],col=greyscale)
-image((est_G+diag(s))[s:1,],col=greyscale) image(example_ground_truth[["G"]][s:1,],col=greyscale)
+image(est_gamma,col=greyscale)
+image(example_ground_truth[["gamma"]],col=greyscale)
+image((est_G+diag(s))[s:1,],col=greyscale)
+image(example_ground_truth[["G"]][s:1,],col=greyscale)
 par(mfrow=c(1,1))
+
 }
 
 }
