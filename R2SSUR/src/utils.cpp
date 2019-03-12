@@ -272,20 +272,25 @@ namespace Utils{
 
 
 			std::vector<std::string> valid_top_level = {"hyperparameters"}; // ,"model","chain"}; ?
-			std::vector<std::string> valid_nodes = {"mrf_d","mrf_e","a_sigma","b_sigma","a_tau","b_tau","nu","a_eta","b_eta","a_o","b_o","a_pi","b_pi","a_w","b_w"};
+			std::vector<std::string> valid_hyperpar = {"mrf_d","mrf_e","a_sigma","b_sigma","a_tau","b_tau","nu",
+													"a_eta","b_eta","a_o","b_o","a_pi","b_pi","a_w","b_w"};
 
 			for (pugi::xml_node node = doc.first_child(); node; node = node.next_sibling())
 			{
 				if ( std::find(valid_top_level.begin(), valid_top_level.end(), node.name() ) == valid_top_level.end() )
-					std::cout << "\n\tWarning: " << node.name() << " not recognised as a valid top level node - only hyperparameters is valid" << std::endl; // ,model and chain 
+					std::cout << "\n\tWarning: " << node.name() << " not recognised as a valid top level node - only 'hyperparameters' is valid" << std::endl; // ,model and chain 
 			}
 
 			for (pugi::xml_node node = doc.child("hyperparameters").first_child(); node; node = node.next_sibling())
 			{
-				if ( std::find(valid_nodes.begin(), valid_nodes.end(), node.name() ) == valid_nodes.end() )
+				if ( std::find(valid_hyperpar.begin(), valid_hyperpar.end(), node.name() ) == valid_hyperpar.end() )
 				{
-					std::cout << "\n\tWarning: " << node.name() << " not recognised as a valid hyperaparameter - see the documentation for more details" << std::endl;
+					std::cout << "\n\tWarning: " << node.name() << " not recognised as a valid hyperaparameter" << std::endl;
 					std::cout << node.name() << ": " << node.child_value() << " disregarded .. " << std::endl;
+					std::cout << "Valid hyperparameters are: ";
+					for( auto& v : valid_hyperpar ) 
+						std::cout << v << ", ";
+					std::cout << " --- see the documentation for more details " << std::endl << std::endl;
 				}
 			}
 
