@@ -867,7 +867,7 @@ int drive( const std::string& dataFile, const std::string& blockFile, const std:
 	}	
 
 
-	cout << " successfull!" << endl;
+	cout << "... successfull!" << endl;
 
 	// ############
 
