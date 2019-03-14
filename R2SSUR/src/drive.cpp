@@ -43,6 +43,7 @@ int drive_SUR( Chain_Data& chainData )
 	// *****************************
 	sampler.setHyperParameters( chainData );
 
+	cout << " ... " << std::flush;
 	// *****************************
 
 	// set when the JT move should start
@@ -426,6 +427,7 @@ int drive_HESS( Chain_Data& chainData )
 	// Init all parameters
 	// *****************************
 	sampler.setHyperParameters( chainData );
+	cout << " ... " << std::flush;
 
 	// Init gamma for the main chain
 	// *****************************

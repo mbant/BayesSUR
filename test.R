@@ -12,14 +12,14 @@ install.packages("R2SSUR_0.1.6.tar.gz",repos = NULL,type = "source")
 data(example_data, package = "R2SSUR")
 
 mrfGFile = as.matrix( read.table("mrf.txt") )
-hyperpar = list( mrf_d = -3 , mrf_e = 0.2 , some_wrong_name = -999 )
+hyperpar = list(mrf_e=-3, mrf_d=3/10, b_pi = 0.2 , a_pi = 0.1 , b_o = 5 , a_o = 1 )
 
 fit = R2SSUR::runSSUR(data = example_data[["data"]],
                 Y = example_data[["blockList"]][[1]],
                 X = example_data[["blockList"]][[2]][11:150],
                 X_0 = example_data[["blockList"]][[2]][1:10],
                 outFilePath = "results/",hyperpar=hyperpar,
-                nIter = 2000, nChains = 2, covariancePrior = "IW", gammaPrior = "mrf" )
+                nIter = 2000, nChains = 2, covariancePrior = "IW", gammaPrior = "hotspot" )
 
 ## check output
 greyscale = grey((100:0)/100)

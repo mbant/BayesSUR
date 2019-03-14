@@ -244,7 +244,7 @@ void SUR_Chain::setTauB( double b_tau_ )
 
 void SUR_Chain::setTauAB( double a_tau_ , double b_tau_ )
 {
-    if ( covariance_type != Covariance_Type::HIW || covariance_type != Covariance_Type::IW )
+    if ( covariance_type != Covariance_Type::HIW && covariance_type != Covariance_Type::IW )
         throw Bad_Covariance_Type( covariance_type );
         
     a_tau = a_tau_ ;
@@ -430,7 +430,7 @@ void SUR_Chain::setPiB( double b_pi_ )
 
 void SUR_Chain::setPiAB( double a_pi_ , double b_pi_ )
 {
-    if ( gamma_type != Gamma_Type::hotspot || gamma_type != Gamma_Type::hierarchical )
+    if ( gamma_type != Gamma_Type::hotspot && gamma_type != Gamma_Type::hierarchical )
         throw Bad_Gamma_Type( gamma_type );
 
     a_pi = a_pi_ ;

@@ -167,9 +167,9 @@ runSSUR = function(data=NULL, Y, X, X_0=NULL,
 
   ## Then init the structure graph
   # Consider that the indexes are written so that Y is 0 , X is 1 and (if there) X_0 is 2
-  if ( length ( X_0 ) > 0 )
+  if ( length ( X_0 ) > 0 ){
     structureGraph = structureGraph = matrix(c(0,0,0,1,0,0,2,0,0),3,3,byrow=TRUE)
-  else structureGraph = structureGraph = matrix(c(0,0,1,0),2,2,byrow=TRUE)
+  }else structureGraph = structureGraph = matrix(c(0,0,1,0),2,2,byrow=TRUE)
 
   ## Finally write blockLabels and structureGraph to a file
   write.table(blockLabels,paste(sep="",tmpFolder,"blockLabels.txt"), row.names = FALSE, col.names = FALSE)
@@ -228,13 +228,13 @@ runSSUR = function(data=NULL, Y, X, X_0=NULL,
   ###############################
 
   # method to use
-  if ( covariancePrior == "sparse" | covariancePrior == "Sparse" | covariancePrior == "SPARSE" | covariancePrior == "HIW" | covariancePrior == "hiw" )
+  if ( covariancePrior == "sparse" | covariancePrior == "Sparse" | covariancePrior == "SPARSE" | covariancePrior == "HIW" | covariancePrior == "hiw" ){
     covariancePrior = "HIW"
-  else if ( covariancePrior == "dense" | covariancePrior == "Dense" | covariancePrior == "DENSE" | covariancePrior == "IW" | covariancePrior == "iw" ) 
+  }else if ( covariancePrior == "dense" | covariancePrior == "Dense" | covariancePrior == "DENSE" | covariancePrior == "IW" | covariancePrior == "iw" ){
     covariancePrior = "IW"
-  else if ( covariancePrior == "independent" | covariancePrior == "Independent" | covariancePrior == "INDEPENDENT" | covariancePrior == "INDEP" | covariancePrior == "indep" | covariancePrior == "IG" | covariancePrior == "ig" ) 
+  }else if ( covariancePrior == "independent" | covariancePrior == "Independent" | covariancePrior == "INDEPENDENT" | covariancePrior == "INDEP" | covariancePrior == "indep" | covariancePrior == "IG" | covariancePrior == "ig" ){
     covariancePrior = "IG"
-  else
+  }else
     my_stop("Unknown covariancePrior argument: only sparse (HIW), dense(IW) or independent (IG) are available",tmpFolder)
   
   # mrfG and gammaPrior
@@ -278,27 +278,24 @@ runSSUR = function(data=NULL, Y, X, X_0=NULL,
   }
 
 
-  if ( betaPrior == "independent" | betaPrior == "Independent" | betaPrior == "INDEPENDENT" | betaPrior == "indep" | betaPrior == "Indep" | betaPrior == "i" | betaPrior == "I" )
+  if ( betaPrior == "independent" | betaPrior == "Independent" | betaPrior == "INDEPENDENT" | betaPrior == "indep" | betaPrior == "Indep" | betaPrior == "i" | betaPrior == "I" ){
     betaPrior = "independent"
-  else if ( betaPrior == "gprior" | betaPrior == "gPrior" | betaPrior == "g-prior" | betaPrior == "G-Prior" | betaPrior == "GPRIOR" ) 
+  }else if ( betaPrior == "gprior" | betaPrior == "gPrior" | betaPrior == "g-prior" | betaPrior == "G-Prior" | betaPrior == "GPRIOR" ){
     betaPrior = "g-prior"
-  else
+  }else
     my_stop("Unknown betaPrior method: only independent is available as of yet",tmpFolder) # g prior is accepted but will return an error later
 
   
   ## Set up the XML file for hyperparameters
-  if ( length(hyperpar) > 0 )
-  {
-    if("xml2" %in% rownames(installed.packages()) == FALSE)
-      my_stop("Using non-default hyperparameters require an XML file to be written, please install the \"xml2\" package.",tmpFolder)
-      
-    xml  = xml2::as_xml_document(
-      list( hyperparameters = list(
-        lapply(hyperpar,function(x) list(x)) # every element in the list should be a list
-      )))
-    hyperParFile = paste(sep="",tmpFolder,"hyperpar.xml")
-    xml2::write_xml(xml,file = hyperParFile)
-  }
+  if("xml2" %in% rownames(installed.packages()) == FALSE)
+    my_stop("Using non-default hyperparameters require an XML file to be written, please install the \"xml2\" package.",tmpFolder)
+    
+  xml  = xml2::as_xml_document(
+    list( hyperparameters = list(
+      lapply(hyperpar,function(x) list(x)) # every element in the list should be a list
+    )))
+  hyperParFile = paste(sep="",tmpFolder,"hyperpar.xml")
+  xml2::write_xml(xml,file = hyperParFile)
   
   ## Create the directory for the results
   dir.create(outFilePath)

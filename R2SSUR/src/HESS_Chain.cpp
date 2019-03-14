@@ -311,7 +311,7 @@ void HESS_Chain::setPiB( double b_pi_ )
 
 void HESS_Chain::setPiAB( double a_pi_ , double b_pi_ )
 {
-    if ( gamma_type != Gamma_Type::hotspot || gamma_type != Gamma_Type::hierarchical )
+    if ( gamma_type != Gamma_Type::hotspot && gamma_type != Gamma_Type::hierarchical )
         throw Bad_Gamma_Type( gamma_type );
 
     a_pi = a_pi_ ;
