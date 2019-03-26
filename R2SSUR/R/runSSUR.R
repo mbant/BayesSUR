@@ -187,7 +187,9 @@ runSSUR = function(data=NULL, Y, X, X_0=NULL,
   if( outFilePathLength > 0 )
   {
     if( substr(outFilePath,outFilePathLength,outFilePathLength) != "/" )
-      paste( outFilePath , "/" , sep="" )
+      outFilePath = paste( outFilePath , "/" , sep="" )
+    if( substr(outFilePath,1,1) != "/" )
+      outFilePath = paste( getwd(), outFilePath , sep="" )
   }
 
   # magicly strip '/' from the start and '.txt' from the end of the data file name
@@ -228,11 +230,11 @@ runSSUR = function(data=NULL, Y, X, X_0=NULL,
   ###############################
 
   # method to use
-  if ( covariancePrior == "sparse" | covariancePrior == "Sparse" | covariancePrior == "SPARSE" | covariancePrior == "HIW" | covariancePrior == "hiw" ){
+  if ( toupper(covariancePrior) %in% c("SPARSE", "HIW") ){
     covariancePrior = "HIW"
-  }else if ( covariancePrior == "dense" | covariancePrior == "Dense" | covariancePrior == "DENSE" | covariancePrior == "IW" | covariancePrior == "iw" ){
+  }else if ( toupper(covariancePrior) %in% c("DENSE", "IW") ){
     covariancePrior = "IW"
-  }else if ( covariancePrior == "independent" | covariancePrior == "Independent" | covariancePrior == "INDEPENDENT" | covariancePrior == "INDEP" | covariancePrior == "indep" | covariancePrior == "IG" | covariancePrior == "ig" ){
+  }else if ( toupper(covariancePrior) %in% c("INDEPENDENT", "INDEP", "IG") ){
     covariancePrior = "IG"
   }else
     my_stop("Unknown covariancePrior argument: only sparse (HIW), dense(IW) or independent (IG) are available",tmpFolder)
@@ -253,11 +255,11 @@ runSSUR = function(data=NULL, Y, X, X_0=NULL,
 		}
 	}else{
 
-    if ( gammaPrior == "hotspot" | gammaPrior == "HOTSPOT" | gammaPrior == "hotspots" | gammaPrior == "HOTSPOTS" | gammaPrior == "hs" | gammaPrior == "HS" )
+    if ( toupper(gammaPrior) %in% c("HOTSPOT", "HOTSPOTS", "HS") )
       gammaPrior = "hotspot"
-    else if ( gammaPrior == "MRF" | gammaPrior == "mrf" | gammaPrior == "markov random field" | gammaPrior == "Markov Random Field" ) 
+    else if ( toupper(gammaPrior) %in% c("MRF", "MARKOV RANDOM FIELD") ) 
       gammaPrior = "MRF"
-    else if ( gammaPrior == "hierarchical" | gammaPrior == "h" | gammaPrior == "H" ) 
+    else if ( toupper(gammaPrior) %in% c("HIERARCHICAL", "H") ) 
       gammaPrior = "hierarchical"
     else
       my_stop("Unknown gammaPrior argument: only hotspot, MRF or hierarchical are available",tmpFolder)
@@ -278,9 +280,9 @@ runSSUR = function(data=NULL, Y, X, X_0=NULL,
   }
 
 
-  if ( betaPrior == "independent" | betaPrior == "Independent" | betaPrior == "INDEPENDENT" | betaPrior == "indep" | betaPrior == "Indep" | betaPrior == "i" | betaPrior == "I" ){
+  if ( toupper(betaPrior) %in% c("INDEPENDENT", "INDEP", "I") ){
     betaPrior = "independent"
-  }else if ( betaPrior == "gprior" | betaPrior == "gPrior" | betaPrior == "g-prior" | betaPrior == "G-Prior" | betaPrior == "GPRIOR" ){
+  }else if ( toupper(betaPrior) %in% c("GPRIOR", "G-PRIOR") ){
     betaPrior = "g-prior"
   }else
     my_stop("Unknown betaPrior method: only independent is available as of yet",tmpFolder) # g prior is accepted but will return an error later
