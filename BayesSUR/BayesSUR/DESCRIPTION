@@ -1,0 +1,16 @@
+Package: BayesSUR
+Type: Package
+Title: Bayesian Seemingly Unrelated Regression
+Version: 0.1.1
+Date: 2019-03-26
+Authors@R: c(person("Marco", "Banterle", email = "marco.banterle@gmail.com", role = c("aut")), person("Zhi", "Zhao", email = "zhi.zhao@medisin.uio.no", role = c("aut", "cre")))
+Maintainer@R: person("Zhi", "Zhao", email = "zhi.zhao@medisin.uio.no", role = c("aut", "cre")) person("Marco", "Banterle", email = "marco.banterle@gmail.com", role = c("aut", "cre")))
+Description: Bayesian Seemingly Unrelated Regression with general variable selection and dense/sparse covariance matrix
+License: MIT + file LICENSE 
+VignetteBuilder: knitr
+RoxygenNote: 6.1.1
+Depends: R (>= 3.2)
+LinkingTo: Rcpp, RcppArmadillo (>= 0.9.000), BH
+Imports: Rcpp, utils, RcppArmadillo (>= 0.9.000), BH
+Suggests: xml2, knitr, rmarkdown
+LazyData: true
