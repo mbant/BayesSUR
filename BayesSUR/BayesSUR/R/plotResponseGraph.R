@@ -4,18 +4,17 @@
 #' Show the relationship between responses
 #' @name plotResponseGraph
 #' @param object fitted "runSUR" model
-#' @param PmaxCovariate cutpoint for thresholding the estimated latent indicator variable. Default is 0.5
 #' @param PmaxResponse cutpoint for thresholding the learning structure matrix of multiple response variables. Default is 0.5
 #' @param PtrueResponse true adjacency matrix for the structure of multiple response variables
 #' @export
-plotResponseGraph <- function(object, PmaxCovariate=0.5, PmaxResponse=0.5, PtrueResponse=NULL, response.name=NULL){
+plotResponseGraph <- function(object, PmaxResponse=0.5, PtrueResponse=NULL, response.name=NULL){
   #library(igraph)
   G0_hat <- as.matrix( read.table(object$output$G) )
   
   if(!is.null(response.name)){
     rownames(G0_hat) <- colnames(G0_hat) <- response.name
   }else{
-    rownames(G0_hat) <- colnames(gamma_hat) <- names(read.table(object$output$Y,header=T))
+    rownames(G0_hat) <- colnames(G0_hat) <- names(read.table(object$output$Y,header=T))
   }
    
   G0_thresh <- as.matrix( G0_hat > PmaxResponse )

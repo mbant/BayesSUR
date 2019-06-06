@@ -24,7 +24,7 @@ manhattan <- function(object, x.loc=FALSE, show.marker=NULL, xlab1="", ylab1="mP
     names(x.loc) <- 1:dim(gamma)[1]
   }else{
     x.loc <- 1:dim(gamma)[1]
-    if(is.null(names(x.loc))) names(x.loc) <- names(read.table(object$output$X,header=T))
+    if(is.null(names(x.loc))) names(x.loc) <- colnames(read.table(object$output$X,header=T))
   }
   if(show.all.xlab){
     n.xlab <- length(x.loc)

@@ -6,7 +6,7 @@
 #' @param object fitted "runSUR" model
 #' @param greyscale grey value palette
 #' @export
-plotEstimator <- function(object, greyscale=grey((0:100)/100)){
+plotEstimator <- function(object, greyscale=grey((100:0)/100)){
   
   beta_hat <- as.matrix( read.table(object$output$beta) )
   gamma_hat <- as.matrix( read.table(object$output$gamma) )
@@ -17,7 +17,7 @@ plotEstimator <- function(object, greyscale=grey((0:100)/100)){
   
   if(toupper(object$input$covariancePrior) == "HIW"){
     G0_hat <- as.matrix( read.table(object$output$G) )
-    image((G0_hat+diag(ncol(G0_hat))), col=greyscale, axes = FALSE, main=mtext(bquote(hat(G)[0])));box()
+    image((G0_hat+diag(ncol(G0_hat))), col=greyscale, axes = FALSE, main="Estimated graph of responses");box()
   }
   
   par(mfrow=c(1,1))

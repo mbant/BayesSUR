@@ -4,13 +4,11 @@
 \alias{plotResponseGraph}
 \title{plotResponseGraph}
 \usage{
-plotResponseGraph(object, PmaxCovariate = 0.5, PmaxResponse = 0.5,
-  PtrueResponse = NULL, response.name = NULL)
+plotResponseGraph(object, PmaxResponse = 0.5, PtrueResponse = NULL,
+  response.name = NULL)
 }
 \arguments{
 \item{object}{fitted "runSUR" model}
-
-\item{PmaxCovariate}{cutpoint for thresholding the estimated latent indicator variable. Default is 0.5}
 
 \item{PmaxResponse}{cutpoint for thresholding the learning structure matrix of multiple response variables. Default is 0.5}
 

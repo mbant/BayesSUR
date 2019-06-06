@@ -4,7 +4,7 @@
 \alias{plotEstimator}
 \title{plotEstimator}
 \usage{
-plotEstimator(object, greyscale = grey((0:100)/100))
+plotEstimator(object, greyscale = grey((100:0)/100))
 }
 \arguments{
 \item{object}{fitted "runSUR" model}

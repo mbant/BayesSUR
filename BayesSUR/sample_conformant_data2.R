@@ -16,14 +16,14 @@ s = 10
 # but as the NFBC66 dataset is confidential we'll use scrime to sample similar data
 library(scrime)
 
-x = simulateSNPs(n, p, c(3, 2),prop.explain = c(0.9, 0.95))$data
+x = simulateSNPs(c(n,10), p, c(3, 2),prop.explain = c(0.9, 0.95))$data[1:n,]
 x = cbind(rep(1,n),x)
 
 ####################################################################
 
-graph_pattern = 3 # in 2,3,4
+graph_pattern = 2 # in 2,3,4
   
-snr = 15  # in 5,15,25
+snr = 25  # in 5,15,25
     
 corr_param = 0.9 # in 0.3 , 0.6 , 0.9
       
@@ -215,7 +215,8 @@ corr_param = 0.9 # in 0.3 , 0.6 , 0.9
     
     ### Sample the errors and the Ys
     cVar = chol(as.matrix(var))
-    err = matrix(rnorm(n*s),n,s) %*% cVar
+    #err = matrix(rnorm(n*s),n,s) %*% cVar
+    err = matrix(rnorm(n*s,sd=0.5),n,s) %*% cVar
     y = xb+err
     
 
