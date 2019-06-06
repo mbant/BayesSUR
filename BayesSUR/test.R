@@ -4,41 +4,40 @@ Rcpp::compileAttributes(pkgdir = "/Users/zhiz/Downloads/BayesSUR/BayesSUR/"); de
 devtools::build("/Users/zhiz/Downloads/BayesSUR/BayesSUR")#,vignettes=TRUE)
 
 ## Install the package
-install.packages("/Users/zhiz/Downloads/BayesSUR/BayesSUR_0.1.1.tar.gz",repos = NULL,type = "source")
+install.packages("/Users/zhiz/Downloads/BayesSUR/BayesSUR_0.1.2.tar.gz",repos = NULL,type = "source")
 
 
 #####################################################################################################
 ## Test the installation
 library(BayesSUR)
 data(example_data, package = "BayesSUR")
+str(example_data)
 
-hyperpar = list(mrf_e=-3, mrf_d=3/10, b_pi = 0.2 , a_pi = 0.1 , b_o = 5 , a_o = 1 )
+# show the simulated gamma matrix and G_0
+layout(matrix(1:2, ncol=2))
+image(z=example_data$gamma, x=1:150, y=1:10, col=grey(1:0), xlab="SNPs Index", 
+      ylab="Responses", main=mtext(bquote(True~" "~gamma)));box()
+image(z=t(example_data$G), x=1:10, y=1:10, col=grey(1:0), xlab="Responses", 
+      ylab="Responses", main="True graph of responses");box()
 
-fit = runSUR(data = example_data[["data"]],
-                Y = example_data[["blockList"]][[1]],
-                X = example_data[["blockList"]][[2]][11:150],
-                outFilePath = "results/",hyperpar=hyperpar,
-                nIter = 2000, nChains = 2, covariancePrior = "HIW", gammaPrior = "hotspot")
+fit <- runSUR(data = example_data$data, Y = example_data$blockList[[1]],
+              X = example_data$blockList[[2]], outFilePath = "results/", 
+              nIter = 100000, nChains = 4, covariancePrior = "HIW", 
+              gammaPrior = "hotspot")
 
-## check output
-est_gamma = getEstimator( fit, "gamma")
-est_G0 = getEstimator( fit, "G0")
-est_beta = getEstimator( fit, "beta")
-model_size = getEstimator( fit, "model_size")
+str(fit)
+#
+# show the estimated beta, gamma and G_0
+plotEstimator(fit);hat_gamma=getEstimator(fit);sum(hat_gamma>.5);max(hat_gamma)
 
-sumint.fit = summary(fit)
+# show the relationship of responses
+plotResponseGraph(fit, PtrueResponse=example_data$G0, 
+                  response.name=paste("GEX",1:ncol(example_data$G0),sep=""))
 
-plotEstimator(fit)
+# show the network representation of the associations between responses and features
+plotNetwork(fit, PmaxCovariate=0.5, lineup=1.2)
+# show the manhattan plot
+manhattan(fit)
 
-plotResponseGraph(fit, PtrueResponse=example_data$G0)
-
-plotNetwork(fit)
-
+# check the convergence of the algorithm
 mcmcDiag(fit)
-
-
-greyscale = grey((100:0)/100)
-data(example_ground_truth, package = "BayesSUR")
-image(example_ground_truth[["gamma"]],col=greyscale)
-plot.default( model_size[,1] , type="l",ylim = c(0,150))
-points(1:ncol(example_ground_truth[["gamma"]]),colSums(example_ground_truth[["gamma"]]),col="red",pch=20)
