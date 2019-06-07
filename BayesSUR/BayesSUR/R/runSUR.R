@@ -252,11 +252,6 @@ runSUR = function(data=NULL, Y, X, X_0=NULL,
 			cat( "Using default prior for Gamma - hotspot prior\n")
 			#mrfG=""
 			gammaPrior = "hotspot"
-			
-			# save a meaningless mrfG.txt file to pass the parameter to C++ 
-			mrfG = matrix(c(0,0),ncol=2)
-			write.table(mrfG, paste(sep="",tmpFolder,"mrfG.txt"), row.names = FALSE, col.names = FALSE)
-			mrfG = paste(sep="",tmpFolder,"mrfG.txt")
 		}
 		else
 		{
@@ -285,11 +280,13 @@ runSUR = function(data=NULL, Y, X, X_0=NULL,
       write.table(mrfG,paste(sep="",tmpFolder,"mrfG.txt"), row.names = FALSE, col.names = FALSE)
       mrfG = paste(sep="",tmpFolder,"mrfG.txt")
     }else if( is.null( mrfG )){
-        mrfG=""
+      # save a meaningless mrfG.txt file to pass the parameter to C++ 
+      mrfG = matrix(c(0,0),ncol=2)
+      write.table(mrfG, paste(sep="",tmpFolder,"mrfG.txt"), row.names = FALSE, col.names = FALSE)
+      mrfG = paste(sep="",tmpFolder,"mrfG.txt")
     }else
       my_stop("Unknown mrfG argument: check the help function for possibile values",tmpFolder)
   }
-
 
   if ( toupper(betaPrior) %in% c("INDEPENDENT", "INDEP", "I") ){
     betaPrior = "independent"
@@ -365,7 +362,7 @@ runSUR = function(data=NULL, Y, X, X_0=NULL,
   
   if ( output_X )
     ret$output["X"] = paste(sep="", outFilePath, "data_X.txt")
-  
+
   ret$status = BayesSUR_internal(data, mrfG, blockList, structureGraph, hyperParFile, outFilePath, 
             nIter, burnin, nChains, 
             covariancePrior, gammaPrior, gammaSampler, gammaInit, betaPrior,

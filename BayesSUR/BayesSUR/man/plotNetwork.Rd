@@ -8,7 +8,7 @@ plotNetwork(object, includeResponse = NULL, excludeResponse = NULL,
   includePredictor = NULL, excludePredictor = NULL,
   MatrixGamma = NULL, PmaxPredictor = 0.5, PmaxResponse = 0.5,
   nodesizePredictor = 15, nodesizeResponse = 25, no.isolates = FALSE,
-  lineup = 0.8)
+  lineup = 0.8, gray.alpha = 0.6)
 }
 \arguments{
 \item{object}{fitted "runSUR" model}

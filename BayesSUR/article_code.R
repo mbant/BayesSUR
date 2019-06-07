@@ -1,4 +1,5 @@
 library(BayesSUR)
+library(igraph)
 data(example_data, package = "BayesSUR")
 str(example_data)
 # show the simulated gamma matrix and G_0
@@ -18,7 +19,7 @@ image(z=t(example_data$G), x=1:10, y=1:10, col=grey(1:0), xlab="Responses",
 
 fit <- runSUR(data = example_data$data, Y = example_data$blockList[[1]],
               X = example_data$blockList[[2]], outFilePath = "results/", 
-              nIter = 100000, nChains = 4, covariancePrior = "HIW", 
+              nIter = 1000, nChains = 4, covariancePrior = "HIW", 
               gammaPrior = "hotspot")
 str(fit)
 # show the estimated beta, gamma and G_0
@@ -29,7 +30,7 @@ plotResponseGraph(fit, PtrueResponse=example_data$G0,
                   response.name=paste("GEX",1:ncol(example_data$G0),sep=""))
 #dev.off()
 # show the network representation of the associations between responses and features
-plotNetwork(fit, PmaxCovariate=0.8, lineup=1.2)
+plotNetwork(fit, PmaxPredictor=0.8, lineup=1.2)
 # show the manhattan plot
 manhattan(fit)
 

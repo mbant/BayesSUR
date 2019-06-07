@@ -17,7 +17,8 @@
 #' @param lineup A ratio of the heights between responses' area and Predictors'
 #' @export 
 plotNetwork <- function(object, includeResponse=NULL, excludeResponse=NULL, includePredictor=NULL, excludePredictor=NULL, 
-                        MatrixGamma=NULL, PmaxPredictor=0.5, PmaxResponse=0.5, nodesizePredictor=15, nodesizeResponse=25, no.isolates=FALSE, lineup=0.8){
+                        MatrixGamma=NULL, PmaxPredictor=0.5, PmaxResponse=0.5, nodesizePredictor=15, nodesizeResponse=25, no.isolates=FALSE,
+                        lineup=0.8, gray.alpha=0.6){
   
   # library(igraph)
   gamma_hat <- as.matrix( read.table(object$output$gamma) )
@@ -45,11 +46,11 @@ plotNetwork <- function(object, includeResponse=NULL, excludeResponse=NULL, incl
   rownames(G0_hat) <- colnames(G0_hat) <-  colnames(gamma_hat)
   G0_thresh <- as.data.frame(as.matrix(G0_hat>PmaxResponse)+0)
   
-  plotSEMgraph(G0_thresh, t(gamma_thresh), nodesizeSNP=nodesizePredictor, nodesizeMET=nodesizeResponse, no.isolates=no.isolates, lineup=lineup)
+  plotSEMgraph(G0_thresh, t(gamma_thresh), nodesizeSNP=nodesizePredictor, nodesizeMET=nodesizeResponse, no.isolates=no.isolates, lineup=lineup, gray.alpha=gray.alpha)
 
 }
 plotSEMgraph <- function(ADJmatrix,GAMmatrix,nodesizeSNP=15,nodesizeMET=25,
-                         no.isolates=FALSE,lineup=0.8){
+                         no.isolates=FALSE,lineup=0.8,gray.alpha=0.6){
   
   # ADJmatrix must be a square qxq adjacency matrix (or data frame)
   qq <- dim(ADJmatrix)[1]
@@ -112,7 +113,7 @@ plotSEMgraph <- function(ADJmatrix,GAMmatrix,nodesizeSNP=15,nodesizeMET=25,
   V(graphSEM)$size <- c( rep(nodesizeMET,qq), rep(nodesizeSNP,pp) )
   
   plot(graphSEM,edge.arrow.size=0.5,
-       edge.width=2,edge.color="darkgray",
+       edge.width=2,edge.color=gray(0.7, alpha=gray.alpha),
        layout=llsem)
   
 }
