@@ -4,29 +4,48 @@
 #' Network representation of the associations between responses and features
 #' @name plotNetwork
 #' @param object fitted "runSUR" model
-#' @param GraphResponse A matrix or dataframe of the relationship of multiple response variables. Default is "NULL" and to extrate it from object of class inheriting from "runSUR"
+#' @param includeResponse A vector of the response names which are shown in the network. 
+#' @param excludeResponse A vector of the response names which are not shown in the network. 
+#' @param includePredictor A vector of the predictor names which are shown in the network. 
+#' @param excludePredictor A vector of the predictor names which are not shown in the network. 
 #' @param MatrixGamma A matrix or dataframe of the latent indicator variable. Default is "NULL" and to extrate it from object of class inheriting from "runSUR"
-#' @param PmaxCovariate cutpoint for thresholding the estimated latent indicator variable. Default is 0.5
+#' @param PmaxPredictor cutpoint for thresholding the estimated latent indicator variable. Default is 0.5
 #' @param PmaxResponse cutpoint for thresholding the learning structure matrix of multiple response variables. Default is 0.5
-#' @param nodesizeCovariate node size of covariates in the output graph. Default is 15
-#' @param nodesizeCovariate node size of response variables in the output graph. Default is 25
-#' @param no.isolates remove isolated nodes from responses graph and Full graph, may get problem if there are also isolated covariates
-#' @param lineup A ratio of the heights between responses' area and covariates'
+#' @param nodesizePredictor node size of Predictors in the output graph. Default is 15
+#' @param nodesizePredictor node size of response variables in the output graph. Default is 25
+#' @param no.isolates remove isolated nodes from responses graph and Full graph, may get problem if there are also isolated Predictors
+#' @param lineup A ratio of the heights between responses' area and Predictors'
 #' @export 
-plotNetwork <- function(object, GraphResponse=NULL, MatrixGamma=NULL, PmaxCovariate=0.5, PmaxResponse=0.5, nodesizeCovariate=15, nodesizeResponse=25, no.isolates=FALSE, lineup=0.8){
+plotNetwork <- function(object, includeResponse=NULL, excludeResponse=NULL, includePredictor=NULL, excludePredictor=NULL, 
+                        MatrixGamma=NULL, PmaxPredictor=0.5, PmaxResponse=0.5, nodesizePredictor=15, nodesizeResponse=25, no.isolates=FALSE, lineup=0.8){
   
-  #library(igraph)
+  # library(igraph)
   gamma_hat <- as.matrix( read.table(object$output$gamma) )
   colnames(gamma_hat) <- names(read.table(object$output$Y,header=T))
   rownames(gamma_hat) <- names(read.table(object$output$X,header=T))
-  gamma_thresh <- as.data.frame(as.matrix(gamma_hat>PmaxCovariate)+0)
+  
+  # select the required resposes and predictors to plot the network
+  excludeResponse.idx <- rep(FALSE, ncol(gamma_hat))
+  excludePredictor.idx <- rep(FALSE, nrow(gamma_hat))
+  if(!is.null(includeResponse)) 
+    excludeResponse.idx <- c(!(colnames(gamma_hat) %in% includeResponse))
+  if(!is.null(excludeResponse)) 
+    excludeResponse.idx <- c(excludeResponse.idx | c(colnames(gamma_hat) %in% excludeResponse))
+  if(!is.null(includePredictor)) 
+    excludePredictor.idx <- c(!(rownames(gamma_hat) %in% includePredictor))
+  if(!is.null(excludePredictor))
+    excludePredictor.idx <- c(excludePredictor.idx | c(rownames(gamma_hat) %in% excludePredictor))
+  
+  gamma_hat <- gamma_hat[!excludePredictor.idx,!excludeResponse.idx]
+  gamma_thresh <- as.data.frame(as.matrix(gamma_hat>PmaxPredictor)+0)
   gamma_thresh <- gamma_thresh[rowSums(gamma_thresh)!=0,]
   
   G0_hat <- as.matrix( read.table(object$output$G) )
+  G0_hat <- G0_hat[!excludeResponse.idx,!excludeResponse.idx]
   rownames(G0_hat) <- colnames(G0_hat) <-  colnames(gamma_hat)
   G0_thresh <- as.data.frame(as.matrix(G0_hat>PmaxResponse)+0)
   
-  plotSEMgraph(G0_thresh, t(gamma_thresh), nodesizeSNP=nodesizeCovariate, nodesizeMET=nodesizeResponse, no.isolates=no.isolates, lineup=lineup)
+  plotSEMgraph(G0_thresh, t(gamma_thresh), nodesizeSNP=nodesizePredictor, nodesizeMET=nodesizeResponse, no.isolates=no.isolates, lineup=lineup)
 
 }
 plotSEMgraph <- function(ADJmatrix,GAMmatrix,nodesizeSNP=15,nodesizeMET=25,

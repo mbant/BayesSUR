@@ -38,7 +38,7 @@ class SUR_Chain : public ESS_Atom<SUR_Chain>
         // Constructors
         // *******************************
 
-        SUR_Chain( std::shared_ptr<arma::mat> data_, unsigned int nObservations_, 
+        SUR_Chain( std::shared_ptr<arma::mat> data_, std::shared_ptr<arma::mat> mrfG_, unsigned int nObservations_, 
             unsigned int nOutcomes_, unsigned int nVSPredictors_, unsigned int nFixedPredictors_,
             std::shared_ptr<arma::uvec> outcomesIdx_, std::shared_ptr<arma::uvec> VSPredictorsIdx_,
             std::shared_ptr<arma::uvec> fixedPredictorsIdx_, std::shared_ptr<arma::umat> missingDataArrayIdx_, std::shared_ptr<arma::uvec> completeCases_, 
@@ -62,8 +62,10 @@ class SUR_Chain : public ESS_Atom<SUR_Chain>
 
         // data
         inline std::shared_ptr<arma::mat> getData() const{ return data ; }
-
         inline arma::mat& getXtX(){ return XtX ; }
+
+        // mrfG
+        inline std::shared_ptr<arma::mat> getMRFG() const{ return mrfG ; } 
 
         inline unsigned int getN() const{ return nObservations ; }
         inline unsigned int getP() const{ return nFixedPredictors+nVSPredictors ; }
@@ -236,8 +238,8 @@ class SUR_Chain : public ESS_Atom<SUR_Chain>
         // no setter for this, dedicated setter below
 
         // MRF
-        inline arma::mat& getMRFG() { return mrf_G; }
-        void setMRFG( arma::mat& mrf_G_ ) { mrf_G = mrf_G_; logPGamma(); }
+//        inline arma::mat& getMRFG() { return mrf_G; }
+//        void setMRFG( arma::mat& mrf_G_ ) { mrf_G = mrf_G_; logPGamma(); }
 
         // GAMMA (bandit defined above)
         arma::umat& getGamma();
@@ -331,7 +333,7 @@ class SUR_Chain : public ESS_Atom<SUR_Chain>
         void piInit( arma::vec& , double , double , double );
 
         void mrfGInit();
-        void mrfGInit( arma::mat& );
+//        void mrfGInit( arma::mat& );
 
         void gammaInit();
         void gammaInit( arma::umat& );
@@ -389,8 +391,8 @@ class SUR_Chain : public ESS_Atom<SUR_Chain>
         double logPGamma( const arma::umat& );
         double logPGamma( const arma::umat& , const arma::vec& , const arma::vec& );
         double logPGamma( const arma::umat& , const arma::vec& );
-        double logPGamma( const arma::umat& , double , double , const arma::mat& );
-
+//        double logPGamma( const arma::umat& , double , double , const arma::mat& );
+        double logPGamma( const arma::umat& , double , double );
 
         // W
         double logPW( );
@@ -532,6 +534,7 @@ class SUR_Chain : public ESS_Atom<SUR_Chain>
 
         // Data (and related quatities)
         std::shared_ptr<arma::mat> data;
+        std::shared_ptr<arma::mat> mrfG;
         std::shared_ptr<arma::uvec> outcomesIdx;
 
         std::shared_ptr<arma::uvec> predictorsIdx;
@@ -633,7 +636,7 @@ class SUR_Chain : public ESS_Atom<SUR_Chain>
         unsigned int jtStartIteration;
 
         // MRF PRIOR
-        arma::mat mrf_G;
+//        arma::mat mrf_G;
         double mrf_d, mrf_e;
 
         // GAMMA - variable selection binary indexes

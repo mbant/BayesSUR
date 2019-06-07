@@ -30,7 +30,7 @@ int drive_SUR( Chain_Data& chainData )
 
 	// extra step needed to read in the MRF prior G matrix if needed
 	// ************************************
-	if ( chainData.gamma_type == Gamma_Type::mrf )
+/*	if ( chainData.gamma_type == Gamma_Type::mrf )
 	{
 		for( unsigned int i=0; i< chainData.nChains; ++i )
 		{
@@ -38,7 +38,7 @@ int drive_SUR( Chain_Data& chainData )
 			sampler[i]->logPGamma();
 		}
 	}
-
+*/
 	// Init all parameters
 	// *****************************
 	sampler.setHyperParameters( chainData );
@@ -208,38 +208,7 @@ int drive_SUR( Chain_Data& chainData )
 
 		// ## Global moves
 		// *** end Global move's section
-        
-        // UPDATE BURN-IN STATE
-        if( i < chainData.burnin )
-        {
-            if ( chainData.output_gamma )
-                gamma_out = sampler[0] -> getGamma(); // the result of the whole procedure is now my new mcmc point, so add that up
-            
-            if ( chainData.covariance_type == Covariance_Type::HIW && chainData.output_G )
-                g_out = arma::umat( sampler[0] -> getGAdjMat() );
-            
-            if ( chainData.output_beta )
-                beta_out = sampler[0] -> getBeta();
-            
-            if ( chainData.output_sigmaRho )
-                sigmaRho_out = sampler[0] -> getSigmaRho();
-            
-            if ( ( chainData.gamma_type == Gamma_Type::hotspot || chainData.gamma_type == Gamma_Type::hierarchical ) &&
-                ( chainData.output_pi || chainData.output_tail ) )
-            {
-                tmpVec = sampler[0] -> getPi();
-                if ( chainData.output_pi )
-                    pi_out = tmpVec;
-                
-                if ( chainData.gamma_type == Gamma_Type::hotspot && chainData.output_tail )
-                {
-                    tmpVec.for_each( [](arma::vec::elem_type& val) { if(val>1.0) val = 1.0; else val=0.0; } );
-                    hotspot_tail_prob_out = tmpVec;
-                }
-            }
-            // Nothing to update for model size
-        }
-        
+
 		// UPDATE OUTPUT STATE
 		if( i >= chainData.burnin )
 		{
@@ -446,7 +415,7 @@ int drive_HESS( Chain_Data& chainData )
 	
 	// extra step needed to read in the MRF prior G matrix if needed
 	// **********************************
-	if ( chainData.gamma_type == Gamma_Type::mrf )
+/*	if ( chainData.gamma_type == Gamma_Type::mrf )
 	{
 		for( unsigned int i=0; i< chainData.nChains; ++i)
 		{
@@ -454,7 +423,7 @@ int drive_HESS( Chain_Data& chainData )
 			sampler[i]->logPGamma();
 		}
 	}
-
+*/
 	// Init all parameters
 	// *****************************
 	sampler.setHyperParameters( chainData );
@@ -746,10 +715,10 @@ int drive_HESS( Chain_Data& chainData )
 // *******************************************************************************
 
 
-int drive( const std::string& dataFile, const std::string& blockFile, const std::string& structureGraphFile, const std::string& hyperParFile, const std::string& outFilePath,  
+int drive( const std::string& dataFile, const std::string& mrfGFile, const std::string& blockFile, const std::string& structureGraphFile, const std::string& hyperParFile, const std::string& outFilePath,  
 			unsigned int nIter, unsigned int burnin, unsigned int nChains,
 			const std::string& covariancePrior, 
-			const std::string& gammaPrior, const std::string& gammaSampler, const std::string& gammaInit, const std::string& mrfGFile ,
+			const std::string& gammaPrior, const std::string& gammaSampler, const std::string& gammaInit,
 			const std::string& betaPrior,
 			bool output_gamma, bool output_beta, bool output_G, bool output_sigmaRho, bool output_pi, bool output_tail, bool output_model_size )
 {
@@ -811,7 +780,7 @@ int drive( const std::string& dataFile, const std::string& blockFile, const std:
 	{
 		chainData.gamma_type = Gamma_Type::mrf ;
 
-		try
+/*		try
 		{
 			if ( mrfGFile != "" )
 	        	Utils::readGmrf(mrfGFile, chainData.mrfG);
@@ -820,7 +789,7 @@ int drive( const std::string& dataFile, const std::string& blockFile, const std:
 		{
 			std::cerr << e.what() << '\n';
 			return 1;
-		}	
+		}	*/
 	}
 	else
 	{
@@ -881,7 +850,7 @@ int drive( const std::string& dataFile, const std::string& blockFile, const std:
 
 	try
 	{
-		Utils::formatData(dataFile, blockFile, structureGraphFile, chainData.surData );
+		Utils::formatData(dataFile, mrfGFile, blockFile, structureGraphFile, chainData.surData );
 	}
 	catch(const std::exception& e)
 	{

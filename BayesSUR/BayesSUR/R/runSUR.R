@@ -250,14 +250,20 @@ runSUR = function(data=NULL, Y, X, X_0=NULL,
 		if ( is.null(mrfG) )
 		{
 			cat( "Using default prior for Gamma - hotspot prior\n")
-			mrfG=""
+			#mrfG=""
 			gammaPrior = "hotspot"
+			
+			# save a meaningless mrfG.txt file to pass the parameter to C++ 
+			mrfG = matrix(c(0,0),ncol=2)
+			write.table(mrfG, paste(sep="",tmpFolder,"mrfG.txt"), row.names = FALSE, col.names = FALSE)
+			mrfG = paste(sep="",tmpFolder,"mrfG.txt")
 		}
 		else
 		{
 			cat( "No value for gammaPrior was specified, but mrfG was given - choosing MRF prior\n")
 			gammaPrior = "MRF"
 		}
+    
 	}else{
 
     if ( toupper(gammaPrior) %in% c("HOTSPOT", "HOTSPOTS", "HS") )
@@ -360,9 +366,9 @@ runSUR = function(data=NULL, Y, X, X_0=NULL,
   if ( output_X )
     ret$output["X"] = paste(sep="", outFilePath, "data_X.txt")
   
-  ret$status = BayesSUR_internal(data, blockList, structureGraph, hyperParFile, outFilePath, 
+  ret$status = BayesSUR_internal(data, mrfG, blockList, structureGraph, hyperParFile, outFilePath, 
             nIter, burnin, nChains, 
-            covariancePrior, gammaPrior, gammaSampler, gammaInit, mrfG, betaPrior,
+            covariancePrior, gammaPrior, gammaSampler, gammaInit, betaPrior,
             output_gamma, output_beta, output_G, output_sigmaRho, output_pi, output_tail, output_model_size)
 
   if(outFilePath != tmpFolder)

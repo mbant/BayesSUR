@@ -14,6 +14,7 @@ namespace Utils{
 	struct SUR_Data
 	{	
 		std::shared_ptr<arma::mat> data;
+		std::shared_ptr<arma::mat> mrfG;
 		unsigned int nObservations, nOutcomes, nPredictors, nVSPredictors, nFixedPredictors;
 		std::shared_ptr<arma::uvec> outcomesIdx, VSPredictorsIdx, fixedPredictorsIdx;
 
@@ -26,6 +27,7 @@ namespace Utils{
 		SUR_Data() // use this constructor to instanciate all the object at creation (to be sure pointers point to *something*)
 		{
 			data = std::make_shared<arma::mat>();
+			mrfG = std::make_shared<arma::mat>();
 			outcomesIdx = std::make_shared<arma::uvec>();
 			VSPredictorsIdx = std::make_shared<arma::uvec>();
 			fixedPredictorsIdx = std::make_shared<arma::uvec>();
@@ -116,7 +118,7 @@ namespace Utils{
 
 	bool readData(const std::string& dataFileName, std::shared_ptr<arma::mat> data);
     
-	bool readGmrf(const std::string& mrfGFileName, arma::mat& mrfG);
+	bool readGmrf(const std::string& mrfGFileName, std::shared_ptr<arma::mat> mrfG);
 
 	bool readGraph(const std::string& graphFileName, arma::umat& graph);
 
@@ -125,7 +127,8 @@ namespace Utils{
 	void removeDisposable(std::shared_ptr<arma::mat> data, arma::ivec& blockLabels);
 
 	void getBlockDimensions(const arma::ivec& blockLabels, const arma::umat& structureGraph,
-							const std::shared_ptr<arma::mat>& data, unsigned int& nObservations,
+							const std::shared_ptr<arma::mat>& data, const std::shared_ptr<arma::mat>& mrfG, 
+							unsigned int& nObservations,
 							unsigned int& nOutcomes, std::shared_ptr<arma::uvec> outcomesIndexes, 
 							unsigned int& nPredictors, unsigned int& nVSPredictors, unsigned int& nFixedPredictors,
 							std::shared_ptr<arma::uvec> VSPredictorsIndexes, std::shared_ptr<arma::uvec> fixedPredictorsIndexes);
@@ -135,7 +138,7 @@ namespace Utils{
 
 	void initMissingData(std::shared_ptr<arma::mat> data, std::shared_ptr<arma::umat> missingDataArrayIndexes, std::shared_ptr<arma::uvec> completeCases, bool print=false );
 
-	void formatData(const std::string& dataFileName, const std::string& blockFileName, const std::string& structureGraphFileName, 
+	void formatData(const std::string& dataFileName, const std::string& mrfGFileName, const std::string& blockFileName, const std::string& structureGraphFileName, 
 					SUR_Data& surData );
 
 	void readHyperPar(const std::string& hyperParFile, Chain_Data& chainData );

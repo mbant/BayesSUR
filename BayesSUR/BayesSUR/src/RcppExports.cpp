@@ -7,11 +7,12 @@
 using namespace Rcpp;
 
 // BayesSUR_internal
-int BayesSUR_internal(const std::string& dataFile, const std::string& blockFile, const std::string& structureGraphFile, const std::string& hyperParFile, const std::string& outFilePath, unsigned int nIter, unsigned int burnin, unsigned int nChains, const std::string& covariancePrior, const std::string& gammaPrior, const std::string& gammaSampler, const std::string& gammaInit, const std::string& mrfGFile, const std::string& betaPrior, bool output_gamma, bool output_beta, bool output_G, bool output_sigmaRho, bool output_pi, bool output_tail, bool output_model_size);
-RcppExport SEXP _BayesSUR_BayesSUR_internal(SEXP dataFileSEXP, SEXP blockFileSEXP, SEXP structureGraphFileSEXP, SEXP hyperParFileSEXP, SEXP outFilePathSEXP, SEXP nIterSEXP, SEXP burninSEXP, SEXP nChainsSEXP, SEXP covariancePriorSEXP, SEXP gammaPriorSEXP, SEXP gammaSamplerSEXP, SEXP gammaInitSEXP, SEXP mrfGFileSEXP, SEXP betaPriorSEXP, SEXP output_gammaSEXP, SEXP output_betaSEXP, SEXP output_GSEXP, SEXP output_sigmaRhoSEXP, SEXP output_piSEXP, SEXP output_tailSEXP, SEXP output_model_sizeSEXP) {
+int BayesSUR_internal(const std::string& dataFile, const std::string& mrfGFile, const std::string& blockFile, const std::string& structureGraphFile, const std::string& hyperParFile, const std::string& outFilePath, unsigned int nIter, unsigned int burnin, unsigned int nChains, const std::string& covariancePrior, const std::string& gammaPrior, const std::string& gammaSampler, const std::string& gammaInit, const std::string& betaPrior, bool output_gamma, bool output_beta, bool output_G, bool output_sigmaRho, bool output_pi, bool output_tail, bool output_model_size);
+RcppExport SEXP _BayesSUR_BayesSUR_internal(SEXP dataFileSEXP, SEXP mrfGFileSEXP, SEXP blockFileSEXP, SEXP structureGraphFileSEXP, SEXP hyperParFileSEXP, SEXP outFilePathSEXP, SEXP nIterSEXP, SEXP burninSEXP, SEXP nChainsSEXP, SEXP covariancePriorSEXP, SEXP gammaPriorSEXP, SEXP gammaSamplerSEXP, SEXP gammaInitSEXP, SEXP betaPriorSEXP, SEXP output_gammaSEXP, SEXP output_betaSEXP, SEXP output_GSEXP, SEXP output_sigmaRhoSEXP, SEXP output_piSEXP, SEXP output_tailSEXP, SEXP output_model_sizeSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::traits::input_parameter< const std::string& >::type dataFile(dataFileSEXP);
+    Rcpp::traits::input_parameter< const std::string& >::type mrfGFile(mrfGFileSEXP);
     Rcpp::traits::input_parameter< const std::string& >::type blockFile(blockFileSEXP);
     Rcpp::traits::input_parameter< const std::string& >::type structureGraphFile(structureGraphFileSEXP);
     Rcpp::traits::input_parameter< const std::string& >::type hyperParFile(hyperParFileSEXP);
@@ -23,7 +24,6 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const std::string& >::type gammaPrior(gammaPriorSEXP);
     Rcpp::traits::input_parameter< const std::string& >::type gammaSampler(gammaSamplerSEXP);
     Rcpp::traits::input_parameter< const std::string& >::type gammaInit(gammaInitSEXP);
-    Rcpp::traits::input_parameter< const std::string& >::type mrfGFile(mrfGFileSEXP);
     Rcpp::traits::input_parameter< const std::string& >::type betaPrior(betaPriorSEXP);
     Rcpp::traits::input_parameter< bool >::type output_gamma(output_gammaSEXP);
     Rcpp::traits::input_parameter< bool >::type output_beta(output_betaSEXP);
@@ -32,7 +32,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< bool >::type output_pi(output_piSEXP);
     Rcpp::traits::input_parameter< bool >::type output_tail(output_tailSEXP);
     Rcpp::traits::input_parameter< bool >::type output_model_size(output_model_sizeSEXP);
-    rcpp_result_gen = Rcpp::wrap(BayesSUR_internal(dataFile, blockFile, structureGraphFile, hyperParFile, outFilePath, nIter, burnin, nChains, covariancePrior, gammaPrior, gammaSampler, gammaInit, mrfGFile, betaPrior, output_gamma, output_beta, output_G, output_sigmaRho, output_pi, output_tail, output_model_size));
+    rcpp_result_gen = Rcpp::wrap(BayesSUR_internal(dataFile, mrfGFile, blockFile, structureGraphFile, hyperParFile, outFilePath, nIter, burnin, nChains, covariancePrior, gammaPrior, gammaSampler, gammaInit, betaPrior, output_gamma, output_beta, output_G, output_sigmaRho, output_pi, output_tail, output_model_size));
     return rcpp_result_gen;
 END_RCPP
 }

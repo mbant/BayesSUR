@@ -5,14 +5,14 @@
 // *******************************
 
 
-SUR_Chain::SUR_Chain( std::shared_ptr<arma::mat> data_, unsigned int nObservations_, 
+SUR_Chain::SUR_Chain( std::shared_ptr<arma::mat> data_, std::shared_ptr<arma::mat> mrfG_, unsigned int nObservations_, 
             unsigned int nOutcomes_, unsigned int nVSPredictors_, unsigned int nFixedPredictors_,
             std::shared_ptr<arma::uvec> outcomesIdx_, std::shared_ptr<arma::uvec> VSPredictorsIdx_,
             std::shared_ptr<arma::uvec> fixedPredictorsIdx_, std::shared_ptr<arma::umat> missingDataArrayIdx_, std::shared_ptr<arma::uvec> completeCases_, 
             Gamma_Sampler_Type gamma_sampler_type_ , Gamma_Type gamma_type_ ,
             Beta_Type beta_type_ , Covariance_Type covariance_type_ , 
             double externalTemperature ):
-    data(data_), outcomesIdx(outcomesIdx_), VSPredictorsIdx(VSPredictorsIdx_), fixedPredictorsIdx(fixedPredictorsIdx_),
+    data(data_), mrfG(mrfG_), outcomesIdx(outcomesIdx_), VSPredictorsIdx(VSPredictorsIdx_), fixedPredictorsIdx(fixedPredictorsIdx_),
     nObservations(nObservations_), nOutcomes(nOutcomes_), nVSPredictors(nVSPredictors_), nFixedPredictors(nFixedPredictors_),
     missingDataArrayIdx(missingDataArrayIdx_), completeCases(completeCases_),
     gamma_sampler_type(gamma_sampler_type_),gamma_type(gamma_type_),beta_type(beta_type_),covariance_type(covariance_type_),
@@ -80,12 +80,12 @@ SUR_Chain::SUR_Chain( Utils::SUR_Data& surData,
             Gamma_Sampler_Type gamma_sampler_type_ , Gamma_Type gamma_type_ ,
             Beta_Type beta_type_ , Covariance_Type covariance_type_  , 
             double externalTemperature ):
-    SUR_Chain(surData.data,surData.nObservations,surData.nOutcomes,surData.nVSPredictors,surData.nFixedPredictors,
+    SUR_Chain(surData.data,surData.mrfG,surData.nObservations,surData.nOutcomes,surData.nVSPredictors,surData.nFixedPredictors,
         surData.outcomesIdx,surData.VSPredictorsIdx,surData.fixedPredictorsIdx,surData.missingDataArrayIdx,surData.completeCases,
         gamma_sampler_type_,gamma_type_,beta_type_,covariance_type_,externalTemperature){ }
 
 SUR_Chain::SUR_Chain( Utils::SUR_Data& surData, double externalTemperature ):
-    SUR_Chain(surData.data,surData.nObservations,surData.nOutcomes,surData.nVSPredictors,surData.nFixedPredictors,
+    SUR_Chain(surData.data,surData.mrfG,surData.nObservations,surData.nOutcomes,surData.nVSPredictors,surData.nFixedPredictors,
         surData.outcomesIdx,surData.VSPredictorsIdx,surData.fixedPredictorsIdx,surData.missingDataArrayIdx,surData.completeCases,
         Gamma_Sampler_Type::bandit , Gamma_Type::hotspot , Beta_Type::independent , Covariance_Type::HIW , 
         externalTemperature){ }
@@ -790,11 +790,11 @@ void SUR_Chain::mrfGInit()
     if( gamma_type != Gamma_Type::mrf )
         throw Bad_Gamma_Type ( gamma_type );
 
-    mrf_G = arma::zeros<arma::mat>(0,2);
+//    mrf_G = arma::zeros<arma::mat>(0,2);
     mrf_d = -3. ;
     mrf_e = 0.2 ;
 }
-
+/*
 void SUR_Chain::mrfGInit( arma::mat& mrf_G_ )
 {
     if( gamma_type != Gamma_Type::mrf )
@@ -804,7 +804,7 @@ void SUR_Chain::mrfGInit( arma::mat& mrf_G_ )
     mrf_d = -3. ;
     mrf_e = 0.2 ;
 }
-
+*/
 
 void SUR_Chain::gammaInit( arma::umat& gamma_init )
 {
@@ -1135,11 +1135,19 @@ double SUR_Chain::logPGamma( const arma::umat& externalGamma , const arma::vec& 
 }
 
 // this is the MRF prior
-double SUR_Chain::logPGamma( const arma::umat& externalGamma , double d, double e, const arma::mat& externalMRFG )
+//double SUR_Chain::logPGamma( const arma::umat& externalGamma , double d, double e, const arma::mat& externalMRFG )
+double SUR_Chain::logPGamma( const arma::umat& externalGamma , double d, double e )
 {
     if( gamma_type != Gamma_Type::mrf )
         throw Bad_Gamma_Type ( gamma_type );
 
+    arma::mat externalMRFG = mrfG->cols( arma::linspace<arma::uvec>(0,1,2) );
+
+//==============
+// debug the parameters passing
+/*std::cout << "MRF_d: " << d << "; MRF_e: " << e << "\n" << std::endl;
+std::cout << "GmrfFile: " << arma::size(externalMRFG) << (externalMRFG).submat(0,0,5,1) << "\n" << std::endl;*/
+//==============
     double logP = 0.;
     // calculate the quadratic form in MRF by using all edges of G
     arma::vec gammaVec = arma::conv_to< arma::vec >::from(arma::vectorise(externalGamma));
@@ -1169,7 +1177,8 @@ double SUR_Chain::logPGamma( )
     
         case Gamma_Type::mrf :
         {
-            logP_gamma = logPGamma( gamma , mrf_d , mrf_e , mrf_G );
+//            logP_gamma = logPGamma( gamma , mrf_d , mrf_e , mrf_G );
+	    logP_gamma = logPGamma( gamma , mrf_d , mrf_e );
             break;
         }
         default:
@@ -1194,7 +1203,8 @@ double SUR_Chain::logPGamma( const arma::umat& externalGamma )
     
         case Gamma_Type::mrf :
         {
-            logP = logPGamma( externalGamma , mrf_d , mrf_e , mrf_G );
+//            logP = logPGamma( externalGamma , mrf_d , mrf_e , mrf_G );
+	    logP = logPGamma( externalGamma , mrf_d , mrf_e );
             break;
         }
         default:

@@ -29,10 +29,10 @@ int drive_SUR( Chain_Data& chainData );
 
 int drive_HESS( Chain_Data& chainData );
 
-int drive( const std::string& dataFile, const std::string& blockFile, const std::string& structureGraphFile, const std::string& hyperParFile, const std::string& outFilePath,  
+int drive( const std::string& dataFile, const std::string& mrfGFile, const std::string& blockFile, const std::string& structureGraphFile, const std::string& hyperParFile, const std::string& outFilePath,  
 			unsigned int nIter, unsigned int burnin, unsigned int nChains,
 			const std::string& covariancePrior, 
-			const std::string& gammaPrior, const std::string& gammaSampler, const std::string& gammaInit, const std::string& mrfGFile ,
+			const std::string& gammaPrior, const std::string& gammaSampler, const std::string& gammaInit,
 			const std::string& betaPrior,
 			bool output_gamma, bool output_beta, bool output_G, bool output_sigmaRho, bool output_pi, bool output_tail, bool output_model_size );
 

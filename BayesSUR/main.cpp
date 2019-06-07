@@ -3,10 +3,10 @@
 #include <cmath>
 
 // redeclare the drive funciton
-int drive( const std::string& dataFile, const std::string& blockFile, const std::string& structureGraphFile, const std::string& hyperParFile, const std::string& outFilePath,  
+int drive( const std::string& dataFile, const std::string& mrfGFile, const std::string& blockFile, const std::string& structureGraphFile, const std::string& hyperParFile, const std::string& outFilePath,  
 			unsigned int nIter, unsigned int burnin, unsigned int nChains,
 			const std::string& covariancePrior, 
-			const std::string& gammaPrior, const std::string& gammaSampler, const std::string& gammaInit, const std::string& mrfGFile ,
+			const std::string& gammaPrior, const std::string& gammaSampler, const std::string& gammaInit,
 			const std::string& betaPrior,
 			bool output_gamma, bool output_beta, bool output_G, bool output_sigmaRho, bool output_pi, bool output_tail, bool output_model_size );
 
@@ -18,6 +18,7 @@ int main(int argc, char* argv[])
 	unsigned int nChains = 1;
 
 	std::string dataFile = "data.txt";
+	std::string mrfGFile = "mrfG.txt";
 	std::string blockFile = "blocks.txt";
 	std::string structureGraphFile = "structureGraph.txt";
 	std::string hpFile = "model.xml";
@@ -27,7 +28,7 @@ int main(int argc, char* argv[])
 	std::string covariancePrior = "";
 	
 	std::string gammaPrior = "";
-	std::string mrfGFile = "";
+//	std::string mrfGFile = "";
 	std::string gammaSampler = "bandit";
 	std::string gammaInit = "MLE";
 
@@ -291,9 +292,9 @@ int main(int argc, char* argv[])
 	
 	try
 	{
-		status =  drive(dataFile,blockFile,structureGraphFile,hpFile,outFilePath,
+		status =  drive(dataFile,mrfGFile,blockFile,structureGraphFile,hpFile,outFilePath,
 			nIter,burnin,nChains,
-			covariancePrior,gammaPrior,gammaSampler,gammaInit,mrfGFile,betaPrior,
+			covariancePrior,gammaPrior,gammaSampler,gammaInit,betaPrior,
 			out_gamma,out_beta,out_G,out_sigmaRho,out_pi,out_tail,out_model_size);
 	}
 	catch(const std::exception& e)

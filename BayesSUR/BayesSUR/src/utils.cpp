@@ -20,13 +20,13 @@ namespace Utils{
 		return status;
 	}
     
-    bool readGmrf(const std::string& mrfGFileName, arma::mat& mrfG)
+    bool readGmrf(const std::string& mrfGFileName, std::shared_ptr<arma::mat> mrfG)
     {
         
-        bool status = mrfG.load(mrfGFileName,arma::raw_ascii);
+        bool status = mrfG->load(mrfGFileName,arma::raw_ascii);
         if( !status )
             throw badFile();
-        
+
         return status;
         
     }
@@ -78,7 +78,7 @@ namespace Utils{
 
 
 	void getBlockDimensions(const arma::ivec& blockLabels, const arma::umat& structureGraph,
-							const std::shared_ptr<arma::mat>& data, unsigned int& nObservations,
+							const std::shared_ptr<arma::mat>& data, const std::shared_ptr<arma::mat>& mrfG, unsigned int& nObservations,
 							unsigned int& nOutcomes, std::shared_ptr<arma::uvec> outcomeIndexes, 
 							unsigned int& nPredictors, unsigned int& nVSPredictors, unsigned int& nFixedPredictors,
 							std::shared_ptr<arma::uvec> VSPredictorsIndexes, std::shared_ptr<arma::uvec> fixedPredictorsIndexes)
@@ -193,10 +193,11 @@ namespace Utils{
 	}
 
 
-	void formatData( const std::string& dataFileName, const std::string& blockFileName, const std::string& structureGraphFileName,  SUR_Data& surData )
+	void formatData( const std::string& dataFileName, const std::string& mrfGFileName, const std::string& blockFileName, const std::string& structureGraphFileName,  SUR_Data& surData )
 	{
 		
 		bool status = readData(dataFileName,surData.data);
+		status = status && readGmrf(mrfGFileName,surData.mrfG);
 		status = status && readBlocks(blockFileName,surData.blockLabels);
 		status = status && readGraph(structureGraphFileName,surData.structureGraph);
 
@@ -206,7 +207,7 @@ namespace Utils{
 		removeDisposable(surData.data,surData.blockLabels); // variables indexed by negative indexes are deemed unnecessary by the user, remove them
 
 
-		getBlockDimensions( surData.blockLabels, surData.structureGraph, surData.data, surData.nObservations,
+		getBlockDimensions( surData.blockLabels, surData.structureGraph, surData.data, surData.mrfG, surData.nObservations,
 							surData.nOutcomes, surData.outcomesIdx, surData.nPredictors, surData.nVSPredictors, surData.nFixedPredictors,
 							surData.VSPredictorsIdx, surData.fixedPredictorsIdx);
 
