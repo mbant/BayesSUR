@@ -2,6 +2,8 @@
 // [[Rcpp::plugins(openmp)]]
 // [[Rcpp::depends(RcppArmadillo)]]
 // [[Rcpp::depends(BH)]]
+// [[Rcpp::depends(igraph)]]
+// [[Rcpp::depends(Matrix)]]
 //' @title BayesSUR_internal
 //' @description
 //' Run a SUR Bayesian sampler -- internal function

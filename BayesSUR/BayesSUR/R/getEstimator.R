@@ -4,11 +4,13 @@
 #' Extract results from the object of fitted Bayesian Seemingly Unrelated Regression
 #' @name getEstimator
 #' @param object fitted "runSUR" model
-#' @param estimator the name of one estimator. Default is the latent indicator estimator "gamma"
+#' @param estimator the name of one estimator. Default is the latent indicator estimator "gamma". Other options "beta" and "G0" correspond the posterior means of coefficient matrix and response graph, respectively 
 #' @export
 getEstimator <- function(object, estimator="gamma"){
   
-  if( sum(estimator %in% c("gamma","beta","G0","logP","model_size"))<1 )
+  devAskNewPage(FALSE)
+  object$output[-1] <- paste(object$output$outFilePath,object$output[-1],sep="")
+  if( sum(estimator %in% c("gamma","beta","G0"))<1 )
     stop("Please specify a correct estimator!")
   if( estimator == "gamma" ) Est <- as.matrix( read.table(object$output$gamma) )
   if( estimator == "beta" ) Est <- as.matrix( read.table(object$output$beta) )

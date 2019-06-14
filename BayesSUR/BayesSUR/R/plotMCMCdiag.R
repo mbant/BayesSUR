@@ -8,6 +8,9 @@
 #' @export
 plotMCMCdiag <- function(object, nbloc=4){
   
+  devAskNewPage(FALSE)
+  object$output[-1] <- paste(object$output$outFilePath,object$output[-1],sep="")
+  
   logP <- t( as.matrix( read.table(object$output$logP) ) )
   Ptau.indx <- ifelse(fit$input$covariancePrior!="IG", 7, 3)
   Plik.indx <- ifelse(fit$input$covariancePrior!="IG", 10, 5)

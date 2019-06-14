@@ -227,7 +227,7 @@ runSUR = function(data=NULL, Y, X, X_0=NULL,
   if ( burnin < 0 ){
     my_stop("Burnin must be positive or 0",tmpFolder)
   }else{ if ( burnin > nIter ){
-    my_stop("Burnin might ont be greater then nIter",tmpFolder)
+    my_stop("Burnin might not be greater than nIter",tmpFolder)
   }else{ if ( burnin < 1 ){ # given as a fraction
     burnin = ceiling(nIter * burnin) # the zero case is taken into account here as well
   }}} # else assume is given as an absolute number
@@ -334,34 +334,36 @@ runSUR = function(data=NULL, Y, X, X_0=NULL,
       "IG"  = "HESS" )
 
   # Prepare path to outputs
-  ret$output["logP"] = paste(sep="", outFilePath , dataString , "_",  methodString , "_logP_out.txt")
+  ret$output["outFilePath"] = outFilePath
+  
+  ret$output["logP"] = paste(sep="", dataString , "_",  methodString , "_logP_out.txt")
 
   if ( output_gamma )
-    ret$output["gamma"] = paste(sep="", outFilePath , dataString , "_",  methodString , "_gamma_out.txt")
+    ret$output["gamma"] = paste(sep="", dataString , "_",  methodString , "_gamma_out.txt")
   
   if( gammaPrior %in% c("hierarchical","hotspot") & output_pi )
-    ret$output["pi"] = paste(sep="", outFilePath , dataString , "_",  methodString , "_pi_out.txt")
+    ret$output["pi"] = paste(sep="", dataString , "_",  methodString , "_pi_out.txt")
 
   if( gammaPrior == "hotspot" & output_tail )
-    ret$output["tail"] = paste(sep="", outFilePath , dataString , "_",  methodString , "_hotspot_tail_p_out.txt")
+    ret$output["tail"] = paste(sep="", dataString , "_",  methodString , "_hotspot_tail_p_out.txt")
   
   if ( output_beta )
-    ret$output["beta"] = paste(sep="", outFilePath , dataString , "_",  methodString , "_beta_out.txt")
+    ret$output["beta"] = paste(sep="", dataString , "_",  methodString , "_beta_out.txt")
   
   if ( covariancePrior == "HIW" & output_G )
-    ret$output["G"] = paste(sep="", outFilePath , dataString , "_",  methodString , "_G_out.txt")
+    ret$output["G"] = paste(sep="", dataString , "_",  methodString , "_G_out.txt")
     
   if ( covariancePrior %in% c("HIW","IW") & output_sigmaRho )
-    ret$output["sigmaRho"] = paste(sep="", outFilePath , dataString , "_",  methodString , "_sigmaRho_out.txt")
+    ret$output["sigmaRho"] = paste(sep="", dataString , "_",  methodString , "_sigmaRho_out.txt")
 
   if ( output_beta )
-    ret$output["model_size"] = paste(sep="", outFilePath , dataString , "_",  methodString , "_model_size_out.txt")
+    ret$output["model_size"] = paste(sep="", dataString , "_",  methodString , "_model_size_out.txt")
   
   if ( output_Y )
-    ret$output["Y"] = paste(sep="", outFilePath, "data_Y.txt")
+    ret$output["Y"] = paste(sep="", "data_Y.txt")
   
   if ( output_X )
-    ret$output["X"] = paste(sep="", outFilePath, "data_X.txt")
+    ret$output["X"] = paste(sep="", "data_X.txt")
 
   ret$status = BayesSUR_internal(data, mrfG, blockList, structureGraph, hyperParFile, outFilePath, 
             nIter, burnin, nChains, 
@@ -372,6 +374,7 @@ runSUR = function(data=NULL, Y, X, X_0=NULL,
     unlink(tmpFolder,recursive = TRUE)
    
   class(summary) <- c(class(summary), "BayesSUR")
+  class(plot) <- c(class(plot), "BayesSUR")
   return(ret)
 }
 

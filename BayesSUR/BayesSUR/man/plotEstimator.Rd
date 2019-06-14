@@ -4,12 +4,14 @@
 \alias{plotEstimator}
 \title{plotEstimator}
 \usage{
-plotEstimator(object, greyscale = grey((100:0)/100))
+plotEstimator(object, colorScale.gamma = grey((100:0)/100))
 }
 \arguments{
 \item{object}{fitted "runSUR" model}
 
-\item{greyscale}{grey value palette}
+\item{colorScale.gamma}{value palette for gamma}
+
+\item{colorScale.betay}{value palette for beta}
 }
 \description{
 Plot the estimators from the object of fitted Bayesian Seemingly Unrelated Regression

@@ -208,6 +208,37 @@ int drive_SUR( Chain_Data& chainData )
 
 		// ## Global moves
 		// *** end Global move's section
+        
+        // UPDATE BURN-IN STATE
+        if( i < chainData.burnin )
+        {
+            if ( chainData.output_gamma )
+                gamma_out = sampler[0] -> getGamma(); // the result of the whole procedure is now my new mcmc point, so add that up
+            
+            if ( chainData.covariance_type == Covariance_Type::HIW && chainData.output_G )
+                g_out = arma::umat( sampler[0] -> getGAdjMat() );
+            
+            if ( chainData.output_beta )
+                beta_out = sampler[0] -> getBeta();
+            
+            if ( chainData.output_sigmaRho )
+                sigmaRho_out = sampler[0] -> getSigmaRho();
+            
+            if ( ( chainData.gamma_type == Gamma_Type::hotspot || chainData.gamma_type == Gamma_Type::hierarchical ) &&
+                ( chainData.output_pi || chainData.output_tail ) )
+            {
+                tmpVec = sampler[0] -> getPi();
+                if ( chainData.output_pi )
+                    pi_out = tmpVec;
+                
+                if ( chainData.gamma_type == Gamma_Type::hotspot && chainData.output_tail )
+                {
+                    tmpVec.for_each( [](arma::vec::elem_type& val) { if(val>1.0) val = 1.0; else val=0.0; } );
+                    hotspot_tail_prob_out = tmpVec;
+                }
+            }
+            // Nothing to update for model size
+        }
 
 		// UPDATE OUTPUT STATE
 		if( i >= chainData.burnin )

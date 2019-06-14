@@ -8,7 +8,9 @@
 #' @param PtrueResponse true adjacency matrix for the structure of multiple response variables
 #' @export
 plotResponseGraph <- function(object, PmaxResponse=0.5, PtrueResponse=NULL, response.name=NULL){
-  #library(igraph)
+  
+  devAskNewPage(FALSE)
+  object$output[-1] <- paste(object$output$outFilePath,object$output[-1],sep="")
   G0_hat <- as.matrix( read.table(object$output$G) )
   
   if(!is.null(response.name)){

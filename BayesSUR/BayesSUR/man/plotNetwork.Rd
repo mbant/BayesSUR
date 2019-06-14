@@ -8,7 +8,8 @@ plotNetwork(object, includeResponse = NULL, excludeResponse = NULL,
   includePredictor = NULL, excludePredictor = NULL,
   MatrixGamma = NULL, PmaxPredictor = 0.5, PmaxResponse = 0.5,
   nodesizePredictor = 15, nodesizeResponse = 25, no.isolates = FALSE,
-  lineup = 0.8, gray.alpha = 0.6)
+  lineup = 0.8, gray.alpha = 0.6, edgewith.response = 5,
+  edgewith.predictor = 2)
 }
 \arguments{
 \item{object}{fitted "runSUR" model}
@@ -32,6 +33,10 @@ plotNetwork(object, includeResponse = NULL, excludeResponse = NULL,
 \item{no.isolates}{remove isolated nodes from responses graph and Full graph, may get problem if there are also isolated Predictors}
 
 \item{lineup}{A ratio of the heights between responses' area and Predictors'}
+
+\item{edgewith.response}{the edge width betwen response nodes}
+
+\item{edgewith.predictor}{the edge width betwen the predictor and response node}
 
 \item{nodesizePredictor}{node size of response variables in the output graph. Default is 25}
 }

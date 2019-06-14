@@ -4,12 +4,12 @@
 \alias{summary.BayesSUR}
 \title{getEstimator}
 \usage{
-\method{summary}{BayesSUR}(object, PmaxCovariate = 0.5)
+\method{summary}{BayesSUR}(object, PmaxPredictor = 0.5)
 }
 \arguments{
 \item{object}{fitted "runSUR" model}
 
-\item{PmaxCovariate}{cutpoint for thresholding the estimated latent indicator variable. Default is 0.5}
+\item{PmaxPredictor}{cutpoint for thresholding the estimated latent indicator variable. Default is 0.5}
 }
 \description{
 Summarize the results from fitted model
