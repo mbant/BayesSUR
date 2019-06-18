@@ -1,7 +1,7 @@
-## Build a new version of the package
-remove.packages("BayesSUR")
-Rcpp::compileAttributes(pkgdir = "/Users/zhiz/Downloads/BayesSUR/BayesSUR/"); devtools::document("/Users/zhiz/Downloads/BayesSUR/BayesSUR")
-devtools::build("/Users/zhiz/Downloads/BayesSUR/BayesSUR")#,vignettes=TRUE)
+# ## Build a new version of the package
+# remove.packages("BayesSUR")
+# Rcpp::compileAttributes(pkgdir = "/Users/zhiz/Downloads/BayesSUR/BayesSUR/"); devtools::document("/Users/zhiz/Downloads/BayesSUR/BayesSUR")
+# devtools::build("/Users/zhiz/Downloads/BayesSUR/BayesSUR")#,vignettes=TRUE)
 
 ## Install the package
 install.packages("/Users/zhiz/Downloads/BayesSUR/BayesSUR_0.1.6.tar.gz",repos = NULL,type = "source")
@@ -10,36 +10,44 @@ install.packages("/Users/zhiz/Downloads/BayesSUR/BayesSUR_0.1.6.tar.gz",repos = 
 #####################################################################################################
 ## Test the installation
 library(BayesSUR)
-data(example_data, package = "BayesSUR")
-str(example_data)
-
-# show the simulated gamma matrix and the response graph \mathcal{G}
-attach(example_data)
+data(example_eQTL, package = "BayesSUR")
+str(example_eQTL)
+# show the simulated gamma matrix and G_0
+attach(example_eQTL)
 layout(matrix(1:2, ncol=2))
 image(z=gamma, x=1:150, y=1:10, col=grey(1:0), xlab="SNPs Index", 
       ylab="Responses", main=mtext(bquote(True~" "~gamma)));box()
-image(z=t(G), x=1:10, y=1:10, col=grey(1:0), xlab="Responses", 
+image(z=t(G0), x=1:10, y=1:10, col=grey(1:0), xlab="Responses", 
       ylab="Responses", main="True graph of responses");box()
+
+#hyperpar = list(mrf_e=-3, mrf_d=3/10, b_pi = 0.2 , a_pi = 0.1 , b_o = 5 , a_o = 1 )
+#hyperpar = list(mrf_e=-3, mrf_d=3/10, b_pi = 0.02, a_pi = 0.01, b_o = 5 , a_o = 1 )
+#hyperpar = list(mrf_e=-3, mrf_d=3/10, b_pi = 100, a_pi = 200 , b_o = 8 , a_o = 7 )
+#(mean_pi=hyperpar$a_pi/hyperpar$b_pi); hyperpar$a_pi/hyperpar$b_pi^2
+#(mean_o=hyperpar$a_o/(hyperpar$a_o+hyperpar$b_o)); hyperpar$a_o*hyperpar$b_o/(hyperpar$a_o+hyperpar$b_o)^2/(hyperpar$a_o+hyperpar$b_o+1)
+#mean_pi * mean_o
+#sum(example_data$gamma)/prod(dim(example_data$gamma)); sum(example_data$gamma)
 
 fit <- runSUR(data = data, Y = blockList[[1]],
               X = blockList[[2]], outFilePath = "results/", 
-              nIter = 3000, nChains = 5, covariancePrior = "HIW", 
+              nIter = 2000, nChains = 5, covariancePrior = "HIW", burnin=1000,
               gammaPrior = "hotspot")
 
 str(summary(fit))
+
 # show the interaction of plots
 plot(fit)
+
 # show the estimated beta, gamma and G_0
-plotEstimator(fit);hat_gamma=getEstimator(fit);sum(hat_gamma>.5);max(hat_gamma)
+plotEstimator(fit);
+
 # show the relationship of responses
-#pdf("ResponseGraph.pdf", height=4, width=7)
 plotResponseGraph(fit, PtrueResponse=G0, response.name=paste("GEX",1:ncol(G0),sep=""))
-#dev.off()
+
 # show the network representation of the associations between responses and features
-#pdf("ResponseNetwork.pdf", height=10, width=10)
 plotNetwork(fit,label.predictor = NA,lineup=1.5,nodesizePredictor=2,nodesizeResponse=15,
             name.predictors="SNPs", name.responses="Gene expression",edge.weight=TRUE)
-#dev.off()
+
 # show the manhattan plot
 plotManhattan(fit)
 
