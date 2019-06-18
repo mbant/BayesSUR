@@ -8,10 +8,11 @@ install.packages("/Users/zhiz/Downloads/BayesSUR/BayesSUR_0.1.6.tar.gz",repos = 
 
 
 #####################################################################################################
-## Test the installation
+## load the package
 library(BayesSUR)
 data(example_eQTL, package = "BayesSUR")
 str(example_eQTL)
+
 # show the simulated gamma matrix and G_0
 attach(example_eQTL)
 layout(matrix(1:2, ncol=2))
@@ -20,14 +21,7 @@ image(z=gamma, x=1:150, y=1:10, col=grey(1:0), xlab="SNPs Index",
 image(z=t(G0), x=1:10, y=1:10, col=grey(1:0), xlab="Responses", 
       ylab="Responses", main="True graph of responses");box()
 
-#hyperpar = list(mrf_e=-3, mrf_d=3/10, b_pi = 0.2 , a_pi = 0.1 , b_o = 5 , a_o = 1 )
-#hyperpar = list(mrf_e=-3, mrf_d=3/10, b_pi = 0.02, a_pi = 0.01, b_o = 5 , a_o = 1 )
-#hyperpar = list(mrf_e=-3, mrf_d=3/10, b_pi = 100, a_pi = 200 , b_o = 8 , a_o = 7 )
-#(mean_pi=hyperpar$a_pi/hyperpar$b_pi); hyperpar$a_pi/hyperpar$b_pi^2
-#(mean_o=hyperpar$a_o/(hyperpar$a_o+hyperpar$b_o)); hyperpar$a_o*hyperpar$b_o/(hyperpar$a_o+hyperpar$b_o)^2/(hyperpar$a_o+hyperpar$b_o+1)
-#mean_pi * mean_o
-#sum(example_data$gamma)/prod(dim(example_data$gamma)); sum(example_data$gamma)
-
+# fit a SSUR model with hotspot prior
 fit <- runSUR(data = data, Y = blockList[[1]],
               X = blockList[[2]], outFilePath = "results/", 
               nIter = 2000, nChains = 5, covariancePrior = "HIW", burnin=1000,
