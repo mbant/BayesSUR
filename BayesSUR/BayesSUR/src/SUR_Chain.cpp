@@ -3489,7 +3489,7 @@ arma::umat SUR_Chain::createGammaMask( const arma::umat& gamma )
     {
         for(unsigned int k=0 ; k<nOutcomes ; ++k)  //add gammas for the fixed variables
         {
-            mask(k,0) = j; mask(k,1) = k;
+            mask(j*nOutcomes+k,0) = j; mask(j*nOutcomes+k,1) = k;
         }
     }
 
@@ -3520,7 +3520,7 @@ void SUR_Chain::updateGammaMask()
     {
         for(unsigned int k=0 ; k<nOutcomes ; ++k)  //add gammas for the fixed variables
         {
-            gammaMask(k,0) = j; gammaMask(k,1) = k;
+            gammaMask(j*nOutcomes+k,0) = j; gammaMask(j*nOutcomes+k,1) = k;
         }
     }
 

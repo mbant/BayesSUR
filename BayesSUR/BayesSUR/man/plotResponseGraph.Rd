@@ -5,7 +5,8 @@
 \title{plotResponseGraph}
 \usage{
 plotResponseGraph(object, PmaxResponse = 0.5, PtrueResponse = NULL,
-  response.name = NULL)
+  response.name = NULL, edge.weight = FALSE, label.color = "black",
+  node.size = 30, node.color = "dodgerblue")
 }
 \arguments{
 \item{object}{fitted "runSUR" model}
@@ -13,6 +14,16 @@ plotResponseGraph(object, PmaxResponse = 0.5, PtrueResponse = NULL,
 \item{PmaxResponse}{cutpoint for thresholding the learning structure matrix of multiple response variables. Default is 0.5}
 
 \item{PtrueResponse}{true adjacency matrix for the structure of multiple response variables}
+
+\item{response.name}{A vector for the node names}
+
+\item{edge.weight}{draw weighted edges after thresholding at 0.5. The defaul value "FALSE" is not to draw weigthed edges}
+
+\item{label.color}{label color. Default is "black"}
+
+\item{node.size}{node size. Default is 30}
+
+\item{node.color}{node color. Default is "dodgerblue}
 }
 \description{
 Show the relationship between responses

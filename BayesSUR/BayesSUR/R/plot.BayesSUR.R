@@ -4,7 +4,7 @@
 #' Six available plots from the object of fitted Bayesian Seemingly Unrelated Regression
 #' @name plot
 #' @param object fitted "runSUR" model.
-#' @param which if a subset of the plots is required, specify a subset of the numbers 1:6 which are plots of estimators, response graph, network, manhattan and MCMC diagnosis, respectively.
+#' @param which if a subset of the plots is required, specify a subset of the numbers 1:5 which are plots of estimators, response graph, network, manhattan and MCMC diagnosis, respectively.
 #' @export
 plot.BayesSUR <- function(object, which = c(1L:5L), ask = prod(par("mfcol")) < length(which) && dev.interactive()){
   

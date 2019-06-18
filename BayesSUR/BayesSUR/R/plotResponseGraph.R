@@ -6,8 +6,13 @@
 #' @param object fitted "runSUR" model
 #' @param PmaxResponse cutpoint for thresholding the learning structure matrix of multiple response variables. Default is 0.5
 #' @param PtrueResponse true adjacency matrix for the structure of multiple response variables
+#' @param response.name A vector for the node names
+#' @param edge.weight draw weighted edges after thresholding at 0.5. The defaul value "FALSE" is not to draw weigthed edges
+#' @param label.color label color. Default is "black"
+#' @param node.size node size. Default is 30
+#' @param node.color node color. Default is "dodgerblue
 #' @export
-plotResponseGraph <- function(object, PmaxResponse=0.5, PtrueResponse=NULL, response.name=NULL){
+plotResponseGraph <- function(object, PmaxResponse=0.5, PtrueResponse=NULL, response.name=NULL, edge.weight=FALSE, label.color="black", node.size=30, node.color="dodgerblue"){
   
   devAskNewPage(FALSE)
   object$output[-1] <- paste(object$output$outFilePath,object$output[-1],sep="")
@@ -18,18 +23,28 @@ plotResponseGraph <- function(object, PmaxResponse=0.5, PtrueResponse=NULL, resp
   }else{
     rownames(G0_hat) <- colnames(G0_hat) <- names(read.table(object$output$Y,header=T))
   }
-   
-  G0_thresh <- as.matrix( G0_hat > PmaxResponse )
+  
+  if(edge.width){
+    G0_thresh <- G0_hat
+    G0_thresh[G0_hat<=PmaxResponse] <- 0
+  }else{
+    G0_thresh <- as.matrix( G0_hat > PmaxResponse )
+  }
+  
   net <- graph_from_adjacency_matrix(  G0_thresh, weighted=T, mode="undirected", diag=F)
-  V(net)$size = 30
+  V(net)$size = node.size
+  V(net)$label.color <- label.color
+  V(net)$color <- node.color
   
   if( !is.null(PtrueResponse) ){
     par(mfrow=c(1,2))
     netTRUE <- graph_from_adjacency_matrix(  PtrueResponse, weighted=T, mode="undirected", diag=F)
-    V(netTRUE)$size <- 30
-    plot.igraph(netTRUE, main = "True graph of responses")
+    V(netTRUE)$label.color <- label.color
+    V(netTRUE)$color <- node.color
+    V(netTRUE)$size <- node.size
+    plot.igraph(netTRUE, main = "True graph of responses", edge.width=E(net)$weight*ifelse(edge.weight,1,2))
   }
-  plot.igraph(net, main = "Estimated graph of responses")
+  plot.igraph(net, main = "Estimated graph of responses", edge.width=E(net)$weight*ifelse(edge.weight,1,2))
   par(mfrow=c(1,1))
   
 }

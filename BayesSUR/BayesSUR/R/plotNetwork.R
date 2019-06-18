@@ -17,10 +17,12 @@
 #' @param lineup A ratio of the heights between responses' area and Predictors'
 #' @param edgewith.response the edge width betwen response nodes
 #' @param edgewith.predictor the edge width betwen the predictor and response node
+#' @param edge.weight draw weighted edges after thresholding at 0.5. The defaul value "FALSE" is not to draw weigthed edges
 #' @export 
 plotNetwork <- function(object, includeResponse=NULL, excludeResponse=NULL, includePredictor=NULL, excludePredictor=NULL, 
-                        MatrixGamma=NULL, PmaxPredictor=0.5, PmaxResponse=0.5, nodesizePredictor=15, nodesizeResponse=25, no.isolates=FALSE,
-                        lineup=0.8, gray.alpha=0.6, edgewith.response=5, edgewith.predictor=2){
+                        MatrixGamma=NULL, PmaxPredictor=0.5, PmaxResponse=0.5, nodesizePredictor=2, nodesizeResponse=25, no.isolates=FALSE,
+                        lineup=1, gray.alpha=0.6, edgewith.response=5, edgewith.predictor=2, edge.weight=FALSE, label.predictor=NULL,
+                        label.response=NULL, color.predictor=NULL,color.response=NULL, name.predictors="predictors",name.responses="responses"){
   devAskNewPage(FALSE)
   object$output[-1] <- paste(object$output$outFilePath,object$output[-1],sep="")
   
@@ -41,20 +43,34 @@ plotNetwork <- function(object, includeResponse=NULL, excludeResponse=NULL, incl
     excludePredictor.idx <- c(excludePredictor.idx | c(rownames(gamma_hat) %in% excludePredictor))
   
   gamma_hat <- gamma_hat[!excludePredictor.idx,!excludeResponse.idx]
-  gamma_thresh <- as.data.frame(as.matrix(gamma_hat>PmaxPredictor)+0)
-  gamma_thresh <- gamma_thresh[rowSums(gamma_thresh)!=0,]
   
   G0_hat <- as.matrix( read.table(object$output$G) )
   G0_hat <- G0_hat[!excludeResponse.idx,!excludeResponse.idx]
-  rownames(G0_hat) <- colnames(G0_hat) <-  colnames(gamma_hat)
-  G0_thresh <- as.data.frame(as.matrix(G0_hat>PmaxResponse)+0)
+  
+  if(edge.weight){
+    G0_thresh <- G0_hat
+    G0_thresh[G0_hat<=PmaxResponse] <- 0
+    
+    gamma_thresh <- gamma_hat
+    gamma_thresh[gamma_hat<=PmaxResponse] <- 0
+  }else{
+    G0_thresh <- as.matrix( G0_hat > PmaxResponse )
+    gamma_thresh <- as.matrix(gamma_hat>PmaxPredictor)
+  }
+  
+  gamma_thresh <- gamma_thresh[rowSums(gamma_thresh)!=0,]
+  rownames(G0_thresh) <- colnames(G0_thresh) <-  colnames(gamma_hat) 
   
   plotSEMgraph(G0_thresh, t(gamma_thresh), nodesizeSNP=nodesizePredictor, nodesizeMET=nodesizeResponse, no.isolates=no.isolates, 
-               lineup=lineup, gray.alpha=gray.alpha, edgewith.response=edgewith.response, edgewith.predictor=edgewith.predictor)
+               lineup=lineup, gray.alpha=gray.alpha, edgewith.response=edgewith.response, edgewith.predictor=edgewith.predictor,edge.weight=edge.weight,
+               label.predictor=label.predictor,label.response=label.response, color.predictor=color.predictor,color.response=color.response, 
+               name.predictors=name.predictors,name.responses=name.responses)
 
 }
-plotSEMgraph <- function(ADJmatrix,GAMmatrix,nodesizeSNP=15,nodesizeMET=25,no.isolates=FALSE,
-                         lineup=0.8,gray.alpha=0.6,edgewith.response=5,edgewith.predictor=2){
+plotSEMgraph <- function(ADJmatrix,GAMmatrix,nodesizeSNP=2,nodesizeMET=25,no.isolates=FALSE,
+                         lineup=1,gray.alpha=0.6,edgewith.response=5,edgewith.predictor=2,
+                         label.predictor=NULL,label.response=NULL, color.predictor=NULL,color.response=NULL, 
+                         name.predictors="predictors",name.responses="responses",edge.weight=FALSE){
   
   # ADJmatrix must be a square qxq adjacency matrix (or data frame)
   qq <- dim(ADJmatrix)[1]
@@ -81,8 +97,8 @@ plotSEMgraph <- function(ADJmatrix,GAMmatrix,nodesizeSNP=15,nodesizeMET=25,no.is
   #print(semgraph[201:206,1:6])
   
   # igraph objects
-  graphADJ <- graph.adjacency(as.matrix(ADJmatrix),weight=T,diag=FALSE,mode="undirected")
-  graphSEM <- graph.adjacency(as.matrix(semgraph),weight=T,diag=FALSE,mode="directed")
+  graphADJ <- graph.adjacency(as.matrix(ADJmatrix),weight=TRUE,diag=FALSE,mode="undirected")
+  graphSEM <- graph.adjacency(as.matrix(semgraph),weight=TRUE,diag=FALSE,mode="directed")
   
   # don't plot isolated nodes?
   if(no.isolates){
@@ -118,8 +134,27 @@ plotSEMgraph <- function(ADJmatrix,GAMmatrix,nodesizeSNP=15,nodesizeMET=25,no.is
   
   n.edgeADJ <- gsize(graphADJ)
   n.edgeGAM <- gsize(graphSEM) - n.edgeADJ
-   
-  plot(graphSEM,edge.arrow.size=0.5, edge.width=c(rep(edgewith.response,2*n.edgeADJ),rep(edgewith.predictor,2*n.edgeGAM)),
+  
+  V(graphSEM)$label.color <- "black"
+  
+  V(graphSEM)$color <- c(rep("blue", nrow(GAMmatrix)), rep("red", ncol(GAMmatrix)))
+  if(!is.null(color.predictor)) V(graphSEM)$color[-c(1:nrow(GAMmatrix))] <- color.predictor
+  if(!is.null(color.response)) V(graphSEM)$color[1:nrow(GAMmatrix)] <- color.response
+  
+  V(graphSEM)$label <- c(rownames(GAMmatrix), colnames(GAMmatrix))
+  if(!is.null(label.predictor)) V(graphSEM)$label[-c(1:nrow(GAMmatrix))] <- label.predictor
+  if(!is.null(label.response)) V(graphSEM)$label[1:nrow(GAMmatrix)] <- label.response
+  
+  if(edge.weight){
+    #edge.width=edge.betweenness(graphSEM)
+    edge.width=E(graphSEM)$weight*ifelse(edge.weight,5,1)
+  }else{
+    edge.width=c(rep(edgewith.response,2*n.edgeADJ),rep(edgewith.predictor,2*n.edgeGAM))
+  }
+  
+  plot.igraph(graphSEM,edge.arrow.size=0.5, edge.width=edge.width,
        edge.color=c(rep(gray(0),2*n.edgeADJ),rep(gray(0.7, alpha=gray.alpha),2*n.edgeGAM)),layout=llsem)
   
+  text(-1,-1.3,name.predictors,cex=1.2)
+  text(0.4,-1.3,name.responses,cex=1.2)
 }

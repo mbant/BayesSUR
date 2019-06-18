@@ -11,7 +11,7 @@
 \arguments{
 \item{object}{fitted "runSUR" model.}
 
-\item{which}{if a subset of the plots is required, specify a subset of the numbers 1:6 which are plots of estimators, response graph, network, manhattan and MCMC diagnosis, respectively.}
+\item{which}{if a subset of the plots is required, specify a subset of the numbers 1:5 which are plots of estimators, response graph, network, manhattan and MCMC diagnosis, respectively.}
 }
 \description{
 Six available plots from the object of fitted Bayesian Seemingly Unrelated Regression

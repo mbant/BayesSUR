@@ -7,9 +7,12 @@
 plotNetwork(object, includeResponse = NULL, excludeResponse = NULL,
   includePredictor = NULL, excludePredictor = NULL,
   MatrixGamma = NULL, PmaxPredictor = 0.5, PmaxResponse = 0.5,
-  nodesizePredictor = 15, nodesizeResponse = 25, no.isolates = FALSE,
-  lineup = 0.8, gray.alpha = 0.6, edgewith.response = 5,
-  edgewith.predictor = 2)
+  nodesizePredictor = 2, nodesizeResponse = 25, no.isolates = FALSE,
+  lineup = 1, gray.alpha = 0.6, edgewith.response = 5,
+  edgewith.predictor = 2, edge.weight = FALSE,
+  label.predictor = NULL, label.response = NULL,
+  color.predictor = NULL, color.response = NULL,
+  name.predictors = "predictors", name.responses = "responses")
 }
 \arguments{
 \item{object}{fitted "runSUR" model}
@@ -37,6 +40,8 @@ plotNetwork(object, includeResponse = NULL, excludeResponse = NULL,
 \item{edgewith.response}{the edge width betwen response nodes}
 
 \item{edgewith.predictor}{the edge width betwen the predictor and response node}
+
+\item{edge.weight}{draw weighted edges after thresholding at 0.5. The defaul value "FALSE" is not to draw weigthed edges}
 
 \item{nodesizePredictor}{node size of response variables in the output graph. Default is 25}
 }
