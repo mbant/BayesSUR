@@ -19,7 +19,7 @@ image(z=t(G0), x=1:10, y=1:10, col=grey(1:0), xlab="Responses",
 
 fit <- runSUR(data = data, Y = blockList[[1]],
               X = blockList[[2]], outFilePath = "results/", 
-              nIter = 3000, nChains = 5, covariancePrior = "HIW", 
+              nIter = 3000, nChains = 5, covariancePrior = "HIW", burnin=1000,
               gammaPrior = "hotspot")
 
 str(summary(fit))
@@ -33,7 +33,8 @@ plotResponseGraph(fit, PtrueResponse=G0, response.name=paste("GEX",1:ncol(G0),se
 #dev.off()
 # show the network representation of the associations between responses and features
 pdf("ResponseNetwork7.pdf", height=10, width=10)
-plotNetwork(fit, PmaxPredictor=0.5, lineup=1.5, nodesizePredictor=5, nodesizeResponse=10)
+plotNetwork(fit,label.predictor = NA,lineup=1.5,nodesizePredictor=2,nodesizeResponse=15,
+            name.predictors="SNPs", name.responses="Gene expression",edge.weight=TRUE)
 dev.off()
 # show the manhattan plot
 plotManhattan(fit)
@@ -59,6 +60,8 @@ plotResponseGraph(fit)
 plotNetwork(fit)
 mcmcDiag(fit)
 manhattan(fit)
+
+
 
 pdf("ResponseEstimator.pdf", height=8, width=8);plotEstimator(fit);dev.off()
 # show the relationship of responses
