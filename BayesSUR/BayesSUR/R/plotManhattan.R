@@ -18,7 +18,6 @@
 plotManhattan <- function(object, x.loc=FALSE, show.marker=NULL, xlab1="", ylab1="mPIP", xlab2="features", ylab2="No. of responses",threshold=0.5,
                            show.all.xlab=FALSE, las=0, cex.axis=1){
   
-  devAskNewPage(FALSE)
   object$output[-1] <- paste(object$output$outFilePath,object$output[-1],sep="")
   gamma <- as.matrix( read.table(object$output$gamma) )
   

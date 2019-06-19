@@ -14,7 +14,6 @@
 #' @export
 plotResponseGraph <- function(object, PmaxResponse=0.5, PtrueResponse=NULL, response.name=NULL, edge.weight=FALSE, label.color="black", node.size=30, node.color="dodgerblue"){
   
-  devAskNewPage(FALSE)
   object$output[-1] <- paste(object$output$outFilePath,object$output[-1],sep="")
   G0_hat <- as.matrix( read.table(object$output$G) )
   
@@ -24,7 +23,7 @@ plotResponseGraph <- function(object, PmaxResponse=0.5, PtrueResponse=NULL, resp
     rownames(G0_hat) <- colnames(G0_hat) <- names(read.table(object$output$Y,header=T))
   }
   
-  if(edge.width){
+  if(edge.weight){
     G0_thresh <- G0_hat
     G0_thresh[G0_hat<=PmaxResponse] <- 0
   }else{
@@ -42,9 +41,9 @@ plotResponseGraph <- function(object, PmaxResponse=0.5, PtrueResponse=NULL, resp
     V(netTRUE)$label.color <- label.color
     V(netTRUE)$color <- node.color
     V(netTRUE)$size <- node.size
-    plot.igraph(netTRUE, main = "True graph of responses", edge.width=E(net)$weight*ifelse(edge.weight,1,2))
+    plot.igraph(netTRUE, main = "True graph of responses", edge.width=E(netTRUE)$weight*ifelse(edge.weight,2,1))
   }
-  plot.igraph(net, main = "Estimated graph of responses", edge.width=E(net)$weight*ifelse(edge.weight,1,2))
+  plot.igraph(net, main = "Estimated graph of responses", edge.width=E(net)$weight*ifelse(edge.weight,2,1))
   par(mfrow=c(1,1))
   
 }

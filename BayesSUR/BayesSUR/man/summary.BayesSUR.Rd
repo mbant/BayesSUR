@@ -2,7 +2,7 @@
 % Please edit documentation in R/summary.BayesSUR.R
 \name{summary.BayesSUR}
 \alias{summary.BayesSUR}
-\title{getEstimator}
+\title{summary}
 \usage{
 \method{summary}{BayesSUR}(object, PmaxPredictor = 0.5)
 }

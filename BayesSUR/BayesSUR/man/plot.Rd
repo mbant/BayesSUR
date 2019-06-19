@@ -5,8 +5,7 @@
 \alias{plot.BayesSUR}
 \title{plotEstimator}
 \usage{
-\method{plot}{BayesSUR}(object, which = c(1L:5L),
-  ask = prod(par("mfcol")) < length(which) && dev.interactive())
+\method{plot}{BayesSUR}(object, which = c(1L:5L))
 }
 \arguments{
 \item{object}{fitted "runSUR" model.}

@@ -1,5 +1,5 @@
 #' BayesSUR -- Bayesian Seemingly Unrelated Regression
-#' @title getEstimator
+#' @title summary
 #' @description
 #' Summarize the results from fitted model
 #' @name summary.BayesSUR

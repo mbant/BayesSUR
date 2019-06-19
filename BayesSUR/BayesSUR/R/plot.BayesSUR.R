@@ -6,7 +6,7 @@
 #' @param object fitted "runSUR" model.
 #' @param which if a subset of the plots is required, specify a subset of the numbers 1:5 which are plots of estimators, response graph, network, manhattan and MCMC diagnosis, respectively.
 #' @export
-plot.BayesSUR <- function(object, which = c(1L:5L), ask = prod(par("mfcol")) < length(which) && dev.interactive()){
+plot.BayesSUR <- function(object, which = c(1L:5L)){
   
   if (!inherits(object, "BayesSUR")) 
     stop("use only with \"BayesSUR\" objects")
@@ -16,10 +16,7 @@ plot.BayesSUR <- function(object, which = c(1L:5L), ask = prod(par("mfcol")) < l
   show <- rep(FALSE, 5)
   show[which] <- TRUE
   
-  if (ask) {
-    oask <- devAskNewPage(TRUE)
-    on.exit(devAskNewPage(oask))
-  }
+  devAskNewPage(TRUE)
   
   if (show[1L]) {
     dev.hold()
@@ -47,6 +44,6 @@ plot.BayesSUR <- function(object, which = c(1L:5L), ask = prod(par("mfcol")) < l
     dev.flush()
   }
   
-  invisible()
+  devAskNewPage(options("device.ask.default")[[1]])
 
 }

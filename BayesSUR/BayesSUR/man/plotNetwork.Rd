@@ -12,7 +12,7 @@ plotNetwork(object, includeResponse = NULL, excludeResponse = NULL,
   edgewith.predictor = 2, edge.weight = FALSE,
   label.predictor = NULL, label.response = NULL,
   color.predictor = NULL, color.response = NULL,
-  name.predictors = "predictors", name.responses = "responses")
+  name.predictors = NULL, name.responses = NULL)
 }
 \arguments{
 \item{object}{fitted "runSUR" model}
@@ -43,7 +43,19 @@ plotNetwork(object, includeResponse = NULL, excludeResponse = NULL,
 
 \item{edge.weight}{draw weighted edges after thresholding at 0.5. The defaul value "FALSE" is not to draw weigthed edges}
 
+\item{label.predictor}{A vector of the names of predictors}
+
+\item{label.response}{A vector of the names of response variables}
+
+\item{color.predictor}{color of the predictor nodes}
+
+\item{name.predictors}{a subtitle for the predictors}
+
+\item{name.responses}{a subtitle for the responses}
+
 \item{nodesizePredictor}{node size of response variables in the output graph. Default is 25}
+
+\item{color.predictor}{color of the reponse nodes}
 }
 \description{
 Network representation of the associations between responses and features

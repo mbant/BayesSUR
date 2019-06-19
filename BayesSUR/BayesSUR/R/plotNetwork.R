@@ -18,12 +18,18 @@
 #' @param edgewith.response the edge width betwen response nodes
 #' @param edgewith.predictor the edge width betwen the predictor and response node
 #' @param edge.weight draw weighted edges after thresholding at 0.5. The defaul value "FALSE" is not to draw weigthed edges
+#' @param label.predictor A vector of the names of predictors
+#' @param label.response A vector of the names of response variables
+#' @param color.predictor color of the predictor nodes
+#' @param color.predictor color of the reponse nodes
+#' @param name.predictors a subtitle for the predictors
+#' @param name.responses a subtitle for the responses
 #' @export 
 plotNetwork <- function(object, includeResponse=NULL, excludeResponse=NULL, includePredictor=NULL, excludePredictor=NULL, 
                         MatrixGamma=NULL, PmaxPredictor=0.5, PmaxResponse=0.5, nodesizePredictor=2, nodesizeResponse=25, no.isolates=FALSE,
                         lineup=1, gray.alpha=0.6, edgewith.response=5, edgewith.predictor=2, edge.weight=FALSE, label.predictor=NULL,
-                        label.response=NULL, color.predictor=NULL,color.response=NULL, name.predictors="predictors",name.responses="responses"){
-  devAskNewPage(FALSE)
+                        label.response=NULL, color.predictor=NULL,color.response=NULL, name.predictors=NULL,name.responses=NULL){
+  
   object$output[-1] <- paste(object$output$outFilePath,object$output[-1],sep="")
   
   gamma_hat <- as.matrix( read.table(object$output$gamma) )
@@ -70,7 +76,7 @@ plotNetwork <- function(object, includeResponse=NULL, excludeResponse=NULL, incl
 plotSEMgraph <- function(ADJmatrix,GAMmatrix,nodesizeSNP=2,nodesizeMET=25,no.isolates=FALSE,
                          lineup=1,gray.alpha=0.6,edgewith.response=5,edgewith.predictor=2,
                          label.predictor=NULL,label.response=NULL, color.predictor=NULL,color.response=NULL, 
-                         name.predictors="predictors",name.responses="responses",edge.weight=FALSE){
+                         name.predictors=NULL,name.responses=NULL,edge.weight=FALSE){
   
   # ADJmatrix must be a square qxq adjacency matrix (or data frame)
   qq <- dim(ADJmatrix)[1]
@@ -137,7 +143,7 @@ plotSEMgraph <- function(ADJmatrix,GAMmatrix,nodesizeSNP=2,nodesizeMET=25,no.iso
   
   V(graphSEM)$label.color <- "black"
   
-  V(graphSEM)$color <- c(rep("blue", nrow(GAMmatrix)), rep("red", ncol(GAMmatrix)))
+  V(graphSEM)$color <- c(rep("dodgerblue", nrow(GAMmatrix)), rep("red", ncol(GAMmatrix)))
   if(!is.null(color.predictor)) V(graphSEM)$color[-c(1:nrow(GAMmatrix))] <- color.predictor
   if(!is.null(color.response)) V(graphSEM)$color[1:nrow(GAMmatrix)] <- color.response
   
@@ -155,6 +161,6 @@ plotSEMgraph <- function(ADJmatrix,GAMmatrix,nodesizeSNP=2,nodesizeMET=25,no.iso
   plot.igraph(graphSEM,edge.arrow.size=0.5, edge.width=edge.width,
        edge.color=c(rep(gray(0),2*n.edgeADJ),rep(gray(0.7, alpha=gray.alpha),2*n.edgeGAM)),layout=llsem)
   
-  text(-1,-1.3,name.predictors,cex=1.2)
-  text(0.4,-1.3,name.responses,cex=1.2)
+  if(!is.null(name.predictors)) text(-1,-1.3,name.predictors,cex=1.2)
+  if(!is.null(name.responses)) text(0.4,-1.3,name.responses,cex=1.2)
 }
