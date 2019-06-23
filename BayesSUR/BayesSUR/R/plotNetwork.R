@@ -26,7 +26,7 @@
 #' @param name.responses a subtitle for the responses
 #' @export 
 plotNetwork <- function(object, includeResponse=NULL, excludeResponse=NULL, includePredictor=NULL, excludePredictor=NULL, 
-                        MatrixGamma=NULL, PmaxPredictor=0.5, PmaxResponse=0.5, nodesizePredictor=2, nodesizeResponse=25, no.isolates=FALSE,
+                        MatrixGamma=NULL, PmaxPredictor=0.5, PmaxResponse=0.5, nodesizePredictor=5, nodesizeResponse=25, no.isolates=FALSE,
                         lineup=1, gray.alpha=0.6, edgewith.response=5, edgewith.predictor=2, edge.weight=FALSE, label.predictor=NULL,
                         label.response=NULL, color.predictor=NULL,color.response=NULL, name.predictors=NULL,name.responses=NULL){
   
@@ -58,13 +58,15 @@ plotNetwork <- function(object, includeResponse=NULL, excludeResponse=NULL, incl
     G0_thresh[G0_hat<=PmaxResponse] <- 0
     
     gamma_thresh <- gamma_hat
-    gamma_thresh[gamma_hat<=PmaxResponse] <- 0
+    gamma_thresh[gamma_hat<=PmaxPredictor] <- 0
   }else{
     G0_thresh <- as.matrix( G0_hat > PmaxResponse )
     gamma_thresh <- as.matrix(gamma_hat>PmaxPredictor)
   }
   
-  gamma_thresh <- gamma_thresh[rowSums(gamma_thresh)!=0,]
+  gamma_thresh <- matrix(gamma_thresh[rowSums(gamma_thresh)!=0,], ncol=ncol(gamma_hat))
+  colnames(gamma_thresh) <- colnames(gamma_hat)
+  rownames(gamma_thresh) <- rownames(gamma_hat)[rowSums(gamma_hat>PmaxPredictor)!=0]
   rownames(G0_thresh) <- colnames(G0_thresh) <-  colnames(gamma_hat) 
   
   plotSEMgraph(G0_thresh, t(gamma_thresh), nodesizeSNP=nodesizePredictor, nodesizeMET=nodesizeResponse, no.isolates=no.isolates, 

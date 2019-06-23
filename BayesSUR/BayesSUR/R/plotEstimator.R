@@ -28,7 +28,7 @@ plotEstimator <- function(object, colorScale.gamma=grey((100:0)/100), colorScale
   
     if(toupper(object$input$covariancePrior) == "HIW"){
        G0_hat <- as.matrix( read.table(object$output$G) )
-       image((G0_hat+diag(ncol(G0_hat))), col=colorScale.gamma, axes = FALSE, main=paste("Estimator","$\hat{\mathcal{G}}$"));box()
+       image((G0_hat+diag(ncol(G0_hat))), col=colorScale.gamma, axes = FALSE, main="Estimated graph of responses");box()
        vertical.image.legend(col=colorScale.gamma, zlim=c(min(G0_hat),max(G0_hat)))
     }
     par(mfrow=c(1,1))

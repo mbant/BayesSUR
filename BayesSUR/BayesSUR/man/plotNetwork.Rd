@@ -7,7 +7,7 @@
 plotNetwork(object, includeResponse = NULL, excludeResponse = NULL,
   includePredictor = NULL, excludePredictor = NULL,
   MatrixGamma = NULL, PmaxPredictor = 0.5, PmaxResponse = 0.5,
-  nodesizePredictor = 2, nodesizeResponse = 25, no.isolates = FALSE,
+  nodesizePredictor = 5, nodesizeResponse = 25, no.isolates = FALSE,
   lineup = 1, gray.alpha = 0.6, edgewith.response = 5,
   edgewith.predictor = 2, edge.weight = FALSE,
   label.predictor = NULL, label.response = NULL,
