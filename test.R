@@ -1,41 +1,54 @@
 ## Build a new version of the package
-remove.packages("R2SSUR")
-Rcpp::compileAttributes(pkgdir = "/Users/zhiz/Downloads/R2SSUR/R2SSUR/"); devtools::document("/Users/zhiz/Downloads/R2SSUR/R2SSUR")
-devtools::build("/Users/zhiz/Downloads/R2SSUR/R2SSUR")#,vignettes=TRUE)
+remove.packages("BayesSUR")
+Rcpp::compileAttributes(pkgdir = "/Users/zhiz/Downloads/BayesSUR/BayesSUR/"); devtools::document("/Users/zhiz/Downloads/BayesSUR/BayesSUR")
+devtools::build("/Users/zhiz/Downloads/BayesSUR/BayesSUR")#,vignettes=TRUE)
 
 ## Install the package
-install.packages("/Users/zhiz/Downloads/R2SSUR/R2SSUR_0.1.7.tar.gz",repos = NULL,type = "source")
+install.packages("/Users/zhiz/Downloads/BayesSUR/BayesSUR_0.1.7.tar.gz",repos = NULL,type = "source")
 
 
 #####################################################################################################
-## Test the installation
-data(example_data, package = "R2SSUR")
+## load the package
+library(BayesSUR)
+data(example_eQTL, package = "BayesSUR")
+str(example_eQTL)
 
-mrfGFile = example_data[["mrfG"]]
-hyperpar = list(mrf_e=-3, mrf_d=3/10, b_pi = 0.2 , a_pi = 0.1 , b_o = 5 , a_o = 1 )
+# show the simulated gamma matrix and G_0
+attach(example_eQTL)
+options(tikzMetricPackages = c("\\usepackage{amsmath}","\\usepackage{bm}", "\\usetikzlibrary{calc}"))
+tikz('ParamTrue.tex',width=5.5,height=3, standAlone = TRUE,packages = c("\\usepackage{tikz}","\\usepackage{amsmath}","\\usepackage{bm}"))
+layout(matrix(1:2, ncol=2))
+image(z=gamma, x=1:150, y=1:10, col=grey(1:0), xlab="SNPs Index", 
+      ylab="Responses", main=paste("True","$\\bm{\\gamma}$"));box()
+image(z=t(G0), x=1:10, y=1:10, col=grey(1:0), xlab="Responses", 
+      ylab="Responses", main=paste("True","$\\mathcal{G}$"));box()
+dev.off()
+tools::texi2pdf("ParamTrue.tex")
+system(paste(getOption("pdfviewer"), "ParamTrue.pdf"))
 
-fit = R2SSUR::runSSUR(data = example_data[["data"]],
-                Y = example_data[["blockList"]][[1]],
-                X = example_data[["blockList"]][[2]][11:150],
-                X_0 = example_data[["blockList"]][[2]][1:10],
-                outFilePath = "results/",hyperpar=hyperpar,
-                nIter = 2000, nChains = 2, covariancePrior = "IW", gammaPrior = "hotspot")
+# fit a SSUR model with hotspot prior
+fit <- runSUR(data = data, Y = blockList[[1]],
+              X = blockList[[2]], outFilePath = "results/", 
+              nIter = 2000, nChains = 5, covariancePrior = "HIW", burnin=1000,
+              gammaPrior = "hotspot")
 
-## check output
-est_gamma = getEst( fit, "gamma")
-est_G0 = getEst( fit, "G0")
-est_beta = getEst( fit, "beta")
-model_size = getEst( fit, "model_size")
+str(summary(fit))
 
-sumint.fit = R2SSUR::summary(fit)
+# show the interaction of plots
+plot(fit)
 
-R2SSUR::plot(fit)
+# show the estimated beta, gamma and G_0
+plotEstimator(fit);
 
-R2SSUR::mcmcDiag(fit)
+# show the relationship of responses
+plotResponseGraph(fit, PtrueResponse=G0, response.name=paste("GEX",1:ncol(G0),sep=""))
 
+# show the network representation of the associations between responses and features
+plotNetwork(fit,label.predictor = NA,lineup=1.5,nodesizePredictor=2,nodesizeResponse=15,
+            name.predictors="SNPs", name.responses="Gene expression",edge.weight=TRUE)
 
-greyscale = grey((100:0)/100)
-data(example_ground_truth, package = "R2SSUR")
-image(example_ground_truth[["gamma"]],col=greyscale)
-plot.default( model_size[,1] , type="l",ylim = c(0,150))
-points(1:ncol(example_ground_truth[["gamma"]]),colSums(example_ground_truth[["gamma"]]),col="red",pch=20)
+# show the manhattan plot
+plotManhattan(fit)
+
+# check the convergence of the algorithm
+plotMCMCdiag(fit)
