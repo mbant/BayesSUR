@@ -1,6 +1,6 @@
 
 #' BayesSUR -- Bayesian Seemingly Unrelated Regression
-#' @title Manhattan
+#' @title plotManhattan
 #' @description
 #' Manhattan plot
 #' @param object the object from the runSUR

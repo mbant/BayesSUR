@@ -5,10 +5,11 @@
 #' @name plotEstimator
 #' @param object fitted "runSUR" model
 #' @param colorScale.gamma value palette for gamma
-#' @param colorScale.beta A vector of three colors for diverging color schemes
+#' @param colorScale.beta a vector of three colors for diverging color schemes
+#' @param legend.cex.axis magnification of axis annotation relative to cex
 #' @param fig.tex print the figure through LaTex. Default is "FALSE"
 #' @export
-plotEstimator <- function(object, colorScale.gamma=grey((100:0)/100), colorScale.beta=c("blue","white","red"), fig.tex=FALSE){
+plotEstimator <- function(object, colorScale.gamma=grey((100:0)/100), colorScale.beta=c("blue","white","red"), legend.cex.axis=1, fig.tex=FALSE){
   
   object$output[-1] <- paste(object$output$outFilePath,object$output[-1],sep="")
   beta_hat <- as.matrix( read.table(object$output$beta) )
@@ -21,15 +22,15 @@ plotEstimator <- function(object, colorScale.gamma=grey((100:0)/100), colorScale
   if(!fig.tex){
     par(mfrow=c(1,ifelse(toupper(object$input$covariancePrior)=="HIW",3,2))) 
     
-    image(beta_hat, col=colorbar, axes = FALSE, main=mtext(bquote(hat(bold(beta)))));box()
-    vertical.image.legend(col=colorbar, zlim=c(min(beta_hat),max(beta_hat)))
-    image(gamma_hat, col=colorScale.gamma, axes = FALSE, main=mtext(bquote(hat(gamma))));box()
-     vertical.image.legend(col=colorScale.gamma, zlim=c(min(gamma_hat),max(gamma_hat)))
+    image(z=beta_hat, x=1:nrow(beta_hat), y=1:ncol(beta_hat), col=colorbar, xlab="", ylab="",main=mtext(bquote(hat(bold(beta)))));box()
+    vertical.image.legend(col=colorbar, zlim=c(min(beta_hat),max(beta_hat)), legend.cex.axis=legend.cex.axis)
+    image(z=gamma_hat, x=1:nrow(gamma_hat), y=1:ncol(gamma_hat), col=colorScale.gamma, xlab="", ylab="",main=mtext(bquote(hat(gamma))));box()
+     vertical.image.legend(col=colorScale.gamma, zlim=c(min(gamma_hat),max(gamma_hat)), legend.cex.axis=legend.cex.axis)
   
     if(toupper(object$input$covariancePrior) == "HIW"){
        G0_hat <- as.matrix( read.table(object$output$G) )
-       image((G0_hat+diag(ncol(G0_hat))), col=colorScale.gamma, axes = FALSE, main="Estimated graph of responses");box()
-       vertical.image.legend(col=colorScale.gamma, zlim=c(min(G0_hat),max(G0_hat)))
+       image(z=G0_hat+diag(ncol(G0_hat)), x=1:nrow(G0_hat+diag(ncol(G0_hat))), y=1:ncol(G0_hat+diag(ncol(G0_hat))), col=colorScale.gamma, xlab="", ylab="",main="Estimated graph of responses");box()
+       vertical.image.legend(col=colorScale.gamma, zlim=c(min(G0_hat),max(G0_hat)), legend.cex.axis=legend.cex.axis)
     }
     par(mfrow=c(1,1))
   }else{
@@ -38,24 +39,23 @@ plotEstimator <- function(object, colorScale.gamma=grey((100:0)/100), colorScale
     tikz('ParamEstimator.tex',width=6,height=2.5,standAlone=TRUE,packages=c("\\usepackage{tikz}","\\usepackage{amsmath}","\\usepackage{bm}"))
     par(mfrow=c(1,ifelse(toupper(object$input$covariancePrior)=="HIW",3,2))) 
     
-    image(z=beta_hat, col=colorbar, axes = FALSE, main=paste("Estimator","$\\hat{\\bm{\\beta}}$"));box()
-    vertical.image.legend(col=colorbar, zlim=c(min(beta_hat),max(beta_hat)))
-    image(z=gamma_hat, col=colorScale.gamma, axes = FALSE, main=paste("Estimator","$\\hat{\\bm{\\gamma}}$"));box()
-    vertical.image.legend(col=colorScale.gamma, zlim=c(min(gamma_hat),max(gamma_hat)))
+    image(z=beta_hat, x=1:nrow(beta_hat), y=1:ncol(beta_hat), col=colorbar, xlab="", ylab="", main=paste("Estimator","$\\hat{\\bm{\\beta}}$"));box()
+    vertical.image.legend(col=colorbar, zlim=c(min(beta_hat),max(beta_hat)), legend.cex.axis=legend.cex.axis)
+    image(z=gamma_hat, x=1:nrow(gamma_hat), y=1:ncol(gamma_hat), col=colorScale.gamma, xlab="", ylab="", main=paste("Estimator","$\\hat{\\bm{\\gamma}}$"));box()
+    vertical.image.legend(col=colorScale.gamma, zlim=c(min(gamma_hat),max(gamma_hat)), legend.cex.axis=legend.cex.axis)
     
     if(toupper(object$input$covariancePrior) == "HIW"){
       G0_hat <- as.matrix( read.table(object$output$G) )
-      image(z=(G0_hat+diag(ncol(G0_hat))), col=colorScale.gamma, axes = FALSE, main=paste("Estimator","$\\hat{\\mathcal{G}}$"));box()
-      vertical.image.legend(col=colorScale.gamma, zlim=c(min(G0_hat),max(G0_hat)))
+      image(z=G0_hat+diag(ncol(G0_hat)), x=1:nrow(G0_hat+diag(ncol(G0_hat))), y=1:ncol(G0_hat+diag(ncol(G0_hat))), col=colorScale.gamma, xlab="", ylab="", main=paste("Estimator","$\\hat{\\mathcal{G}}$"));box()
+      vertical.image.legend(col=colorScale.gamma, zlim=c(min(G0_hat),max(G0_hat)), legend.cex.axis=legend.cex.axis)
     }
     dev.off()
   }
-  
 
 }
 
 # the function vertical.image.legend is orginally from the R package "aqfig"
-vertical.image.legend <- function (zlim, col) 
+vertical.image.legend <- function (zlim, col, legend.cex.axis=1) 
 {
   starting.par.settings <- par(no.readonly = TRUE)
   mai <- par("mai")
@@ -71,7 +71,7 @@ vertical.image.legend <- function (zlim, col)
   par(new = TRUE, pty = "m", plt = c(x.legend.plt, y.legend.plt))
   image(x = 1.5, y = z, z = matrix(z, nrow = 1, ncol = length(col)), 
         col = col, xlab = "", ylab = "", xaxt = "n", yaxt = "n")
-  axis(4, mgp = c(3, 0.2, 0), las = 2, cex.axis = 0.5, tcl = -0.1)
+  axis(4, mgp = c(3, 0.2, 0), las = 2, cex.axis = legend.cex.axis, tcl = -0.1)
   box()
   mfg.settings <- par()$mfg
   par(starting.par.settings)

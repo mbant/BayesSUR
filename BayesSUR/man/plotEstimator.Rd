@@ -5,14 +5,17 @@
 \title{plotEstimator}
 \usage{
 plotEstimator(object, colorScale.gamma = grey((100:0)/100),
-  colorScale.beta = c("blue", "white", "red"), fig.tex = FALSE)
+  colorScale.beta = c("blue", "white", "red"), legend.cex.axis = 1,
+  fig.tex = FALSE)
 }
 \arguments{
 \item{object}{fitted "runSUR" model}
 
 \item{colorScale.gamma}{value palette for gamma}
 
-\item{colorScale.beta}{A vector of three colors for diverging color schemes}
+\item{colorScale.beta}{a vector of three colors for diverging color schemes}
+
+\item{legend.cex.axis}{magnification of axis annotation relative to cex}
 
 \item{fig.tex}{print the figure through LaTex. Default is "FALSE"}
 }

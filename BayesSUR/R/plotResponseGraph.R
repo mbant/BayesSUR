@@ -15,22 +15,22 @@
 plotResponseGraph <- function(object, PmaxResponse=0.5, PtrueResponse=NULL, response.name=NULL, edge.weight=FALSE, label.color="black", node.size=30, node.color="dodgerblue"){
   
   object$output[-1] <- paste(object$output$outFilePath,object$output[-1],sep="")
-  G0_hat <- as.matrix( read.table(object$output$G) )
+  Gy_hat <- as.matrix( read.table(object$output$G) )
   
   if(!is.null(response.name)){
-    rownames(G0_hat) <- colnames(G0_hat) <- response.name
+    rownames(Gy_hat) <- colnames(Gy_hat) <- response.name
   }else{
-    rownames(G0_hat) <- colnames(G0_hat) <- names(read.table(object$output$Y,header=T))
+    rownames(Gy_hat) <- colnames(Gy_hat) <- names(read.table(object$output$Y,header=T))
   }
   
   if(edge.weight){
-    G0_thresh <- G0_hat
-    G0_thresh[G0_hat<=PmaxResponse] <- 0
+    Gy_thresh <- Gy_hat
+    Gy_thresh[Gy_hat<=PmaxResponse] <- 0
   }else{
-    G0_thresh <- as.matrix( G0_hat > PmaxResponse )
+    Gy_thresh <- as.matrix( Gy_hat > PmaxResponse )
   }
   
-  net <- graph_from_adjacency_matrix(  G0_thresh, weighted=T, mode="undirected", diag=F)
+  net <- graph_from_adjacency_matrix(  Gy_thresh, weighted=T, mode="undirected", diag=F)
   V(net)$size = node.size
   V(net)$label.color <- label.color
   V(net)$color <- node.color

@@ -50,26 +50,26 @@ plotNetwork <- function(object, includeResponse=NULL, excludeResponse=NULL, incl
   
   gamma_hat <- gamma_hat[!excludePredictor.idx,!excludeResponse.idx]
   
-  G0_hat <- as.matrix( read.table(object$output$G) )
-  G0_hat <- G0_hat[!excludeResponse.idx,!excludeResponse.idx]
+  Gy_hat <- as.matrix( read.table(object$output$G) )
+  Gy_hat <- Gy_hat[!excludeResponse.idx,!excludeResponse.idx]
   
   if(edge.weight){
-    G0_thresh <- G0_hat
-    G0_thresh[G0_hat<=PmaxResponse] <- 0
+    Gy_thresh <- Gy_hat
+    Gy_thresh[Gy_hat<=PmaxResponse] <- 0
     
     gamma_thresh <- gamma_hat
     gamma_thresh[gamma_hat<=PmaxPredictor] <- 0
   }else{
-    G0_thresh <- as.matrix( G0_hat > PmaxResponse )
+    Gy_thresh <- as.matrix( Gy_hat > PmaxResponse )
     gamma_thresh <- as.matrix(gamma_hat>PmaxPredictor)
   }
   
   gamma_thresh <- matrix(gamma_thresh[rowSums(gamma_thresh)!=0,], ncol=ncol(gamma_hat))
   colnames(gamma_thresh) <- colnames(gamma_hat)
   rownames(gamma_thresh) <- rownames(gamma_hat)[rowSums(gamma_hat>PmaxPredictor)!=0]
-  rownames(G0_thresh) <- colnames(G0_thresh) <-  colnames(gamma_hat) 
+  rownames(Gy_thresh) <- colnames(Gy_thresh) <-  colnames(gamma_hat) 
   
-  plotSEMgraph(G0_thresh, t(gamma_thresh), nodesizeSNP=nodesizePredictor, nodesizeMET=nodesizeResponse, no.isolates=no.isolates, 
+  plotSEMgraph(Gy_thresh, t(gamma_thresh), nodesizeSNP=nodesizePredictor, nodesizeMET=nodesizeResponse, no.isolates=no.isolates, 
                lineup=lineup, gray.alpha=gray.alpha, edgewith.response=edgewith.response, edgewith.predictor=edgewith.predictor,edge.weight=edge.weight,
                label.predictor=label.predictor,label.response=label.response, color.predictor=color.predictor,color.response=color.response, 
                name.predictors=name.predictors,name.responses=name.responses)

@@ -305,7 +305,7 @@ int drive_SUR( Chain_Data& chainData )
 				if ( chainData.covariance_type == Covariance_Type::HIW && chainData.output_G )
 				{
 					gOutFile.open( outFilePrefix+"G_out.txt" , std::ios_base::trunc);
-					gOutFile << ( arma::conv_to<arma::mat>::from(g_out) )/((double)(i-jtStartIteration-chainData.burnin)+1.0) << std::flush;   // this might be quite long...
+					gOutFile << ( arma::conv_to<arma::mat>::from(g_out) )/((double)(i-std::max(jtStartIteration,chainData.burnin))+1.0) << std::flush;   // this might be quite long...
 					gOutFile.close();
 				}
 
@@ -348,7 +348,8 @@ int drive_SUR( Chain_Data& chainData )
 
 			}
             
-            if( (i-chainData.burnin+1) % (tick*1) == 0 )
+            //if( (i-chainData.burnin+1) % (tick*1) == 0 )
+            if( (i+1) % (tick*1) == 0 )
             {
                 logPOutFile <<     sampler[0] -> getLogPTau() << " ";
                 logPOutFile <<     sampler[0] -> getLogPEta() <<  " ";
@@ -387,7 +388,7 @@ int drive_SUR( Chain_Data& chainData )
 	if ( chainData.covariance_type == Covariance_Type::HIW && chainData.output_G )
 	{
 		gOutFile.open( outFilePrefix+"G_out.txt" , std::ios_base::trunc);
-		gOutFile << ( arma::conv_to<arma::mat>::from(g_out) )/(double)(chainData.nIter-jtStartIteration-chainData.burnin+1.) << std::flush;   // this might be quite long...
+		gOutFile << ( arma::conv_to<arma::mat>::from(g_out) )/(double)(chainData.nIter-std::max(jtStartIteration,chainData.burnin)+1.) << std::flush;   // this might be quite long...
 		gOutFile.close();
 	}
 

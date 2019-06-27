@@ -4,9 +4,9 @@
 \alias{plotMCMCdiag}
 \title{getEstimator}
 \usage{
-plotMCMCdiag(object, nbloc = 4)
+plotMCMCdiag(object, nbloc = 3)
 
-plotMCMCdiag(object, nbloc = 4)
+plotMCMCdiag(object, nbloc = 3)
 }
 \arguments{
 \item{object}{fitted "runSUR" model}
