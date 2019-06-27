@@ -41,9 +41,9 @@ plotResponseGraph <- function(object, PmaxResponse=0.5, PtrueResponse=NULL, resp
     V(netTRUE)$label.color <- label.color
     V(netTRUE)$color <- node.color
     V(netTRUE)$size <- node.size
-    plot.igraph(netTRUE, main = "True graph of responses", edge.width=E(netTRUE)$weight*ifelse(edge.weight,2,1))
+    plot.igraph(netTRUE, main = "True graph of responses", edge.width=E(netTRUE)$weight*ifelse(edge.weight,2,1), vertex.frame.color=NA)
   }
-  plot.igraph(net, main = "Estimated graph of responses", edge.width=E(net)$weight*ifelse(edge.weight,2,1))
+  plot.igraph(net, main = "Estimated graph of responses", edge.width=E(net)$weight*ifelse(edge.weight,2,1), vertex.frame.color=NA)
   par(mfrow=c(1,1))
   
 }

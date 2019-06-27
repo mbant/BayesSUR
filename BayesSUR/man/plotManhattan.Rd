@@ -2,7 +2,7 @@
 % Please edit documentation in R/plotManhattan.R
 \name{plotManhattan}
 \alias{plotManhattan}
-\title{Manhattan}
+\title{plotManhattan}
 \usage{
 plotManhattan(object, x.loc = FALSE, show.marker = NULL, xlab1 = "",
   ylab1 = "mPIP", xlab2 = "features", ylab2 = "No. of responses",

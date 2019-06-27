@@ -12,7 +12,8 @@ plotNetwork(object, includeResponse = NULL, excludeResponse = NULL,
   edgewith.predictor = 2, edge.weight = FALSE,
   label.predictor = NULL, label.response = NULL,
   color.predictor = NULL, color.response = NULL,
-  name.predictors = NULL, name.responses = NULL)
+  name.predictors = NULL, name.responses = NULL,
+  vertex.frame.color = NA)
 }
 \arguments{
 \item{object}{fitted "runSUR" model}
