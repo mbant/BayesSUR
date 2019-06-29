@@ -13,7 +13,7 @@ plotNetwork(object, includeResponse = NULL, excludeResponse = NULL,
   label.predictor = NULL, label.response = NULL,
   color.predictor = NULL, color.response = NULL,
   name.predictors = NULL, name.responses = NULL,
-  vertex.frame.color = NA)
+  vertex.frame.color = NA, layoutInCircle = FALSE)
 }
 \arguments{
 \item{object}{fitted "runSUR" model}
@@ -53,6 +53,8 @@ plotNetwork(object, includeResponse = NULL, excludeResponse = NULL,
 \item{name.predictors}{a subtitle for the predictors}
 
 \item{name.responses}{a subtitle for the responses}
+
+\item{vertex.frame.color}{The color of the frame of the vertices. If you don't want vertices to have a frame, supply NA as the color name}
 
 \item{nodesizePredictor}{node size of response variables in the output graph. Default is 25}
 

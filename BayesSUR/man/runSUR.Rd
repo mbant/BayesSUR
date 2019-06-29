@@ -4,22 +4,20 @@
 \alias{runSUR}
 \title{runSUR}
 \usage{
-runSUR(data = NULL, Y, X, X_0 = NULL, varType = NULL,
-  structureGraph = NULL, outFilePath = "", nIter = 10, burnin = 0,
-  nChains = 1, covariancePrior = "HIW", gammaPrior = "",
-  gammaSampler = "bandit", gammaInit = "MLE", mrfG = NULL,
-  betaPrior = "independent", output_gamma = TRUE, output_beta = TRUE,
-  output_G = TRUE, output_sigmaRho = TRUE, output_pi = TRUE,
-  output_tail = TRUE, output_model_size = TRUE, output_Y = TRUE,
-  output_X = TRUE, hyperpar = list(), tmpFolder = "tmp/")
+runSUR(data = NULL, Y, X, X_0 = NULL, structureGraph = NULL,
+  outFilePath = "", nIter = 10, burnin = 0, nChains = 1,
+  covariancePrior = "HIW", gammaPrior = "", gammaSampler = "bandit",
+  gammaInit = "MLE", mrfG = NULL, betaPrior = "independent",
+  output_gamma = TRUE, output_beta = TRUE, output_G = TRUE,
+  output_sigmaRho = TRUE, output_pi = TRUE, output_tail = TRUE,
+  output_model_size = TRUE, output_Y = TRUE, output_X = TRUE,
+  hyperpar = list(), tmpFolder = "tmp/")
 }
 \arguments{
 \item{data}{either a matrix/dataframe or the path to (a plain text) data file with variables on the columns and observations on the rows}
 
 \item{Y, X, X_0}{vectors of indexes (with respect to the data matrix) for the outcomes, the covariates to select and the fixed covariates respectively if data is either a path to a file or a matrix;
 if the 'data' argument is not provided, these needs to be matrices containing the data instead.}
-
-\item{varType}{variable type for each column in the data file coded as: 0 - continuous, 1- binary, 2 - categorical. Note that categorical variables cannot be imputed}
 
 \item{outFilePath}{path to where the output files are to be written}
 
@@ -55,29 +53,20 @@ BayesSUR -- Bayesian Seemingly Unrelated Regression
 \examples{
 \donttest{
 
-data(example_data, package = "BayesSUR")
+data(example_eQTL, package = "BayesSUR")
 hyperpar = list( a_w = 2 , b_w = 5 )
 
-fit = BayesSUR::runSUR(example_data[["data"]],outFilePath = "results/",
-                     Y = example_data[["blockList"]][[1]],
-                     X = example_data[["blockList"]][[2]],
+fit = BayesSUR::runSUR(example_eQTL[["data"]],outFilePath = "results/",
+                     Y = example_eQTL[["blockList"]][[1]],
+                     X = example_eQTL[["blockList"]][[2]],
                      nIter = 100, nChains = 2, gammaPrior = "hotspot",
                      hyperpar = hyperpar, tmpFolder="tmp/" )
 
+# show the interaction of plots
+plot(fit)
 ## check output
-greyscale = grey((100:0)/100)
-data(example_ground_truth, package = "BayesSUR")
-
-est_gamma = as.matrix( read.table(fit$output$gamma) )
-est_G = as.matrix( read.table(fit$output$G) )
-s = ncol(est_G)
-
-par(mfrow=c(2,2))
-image(est_gamma,col=greyscale)
-image(example_ground_truth[["gamma"]],col=greyscale)
-image((est_G+diag(s))[s:1,],col=greyscale)
-image(example_ground_truth[["G"]][s:1,],col=greyscale)
-par(mfrow=c(1,1))
+# show the estimated beta, gamma and graph of responeses Gy
+plotEstimator(fit);
 
 }
 

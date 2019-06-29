@@ -24,11 +24,12 @@
 #' @param color.predictor color of the reponse nodes
 #' @param name.predictors a subtitle for the predictors
 #' @param name.responses a subtitle for the responses
+#' @param vertex.frame.color The color of the frame of the vertices. If you don't want vertices to have a frame, supply NA as the color name
 #' @export 
 plotNetwork <- function(object, includeResponse=NULL, excludeResponse=NULL, includePredictor=NULL, excludePredictor=NULL, 
                         MatrixGamma=NULL, PmaxPredictor=0.5, PmaxResponse=0.5, nodesizePredictor=5, nodesizeResponse=25, no.isolates=FALSE,
                         lineup=1, gray.alpha=0.6, edgewith.response=5, edgewith.predictor=2, edge.weight=FALSE, label.predictor=NULL,
-                        label.response=NULL, color.predictor=NULL,color.response=NULL, name.predictors=NULL,name.responses=NULL, vertex.frame.color=NA){
+                        label.response=NULL, color.predictor=NULL,color.response=NULL, name.predictors=NULL,name.responses=NULL, vertex.frame.color=NA,layoutInCircle=FALSE){
   
   object$output[-1] <- paste(object$output$outFilePath,object$output[-1],sep="")
   
@@ -72,13 +73,13 @@ plotNetwork <- function(object, includeResponse=NULL, excludeResponse=NULL, incl
   plotSEMgraph(Gy_thresh, t(gamma_thresh), nodesizeSNP=nodesizePredictor, nodesizeMET=nodesizeResponse, no.isolates=no.isolates, 
                lineup=lineup, gray.alpha=gray.alpha, edgewith.response=edgewith.response, edgewith.predictor=edgewith.predictor,edge.weight=edge.weight,
                label.predictor=label.predictor,label.response=label.response, color.predictor=color.predictor,color.response=color.response, 
-               name.predictors=name.predictors,name.responses=name.responses, vertex.frame.color=vertex.frame.color)
+               name.predictors=name.predictors,name.responses=name.responses, vertex.frame.color=vertex.frame.color,layoutInCircle=layoutInCircle)
 
 }
 plotSEMgraph <- function(ADJmatrix,GAMmatrix,nodesizeSNP=2,nodesizeMET=25,no.isolates=FALSE,
                          lineup=1,gray.alpha=0.6,edgewith.response=5,edgewith.predictor=2,
                          label.predictor=NULL,label.response=NULL, color.predictor=NULL,color.response=NULL, 
-                         name.predictors=NULL,name.responses=NULL,edge.weight=FALSE, vertex.frame.color=NA){
+                         name.predictors=NULL,name.responses=NULL,edge.weight=FALSE, vertex.frame.color=NA,layoutInCircle=FALSE){
   
   # ADJmatrix must be a square qxq adjacency matrix (or data frame)
   qq <- dim(ADJmatrix)[1]
@@ -160,8 +161,14 @@ plotSEMgraph <- function(ADJmatrix,GAMmatrix,nodesizeSNP=2,nodesizeMET=25,no.iso
     edge.width=c(rep(edgewith.response,2*n.edgeADJ),rep(edgewith.predictor,2*n.edgeGAM))
   }
   
+  if(!layoutInCircle){
+    layoutSEM <- llsem
+  }else{
+    layoutSEM <- layout_in_circle(graphSEM)
+  }
+  
   plot.igraph(graphSEM,edge.arrow.size=0.5, edge.width=edge.width, vertex.frame.color=vertex.frame.color,
-       edge.color=c(rep(gray(0),2*n.edgeADJ),rep(gray(0.7, alpha=gray.alpha),2*n.edgeGAM)),layout=llsem)
+       edge.color=c(rep(gray(0),2*n.edgeADJ),rep(gray(0.7, alpha=gray.alpha),2*n.edgeGAM)),layout=layoutSEM)
   
   if(!is.null(name.predictors)) text(-1,-1.3,name.predictors,cex=1.2)
   if(!is.null(name.responses)) text(0.4,-1.3,name.responses,cex=1.2)

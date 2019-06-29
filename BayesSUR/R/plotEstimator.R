@@ -39,9 +39,9 @@ plotEstimator <- function(object, colorScale.gamma=grey((100:0)/100), colorScale
     tikz('ParamEstimator.tex',width=6,height=2.5,standAlone=TRUE,packages=c("\\usepackage{tikz}","\\usepackage{amsmath}","\\usepackage{bm}"))
     par(mfrow=c(1,ifelse(toupper(object$input$covariancePrior)=="HIW",3,2))) 
     
-    image(z=beta_hat, x=1:nrow(beta_hat), y=1:ncol(beta_hat), col=colorbar, xlab="", ylab="", main=paste("Estimator","$\\hat{\\bm{\\beta}}$"));box()
+    image(z=beta_hat, x=1:nrow(beta_hat), y=1:ncol(beta_hat), col=colorbar, xlab="", ylab="", main=paste("Estimator","$\\hat{\\mathbf{B}}$"));box()
     vertical.image.legend(col=colorbar, zlim=c(min(beta_hat),max(beta_hat)), legend.cex.axis=legend.cex.axis)
-    image(z=gamma_hat, x=1:nrow(gamma_hat), y=1:ncol(gamma_hat), col=colorScale.gamma, xlab="", ylab="", main=paste("Estimator","$\\hat{\\bm{\\gamma}}$"));box()
+    image(z=gamma_hat, x=1:nrow(gamma_hat), y=1:ncol(gamma_hat), col=colorScale.gamma, xlab="", ylab="", main=paste("Estimator","$\\hat{\\Gamma}$"));box()
     vertical.image.legend(col=colorScale.gamma, zlim=c(min(gamma_hat),max(gamma_hat)), legend.cex.axis=legend.cex.axis)
     
     if(toupper(object$input$covariancePrior) == "HIW"){
@@ -50,6 +50,7 @@ plotEstimator <- function(object, colorScale.gamma=grey((100:0)/100), colorScale
       vertical.image.legend(col=colorScale.gamma, zlim=c(min(G0_hat),max(G0_hat)), legend.cex.axis=legend.cex.axis)
     }
     dev.off()
+    tools::texi2pdf("ParamEstimator.tex")
   }
 
 }

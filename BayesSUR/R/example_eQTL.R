@@ -12,6 +12,12 @@
 #' @examples
 #' \donttest{
 #' 
+#' #===============
+#' # The code below is to generate the dataset "example_eQTL.rda"
+#' #===============
+#' 
+#' ## Not run
+#' 
 #' rm(list=ls())
 #' 
 #' library(readr)

@@ -15,7 +15,7 @@
 #' @param las graphical parameter of plot.default
 #' @param cex.axis graphical parameter of plot.default
 #' @export
-plotManhattan <- function(object, x.loc=FALSE, show.marker=NULL, xlab1="", ylab1="mPIP", xlab2="features", ylab2="No. of responses",threshold=0.5,
+plotManhattan <- function(object, x.loc=FALSE, show.marker=NULL, xlab1="", ylab1="mPIP", xlab2="", ylab2="No. of responses",threshold=0.5,
                            show.all.xlab=FALSE, las=0, cex.axis=1){
   
   object$output[-1] <- paste(object$output$outFilePath,object$output[-1],sep="")
@@ -41,7 +41,7 @@ plotManhattan <- function(object, x.loc=FALSE, show.marker=NULL, xlab1="", ylab1
     plot(gamma[,i]~x.loc, xlim=c(min(x.loc),max(x.loc)), ylim=c(0,1), xaxt = 'n', yaxt = 'n', bty = 'n', ylab = '', xlab = '', pch=19)
     par(new=T)
   }
-  plot(gamma[,dim(gamma)[2]]~x.loc, xlim=c(min(x.loc),max(x.loc)), ylim=c(0,1), xaxt = 'n', ylab=ylab1, xlab=xlab1, main="\n\nManhattan Plot", pch=19)
+  plot(gamma[,dim(gamma)[2]]~x.loc, xlim=c(min(x.loc),max(x.loc)), ylim=c(0,1), xaxt = 'n', ylab=ylab1, xlab=xlab1, main="", pch=19)
   axis(1, at=x.loc[seq(1,max(x.loc),length=n.xlab)], labels=names(x.loc)[seq(1,max(x.loc),length=n.xlab)], las=las, cex.axis=cex.axis)
   
   # Manhattan plot for numbers of responses 

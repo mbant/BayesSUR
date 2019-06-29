@@ -6,7 +6,6 @@
 #' @param data either a matrix/dataframe or the path to (a plain text) data file with variables on the columns and observations on the rows 
 #' @param Y,X,X_0 vectors of indexes (with respect to the data matrix) for the outcomes, the covariates to select and the fixed covariates respectively if data is either a path to a file or a matrix;
 #' if the 'data' argument is not provided, these needs to be matrices containing the data instead.
-#' @param varType variable type for each column in the data file coded as: 0 - continuous, 1- binary, 2 - categorical. Note that categorical variables cannot be imputed
 #' @param outFilePath path to where the output files are to be written
 #' @param nIter number of iterations for the MCMC procedure
 #' @param burnin number of iterations (or fraction of iterations) to discard at the start of the chain Default = 0
@@ -24,35 +23,27 @@
 #' @examples
 #' \donttest{
 #' 
-#' data(example_data, package = "BayesSUR")
+#' data(example_eQTL, package = "BayesSUR")
 #' hyperpar = list( a_w = 2 , b_w = 5 )
 #' 
-#' fit = BayesSUR::runSUR(example_data[["data"]],outFilePath = "results/",
-#'                      Y = example_data[["blockList"]][[1]],
-#'                      X = example_data[["blockList"]][[2]],
+#' fit = BayesSUR::runSUR(example_eQTL[["data"]],outFilePath = "results/",
+#'                      Y = example_eQTL[["blockList"]][[1]],
+#'                      X = example_eQTL[["blockList"]][[2]],
 #'                      nIter = 100, nChains = 2, gammaPrior = "hotspot",
 #'                      hyperpar = hyperpar, tmpFolder="tmp/" )
 #' 
+#' # show the interaction of plots
+#' plot(fit)
+
 #' ## check output
-#' greyscale = grey((100:0)/100)
-#' data(example_ground_truth, package = "BayesSUR")
-#' 
-#' est_gamma = as.matrix( read.table(fit$output$gamma) )
-#' est_G = as.matrix( read.table(fit$output$G) )
-#' s = ncol(est_G)
-#' 
-#' par(mfrow=c(2,2))
-#' image(est_gamma,col=greyscale)
-#' image(example_ground_truth[["gamma"]],col=greyscale)
-#' image((est_G+diag(s))[s:1,],col=greyscale)
-#' image(example_ground_truth[["G"]][s:1,],col=greyscale)
-#' par(mfrow=c(1,1))
+#' # show the estimated beta, gamma and graph of responeses Gy
+#' plotEstimator(fit);
 #' 
 #' }
 #' 
 #' @export
 runSUR = function(data=NULL, Y, X, X_0=NULL,
-                varType=NULL, structureGraph=NULL, outFilePath="", 
+                structureGraph=NULL, outFilePath="", 
                 nIter=10, burnin=0, nChains=1, 
                 covariancePrior="HIW",
                 gammaPrior="",gammaSampler="bandit", gammaInit="MLE", mrfG=NULL,
@@ -200,29 +191,7 @@ runSUR = function(data=NULL, Y, X, X_0=NULL,
   # magicly strip '/' from the start and '.txt' from the end of the data file name
   dataString = head( strsplit( tail( strsplit(data,split = c("/"))[[1]] , 1 ) , ".txt" )[[1]] , 1 ) 
 
-####### CARE ########## ZOMBIE CODE! WILL NEED AD SOME POINT WHEN WE INTRODUCE IMPUTATION
-#   # default varType
-#   if(is.null(varType)){
-#     varType = rep( 0,length(dataHeader) )
-#   }else{
-    
-#     if( length(varType) > length(dataHeader) ){
-#       my_stop("more varible types provided than columns in data matrix",tmpFolder)
-#     }else{
-#       if( length(varType) < length(dataHeader) ){
-        
-#         if( length(varType) != sum(blockLabels!=-1) ){
-#           my_stop("less varible types provided than used columns in data matrix",tmpFolder)
-#         }
-        
-#       }# else is fine
-#     }
-#   }
-#   write.table(varType,paste(sep="",tmpFolder,"varType.txt"), row.names = FALSE, col.names = FALSE)
-#   varType = paste(sep="",tmpFolder,"varType.txt") 
-###### END ######### ZOMBIE CODE! WILL NEED AD SOME POINT WHEN WE INTRODUCE IMPUTATION
 
-  
   # check how burnin was given
   if ( burnin < 0 ){
     my_stop("Burnin must be positive or 0",tmpFolder)
