@@ -4,14 +4,13 @@
 \alias{runSUR}
 \title{runSUR}
 \usage{
-runSUR(data = NULL, Y, X, X_0 = NULL, structureGraph = NULL,
-  outFilePath = "", nIter = 10, burnin = 0, nChains = 1,
-  covariancePrior = "HIW", gammaPrior = "", gammaSampler = "bandit",
-  gammaInit = "MLE", mrfG = NULL, betaPrior = "independent",
-  output_gamma = TRUE, output_beta = TRUE, output_G = TRUE,
-  output_sigmaRho = TRUE, output_pi = TRUE, output_tail = TRUE,
-  output_model_size = TRUE, output_Y = TRUE, output_X = TRUE,
-  hyperpar = list(), tmpFolder = "tmp/")
+runSUR(data = NULL, Y, X, X_0 = NULL, outFilePath = "", nIter = 10,
+  burnin = 0, nChains = 1, covariancePrior = "HIW",
+  gammaPrior = "", gammaSampler = "bandit", gammaInit = "MLE",
+  mrfG = NULL, output_gamma = TRUE, output_beta = TRUE,
+  output_G = TRUE, output_sigmaRho = TRUE, output_pi = TRUE,
+  output_tail = TRUE, output_model_size = TRUE, output_Y = TRUE,
+  output_X = TRUE, hyperpar = list(), tmpFolder = "tmp/")
 }
 \arguments{
 \item{data}{either a matrix/dataframe or the path to (a plain text) data file with variables on the columns and observations on the rows}

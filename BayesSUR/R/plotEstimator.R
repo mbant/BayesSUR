@@ -4,50 +4,88 @@
 #' Plot the estimators from the object of fitted Bayesian Seemingly Unrelated Regression
 #' @name plotEstimator
 #' @param object fitted "runSUR" model
+#' @param estimator print the heatmap of estimators. Default "all" is to print all estimators. The value "beta" is for the estimated coefficients matrix, "gamma" for the latent indicator matrix and "Gy" for the graph of responses
 #' @param colorScale.gamma value palette for gamma
 #' @param colorScale.beta a vector of three colors for diverging color schemes
 #' @param legend.cex.axis magnification of axis annotation relative to cex
+#' @param name.responses a vector of the response names
 #' @param fig.tex print the figure through LaTex. Default is "FALSE"
 #' @export
-plotEstimator <- function(object, colorScale.gamma=grey((100:0)/100), colorScale.beta=c("blue","white","red"), legend.cex.axis=1, fig.tex=FALSE){
+plotEstimator <- function(object, estimator="all", colorScale.gamma=grey((100:0)/100), colorScale.beta=c("blue","white","red"), legend.cex.axis=1, name.responses=NA, fig.tex=FALSE){
   
   object$output[-1] <- paste(object$output$outFilePath,object$output[-1],sep="")
   beta_hat <- as.matrix( read.table(object$output$beta) )
   gamma_hat <- as.matrix( read.table(object$output$gamma) )
   
-  
-  # floor(100*constant)+100-1 colours that your want in the legend bar which has the white middle colour
-  colorbar <- c(colorRampPalette(c(colorScale.beta[1], colorScale.beta[2]))(floor(1000/(-(max(beta_hat)-min(beta_hat))/min(beta_hat)-1))), colorRampPalette(c(colorScale.beta[2],colorScale.beta[3]))(1000)[-1])
-   
+  par(mar=c(6,6,4.1,2.1))
   if(!fig.tex){
-    par(mfrow=c(1,ifelse(toupper(object$input$covariancePrior)=="HIW",3,2))) 
-    
-    image(z=beta_hat, x=1:nrow(beta_hat), y=1:ncol(beta_hat), col=colorbar, xlab="", ylab="",main=mtext(bquote(hat(bold(beta)))));box()
-    vertical.image.legend(col=colorbar, zlim=c(min(beta_hat),max(beta_hat)), legend.cex.axis=legend.cex.axis)
-    image(z=gamma_hat, x=1:nrow(gamma_hat), y=1:ncol(gamma_hat), col=colorScale.gamma, xlab="", ylab="",main=mtext(bquote(hat(gamma))));box()
-     vertical.image.legend(col=colorScale.gamma, zlim=c(min(gamma_hat),max(gamma_hat)), legend.cex.axis=legend.cex.axis)
-  
-    if(toupper(object$input$covariancePrior) == "HIW"){
-       G0_hat <- as.matrix( read.table(object$output$G) )
-       image(z=G0_hat+diag(ncol(G0_hat)), x=1:nrow(G0_hat+diag(ncol(G0_hat))), y=1:ncol(G0_hat+diag(ncol(G0_hat))), col=colorScale.gamma, xlab="", ylab="",main="Estimated graph of responses");box()
-       vertical.image.legend(col=colorScale.gamma, zlim=c(min(G0_hat),max(G0_hat)), legend.cex.axis=legend.cex.axis)
+    if(estimator=="all"){
+      par(mfrow=c(1,ifelse(toupper(object$input$covariancePrior)=="HIW",3,2))) 
     }
-    par(mfrow=c(1,1))
+    
+    if(estimator=="all" | estimator=="beta"){
+      # floor(100*constant)+100-1 colours that your want in the legend bar which has the white middle colour
+      colorbar <- c(colorRampPalette(c(colorScale.beta[1], colorScale.beta[2]))(floor(1000/(-(max(beta_hat)-min(beta_hat))/min(beta_hat)-1))), colorRampPalette(c(colorScale.beta[2],colorScale.beta[3]))(1000)[-1])
+      
+      image(z=beta_hat, x=1:nrow(beta_hat), y=1:ncol(beta_hat), col=colorbar, xlab="", ylab="",main=mtext(bquote(hat(bold(beta)))));box()
+      vertical.image.legend(col=colorbar, zlim=c(min(beta_hat),max(beta_hat)), legend.cex.axis=legend.cex.axis)
+    }
+    if(estimator=="all" | estimator=="gamma"){
+      image(z=gamma_hat, x=1:nrow(gamma_hat), y=1:ncol(gamma_hat), col=colorScale.gamma, xlab="", ylab="",main=mtext(bquote(hat(gamma))));box()
+      vertical.image.legend(col=colorScale.gamma, zlim=c(min(gamma_hat),max(gamma_hat)), legend.cex.axis=legend.cex.axis)
+    }
+    
+    if(toupper(object$input$covariancePrior) == "HIW"){
+      if(estimator=="all" | estimator=="Gy"){
+        Gy_hat <- as.matrix( read.table(object$output$G) )
+        if(is.na(name.responses)){
+          y.lab <- 1:ncol(Gy_hat+diag(ncol(Gy_hat)))
+        }else{
+          y.lab <- name.responses
+        }
+        image(z=Gy_hat+diag(ncol(Gy_hat)), x=1:nrow(Gy_hat+diag(ncol(Gy_hat))), y=y.lab, col=colorScale.gamma, xlab="", ylab="",main="Estimated graph of responses");box()
+        vertical.image.legend(col=colorScale.gamma, zlim=c(min(Gy_hat),max(Gy_hat)), legend.cex.axis=legend.cex.axis)
+      }
+    }
+    #par(mfrow=c(1,1))
   }else{
     #library(tikzDevice)
     options(tikzMetricPackages = c("\\usepackage{amsmath}","\\usepackage{bm}","\\usetikzlibrary{calc}"))
-    tikz('ParamEstimator.tex',width=6,height=2.5,standAlone=TRUE,packages=c("\\usepackage{tikz}","\\usepackage{amsmath}","\\usepackage{bm}"))
-    par(mfrow=c(1,ifelse(toupper(object$input$covariancePrior)=="HIW",3,2))) 
-    
-    image(z=beta_hat, x=1:nrow(beta_hat), y=1:ncol(beta_hat), col=colorbar, xlab="", ylab="", main=paste("Estimator","$\\hat{\\mathbf{B}}$"));box()
-    vertical.image.legend(col=colorbar, zlim=c(min(beta_hat),max(beta_hat)), legend.cex.axis=legend.cex.axis)
-    image(z=gamma_hat, x=1:nrow(gamma_hat), y=1:ncol(gamma_hat), col=colorScale.gamma, xlab="", ylab="", main=paste("Estimator","$\\hat{\\Gamma}$"));box()
-    vertical.image.legend(col=colorScale.gamma, zlim=c(min(gamma_hat),max(gamma_hat)), legend.cex.axis=legend.cex.axis)
+    if(estimator=="all"){
+      par(mfrow=c(1,ifelse(toupper(object$input$covariancePrior)=="HIW",3,2))) 
+      tikz('ParamEstimator.tex',width=6,height=2.5,standAlone=TRUE,packages=c("\\usepackage{tikz}","\\usepackage{amsmath}","\\usepackage{bm}"))
+    }else{
+      tikz('ParamEstimator.tex',width=4,height=4,standAlone=TRUE,packages=c("\\usepackage{tikz}","\\usepackage{amsmath}","\\usepackage{bm}"))
+    }
+    par(mar=c(6,6,4.1,2.1))
+    if(estimator=="all" | estimator=="beta"){
+      # floor(100*constant)+100-1 colours that your want in the legend bar which has the white middle colour
+      colorbar <- c(colorRampPalette(c(colorScale.beta[1], colorScale.beta[2]))(floor(1000/(-(max(beta_hat)-min(beta_hat))/min(beta_hat)-1))), colorRampPalette(c(colorScale.beta[2],colorScale.beta[3]))(1000)[-1])
+      
+      image(z=beta_hat, x=1:nrow(beta_hat), y=1:ncol(beta_hat), col=colorbar, xlab="", ylab="", main=paste("Estimator","$\\hat{\\mathbf{B}}$"));box()
+      vertical.image.legend(col=colorbar, zlim=c(min(beta_hat),max(beta_hat)), legend.cex.axis=legend.cex.axis)
+    }
+    if(estimator=="all" | estimator=="gamma"){
+      image(z=gamma_hat, x=1:nrow(gamma_hat), y=1:ncol(gamma_hat), col=colorScale.gamma, xlab="", ylab="", main=paste("Estimator","$\\hat{\\Gamma}$"));box()
+      vertical.image.legend(col=colorScale.gamma, zlim=c(min(gamma_hat),max(gamma_hat)), legend.cex.axis=legend.cex.axis)
+    }
     
     if(toupper(object$input$covariancePrior) == "HIW"){
-      G0_hat <- as.matrix( read.table(object$output$G) )
-      image(z=G0_hat+diag(ncol(G0_hat)), x=1:nrow(G0_hat+diag(ncol(G0_hat))), y=1:ncol(G0_hat+diag(ncol(G0_hat))), col=colorScale.gamma, xlab="", ylab="", main=paste("Estimator","$\\hat{\\mathcal{G}}$"));box()
-      vertical.image.legend(col=colorScale.gamma, zlim=c(min(G0_hat),max(G0_hat)), legend.cex.axis=legend.cex.axis)
+      if(estimator=="all" | estimator=="Gy"){
+        Gy_hat <- as.matrix( read.table(object$output$G) )
+        
+        image(z=Gy_hat+diag(ncol(Gy_hat)), x=1:nrow(Gy_hat), y=1:nrow(Gy_hat), col=colorScale.gamma, 
+              axes=ifelse(is.na(name.responses)[1],TRUE,FALSE), xlab="", ylab="", main=paste("Estimator","$\\hat{\\mathcal{G}}$"));box()
+        vertical.image.legend(col=colorScale.gamma, zlim=c(min(Gy_hat),max(Gy_hat)), legend.cex.axis=legend.cex.axis)
+        
+        if(!is.na(name.responses)[1]){
+          par(las=2)
+          par(cex.axis=1)
+          axis(2, at = 1:dim(Gy_hat)[2], label=name.responses)
+          par(cex.axis=1)
+          axis(1, at = 1:dim(Gy_hat)[2], label=name.responses)
+        }
+      }
     }
     dev.off()
     tools::texi2pdf("ParamEstimator.tex")

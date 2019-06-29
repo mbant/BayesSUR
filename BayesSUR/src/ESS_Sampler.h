@@ -13,7 +13,7 @@
 #include "distr.h"
 
 #include "ESS_Atom.h"
-#include "HESS_Chain.h"
+#include "HRR_Chain.h"
 #include "SUR_Chain.h"
 
 template<typename T>  //  the template here should be a class derived from ESS_Atom
@@ -405,7 +405,7 @@ void ESS_Sampler<T>::setHyperParameters( const Utils::Chain_Data& chainData )
 
 
     // Covariance Prior
-    if ( chainData.covariance_type == Covariance_Type::IG )  // HESS
+    if ( chainData.covariance_type == Covariance_Type::IG )  // HRR
     {
         // A_Sigma and B_Sigma
         if ( ! std::isnan( chainData.sigmaA ) )

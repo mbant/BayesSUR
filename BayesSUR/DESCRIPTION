@@ -1,7 +1,7 @@
 Package: BayesSUR
 Type: Package
 Title: Bayesian Seemingly Unrelated Regression
-Version: 0.1.11
+Version: 0.1.12
 Date: 2019-06-29
 Authors@R: c(person("Marco", "Banterle", email = "marco.banterle@gmail.com", role = c("aut")), person("Zhi", "Zhao", email = "zhi.zhao@medisin.uio.no", role = c("aut", "cre")))
 Maintainer@R: person("Zhi", "Zhao", email = "zhi.zhao@medisin.uio.no",

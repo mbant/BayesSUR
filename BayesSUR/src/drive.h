@@ -17,7 +17,7 @@
 #include "distr.h"
 
 #include "ESS_Sampler.h"
-#include "HESS_Chain.h"
+#include "HRR_Chain.h"
 #include "SUR_Chain.h"
 	
 using Utils::Chain_Data;
@@ -27,7 +27,7 @@ void setHyperParameters( ESS_Sampler<T>& chain, const Chain_Data& chainData );
 
 int drive_SUR( Chain_Data& chainData );
 
-int drive_HESS( Chain_Data& chainData );
+int drive_HRR( Chain_Data& chainData );
 
 int drive( const std::string& dataFile, const std::string& mrfGFile, const std::string& blockFile, const std::string& structureGraphFile, const std::string& hyperParFile, const std::string& outFilePath,  
 			unsigned int nIter, unsigned int burnin, unsigned int nChains,

@@ -42,12 +42,10 @@
 #' }
 #' 
 #' @export
-runSUR = function(data=NULL, Y, X, X_0=NULL,
-                structureGraph=NULL, outFilePath="", 
+runSUR = function(data=NULL, Y, X, X_0=NULL,outFilePath="", 
                 nIter=10, burnin=0, nChains=1, 
-                covariancePrior="HIW",
-                gammaPrior="",gammaSampler="bandit", gammaInit="MLE", mrfG=NULL,
-                betaPrior="independent",
+                covariancePrior="HIW", gammaPrior="",
+                gammaSampler="bandit", gammaInit="MLE", mrfG=NULL,
                 output_gamma = TRUE, output_beta = TRUE, output_G = TRUE, output_sigmaRho = TRUE,
                 output_pi = TRUE, output_tail = TRUE, output_model_size = TRUE, output_Y = TRUE, output_X = TRUE,
                 hyperpar=list(),tmpFolder="tmp/")
@@ -88,19 +86,23 @@ runSUR = function(data=NULL, Y, X, X_0=NULL,
     if( !is.numeric(X) | is.null(dim(X)) | nrow(X) != nObservations )
       my_stop("X needs to be a valid matrix or data.frame with >= 1 column and the same number of rows of Y")
     
-    if ( is.null ( X_0 ) )
+    if ( is.null ( X_0 ) ){
       X_0 = matrix(NA,nrow=nObservations,ncol=0)
-    
-    if( !is.numeric(X_0) | is.null(dim(X_0)) | nrow(X_0) != nObservations )
-      my_stop("if provided, X_0 needs to be a valid matrix or data.frame with >= 1 column and the same number of rows of Y")
+    }else{
+      if( !is.numeric(X_0) | is.null(dim(X_0)) | nrow(X_0) != nObservations )
+        my_stop("if provided, X_0 needs to be a valid matrix or data.frame with >= 1 column and the same number of rows of Y")
+    }
+      
+    #if( !is.numeric(X_0) | is.null(dim(X_0)) | nrow(X_0) != nObservations )
+    #  my_stop("if provided, X_0 needs to be a valid matrix or data.frame with >= 1 column and the same number of rows of Y")
 
 
     # Write the three down in a single data file
     write.table(cbind(Y,X,X_0),paste(sep="",tmpFolder,"data.txt"), row.names = FALSE, col.names = FALSE)
     data = paste(sep="",tmpFolder,"data.txt")
 
-    blockLabels = c( rep(0,ncol(Y)) , rep(0,ncol(X)) , rep(0,ncol(X_0)) )
-    
+    blockLabels = c( rep(0,ncol(Y)) , rep(1,ncol(X)) , rep(2,ncol(X_0)) )
+
     # Write the data in a output file
     write.table(Y,paste(sep="",outFilePath,"data_Y.txt"), row.names = FALSE, col.names = TRUE)
     write.table(X,paste(sep="",outFilePath,"data_X.txt"), row.names = FALSE, col.names = TRUE)
@@ -256,14 +258,6 @@ runSUR = function(data=NULL, Y, X, X_0=NULL,
     }else
       my_stop("Unknown mrfG argument: check the help function for possibile values",tmpFolder)
   }
-
-  if ( toupper(betaPrior) %in% c("INDEPENDENT", "INDEP", "I") ){
-    betaPrior = "independent"
-  }else if ( toupper(betaPrior) %in% c("GPRIOR", "G-PRIOR") ){
-    betaPrior = "g-prior"
-  }else
-    my_stop("Unknown betaPrior method: only independent is available as of yet",tmpFolder) # g prior is accepted but will return an error later
-
   
   ## Set up the XML file for hyperparameters
   if("xml2" %in% rownames(installed.packages()) == FALSE)
@@ -292,7 +286,6 @@ runSUR = function(data=NULL, Y, X, X_0=NULL,
   ret$input["gammaSampler"] = gammaSampler
   ret$input["gammaInit"] = gammaInit
   ret$input["mrfG"] = mrfG
-  ret$input["betaPrior"] = betaPrior
   
   ret$input$hyperParameters = hyperpar
 
@@ -300,7 +293,7 @@ runSUR = function(data=NULL, Y, X, X_0=NULL,
     switch( covariancePrior,
       "HIW" = "SSUR" ,
       "IW"  = "dSUR" ,
-      "IG"  = "HESS" )
+      "IG"  = "HRR" )
 
   # Prepare path to outputs
   ret$output["outFilePath"] = outFilePath
@@ -334,6 +327,7 @@ runSUR = function(data=NULL, Y, X, X_0=NULL,
   if ( output_X )
     ret$output["X"] = paste(sep="", "data_X.txt")
 
+  betaPrior="independent"
   ret$status = BayesSUR_internal(data, mrfG, blockList, structureGraph, hyperParFile, outFilePath, 
             nIter, burnin, nChains, 
             covariancePrior, gammaPrior, gammaSampler, gammaInit, betaPrior,

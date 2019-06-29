@@ -458,15 +458,15 @@ int drive_SUR( Chain_Data& chainData )
 	return 0;
 }
 
-int drive_HESS( Chain_Data& chainData )
+int drive_HRR( Chain_Data& chainData )
 {
 
 	// ****************************************
 	// **********  INIT THE CHAIN *************
 	// ****************************************
-	cout << "Initialising the (HESS) MCMC Chain " << std::flush;
+	cout << "Initialising the (HRR) MCMC Chain " << std::flush;
 
-	ESS_Sampler<HESS_Chain> sampler( chainData.surData , chainData.nChains , 1.2 ,
+	ESS_Sampler<HRR_Chain> sampler( chainData.surData , chainData.nChains , 1.2 ,
         	chainData.gamma_sampler_type, chainData.gamma_type, chainData.beta_type, chainData.covariance_type);
 
 	cout << " ... " << std::flush;
@@ -987,7 +987,7 @@ int drive( const std::string& dataFile, const std::string& mrfGFile, const std::
 			break;
 
 		case Covariance_Type::IG :
-			chainData.filePrefix += "HESS_";
+			chainData.filePrefix += "HRR_";
 			break;
 
 		default:
@@ -1078,7 +1078,7 @@ int drive( const std::string& dataFile, const std::string& mrfGFile, const std::
 			break;
 
 		case Covariance_Type::IG :
-			status = drive_HESS(chainData);
+			status = drive_HRR(chainData);
 			break;
 
 		default:

@@ -4,18 +4,23 @@
 \alias{plotEstimator}
 \title{plotEstimator}
 \usage{
-plotEstimator(object, colorScale.gamma = grey((100:0)/100),
-  colorScale.beta = c("blue", "white", "red"), legend.cex.axis = 1,
+plotEstimator(object, estimator = "all",
+  colorScale.gamma = grey((100:0)/100), colorScale.beta = c("blue",
+  "white", "red"), legend.cex.axis = 1, name.responses = NA,
   fig.tex = FALSE)
 }
 \arguments{
 \item{object}{fitted "runSUR" model}
+
+\item{estimator}{print the heatmap of estimators. Default "all" is to print all estimators. The value "beta" is for the estimated coefficients matrix, "gamma" for the latent indicator matrix and "Gy" for the graph of responses}
 
 \item{colorScale.gamma}{value palette for gamma}
 
 \item{colorScale.beta}{a vector of three colors for diverging color schemes}
 
 \item{legend.cex.axis}{magnification of axis annotation relative to cex}
+
+\item{name.responses}{a vector of the response names}
 
 \item{fig.tex}{print the figure through LaTex. Default is "FALSE"}
 }
