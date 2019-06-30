@@ -165,16 +165,17 @@
 #' Gmrf <- Gmrf_duplicate[!duplicated(Gmrf_duplicate),]
 #' example_GDSC$mrfG <- Gmrf
 #' 
-#' save(example_GDSC, file="example_GDSC.rda")
-#' 
 #' # create the target gene names of the two groups of drugs
-#' targetGenes <- matrix(Idx_Pathway1,nrow=1)
-#' colnames(targetGenes) <- colnames(example_GDSC$data)[length(name_drugs)+GDSC$num.nonpen+targetGenes]
-#' write.table(targetGenes,file="targetGeneGroup1.txt",na = "NAN",col.names=TRUE,row.names=FALSE)
+#' targetGenes1 <- matrix(Idx_Pathway1,nrow=1)
+#' colnames(targetGenes1) <- colnames(example_GDSC$data)[length(name_drugs)+GDSC$num.nonpen+targetGenes]
+#' targetGenes2 <- matrix(Idx_Pathway2,nrow=1)
+#' colnames(targetGenes2) <- colnames(example_GDSC$data)[length(name_drugs)+GDSC$num.nonpen+targetGenes]
 #' 
-#' targetGenes <- matrix(Idx_Pathway2,nrow=1)
-#' colnames(targetGenes) <- colnames(example_GDSC$data)[length(name_drugs)+GDSC$num.nonpen+targetGenes]
-#' write.table(targetGenes,file="targetGeneGroup2.txt",na = "NAN",col.names=TRUE,row.names=FALSE)
+#' example_GDSC$targetGeneGroup1 <- targetGenes1
+#' example_GDSC$targetGeneGroup2 <- targetGenes2
+#' 
+#' 
+#' save(example_GDSC, file="example_GDSC.rda")
 #' 
 #' ## End(Not run)
 #' 

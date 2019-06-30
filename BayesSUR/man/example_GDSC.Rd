@@ -4,7 +4,7 @@
 \name{example_GDSC}
 \alias{example_GDSC}
 \title{Sample dataset from the GDSC database to test the package}
-\format{An object of class \code{list} of length 3.}
+\format{An object of class \code{list} of length 5.}
 \usage{
 example_GDSC
 }
@@ -175,16 +175,17 @@ Gmrf_duplicate <- rbind(  Gmrf_Group1Pathway1, Gmrf_Group2Pathway2, Gmrf_CommonG
 Gmrf <- Gmrf_duplicate[!duplicated(Gmrf_duplicate),]
 example_GDSC$mrfG <- Gmrf
 
-save(example_GDSC, file="example_GDSC.rda")
-
 # create the target gene names of the two groups of drugs
-targetGenes <- matrix(Idx_Pathway1,nrow=1)
-colnames(targetGenes) <- colnames(example_GDSC$data)[length(name_drugs)+GDSC$num.nonpen+targetGenes]
-write.table(targetGenes,file="targetGeneGroup1.txt",na = "NAN",col.names=TRUE,row.names=FALSE)
+targetGenes1 <- matrix(Idx_Pathway1,nrow=1)
+colnames(targetGenes1) <- colnames(example_GDSC$data)[length(name_drugs)+GDSC$num.nonpen+targetGenes]
+targetGenes2 <- matrix(Idx_Pathway2,nrow=1)
+colnames(targetGenes2) <- colnames(example_GDSC$data)[length(name_drugs)+GDSC$num.nonpen+targetGenes]
 
-targetGenes <- matrix(Idx_Pathway2,nrow=1)
-colnames(targetGenes) <- colnames(example_GDSC$data)[length(name_drugs)+GDSC$num.nonpen+targetGenes]
-write.table(targetGenes,file="targetGeneGroup2.txt",na = "NAN",col.names=TRUE,row.names=FALSE)
+example_GDSC$targetGeneGroup1 <- targetGenes1
+example_GDSC$targetGeneGroup2 <- targetGenes2
+
+
+save(example_GDSC, file="example_GDSC.rda")
 
 ## End(Not run)
 
