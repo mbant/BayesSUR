@@ -89,9 +89,9 @@ plotSEMgraph <- function(ADJmatrix,GAMmatrix,nodesizeSNP=2,nodesizeMET=25,no.iso
   pp <- dim(GAMmatrix)[2]
   if(dim(GAMmatrix)[1] != qq) stop("Gamma and Adjacency have different no. q")
   
-  print(paste("p = ",pp))
-  print(paste("q = ",qq))
-  print(paste("some snp names",names(GAMmatrix)[1:4]))
+  # print(paste("p = ",pp))
+  # print(paste("q = ",qq))
+  # print(paste("some snp names",names(GAMmatrix)[1:4]))
   
   # join mets block (adjency) and lower triangle (gamma)
   semgraph <- rbind(ADJmatrix,t(GAMmatrix))

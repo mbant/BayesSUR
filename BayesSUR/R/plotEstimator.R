@@ -10,15 +10,16 @@
 #' @param legend.cex.axis magnification of axis annotation relative to cex
 #' @param name.responses a vector of the response names
 #' @param fig.tex print the figure through LaTex. Default is "FALSE"
+#' @param output the file name of printed figure
 #' @export
-plotEstimator <- function(object, estimator="all", colorScale.gamma=grey((100:0)/100), colorScale.beta=c("blue","white","red"), legend.cex.axis=1, name.responses=NA, fig.tex=FALSE){
+plotEstimator <- function(object, estimator="all", colorScale.gamma=grey((100:0)/100), colorScale.beta=c("blue","white","red"), legend.cex.axis=1, name.responses=NA, fig.tex=FALSE, output="ParamEstimator"){
   
   object$output[-1] <- paste(object$output$outFilePath,object$output[-1],sep="")
   beta_hat <- as.matrix( read.table(object$output$beta) )
   gamma_hat <- as.matrix( read.table(object$output$gamma) )
   
-  par(mar=c(6,6,4.1,2.1))
   if(!fig.tex){
+    par(mar=c(6,6,2.1,2.5))
     if(estimator=="all"){
       par(mfrow=c(1,ifelse(toupper(object$input$covariancePrior)=="HIW",3,2))) 
     }
@@ -38,13 +39,17 @@ plotEstimator <- function(object, estimator="all", colorScale.gamma=grey((100:0)
     if(toupper(object$input$covariancePrior) == "HIW"){
       if(estimator=="all" | estimator=="Gy"){
         Gy_hat <- as.matrix( read.table(object$output$G) )
-        if(is.na(name.responses)){
-          y.lab <- 1:ncol(Gy_hat+diag(ncol(Gy_hat)))
-        }else{
-          y.lab <- name.responses
-        }
-        image(z=Gy_hat+diag(ncol(Gy_hat)), x=1:nrow(Gy_hat+diag(ncol(Gy_hat))), y=y.lab, col=colorScale.gamma, xlab="", ylab="",main="Estimated graph of responses");box()
+        
+        image(z=Gy_hat+diag(ncol(Gy_hat)), x=1:nrow(Gy_hat), y=1:nrow(Gy_hat), col=colorScale.gamma, 
+              axes=ifelse(is.na(name.responses)[1],TRUE,FALSE), xlab="", ylab="",main="Estimated graph of responses");box()
         vertical.image.legend(col=colorScale.gamma, zlim=c(min(Gy_hat),max(Gy_hat)), legend.cex.axis=legend.cex.axis)
+        if(!is.na(name.responses)[1]){
+          par(las=2)
+          par(cex.axis=1)
+          axis(2, at = 1:dim(Gy_hat)[2], label=name.responses)
+          par(cex.axis=1)
+          axis(1, at = 1:dim(Gy_hat)[2], label=name.responses)
+        }
       }
     }
     #par(mfrow=c(1,1))
@@ -52,12 +57,14 @@ plotEstimator <- function(object, estimator="all", colorScale.gamma=grey((100:0)
     #library(tikzDevice)
     options(tikzMetricPackages = c("\\usepackage{amsmath}","\\usepackage{bm}","\\usetikzlibrary{calc}"))
     if(estimator=="all"){
+      tikz(paste(output,".tex",sep=""),width=7,height=2.5,standAlone=TRUE,packages=c("\\usepackage{tikz}","\\usepackage{amsmath}",
+            "\\usepackage{bm}","\\usepackage[active,tightpage,psfixbb]{preview}","\\PreviewEnvironment{pgfpicture}"))
       par(mfrow=c(1,ifelse(toupper(object$input$covariancePrior)=="HIW",3,2))) 
-      tikz('ParamEstimator.tex',width=6,height=2.5,standAlone=TRUE,packages=c("\\usepackage{tikz}","\\usepackage{amsmath}","\\usepackage{bm}"))
     }else{
-      tikz('ParamEstimator.tex',width=4,height=4,standAlone=TRUE,packages=c("\\usepackage{tikz}","\\usepackage{amsmath}","\\usepackage{bm}"))
+      tikz(paste(output,".tex",sep=""),width=4,height=4,standAlone=TRUE,packages=c("\\usepackage{tikz}","\\usepackage{amsmath}",
+            "\\usepackage{bm}","\\usepackage[active,tightpage,psfixbb]{preview}","\\PreviewEnvironment{pgfpicture}"))
     }
-    par(mar=c(6,6,4.1,2.1))
+    par(mar=c(6,6,2.1,2.5))
     if(estimator=="all" | estimator=="beta"){
       # floor(100*constant)+100-1 colours that your want in the legend bar which has the white middle colour
       colorbar <- c(colorRampPalette(c(colorScale.beta[1], colorScale.beta[2]))(floor(1000/(-(max(beta_hat)-min(beta_hat))/min(beta_hat)-1))), colorRampPalette(c(colorScale.beta[2],colorScale.beta[3]))(1000)[-1])
@@ -88,9 +95,9 @@ plotEstimator <- function(object, estimator="all", colorScale.gamma=grey((100:0)
       }
     }
     dev.off()
-    tools::texi2pdf("ParamEstimator.tex")
+    tools::texi2pdf(paste(output,".tex",sep=""))
   }
-
+  par(mfrow=c(1,1))
 }
 
 # the function vertical.image.legend is orginally from the R package "aqfig"

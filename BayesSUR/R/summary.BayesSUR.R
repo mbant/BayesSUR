@@ -20,6 +20,7 @@ summary.BayesSUR <- function(object, PmaxPredictor=0.5){
   ans$modelParameters <- object$input[3:9]
   ans$hyperParameters <- object$hyperparameters
   ans$outputFiles <- object$output
+  ans$outputFiles["outFilePath"] <- NULL
  
   return(ans) 
 }

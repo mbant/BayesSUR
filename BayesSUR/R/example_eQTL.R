@@ -268,9 +268,10 @@
 #' ####################################################################
 #' ## Write data file
 #' example_eQTL = list(data=data, blockList=list(1:s,s+1:p), mrfG=Gmrf[!duplicated(Gmrf),],
-#'                     gamma=gamma[-1,], beta=b[gamma], G0=G)
-#' save(example_eQTL, file="example_eQRL.rda")
+#'                     gamma=gamma[-1,], beta=b[gamma], Gy=G)
+#' save(example_eQTL, file="example_eQTL.rda")
 #' 
+#' ## End(Not run)
 #' }
 #'
 "example_eQTL"

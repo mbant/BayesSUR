@@ -159,7 +159,7 @@
 #'   if(length(Idx_CommonGene) > 1){
 #'     Gmrf_CommonGene <- rbind(Gmrf_CommonGene, t(combn(rep(Idx_CommonGene,each=length(name_drugs)) + rep((1:length(name_drugs)-1)*sum(p),times=length(Idx_CommonGene)), 2)))
 #'     k <- k+1
-#   }
+#'   }
 #' }
 #' Gmrf_duplicate <- rbind(  Gmrf_Group1Pathway1, Gmrf_Group2Pathway2, Gmrf_CommonGene )
 #' Gmrf <- Gmrf_duplicate[!duplicated(Gmrf_duplicate),]
@@ -176,7 +176,7 @@
 #' colnames(targetGenes) <- colnames(example_GDSC$data)[length(name_drugs)+GDSC$num.nonpen+targetGenes]
 #' write.table(targetGenes,file="targetGeneGroup2.txt",na = "NAN",col.names=TRUE,row.names=FALSE)
 #' 
-#' ## End (Not run)
+#' ## End(Not run)
 #' 
 #' }
 #'

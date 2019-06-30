@@ -7,7 +7,7 @@
 plotEstimator(object, estimator = "all",
   colorScale.gamma = grey((100:0)/100), colorScale.beta = c("blue",
   "white", "red"), legend.cex.axis = 1, name.responses = NA,
-  fig.tex = FALSE)
+  fig.tex = FALSE, output = "ParamEstimator")
 }
 \arguments{
 \item{object}{fitted "runSUR" model}
@@ -23,6 +23,8 @@ plotEstimator(object, estimator = "all",
 \item{name.responses}{a vector of the response names}
 
 \item{fig.tex}{print the figure through LaTex. Default is "FALSE"}
+
+\item{output}{the file name of printed figure}
 }
 \description{
 Plot the estimators from the object of fitted Bayesian Seemingly Unrelated Regression
