@@ -57,7 +57,7 @@ plotEstimator <- function(object, estimator="all", colorScale.gamma=grey((100:0)
     #library(tikzDevice)
     options(tikzMetricPackages = c("\\usepackage{amsmath}","\\usepackage{bm}","\\usetikzlibrary{calc}"))
     if(estimator=="all"){
-      tikz(paste(output,".tex",sep=""),width=7,height=2.5,standAlone=TRUE,packages=c("\\usepackage{tikz}","\\usepackage{amsmath}",
+      tikz(paste(output,".tex",sep=""),width=7,height=2.3,standAlone=TRUE,packages=c("\\usepackage{tikz}","\\usepackage{amsmath}",
             "\\usepackage{bm}","\\usepackage[active,tightpage,psfixbb]{preview}","\\PreviewEnvironment{pgfpicture}"))
       par(mfrow=c(1,ifelse(toupper(object$input$covariancePrior)=="HIW",3,2))) 
     }else{
@@ -69,11 +69,11 @@ plotEstimator <- function(object, estimator="all", colorScale.gamma=grey((100:0)
       # floor(100*constant)+100-1 colours that your want in the legend bar which has the white middle colour
       colorbar <- c(colorRampPalette(c(colorScale.beta[1], colorScale.beta[2]))(floor(1000/(-(max(beta_hat)-min(beta_hat))/min(beta_hat)-1))), colorRampPalette(c(colorScale.beta[2],colorScale.beta[3]))(1000)[-1])
       
-      image(z=beta_hat, x=1:nrow(beta_hat), y=1:ncol(beta_hat), col=colorbar, xlab="", ylab="", main=paste("Estimator","$\\hat{\\mathbf{B}}$"));box()
+      image(z=beta_hat, x=1:nrow(beta_hat), y=1:ncol(beta_hat), col=colorbar, xlab="", ylab="", main=paste("Estimator","$\\hat{\\bm{B}}$"));box()
       vertical.image.legend(col=colorbar, zlim=c(min(beta_hat),max(beta_hat)), legend.cex.axis=legend.cex.axis)
     }
     if(estimator=="all" | estimator=="gamma"){
-      image(z=gamma_hat, x=1:nrow(gamma_hat), y=1:ncol(gamma_hat), col=colorScale.gamma, xlab="", ylab="", main=paste("Estimator","$\\hat{\\Gamma}$"));box()
+      image(z=gamma_hat, x=1:nrow(gamma_hat), y=1:ncol(gamma_hat), col=colorScale.gamma, xlab="", ylab="", main=paste("Estimator","$\\hat{\\mathbf{\\Gamma}}$"));box()
       vertical.image.legend(col=colorScale.gamma, zlim=c(min(gamma_hat),max(gamma_hat)), legend.cex.axis=legend.cex.axis)
     }
     

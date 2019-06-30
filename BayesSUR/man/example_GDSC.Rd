@@ -22,8 +22,11 @@ needed to run the algorithm.
 \examples{
 \donttest{
 
+# Load the GDSC sample dataset
+data(example_GDSC)
+
 #===============
-# This script is to do preprocessing of GDSC data and obtain a complete dataset.
+# This code below is to do preprocessing of GDSC data and obtain a complete dataset.
 # You need load the datasets from ftp://ftp.sanger.ac.uk/pub4/cancerrxgene/releases/release-5.0/. 
 # But downloading and transforming the three used datasets below to *.csv files first.
 #===============
@@ -37,16 +40,16 @@ rm(list=ls())
 ## clean the data
 ##================
 ##================
-features <- data.frame(read.csv("/Users/zhiz/Downloads/release-current/gdsc_en_input_w5.csv", head=T))
+features <- data.frame(read.csv("gdsc_en_input_w5.csv", head=T))
 names.fea <- strsplit(rownames(features), "")
 features <- t(features)
 p <- c(13321, 13747-13321, 13818-13747)
 Cell.Line <- rownames(features)
 features <- data.frame(Cell.Line, features)
 
-ic50_00 <- data.frame(read.csv("/Users/zhiz/Downloads/release-current/gdsc_drug_sensitivity_fitted_data_w5.csv", head=T))
+ic50_00 <- data.frame(read.csv("gdsc_drug_sensitivity_fitted_data_w5.csv", head=T))
 ic50_0 <- ic50_00[,c(1,4,7)]
-drug.id <- data.frame(read.csv("/Users/zhiz/Downloads/release-current/gdsc_tissue_output_w5.csv", head=T))[,c(1,3)]
+drug.id <- data.frame(read.csv("gdsc_tissue_output_w5.csv", head=T))[,c(1,3)]
 drug.id2 <- drug.id[!duplicated(drug.id$drug.id),]
 drug.id2 <- drug.id2[drug.id2$drug.id!=1066,] # delete drug.id=1066 since ID1066 and ID156 both correspond drug AZD6482, and no ID1066 in the "suppl.Data1" 
 drug.id2$drug.name <- as.character(drug.id2$drug.name)

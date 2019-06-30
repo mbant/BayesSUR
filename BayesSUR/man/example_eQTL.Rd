@@ -22,6 +22,9 @@ needed to run the algorithm.
 \examples{
 \donttest{
 
+# Load the eQTL sample dataset
+data(example_eQTL)
+
 #===============
 # The code below is to generate the dataset "example_eQTL.rda"
 #===============
