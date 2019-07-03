@@ -4,4 +4,4 @@ This is WIP repository for an R package interface to the [Bayesian SSUR](github.
 Please use only the C++ code for the moment.
 
 ## R package instructions
-see `test.R` file for usage; see our submitted paper `BayesSUR.pdf` for more details.
+see `test.R` file for usage; See the package vignette `BayesSUR.pdf` (submitted to the Journal of Statistical Software).
