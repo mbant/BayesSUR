@@ -19,7 +19,7 @@ plotEstimator <- function(object, estimator="all", colorScale.gamma=grey((100:0)
   gamma_hat <- as.matrix( read.table(object$output$gamma) )
   
   if(!fig.tex){
-    par(mar=c(6,6,2.1,2.5))
+    par(mar=c(6,6,3.1,2.5))
     if(estimator=="all"){
       par(mfrow=c(1,ifelse(toupper(object$input$covariancePrior)=="HIW",3,2))) 
     }
@@ -28,11 +28,11 @@ plotEstimator <- function(object, estimator="all", colorScale.gamma=grey((100:0)
       # floor(100*constant)+100-1 colours that your want in the legend bar which has the white middle colour
       colorbar <- c(colorRampPalette(c(colorScale.beta[1], colorScale.beta[2]))(floor(1000/(-(max(beta_hat)-min(beta_hat))/min(beta_hat)-1))), colorRampPalette(c(colorScale.beta[2],colorScale.beta[3]))(1000)[-1])
       
-      image(z=beta_hat, x=1:nrow(beta_hat), y=1:ncol(beta_hat), col=colorbar, xlab="", ylab="",main=mtext(bquote(hat(bold(beta)))));box()
+      image(z=beta_hat, x=1:nrow(beta_hat), y=1:ncol(beta_hat), col=colorbar, xlab="", ylab="",main=mtext(bquote(hat(bold(beta)))),cex.main=1.5);box()
       vertical.image.legend(col=colorbar, zlim=c(min(beta_hat),max(beta_hat)), legend.cex.axis=legend.cex.axis)
     }
     if(estimator=="all" | estimator=="gamma"){
-      image(z=gamma_hat, x=1:nrow(gamma_hat), y=1:ncol(gamma_hat), col=colorScale.gamma, xlab="", ylab="",main=mtext(bquote(hat(gamma))));box()
+      image(z=gamma_hat, x=1:nrow(gamma_hat), y=1:ncol(gamma_hat), col=colorScale.gamma, xlab="", ylab="",main=mtext(bquote(hat(gamma))),cex.main=1.5);box()
       vertical.image.legend(col=colorScale.gamma, zlim=c(min(gamma_hat),max(gamma_hat)), legend.cex.axis=legend.cex.axis)
     }
     
@@ -41,7 +41,7 @@ plotEstimator <- function(object, estimator="all", colorScale.gamma=grey((100:0)
         Gy_hat <- as.matrix( read.table(object$output$G) )
         
         image(z=Gy_hat+diag(ncol(Gy_hat)), x=1:nrow(Gy_hat), y=1:nrow(Gy_hat), col=colorScale.gamma, 
-              axes=ifelse(is.na(name.responses)[1],TRUE,FALSE), xlab="", ylab="",main="Estimated graph of responses");box()
+              axes=ifelse(is.na(name.responses)[1],TRUE,FALSE), xlab="", ylab="",main="Estimated graph of responses",cex.main=1.5);box()
         vertical.image.legend(col=colorScale.gamma, zlim=c(min(Gy_hat),max(Gy_hat)), legend.cex.axis=legend.cex.axis)
         if(!is.na(name.responses)[1]){
           par(las=2)
@@ -64,16 +64,16 @@ plotEstimator <- function(object, estimator="all", colorScale.gamma=grey((100:0)
       tikz(paste(output,".tex",sep=""),width=4,height=4,standAlone=TRUE,packages=c("\\usepackage{tikz}","\\usepackage{amsmath}",
             "\\usepackage{bm}","\\usepackage[active,tightpage,psfixbb]{preview}","\\PreviewEnvironment{pgfpicture}"))
     }
-    par(mar=c(6,6,2.1,2.5))
+    par(mar=c(6,6,3.1,2.5))
     if(estimator=="all" | estimator=="beta"){
       # floor(100*constant)+100-1 colours that your want in the legend bar which has the white middle colour
       colorbar <- c(colorRampPalette(c(colorScale.beta[1], colorScale.beta[2]))(floor(1000/(-(max(beta_hat)-min(beta_hat))/min(beta_hat)-1))), colorRampPalette(c(colorScale.beta[2],colorScale.beta[3]))(1000)[-1])
       
-      image(z=beta_hat, x=1:nrow(beta_hat), y=1:ncol(beta_hat), col=colorbar, xlab="", ylab="", main=paste("Estimator","$\\hat{\\bm{B}}$"));box()
+      image(z=beta_hat, x=1:nrow(beta_hat), y=1:ncol(beta_hat), col=colorbar, xlab="", ylab="", main=paste("Estimator","$\\hat{\\bm{B}}$"),cex.main=1.5);box()
       vertical.image.legend(col=colorbar, zlim=c(min(beta_hat),max(beta_hat)), legend.cex.axis=legend.cex.axis)
     }
     if(estimator=="all" | estimator=="gamma"){
-      image(z=gamma_hat, x=1:nrow(gamma_hat), y=1:ncol(gamma_hat), col=colorScale.gamma, xlab="", ylab="", main=paste("Estimator","$\\hat{\\mathbf{\\Gamma}}$"));box()
+      image(z=gamma_hat, x=1:nrow(gamma_hat), y=1:ncol(gamma_hat), col=colorScale.gamma, xlab="", ylab="", main=paste("Estimator","$\\hat{\\mathbf{\\Gamma}}$"),cex.main=1.5);box()
       vertical.image.legend(col=colorScale.gamma, zlim=c(min(gamma_hat),max(gamma_hat)), legend.cex.axis=legend.cex.axis)
     }
     
@@ -82,7 +82,7 @@ plotEstimator <- function(object, estimator="all", colorScale.gamma=grey((100:0)
         Gy_hat <- as.matrix( read.table(object$output$G) )
         
         image(z=Gy_hat+diag(ncol(Gy_hat)), x=1:nrow(Gy_hat), y=1:nrow(Gy_hat), col=colorScale.gamma, 
-              axes=ifelse(is.na(name.responses)[1],TRUE,FALSE), xlab="", ylab="", main=paste("Estimator","$\\hat{\\mathcal{G}}$"));box()
+              axes=ifelse(is.na(name.responses)[1],TRUE,FALSE), xlab="", ylab="", main=paste("Estimator","$\\hat{\\mathcal{G}}$"),cex.main=1.5);box()
         vertical.image.legend(col=colorScale.gamma, zlim=c(min(Gy_hat),max(Gy_hat)), legend.cex.axis=legend.cex.axis)
         
         if(!is.na(name.responses)[1]){
