@@ -40,7 +40,8 @@ str(summary(fit))
 plot(fit)
 
 # show the estimated beta, gamma and G_y
-plotEstimator(fit);
+plotEstimator(fit, fig.tex=TRUE)
+system(paste(getOption("pdfviewer"), "ParamEstimator.pdf"))
 
 # show the relationship of responses
 plotResponseGraph(fit, PtrueResponse=Gy, response.name=paste("GEX",1:ncol(Gy),sep=""))
