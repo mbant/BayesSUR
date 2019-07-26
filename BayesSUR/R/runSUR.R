@@ -16,6 +16,8 @@
 #' @param gammaSampler string indicating the type of sampler for gamma, either "bandit" for the Thompson sampling inspired samper or "MC3" for the usual $MC^3$ sampler
 #' @param gammaInit gamma initialisation to either all-zeros ("0"), all ones ("1"), randomly ("R") or (default) MLE-informed ("MLE").
 #' @param mrfG either a matrix or a path to the file containing the G matrix for the MRF prior on gamma (if necessary)
+#' @param standardize Logical flag for X variable standardization. Default is standardize=TRUE. The coefficients are returned on the standardized scale.
+#' @param standardize.response Standardization for the response variables. Default is standardize=TRUE.
 #' @param hyperpar a list of named hypeparameters to use instead of the default values; valid names are mrf_d, mrf_e, a_sigma, b_sigma, a_tau, b_tau, nu, a_eta, b_eta, a_o, b_o, a_pi, b_pi, a_w and b_w; see Documentation for more details
 #' @param output_* allow ( TRUE ) or suppress ( FALSE ) the outut for *; possible outputs are gamma, G, beta, sigmaRho, pi, tail (hotspot tail probability) or model_size
 #' @param tmpFolder the path to a temporary folder where intermediate data files are stored (will be erased at the end of the chain) default to local tmpFolder
@@ -46,6 +48,7 @@ runSUR = function(data=NULL, Y, X, X_0=NULL,outFilePath="",
                 nIter=10, burnin=0, nChains=1, 
                 covariancePrior="HIW", gammaPrior="",
                 gammaSampler="bandit", gammaInit="MLE", mrfG=NULL,
+                standardize = TRUE, standardize.response=TRUE,
                 output_gamma = TRUE, output_beta = TRUE, output_G = TRUE, output_sigmaRho = TRUE,
                 output_pi = TRUE, output_tail = TRUE, output_model_size = TRUE, output_Y = TRUE, output_X = TRUE,
                 hyperpar=list(),tmpFolder="tmp/")
@@ -96,6 +99,12 @@ runSUR = function(data=NULL, Y, X, X_0=NULL,outFilePath="",
     #if( !is.numeric(X_0) | is.null(dim(X_0)) | nrow(X_0) != nObservations )
     #  my_stop("if provided, X_0 needs to be a valid matrix or data.frame with >= 1 column and the same number of rows of Y")
 
+    # Standarize the data
+    if( standardize ){
+      X = scale(X)[,]
+      X_0 = scale(X_0)[,]
+    } 
+    if( standardize.response ) Y = scale(Y)[,]
 
     # Write the three down in a single data file
     write.table(cbind(Y,X,X_0),paste(sep="",tmpFolder,"data.txt"), row.names = FALSE, col.names = FALSE)
@@ -114,6 +123,13 @@ runSUR = function(data=NULL, Y, X, X_0=NULL,outFilePath="",
     ## If it's valid matrix, simply write it and re-assign the variable data to hold its path
     if( is.numeric(data) & !is.null(dim(data))  )
     {
+      # Standarize the data
+      if( standardize ){
+        data[,X]= scale(data[,X])[,]
+        data[,X_0] = scale(data[,X_0])[,]
+      } 
+      if( standardize.response ) data[,Y] = scale(data[,Y])[,]
+      
       # Write the Y and X data in a output file
       write.table(data[,Y],paste(sep="",outFilePath,"data_Y.txt"), row.names = FALSE, col.names = TRUE)
       write.table(data[,X],paste(sep="",outFilePath,"data_X.txt"), row.names = FALSE, col.names = TRUE)

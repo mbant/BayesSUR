@@ -7,10 +7,11 @@
 runSUR(data = NULL, Y, X, X_0 = NULL, outFilePath = "", nIter = 10,
   burnin = 0, nChains = 1, covariancePrior = "HIW",
   gammaPrior = "", gammaSampler = "bandit", gammaInit = "MLE",
-  mrfG = NULL, output_gamma = TRUE, output_beta = TRUE,
-  output_G = TRUE, output_sigmaRho = TRUE, output_pi = TRUE,
-  output_tail = TRUE, output_model_size = TRUE, output_Y = TRUE,
-  output_X = TRUE, hyperpar = list(), tmpFolder = "tmp/")
+  mrfG = NULL, standardize = TRUE, standardize.response = TRUE,
+  output_gamma = TRUE, output_beta = TRUE, output_G = TRUE,
+  output_sigmaRho = TRUE, output_pi = TRUE, output_tail = TRUE,
+  output_model_size = TRUE, output_Y = TRUE, output_X = TRUE,
+  hyperpar = list(), tmpFolder = "tmp/")
 }
 \arguments{
 \item{data}{either a matrix/dataframe or the path to (a plain text) data file with variables on the columns and observations on the rows}
@@ -36,6 +37,10 @@ if the 'data' argument is not provided, these needs to be matrices containing th
 \item{gammaInit}{gamma initialisation to either all-zeros ("0"), all ones ("1"), randomly ("R") or (default) MLE-informed ("MLE").}
 
 \item{mrfG}{either a matrix or a path to the file containing the G matrix for the MRF prior on gamma (if necessary)}
+
+\item{standardize}{Logical flag for X variable standardization. Default is standardize=TRUE. The coefficients are returned on the standardized scale.}
+
+\item{standardize.response}{Standardization for the response variables. Default is standardize=TRUE.}
 
 \item{hyperpar}{a list of named hypeparameters to use instead of the default values; valid names are mrf_d, mrf_e, a_sigma, b_sigma, a_tau, b_tau, nu, a_eta, b_eta, a_o, b_o, a_pi, b_pi, a_w and b_w; see Documentation for more details}
 

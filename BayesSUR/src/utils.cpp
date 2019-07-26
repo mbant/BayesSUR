@@ -182,7 +182,7 @@ namespace Utils{
 
 		return;
 	}
-
+/*
 	void standardiseData( std::shared_ptr<arma::mat> data, const std::shared_ptr<arma::uvec>& outcomeIndexes, 
 						const std::shared_ptr<arma::uvec>& VSPredictorsIndexes, const std::shared_ptr<arma::uvec>& fixedPredictorsIndexes)
 	{
@@ -191,7 +191,7 @@ namespace Utils{
 		// i'll keep the extra function arguments in case something changes
 
 	}
-
+*/
 
 	void formatData( const std::string& dataFileName, const std::string& mrfGFileName, const std::string& blockFileName, const std::string& structureGraphFileName,  SUR_Data& surData )
 	{
@@ -213,7 +213,7 @@ namespace Utils{
 
 		initMissingData( surData.data, surData.missingDataArrayIdx, surData.completeCases, false );
 
-		standardiseData( surData.data, surData.outcomesIdx, surData.VSPredictorsIdx, surData.fixedPredictorsIdx );
+		//standardiseData( surData.data, surData.outcomesIdx, surData.VSPredictorsIdx, surData.fixedPredictorsIdx );
 
 	}
 
