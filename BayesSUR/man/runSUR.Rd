@@ -40,7 +40,7 @@ if the 'data' argument is not provided, these needs to be matrices containing th
 
 \item{standardize}{Logical flag for X variable standardization. Default is standardize=TRUE. The coefficients are returned on the standardized scale.}
 
-\item{standardize.response}{Standardization for the response variables. Default is standardize=TRUE.}
+\item{standardize.response}{Standardization for the response variables. Default is standardize.response=TRUE.}
 
 \item{hyperpar}{a list of named hypeparameters to use instead of the default values; valid names are mrf_d, mrf_e, a_sigma, b_sigma, a_tau, b_tau, nu, a_eta, b_eta, a_o, b_o, a_pi, b_pi, a_w and b_w; see Documentation for more details}
 
