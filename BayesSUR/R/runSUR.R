@@ -6,7 +6,7 @@
 #' @param data either a matrix/dataframe or the path to (a plain text) data file with variables on the columns and observations on the rows 
 #' @param Y,X,X_0 vectors of indexes (with respect to the data matrix) for the outcomes, the covariates to select and the fixed covariates respectively if data is either a path to a file or a matrix;
 #' if the 'data' argument is not provided, these needs to be matrices containing the data instead.
-#' @param outFilePath path to where the output files are to be written
+#' @param outFilePath path to where the output files are to be written. The default path is the currect working directory.
 #' @param nIter number of iterations for the MCMC procedure
 #' @param burnin number of iterations (or fraction of iterations) to discard at the start of the chain Default = 0
 #' @param nChains number of parallel chains to run
@@ -66,6 +66,7 @@ runSUR = function(data=NULL, Y, X, X_0=NULL,outFilePath="",
   #     - in which case we write those in order into a new joint file
   # everything else throws an error
   
+  ## Create the directory for the results
   outFilePathLength = nchar(outFilePath)
   if( outFilePathLength > 0 )
   {
@@ -74,6 +75,8 @@ runSUR = function(data=NULL, Y, X, X_0=NULL,outFilePath="",
     if( substr(outFilePath,1,1) != "/" )
       outFilePath = paste( getwd(), "/", outFilePath , sep="" )
     dir.create(outFilePath)
+  }else{
+    outFilePath = paste( getwd(), "/" )
   }
 
   # we'll check in reverse order, is data NULL?
@@ -285,9 +288,6 @@ runSUR = function(data=NULL, Y, X, X_0=NULL,outFilePath="",
     )))
   hyperParFile = paste(sep="",tmpFolder,"hyperpar.xml")
   xml2::write_xml(xml,file = hyperParFile)
-  
-  ## Create the directory for the results
-  dir.create(outFilePath)
   
   ## Create the return object
   ret = list( status=1, input=list(), output = list() )

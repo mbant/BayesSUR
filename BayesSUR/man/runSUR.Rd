@@ -19,7 +19,7 @@ runSUR(data = NULL, Y, X, X_0 = NULL, outFilePath = "", nIter = 10,
 \item{Y, X, X_0}{vectors of indexes (with respect to the data matrix) for the outcomes, the covariates to select and the fixed covariates respectively if data is either a path to a file or a matrix;
 if the 'data' argument is not provided, these needs to be matrices containing the data instead.}
 
-\item{outFilePath}{path to where the output files are to be written}
+\item{outFilePath}{path to where the output files are to be written. The default path is the currect working directory.}
 
 \item{nIter}{number of iterations for the MCMC procedure}
 
