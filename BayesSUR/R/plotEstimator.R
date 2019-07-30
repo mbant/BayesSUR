@@ -21,7 +21,7 @@ plotEstimator <- function(object, estimator="all", colorScale.gamma=grey((100:0)
   
   # specify the labels of axes
   if(is.na(name.responses)) name.responses <- 1:ncol(beta_hat)
-  if(name.responses == "auto") name.responses <- names(read.table(object$output$Y,header=T))
+  if(name.responses[1] == "auto") name.responses <- names(read.table(object$output$Y,header=T))
   if(is.character(name.responses)){
     if(length(name.responses) != ncol(beta_hat)){
       stop("The length of the given response names are not consistent with the data!")
@@ -29,7 +29,7 @@ plotEstimator <- function(object, estimator="all", colorScale.gamma=grey((100:0)
   }
   
   if(is.na(name.predictors)) name.predictors <- 1:nrow(beta_hat)
-  if(name.predictors == "auto") name.responses <- names(read.table(object$output$X,header=T))
+  if(name.predictors[1] == "auto") name.predictors <- names(read.table(object$output$X,header=T))
   if(is.character(name.predictors)){
     if(length(name.predictors) != nrow(beta_hat)){
       stop("The length of the given predictor names are not consistent with the data!")

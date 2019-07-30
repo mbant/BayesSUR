@@ -30,17 +30,15 @@ plotManhattan <- function(object, which=c(1,2), x.loc=FALSE, axis.label=NULL, ma
     names(x.loc) <- 1:nrow(gamma)
   }else{
     name.predictors <- colnames(read.table(object$output$X,header=T))
-    if(axis.label == "auto"){
+    if(axis.label[1] == "auto"){
       x.loc <- 1:nrow(gamma)
       names(x.loc) <- name.predictors
     }else{
-      if( (!match(axis.label, name.predictors)[1]) & (!x.loc) )
+      if( (!match(axis.label, name.predictors)[1]) & (!x.loc[1]) )
         stop("The given predictor names are not consistent with the data")
       
-      if(!x.loc){
-        x.loc <- match( axis.label, name.predictors )
-        names(x.loc) <- axis.label
-      }
+      if(!x.loc[1]) x.loc <- match( axis.label, name.predictors )
+      names(x.loc) <- axis.label
     }
   }
   
