@@ -4,54 +4,73 @@
 #' @description
 #' Manhattan plot
 #' @param object the object from the runSUR
+#' @param which if it's value "1" showing the Manhattan-like plot of the marginal posterior inclusion probabilities (mPIP). If it's value "2" showing the Manhattan-like plot of the number of responses. The default is to show both figures.
 #' @param x.loc a vector of features distance
-#' @param show.marker a vector of covariate names which are shown in the Manhattan plot
-#' @param xlab1 a title for the x axis of Manhattan plot for marginal posterior inclusion probabilities
-#' @param ylab1 a title for the y axis of Manhattan plot for marginal posterior inclusion probabilities
-#' @param xlab2 a title for the x axis of Manhattan plot for numbers of responses 
-#' @param ylab2 a title for the y axis of Manhattan plot for numbers of responses 
+#' @param axis.label a vector of predictor names which are shown in the Manhattan-like plot. The default is "NULL" only showing the indices. The value "auto" show the predictor names from the orginal data.
+#' @param mark.responses a vector of response names which are shown in the Manhattan-like plot for the mPIP
+#' @param mark.pos the location of the marked text relative to the point
+#' @param xlab1 a title for the x axis of Manhattan-like plot for the mPIP
+#' @param ylab1 a title for the y axis of Manhattan-like plot for the mPIP
+#' @param xlab2 a title for the x axis of Manhattan-like plot for the numbers of responses 
+#' @param ylab2 a title for the y axis of Manhattan-like plot for the numbers of responses 
 #' @param threshold threshold for showing number of response variables significantly associated with each feature
-#' @param show.all.xlab logical value for showing all labels on the x axis. The defaul value is to show 5 labels on the x axis
+#' @param show.all.xlab logical value for showing all labels on the x axis. The default value is to show 5 labels on the x axis
 #' @param las graphical parameter of plot.default
 #' @param cex.axis graphical parameter of plot.default
+#' @param mark.color the color of the marked text. The default color is red.
+#' @param mark.cex the fontsize of the marked text. The default fontsize is 0.8.
 #' @export
-plotManhattan <- function(object, x.loc=FALSE, show.marker=NULL, xlab1="", ylab1="mPIP", xlab2="", ylab2="No. of responses",threshold=0.5,
-                           show.all.xlab=FALSE, las=0, cex.axis=1){
+plotManhattan <- function(object, which=c(1,2), x.loc=FALSE, axis.label=NULL, mark.responses=NULL, xlab1="", ylab1="mPIP", xlab2="", ylab2="No. of responses",threshold=0.5,las=0, cex.axis=1, mark.pos=c(0,0), mark.color=2, mark.cex=0.8){
   
   object$output[-1] <- paste(object$output$outFilePath,object$output[-1],sep="")
   gamma <- as.matrix( read.table(object$output$gamma) )
   
-  if(x.loc){
-    x.loc <- 1:dim(gamma)[1]
-    names(x.loc) <- 1:dim(gamma)[1]
+  if(is.null(axis.label)){
+    x.loc <- 1:nrow(gamma)
+    names(x.loc) <- 1:nrow(gamma)
   }else{
-    x.loc <- 1:dim(gamma)[1]
-    if(is.null(names(x.loc))) names(x.loc) <- colnames(read.table(object$output$X,header=T))
+    name.predictors <- colnames(read.table(object$output$X,header=T))
+    if(axis.label == "auto"){
+      x.loc <- 1:nrow(gamma)
+      names(x.loc) <- name.predictors
+    }else{
+      if( (!match(axis.label, name.predictors)[1]) & (!x.loc) )
+        stop("The given predictor names are not consistent with the data")
+      
+      if(!x.loc){
+        x.loc <- match( axis.label, name.predictors )
+        names(x.loc) <- axis.label
+      }
+    }
   }
-  if(show.all.xlab){
-    n.xlab <- length(x.loc)
-  }else{
-    n.xlab <- 5
-  } 
-    
+  
   par(mfrow=c(2,1))
   # Manhattan plot for marginal posterior inclusion probabilities (mPIP) 
-  par(mar=c(1,4,6.5,2))
-  for(i in 1:(dim(gamma)[2]-1)){
-    plot(gamma[,i]~x.loc, xlim=c(min(x.loc),max(x.loc)), ylim=c(0,1), xaxt = 'n', yaxt = 'n', bty = 'n', ylab = '', xlab = '', pch=19)
-    par(new=T)
+  if(1 %in% which){
+  par(mar=c(1,4,6.5,2)) 
+  
+  plot(as.vector(gamma) ~ rep(1:nrow(gamma), times=ncol(gamma)), xlim=c(1,nrow(gamma)), ylim=c(0,max(gamma)), xaxt = 'n',bty = "n", ylab = "mPIP", xlab = "", main="", pch=19)
+  axis(1, at=x.loc, labels=names(x.loc), las=las, cex.axis=cex.axis); box()
+  
+  # mark the names of the specified response variables corresponding to the given predictors
+  if(!is.null(mark.responses)){
+    name.responses <- colnames(read.table(object$output$Y,header=T))
+    if(!is.na(match(mark.responses, name.responses)[1])){
+      text(rep(x.loc,times=length(mark.responses))+mark.pos[1], as.vector(gamma[x.loc,name.responses %in% mark.responses])+mark.pos[2], labels=rep(mark.responses, each=length(x.loc)), col=mark.color, cex=mark.cex)
+    }else{
+      stop("The given response names are not consistent with the data")
+    }
   }
-  plot(gamma[,dim(gamma)[2]]~x.loc, xlim=c(min(x.loc),max(x.loc)), ylim=c(0,1), xaxt = 'n', ylab=ylab1, xlab=xlab1, main="", pch=19)
-  axis(1, at=x.loc[seq(1,max(x.loc),length=n.xlab)], labels=names(x.loc)[seq(1,max(x.loc),length=n.xlab)], las=las, cex.axis=cex.axis)
+  }
   
   # Manhattan plot for numbers of responses 
+  if(2 %in% which){
   par(mar=c(5,4,3,2))
   no.gamma <- rowSums(gamma>=threshold)
-  plot(no.gamma~x.loc, xlim=c(min(x.loc),max(x.loc)), ylim=c(0,max(no.gamma)+0.3), type='n', xaxt = 'n', ylab=ylab2, xlab=xlab2, main="")
-  axis(1, at=x.loc[seq(1,max(x.loc),length=n.xlab)], labels=names(x.loc)[seq(1,max(x.loc),length=n.xlab)], las=las, cex.axis=cex.axis)
-  segments(x.loc, 0, x.loc, no.gamma)
-  if(!is.null(show.marker)) text(no.gamma[names(x.loc) %in% show.marker]+0.2~x.loc[names(x.loc) %in% show.marker], labels=names(x.loc)[names(x.loc) %in% show.marker])
-  
+  plot(no.gamma ~ c(1:nrow(gamma)), xlim=c(1,nrow(gamma)), ylim=c(0,max(no.gamma)+0.3), type='n', xaxt = 'n', ylab=ylab2, xlab=xlab2, main="")
+  segments(1:nrow(gamma), 0, 1:nrow(gamma), no.gamma)
+  axis(1, at=x.loc, labels=names(x.loc), las=las, cex.axis=cex.axis)
+  }
   par(mfrow=c(1,1))
   
 }

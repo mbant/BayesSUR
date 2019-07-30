@@ -5,7 +5,7 @@
 \title{plotResponseGraph}
 \usage{
 plotResponseGraph(object, PmaxResponse = 0.5, PtrueResponse = NULL,
-  response.name = NULL, edge.weight = FALSE, label.color = "black",
+  name.responses = NA, edge.weight = FALSE, label.color = "black",
   node.size = 30, node.color = "dodgerblue")
 }
 \arguments{
@@ -15,7 +15,7 @@ plotResponseGraph(object, PmaxResponse = 0.5, PtrueResponse = NULL,
 
 \item{PtrueResponse}{true adjacency matrix for the structure of multiple response variables}
 
-\item{response.name}{A vector for the node names}
+\item{name.responses}{A vector for the node names. The default is "NA" only to show the locations. Value "auto" show the response names from the orginal data.}
 
 \item{edge.weight}{draw weighted edges after thresholding at 0.5. The defaul value "FALSE" is not to draw weigthed edges}
 

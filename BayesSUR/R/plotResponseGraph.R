@@ -6,19 +6,19 @@
 #' @param object fitted "runSUR" model
 #' @param PmaxResponse cutpoint for thresholding the learning structure matrix of multiple response variables. Default is 0.5
 #' @param PtrueResponse true adjacency matrix for the structure of multiple response variables
-#' @param response.name A vector for the node names
+#' @param name.responses A vector for the node names. The default is "NA" only to show the locations. Value "auto" show the response names from the orginal data. 
 #' @param edge.weight draw weighted edges after thresholding at 0.5. The defaul value "FALSE" is not to draw weigthed edges
 #' @param label.color label color. Default is "black"
 #' @param node.size node size. Default is 30
 #' @param node.color node color. Default is "dodgerblue
 #' @export
-plotResponseGraph <- function(object, PmaxResponse=0.5, PtrueResponse=NULL, response.name=NULL, edge.weight=FALSE, label.color="black", node.size=30, node.color="dodgerblue"){
+plotResponseGraph <- function(object, PmaxResponse=0.5, PtrueResponse=NULL, name.responses=NA, edge.weight=FALSE, label.color="black", node.size=30, node.color="dodgerblue"){
   
   object$output[-1] <- paste(object$output$outFilePath,object$output[-1],sep="")
   Gy_hat <- as.matrix( read.table(object$output$G) )
   
-  if(!is.null(response.name)){
-    rownames(Gy_hat) <- colnames(Gy_hat) <- response.name
+  if(!is.na(name.responses)){
+    rownames(Gy_hat) <- colnames(Gy_hat) <- name.responses
   }else{
     rownames(Gy_hat) <- colnames(Gy_hat) <- names(read.table(object$output$Y,header=T))
   }

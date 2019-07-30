@@ -8,15 +8,33 @@
 #' @param colorScale.gamma value palette for gamma
 #' @param colorScale.beta a vector of three colors for diverging color schemes
 #' @param legend.cex.axis magnification of axis annotation relative to cex
-#' @param name.responses a vector of the response names
+#' @param name.responses a vector of the response names. The default is "NA" only to show the locations. The value "auto" show the response names from the orginal data. 
+#' @param name.predictors a vector of the predictor names. The default is "NA" only to show the locations. The value "auto" show the predictor names from the orginal data.
 #' @param fig.tex print the figure through LaTex. Default is "FALSE"
 #' @param output the file name of printed figure
 #' @export
-plotEstimator <- function(object, estimator="all", colorScale.gamma=grey((100:0)/100), colorScale.beta=c("blue","white","red"), legend.cex.axis=1, name.responses=NA, fig.tex=FALSE, output="ParamEstimator"){
+plotEstimator <- function(object, estimator="all", colorScale.gamma=grey((100:0)/100), colorScale.beta=c("blue","white","red"), legend.cex.axis=1, name.responses=NA, name.predictors=NA, fig.tex=FALSE, output="ParamEstimator"){
   
   object$output[-1] <- paste(object$output$outFilePath,object$output[-1],sep="")
   beta_hat <- as.matrix( read.table(object$output$beta) )
   gamma_hat <- as.matrix( read.table(object$output$gamma) )
+  
+  # specify the labels of axes
+  if(is.na(name.responses)) name.responses <- 1:ncol(beta_hat)
+  if(name.responses == "auto") name.responses <- names(read.table(object$output$Y,header=T))
+  if(is.character(name.responses)){
+    if(length(name.responses) != ncol(beta_hat)){
+      stop("The length of the given response names are not consistent with the data!")
+    }
+  }
+  
+  if(is.na(name.predictors)) name.predictors <- 1:nrow(beta_hat)
+  if(name.predictors == "auto") name.responses <- names(read.table(object$output$X,header=T))
+  if(is.character(name.predictors)){
+    if(length(name.predictors) != nrow(beta_hat)){
+      stop("The length of the given predictor names are not consistent with the data!")
+    }
+  }
   
   if(!fig.tex){
     par(mar=c(6,6,3.1,2.5))
@@ -28,12 +46,26 @@ plotEstimator <- function(object, estimator="all", colorScale.gamma=grey((100:0)
       # floor(100*constant)+100-1 colours that your want in the legend bar which has the white middle colour
       colorbar <- c(colorRampPalette(c(colorScale.beta[1], colorScale.beta[2]))(floor(1000/(-(max(beta_hat)-min(beta_hat))/min(beta_hat)-1))), colorRampPalette(c(colorScale.beta[2],colorScale.beta[3]))(1000)[-1])
       
-      image(z=beta_hat, x=1:nrow(beta_hat), y=1:ncol(beta_hat), col=colorbar, xlab="", ylab="",main=mtext(bquote(hat(bold(beta)))),cex.main=1.5);box()
+      image(z=beta_hat, x=1:nrow(beta_hat), y=1:ncol(beta_hat), col=colorbar, axes=ifelse(is.na(name.responses)[1],TRUE,FALSE), xlab="", ylab="",main=mtext(bquote(hat(bold(beta)))),cex.main=1.5);box()
       vertical.image.legend(col=colorbar, zlim=c(min(beta_hat),max(beta_hat)), legend.cex.axis=legend.cex.axis)
+      if(!is.na(name.responses)[1]){
+        par(las=2)
+        par(cex.axis=1)
+        axis(2, at = 1:ncol(beta_hat), label=name.responses)
+        par(cex.axis=1)
+        axis(1, at = 1:nrow(beta_hat), label=name.predictors)
+      }
     }
     if(estimator=="all" | estimator=="gamma"){
-      image(z=gamma_hat, x=1:nrow(gamma_hat), y=1:ncol(gamma_hat), col=colorScale.gamma, xlab="", ylab="",main=mtext(bquote(hat(gamma))),cex.main=1.5);box()
-      vertical.image.legend(col=colorScale.gamma, zlim=c(min(gamma_hat),max(gamma_hat)), legend.cex.axis=legend.cex.axis)
+      image(z=gamma_hat, x=1:nrow(gamma_hat), y=1:ncol(gamma_hat), col=colorScale.gamma, axes=ifelse(is.na(name.responses)[1],TRUE,FALSE), xlab="", ylab="",main=mtext(bquote(hat(gamma))),cex.main=1.5);box()
+      vertical.image.legend(col=colorScale.gamma, zlim=c(0,1), legend.cex.axis=legend.cex.axis)
+      if(!is.na(name.responses)[1]){
+        par(las=2)
+        par(cex.axis=1)
+        axis(2, at = 1:ncol(gamma_hat), label=name.responses)
+        par(cex.axis=1)
+        axis(1, at = 1:nrow(gamma_hat), label=name.predictors)
+      }
     }
     
     if(toupper(object$input$covariancePrior) == "HIW"){
@@ -46,9 +78,9 @@ plotEstimator <- function(object, estimator="all", colorScale.gamma=grey((100:0)
         if(!is.na(name.responses)[1]){
           par(las=2)
           par(cex.axis=1)
-          axis(2, at = 1:dim(Gy_hat)[2], label=name.responses)
+          axis(2, at = 1:ncol(Gy_hat), label=name.responses)
           par(cex.axis=1)
-          axis(1, at = 1:dim(Gy_hat)[2], label=name.responses)
+          axis(1, at = 1:nrow(Gy_hat), label=name.responses)
         }
       }
     }
@@ -69,12 +101,26 @@ plotEstimator <- function(object, estimator="all", colorScale.gamma=grey((100:0)
       # floor(100*constant)+100-1 colours that your want in the legend bar which has the white middle colour
       colorbar <- c(colorRampPalette(c(colorScale.beta[1], colorScale.beta[2]))(floor(1000/(-(max(beta_hat)-min(beta_hat))/min(beta_hat)-1))), colorRampPalette(c(colorScale.beta[2],colorScale.beta[3]))(1000)[-1])
       
-      image(z=beta_hat, x=1:nrow(beta_hat), y=1:ncol(beta_hat), col=colorbar, xlab="", ylab="", main=paste("Estimator","$\\hat{\\bm{B}}$"),cex.main=1.5);box()
+      image(z=beta_hat, x=1:nrow(beta_hat), y=1:ncol(beta_hat), col=colorbar, axes=ifelse(is.na(name.responses)[1],TRUE,FALSE), xlab="", ylab="", main=paste("Estimator","$\\hat{\\bm{B}}$"),cex.main=1.5);box()
       vertical.image.legend(col=colorbar, zlim=c(min(beta_hat),max(beta_hat)), legend.cex.axis=legend.cex.axis)
+      if(!is.na(name.responses)[1]){
+        par(las=2)
+        par(cex.axis=1)
+        axis(2, at = 1:ncol(beta_hat), label=name.responses)
+        par(cex.axis=1)
+        axis(1, at = 1:nrow(beta_hat), label=name.predictors)
+      }
     }
     if(estimator=="all" | estimator=="gamma"){
-      image(z=gamma_hat, x=1:nrow(gamma_hat), y=1:ncol(gamma_hat), col=colorScale.gamma, xlab="", ylab="", main=paste("Estimator","$\\hat{\\mathbf{\\Gamma}}$"),cex.main=1.5);box()
-      vertical.image.legend(col=colorScale.gamma, zlim=c(min(gamma_hat),max(gamma_hat)), legend.cex.axis=legend.cex.axis)
+      image(z=gamma_hat, x=1:nrow(gamma_hat), y=1:ncol(gamma_hat), col=colorScale.gamma, axes=ifelse(is.na(name.responses)[1],TRUE,FALSE), xlab="", ylab="", main=paste("Estimator","$\\hat{\\mathbf{\\Gamma}}$"),cex.main=1.5);box()
+      vertical.image.legend(col=colorScale.gamma, zlim=c(0,1), legend.cex.axis=legend.cex.axis)
+      if(!is.na(name.responses)[1]){
+        par(las=2)
+        par(cex.axis=1)
+        axis(2, at = 1:ncol(gamma_hat), label=name.responses)
+        par(cex.axis=1)
+        axis(1, at = 1:nrow(gamma_hat), label=name.predictors)
+      }
     }
     
     if(toupper(object$input$covariancePrior) == "HIW"){
@@ -88,9 +134,9 @@ plotEstimator <- function(object, estimator="all", colorScale.gamma=grey((100:0)
         if(!is.na(name.responses)[1]){
           par(las=2)
           par(cex.axis=1)
-          axis(2, at = 1:dim(Gy_hat)[2], label=name.responses)
+          axis(2, at = 1:ncol(Gy_hat), label=name.responses)
           par(cex.axis=1)
-          axis(1, at = 1:dim(Gy_hat)[2], label=name.responses)
+          axis(1, at = 1:nrow(Gy_hat), label=name.responses)
         }
       }
     }

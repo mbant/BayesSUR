@@ -55,8 +55,17 @@ runSUR = function(data=NULL, Y, X, X_0=NULL,outFilePath="",
 {
   
   # Create temporary directory
-  if( ! dir.exists(tmpFolder) )
+  tmpFolderLength = nchar(tmpFolder)
+  if( tmpFolderLength > 0 )
+  {
+    if( substr(tmpFolder,tmpFolderLength,tmpFolderLength) != "/" )
+      tmpFolder = paste( tmpFolder , "/" , sep="" )
+    if( (substr(tmpFolder,1,1) != "/") & (substr(tmpFolder,2,2) != ":") )
+      tmpFolder = paste( getwd(), "/", tmpFolder , sep="" )
     dir.create(tmpFolder)
+  }else{
+    tmpFolder = paste( getwd(), "/" )
+  }
   
 
   ## Check the input: reasoning is that the user provides either
@@ -72,7 +81,7 @@ runSUR = function(data=NULL, Y, X, X_0=NULL,outFilePath="",
   {
     if( substr(outFilePath,outFilePathLength,outFilePathLength) != "/" )
       outFilePath = paste( outFilePath , "/" , sep="" )
-    if( substr(outFilePath,1,1) != "/" )
+    if( (substr(outFilePath,1,1) != "/") & (substr(outFilePath,2,2) != ":") )
       outFilePath = paste( getwd(), "/", outFilePath , sep="" )
     dir.create(outFilePath)
   }else{
@@ -85,17 +94,17 @@ runSUR = function(data=NULL, Y, X, X_0=NULL,outFilePath="",
 
     # Y,X (and if there X_0) need to be valid numeric matrices then
     # check Y and X have comfortable number of observations
-    if( !is.numeric(Y) | is.null(dim(Y)) )
+    if( !is.numeric(Y) | !is.data.frame(Y) | is.null(dim(Y)) )
       my_stop("Y needs to be a valid matrix or data.frame with > 1 column ")
     
     nObservations = nrow(Y)
-    if( !is.numeric(X) | is.null(dim(X)) | nrow(X) != nObservations )
+    if( !is.numeric(X) | !is.data.frame(X) | is.null(dim(X)) | nrow(X) != nObservations )
       my_stop("X needs to be a valid matrix or data.frame with >= 1 column and the same number of rows of Y")
     
     if ( is.null ( X_0 ) ){
       X_0 = matrix(NA,nrow=nObservations,ncol=0)
     }else{
-      if( !is.numeric(X_0) | is.null(dim(X_0)) | nrow(X_0) != nObservations )
+      if( !is.numeric(X_0) | !is.data.frame(X_0) | is.null(dim(X_0)) | nrow(X_0) != nObservations )
         my_stop("if provided, X_0 needs to be a valid matrix or data.frame with >= 1 column and the same number of rows of Y")
     }
       
@@ -124,7 +133,7 @@ runSUR = function(data=NULL, Y, X, X_0=NULL,outFilePath="",
 
     # is the data given as matrix?
     ## If it's valid matrix, simply write it and re-assign the variable data to hold its path
-    if( is.numeric(data) & !is.null(dim(data))  )
+    if( (is.numeric(data) | is.data.frame(data)) & !is.null(dim(data))  )
     {
       # Standarize the data
       if( standardize ){
@@ -265,7 +274,7 @@ runSUR = function(data=NULL, Y, X, X_0=NULL,outFilePath="",
   if( !(is.character(mrfG) & length(mrfG) == 1) )
   {
     # if it's a matrix
-    if( is.numeric(mrfG) & !is.null(dim(mrfG))  )
+    if( (is.numeric(mrfG)  | is.data.frame(mrfG)) & !is.null(dim(mrfG))  )
     {
       write.table(mrfG,paste(sep="",tmpFolder,"mrfG.txt"), row.names = FALSE, col.names = FALSE)
       mrfG = paste(sep="",tmpFolder,"mrfG.txt")

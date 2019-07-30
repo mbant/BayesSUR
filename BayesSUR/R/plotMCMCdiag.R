@@ -13,8 +13,8 @@ plotMCMCdiag <- function(object, nbloc=3){
   nIter <- object$input$nIter
   logP <- t( as.matrix( read.table(object$output$logP) ) )
   logP <- logP[,ncol(logP)-floor(nIter/1000)-1+1:floor(nIter/1000)]
-  Ptau.indx <- ifelse(fit$input$covariancePrior!="IG", 7, 3)
-  Plik.indx <- ifelse(fit$input$covariancePrior!="IG", 10, 5)
+  Ptau.indx <- ifelse(object$input$covariancePrior!="IG", 7, 3)
+  Plik.indx <- ifelse(object$input$covariancePrior!="IG", 10, 5)
   #nChain <- object$input$nChains
   model_size <- as.matrix( read.table(object$output$model_size) )
   model_size <- rowSums(  model_size[nrow(model_size)-floor(nIter/1000)-1+1:floor(nIter/1000),] ) 

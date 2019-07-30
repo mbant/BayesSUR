@@ -1,8 +1,8 @@
 Package: BayesSUR
 Type: Package
 Title: Bayesian Seemingly Unrelated Regression
-Version: 0.1.15
-Date: 2019-07-26
+Version: 0.1.16
+Date: 2019-07-30
 Authors@R: c(person("Marco", "Banterle", email = "marco.banterle@gmail.com", role = c("aut")), person("Zhi", "Zhao", email = "zhi.zhao@medisin.uio.no", role = c("aut", "cre")))
 Maintainer@R: person("Zhi", "Zhao", email = "zhi.zhao@medisin.uio.no",
         role = c("aut", "cre")) person("Marco", "Banterle", email =
@@ -18,7 +18,7 @@ Imports: Rcpp, utils, RcppArmadillo (>= 0.9.000), BH, igraph, Matrix,
 Suggests: xml2, knitr, rmarkdown, R.rsp
 LazyData: true
 NeedsCompilation: yes
-Packaged: 2019-07-28 18:30:35 UTC; zhiz
+Packaged: 2019-07-30 18:20:49 UTC; zhiz
 Author: Marco Banterle [aut],
   Zhi Zhao [aut, cre]
 Maintainer: Zhi Zhao <zhi.zhao@medisin.uio.no>

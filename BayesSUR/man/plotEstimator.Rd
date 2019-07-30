@@ -7,7 +7,7 @@
 plotEstimator(object, estimator = "all",
   colorScale.gamma = grey((100:0)/100), colorScale.beta = c("blue",
   "white", "red"), legend.cex.axis = 1, name.responses = NA,
-  fig.tex = FALSE, output = "ParamEstimator")
+  name.predictors = NA, fig.tex = FALSE, output = "ParamEstimator")
 }
 \arguments{
 \item{object}{fitted "runSUR" model}
@@ -20,7 +20,9 @@ plotEstimator(object, estimator = "all",
 
 \item{legend.cex.axis}{magnification of axis annotation relative to cex}
 
-\item{name.responses}{a vector of the response names}
+\item{name.responses}{a vector of the response names. The default is "NA" only to show the locations. The value "auto" show the response names from the orginal data.}
+
+\item{name.predictors}{a vector of the predictor names. The default is "NA" only to show the locations. The value "auto" show the predictor names from the orginal data.}
 
 \item{fig.tex}{print the figure through LaTex. Default is "FALSE"}
 
