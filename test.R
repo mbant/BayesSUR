@@ -4,9 +4,9 @@
 #devtools::build("/Users/zhiz/Downloads/BayesSUR/BayesSUR")#,vignettes=TRUE)
 
 ## Install the package
-#library(devtools)
-#install_github("mbant/BayesSUR/BayesSUR")
-install.packages("BayesSUR_0.1.15.tar.gz",repos = NULL,type = "source")
+library(devtools)
+install_github("mbant/BayesSUR/BayesSUR")
+#install.packages("BayesSUR_0.1.16.tar.gz",repos = NULL,type = "source")
 
 
 #####################################################################################################
