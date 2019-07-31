@@ -8,9 +8,9 @@ see `test.R` file for usage; see the package vignette `BayesSUR.pdf` (submitted 
 
 ## Update of the version `BayesSUR_0.1.16.tar.gz`:
 
-# the function plotEstimator() can choose to plot beta_hat and gamma_hat with the labeled axes rather than numbers only, though the arguments name.responses and name.predictors;
+1) the function plotEstimator() can choose to plot beta_hat and gamma_hat with the labeled axes rather than numbers only, though the arguments name.responses and name.predictors;
 
-# the function plotEstimator() prints the legend of gamma_hat with fixed bar range [0,1];
+2) the function plotEstimator() prints the legend of gamma_hat with fixed bar range [0,1];
 
 3) the function plotManhattan() can show axis labels by giving the argument axis.label and can also mark the corresponding responses in the first Manhattan-like plot (mPIP);
 
