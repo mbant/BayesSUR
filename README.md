@@ -4,21 +4,21 @@ This is WIP repository for an R package interface to the [Bayesian SSUR](github.
 Please use only the C++ code for the moment.
 
 ## R package instructions
-see `test.R` file for usage; see the package vignette `BayesSUR.pdf` (submitted to the Journal of Statistical Software) for more information.
+See `test.R` file for usage; see the package vignette `BayesSUR.pdf` (submitted to the Journal of Statistical Software) for more information.
 
-## Update of the version `BayesSUR_0.1.16.tar.gz`:
+## Update of the version `BayesSUR_0.1.16.tar.gz`
 
-1) the function plotEstimator() can choose to plot beta_hat and gamma_hat with the labeled axes rather than numbers only, though the arguments name.responses and name.predictors;
+1) The function plotEstimator() can choose to plot beta_hat and gamma_hat with the labeled axes rather than numbers only, though the arguments name.responses and name.predictors;
 
-2) the function plotEstimator() prints the legend of gamma_hat with fixed bar range [0,1];
+2) The function plotEstimator() prints the legend of gamma_hat with fixed bar range [0,1];
 
-3) the function plotManhattan() can show axis labels by giving the argument axis.label and can also mark the corresponding responses in the first Manhattan-like plot (mPIP);
+3) The function plotManhattan() can show axis labels by giving the argument axis.label and can also mark the corresponding responses in the first Manhattan-like plot (mPIP);
 
-4) some "hard coding" in the function plotMCMCdiag() has been fixed;
+4) Some "hard coding" in the function plotMCMCdiag() has been fixed;
 
-5) the function runSUR() allows to give the data.matrix and data.frame type of dataset;
+5) The function runSUR() allows to give the data.matrix and data.frame type of dataset;
 
-6) the arguments outFilePath and tmpFolder in the runSUR() have been fixed hopefully so that they can automatically identify the given relative or absolute directory path no matter in WinOS or MacOS.
+6) The arguments outFilePath and tmpFolder in the runSUR() have been fixed hopefully so that they can automatically identify the given relative or absolute directory path no matter in WinOS or MacOS.
 
 
 Remaining issues:
