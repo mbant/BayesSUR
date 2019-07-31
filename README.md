@@ -25,5 +25,3 @@ See `test.R` file for usage; see the package vignette `BayesSUR.pdf` (submitted 
 Remaining issues:
 
 1) The runSUR() doesn’t print the running iterations information in the RGui of WinOS, but it works in the RStudio of WinOS, RStudio of MacOS and R Console of MacOS.
-
-2) ….
