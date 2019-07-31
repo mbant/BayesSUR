@@ -6,7 +6,8 @@ Please use only the C++ code for the moment.
 ## R package instructions
 See `test.R` file for usage; see the package vignette `BayesSUR.pdf` (submitted to the Journal of Statistical Software) for more information.
 
-## Update of the version `BayesSUR_0.1.16.tar.gz`
+## Update
+### new in the version `BayesSUR_0.1.16.tar.gz` (30 July 2019)
 
 1) The function plotEstimator() can choose to plot beta_hat and gamma_hat with the labeled axes rather than numbers only, though the arguments name.responses and name.predictors.
 
