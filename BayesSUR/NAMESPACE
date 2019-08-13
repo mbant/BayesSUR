@@ -3,6 +3,7 @@
 S3method(plot,BayesSUR)
 S3method(summary,BayesSUR)
 export(getEstimator)
+export(plotCPO)
 export(plotEstimator)
 export(plotMCMCdiag)
 export(plotManhattan)

@@ -211,6 +211,10 @@ class HRR_Chain : public ESS_Atom<HRR_Chain>
         
         // get Beta, here we get a sample from the posterior for output reasons
         arma::mat& getBeta() const;
+    
+        // PREDICTIV LIKELIHOOD FOR THE SUR MODEL
+        arma::mat getPredLikelihood();
+        void setPredLikelihood( arma::mat );
 
         // LOG-LIKELIHOOD FOR THE SSUR MODEL
         double getLogLikelihood() const;
@@ -288,6 +292,10 @@ class HRR_Chain : public ESS_Atom<HRR_Chain>
         double logPW( );
         double logPW( double );
         double logPW( double , double , double );
+    
+        // PREDICTIVE LIKELIHOODS
+        arma::mat predLikelihood();
+        arma::mat predLikelihood(const arma::mat& , const arma::mat& , const arma::mat&);
 
         // LOG LIKELIHOODS
         // logLik for the SSUR model, 2 versions
@@ -464,6 +472,9 @@ class HRR_Chain : public ESS_Atom<HRR_Chain>
         // LOG-LIKELIHOOD FOR THE HRR MODEL
         // **************************
         double log_likelihood;
+    
+        // PREDICTIVE LIKELIHOOD
+        arma::mat predLik;
 
         // Parameters for the Global moves
         // extra parameters for global moves

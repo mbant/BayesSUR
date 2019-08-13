@@ -10,8 +10,8 @@ runSUR(data = NULL, Y, X, X_0 = NULL, outFilePath = "", nIter = 10,
   mrfG = NULL, standardize = TRUE, standardize.response = TRUE,
   output_gamma = TRUE, output_beta = TRUE, output_G = TRUE,
   output_sigmaRho = TRUE, output_pi = TRUE, output_tail = TRUE,
-  output_model_size = TRUE, output_Y = TRUE, output_X = TRUE,
-  hyperpar = list(), tmpFolder = "tmp/")
+  output_model_size = TRUE, output_CPO = TRUE, output_Y = TRUE,
+  output_X = TRUE, hyperpar = list(), tmpFolder = "tmp/")
 }
 \arguments{
 \item{data}{either a matrix/dataframe or the path to (a plain text) data file with variables on the columns and observations on the rows}
@@ -42,11 +42,21 @@ if the 'data' argument is not provided, these needs to be matrices containing th
 
 \item{standardize.response}{Standardization for the response variables. Default is standardize.response=TRUE.}
 
-\item{hyperpar}{a list of named hypeparameters to use instead of the default values; valid names are mrf_d, mrf_e, a_sigma, b_sigma, a_tau, b_tau, nu, a_eta, b_eta, a_o, b_o, a_pi, b_pi, a_w and b_w; see Documentation for more details}
+\item{hyperpar}{a list of named hypeparameters to use instead of the default values; valid names are mrf_d, mrf_e, a_sigma, b_sigma, a_tau, b_tau, nu, a_eta, b_eta, a_o, b_o, a_pi, b_pi, a_w and b_w. See the vignette below for more information.}
 
 \item{tmpFolder}{the path to a temporary folder where intermediate data files are stored (will be erased at the end of the chain) default to local tmpFolder}
 
-\item{output_*}{allow ( TRUE ) or suppress ( FALSE ) the outut for *; possible outputs are gamma, G, beta, sigmaRho, pi, tail (hotspot tail probability) or model_size}
+\item{output_*}{allow ( TRUE ) or suppress ( FALSE ) the outut for *; possible outputs are gamma, G, beta, sigmaRho, pi, tail (hotspot tail probability), model_size, CPO. See the return value below for more information.}
+}
+\value{
+An object with list "\code{runSUR}":
+\item{status}{the running status}
+\item{input}{a list of all input parameters by the user}
+\item{output}{a list of the all output filenames. The file "\code{logP_out.txt}" contains each row for the \eqn{t*1000}-th iteration's log-likelihoods of parameters, i.e., Tau, Eta, JunctionTree, SigmaRho, O, Pi, Gamma, W, Beta and data marginal log-likelihood.
+The file "\code{gamma_out.txt}" is the posterior mean of the latent indicator matrix. The file "\code{pi_out.txt}" is the posterior mean of the predictor effects (prospensity) by decomposing the probability of the latent indicator. 
+The file "\code{hotspot_tail_p_out.txt}" is the posterior mean of the hotspot tail probability. The file "\code{beta_out.txt}" is the posterior mean of the coefficients matrix. The file "\code{G_out.txt}" is the posterior mean of
+the response graph. The file "\code{sigmaRho_out.txt}" is the posterior mean of the transformed parameters. The file "\code{model_size.txt}" contains each row for the\eqn{t*1000}-th iteration's model sizes of the multiple response variables.
+The file "\code{CPO_out.txt}" is the (scaled) conditional predictive ordinates. The file "\code{Y_out.txt}" is the responses dataset. The file "\code{X_out.txt}" is the predictors dataset. }
 }
 \description{
 Run a SUR Bayesian sampler
@@ -60,7 +70,7 @@ BayesSUR -- Bayesian Seemingly Unrelated Regression
 data(example_eQTL, package = "BayesSUR")
 hyperpar = list( a_w = 2 , b_w = 5 )
 
-fit = BayesSUR::runSUR(example_eQTL[["data"]],outFilePath = "results/",
+fit = runSUR(example_eQTL[["data"]],outFilePath = "results/",
                      Y = example_eQTL[["blockList"]][[1]],
                      X = example_eQTL[["blockList"]][[2]],
                      nIter = 100, nChains = 2, gammaPrior = "hotspot",

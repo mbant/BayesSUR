@@ -61,6 +61,7 @@ int drive_SUR( Chain_Data& chainData )
 	sampler[0] -> betaInit( chainData.betaInit );
     sampler[0] -> updateQuantities();
     sampler[0] -> logLikelihood();
+    sampler[0] -> predLikelihood();
 	sampler[0] -> stepSigmaRhoAndBeta();
 
 
@@ -112,6 +113,13 @@ int drive_SUR( Chain_Data& chainData )
 		ModelSizeOutFile.open( outFilePrefix+"model_size_out.txt", std::ios::out | std::ios::trunc); ModelSizeOutFile.close();
 		ModelSizeOutFile.open( outFilePrefix+"model_size_out.txt" , std::ios_base::app); // note we don't close!
 	}
+    
+    std::ofstream CPOOutFile;
+    if ( chainData.output_CPO )
+    {
+        CPOOutFile.open(outFilePrefix+"CPO_out.txt", std::ios::trunc);
+        CPOOutFile.close();
+    }
 
 	// Output to file the initial state (if burnin=0)
 	arma::umat gamma_out; // out var for the gammas
@@ -121,6 +129,7 @@ int drive_SUR( Chain_Data& chainData )
 	arma::vec tmpVec; // temporary to store the pi parameter vector
 	arma::vec pi_out;
 	arma::vec hotspot_tail_prob_out;
+    arma::mat predLik_out;
 
 	if( chainData.burnin == 0 )
 	{	
@@ -228,6 +237,14 @@ int drive_SUR( Chain_Data& chainData )
         ModelSizeOutFile << endl << std::flush;
     }
     
+    if ( chainData.output_CPO )
+    {
+        predLik_out = 1./( sampler[0] -> getPredLikelihood() );
+        CPOOutFile.open( outFilePrefix+"CPO_out.txt" , std::ios_base::trunc);
+        CPOOutFile << (arma::conv_to<arma::mat>::from(predLik_out)) << std::flush;
+        CPOOutFile.close();
+    }
+    
 	// ########
 	// ########
 	// ######## Start
@@ -275,6 +292,9 @@ int drive_SUR( Chain_Data& chainData )
 					hotspot_tail_prob_out += tmpVec;
 				}
 			}
+            
+            if( chainData.output_CPO )
+                predLik_out += 1./ (sampler[0] -> getPredLikelihood());
 
 			// Nothing to update for model size
 		}
@@ -341,6 +361,13 @@ int drive_SUR( Chain_Data& chainData )
 					ModelSizeOutFile << sampler[0]->getModelSize() << " " << std::flush;
 					ModelSizeOutFile << endl << std::flush;
 				}*/
+                
+                if ( chainData.output_CPO )
+                {
+                    CPOOutFile.open( outFilePrefix+"CPO_out.txt" , std::ios_base::trunc);
+                    CPOOutFile << 1./( predLik_out/(i+1.0-chainData.burnin) ) << std::flush;
+                    CPOOutFile.close();
+                }
 
 				#ifndef CCODE
 				Rcpp::checkUserInterrupt(); // this checks for interrupts from R
@@ -411,6 +438,7 @@ int drive_SUR( Chain_Data& chainData )
 		ModelSizeOutFile << endl << std::flush;
 		ModelSizeOutFile.close();
 	}
+    
 
 	// ----
 	if ( chainData.output_beta )
@@ -424,6 +452,12 @@ int drive_SUR( Chain_Data& chainData )
 		sigmaRho_out = sigmaRho_out/(double)(chainData.nIter-chainData.burnin+1);
 		sigmaRho_out.save(outFilePrefix+"sigmaRho_out.txt",arma::raw_ascii);
 	}
+    
+    if ( chainData.output_CPO )
+    {
+        predLik_out = 1./( predLik_out/(double)(chainData.nIter-chainData.burnin+1) ) ;
+        predLik_out.save( outFilePrefix+"CPO_out.txt",arma::raw_ascii);
+    }
 	// -----
 
 	// -----
@@ -493,7 +527,7 @@ int drive_HRR( Chain_Data& chainData )
 
 	sampler[0] -> gammaInit( chainData.gammaInit ); // this updates gammaMask as well
 	sampler[0] -> logLikelihood();
-
+    sampler[0] -> predLikelihood();
 
 	// ****************************************
 
@@ -535,6 +569,13 @@ int drive_HRR( Chain_Data& chainData )
 		ModelSizeOutFile.open(outFilePrefix+"model_size_out.txt", std::ios::out | std::ios::trunc); ModelSizeOutFile.close(); // clear out previous content
 		ModelSizeOutFile.open( outFilePrefix+"model_size_out.txt" , std::ios_base::app); //note we don't close it
 	}
+    
+    std::ofstream CPOOutFile;
+    if ( chainData.output_CPO )
+    {
+        CPOOutFile.open(outFilePrefix+"CPO_out.txt", std::ios::trunc);
+        CPOOutFile.close();
+    }
 
 	// Output to file the initial state (if burnin=0)
 	arma::umat gamma_out; // out var for the gammas
@@ -543,6 +584,8 @@ int drive_HRR( Chain_Data& chainData )
 	arma::vec tmpVec; // temporary to store the pi parameter vector
 	arma::vec pi_out;
 	arma::vec hotspot_tail_prob_out;
+    
+    arma::mat predLik_out;
 
 	if( chainData.burnin == 0 )
 	{
@@ -612,6 +655,14 @@ int drive_HRR( Chain_Data& chainData )
         }
     }
     
+    if ( chainData.output_CPO )
+    {
+        predLik_out = 1./( sampler[0] -> getPredLikelihood() );
+        CPOOutFile.open( outFilePrefix+"CPO_out.txt" , std::ios_base::trunc);
+        CPOOutFile << (arma::conv_to<arma::mat>::from(predLik_out)) << std::flush;
+        CPOOutFile.close();
+    }
+    
     logPOutFile <<     sampler[0] -> getLogPO() <<  " ";
     logPOutFile <<     sampler[0] -> getLogPPi() <<  " ";
     logPOutFile <<     sampler[0] -> getLogPGamma() <<  " ";
@@ -668,6 +719,9 @@ int drive_HRR( Chain_Data& chainData )
 					hotspot_tail_prob_out += tmpVec;
 				}
 			}
+            
+            if( chainData.output_CPO )
+                predLik_out += 1./ (sampler[0] -> getPredLikelihood());
 
 			// Nothing to update for model size
 		}
@@ -721,6 +775,13 @@ int drive_HRR( Chain_Data& chainData )
 					ModelSizeOutFile << sampler[0]->getModelSize() << " " << std::flush;
 					ModelSizeOutFile << endl << std::flush;
 				}
+                
+                if ( chainData.output_CPO )
+                {
+                    CPOOutFile.open( outFilePrefix+"CPO_out.txt" , std::ios_base::trunc);
+                    CPOOutFile << 1./( (arma::conv_to<arma::mat>::from(predLik_out))/(double)(i+1.0-chainData.burnin) ) << std::flush;
+                    CPOOutFile.close();
+                }
 
 				#ifndef CCODE
 				Rcpp::checkUserInterrupt(); // this checks for interrupts from R ... or does it?
@@ -766,6 +827,12 @@ int drive_HRR( Chain_Data& chainData )
 		beta_out = beta_out/(double)(chainData.nIter-chainData.burnin+1);
 		beta_out.save(outFilePrefix+"beta_out.txt",arma::raw_ascii);
 	}
+    
+    if ( chainData.output_CPO )
+    {
+        predLik_out = 1./( predLik_out/(double)(chainData.nIter-chainData.burnin+1) ) ;
+        predLik_out.save( outFilePrefix+"CPO_out.txt",arma::raw_ascii);
+    }
 
 	// -----
 	if ( ( chainData.gamma_type == Gamma_Type::hotspot || chainData.gamma_type == Gamma_Type::hierarchical ) && chainData.output_pi )
@@ -809,7 +876,7 @@ int drive( const std::string& dataFile, const std::string& mrfGFile, const std::
 			const std::string& covariancePrior, 
 			const std::string& gammaPrior, const std::string& gammaSampler, const std::string& gammaInit,
 			const std::string& betaPrior,
-			bool output_gamma, bool output_beta, bool output_G, bool output_sigmaRho, bool output_pi, bool output_tail, bool output_model_size )
+			bool output_gamma, bool output_beta, bool output_G, bool output_sigmaRho, bool output_pi, bool output_tail, bool output_model_size, bool output_CPO )
 {
 
 	cout << "BayesSUR -- Bayesian Seemingly Unrelated Regression Modelling" << endl;
@@ -929,6 +996,7 @@ int drive( const std::string& dataFile, const std::string& mrfGFile, const std::
 	chainData.output_pi = output_pi;
 	chainData.output_tail = output_tail;
 	chainData.output_model_size = output_model_size;
+    chainData.output_CPO = output_CPO;
 
 	// ***********************************
 	// ***********************************
@@ -1001,8 +1069,15 @@ int drive( const std::string& dataFile, const std::string& mrfGFile, const std::
 	unsigned int nThreads{1};
 	
 	#ifdef _OPENMP
-		nThreads = std::min( 16, omp_get_max_threads()-1 ); //TODO: make 16 as parameter, note I still use -1 to allow PC to do work in the meantime
-		omp_set_num_threads(  nThreads ); 
+        if ( omp_get_max_threads() == 1 )
+        {
+            nThreads = 1;
+            std::cout << "\n The parallelization is disable by giving one thread!" << std::endl;
+        }else
+        {
+            nThreads = std::min( 16, omp_get_max_threads()-1 ); //TODO: make 16 as parameter, note I still use -1 to allow PC to do work in the meantime
+        }
+        omp_set_num_threads(  nThreads );
 	#endif
 
 	rng.reserve(nThreads);  // reserve the correct space for the vector of rng engines

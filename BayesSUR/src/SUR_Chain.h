@@ -286,8 +286,12 @@ class SUR_Chain : public ESS_Atom<SUR_Chain>
 
         double getLogPBeta() const;
         // no setter for this, dedicated setter below
+    
+        // PREDICTIV LIKELIHOOD FOR THE SUR MODEL
+        arma::mat getPredLikelihood();
+        void setPredLikelihood( arma::mat );
 
-        // LOG-LIKELIHOOD FOR THE SSUR MODEL
+        // LOG-LIKELIHOOD FOR THE SUR MODEL
         double getLogLikelihood() const;
         // setter for this because of exchange operators and stuffs
         void setLogLikelihood( double );
@@ -404,6 +408,10 @@ class SUR_Chain : public ESS_Atom<SUR_Chain>
         double logPBeta( const arma::mat& );
         double logPBeta( const arma::mat& , const arma::umat& , double );
         double logPBetaMask( const arma::mat& , const arma::umat& , double ); // faster version if the gamma mask is available
+    
+        // PREDICTIVE LIKELIHOODS
+        arma::mat predLikelihood();
+        arma::mat predLikelihood(const arma::mat& , const arma::mat& , const arma::mat&);
 
         // LOG LIKELIHOODS
         // logLik for the SSUR model, 2 versions
@@ -669,6 +677,8 @@ class SUR_Chain : public ESS_Atom<SUR_Chain>
         // LOG-LIKELIHOOD FOR THE SSUR MODEL
         // **************************
         double log_likelihood;
+        // PREDICTIVE LIKELIHOOD
+        arma::mat predLik;
 
         // Parameters for the Global moves
         // extra parameters for global moves

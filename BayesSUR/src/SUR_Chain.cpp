@@ -69,6 +69,7 @@ SUR_Chain::SUR_Chain( std::shared_ptr<arma::mat> data_, std::shared_ptr<arma::ma
         updateQuantities();
 
         logLikelihood();
+        predLikelihood();
 
         // init for sigma rho and beta to reasonable values -- one step of gibbs
         stepSigmaRhoAndBeta();
@@ -556,6 +557,10 @@ void SUR_Chain::setBeta( arma::mat&  externalBeta , double logP_beta_ )
 
 double SUR_Chain::getLogPBeta() const{ return logP_beta ; }
 // no setter for this, dedicated setter below
+
+// PREDICTIVE-LIKELIHOOD OF INDIVIDUALS FOR THE SSUR MODEL
+arma::mat SUR_Chain::getPredLikelihood() { return predLik ; }
+void SUR_Chain::setPredLikelihood( arma::mat predLik_ ){ predLik = predLik_ ; }
 
 // LOG-LIKELIHOOD FOR THE SSUR MODEL
 double SUR_Chain::getLogLikelihood() const{ return log_likelihood ; }
@@ -1317,6 +1322,23 @@ double SUR_Chain::logPBeta( )
 double SUR_Chain::logPBeta( const arma::mat&  externalBeta )
 {
     return logPBetaMask(  externalBeta , gammaMask , w );
+}
+
+// PREDICTIVE LIKELIHOODS
+arma::mat SUR_Chain::predLikelihood( )
+{
+    predLik.set_size(nObservations, nOutcomes);
+    arma::mat dataOutcome = data->cols( *outcomesIdx );
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+    for( unsigned int k=0; k<nOutcomes; ++k)
+        for( unsigned int j=0; j<nObservations; ++j )
+        {
+            predLik(j,k) = std::exp( Distributions::logPDFNormal( dataOutcome(j,k) , (XB(j,k)+rhoU(j,k)) , sigmaRho(k,k)) );
+        }
+    
+    return predLik;
 }
 
 // LOG LIKELIHOODS

@@ -73,6 +73,7 @@ HRR_Chain::HRR_Chain( std::shared_ptr<arma::mat> data_, unsigned int nObservatio
         updateGammaMask();
 
         logLikelihood();
+        //predLikelihood();
 
     }
 
@@ -488,6 +489,10 @@ arma::mat& HRR_Chain::getBeta() const
     return beta;
 }
 
+// PREDICTIVE-LIKELIHOOD OF INDIVIDUALS FOR THE SSUR MODEL
+arma::mat HRR_Chain::getPredLikelihood() { return predLik ; }
+void HRR_Chain::setPredLikelihood( arma::mat predLik_ ){ predLik = predLik_ ; }
+
 // LOG-LIKELIHOOD FOR THE HRR MODEL
 double HRR_Chain::getLogLikelihood() const{ return log_likelihood ; }
 void HRR_Chain::setLogLikelihood( double log_likelihood_ ){ log_likelihood = log_likelihood_ ; }
@@ -873,6 +878,83 @@ double HRR_Chain::logPW( double w_ )
 {
     return logPW( w_ , a_w , b_w );
 }
+
+// PREDICTIVE LIKELIHOOD of the HRR model is not implemented
+arma::mat HRR_Chain::predLikelihood( )
+{
+    arma::mat predLik = arma::zeros<arma::mat>(nObservations, nOutcomes);
+    arma::mat dataOutcome = data->cols( *outcomesIdx );
+    
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+    for( unsigned int k=0; k<nOutcomes; ++k)
+        for( unsigned int j=0; j<nObservations; ++j )
+        {
+            arma::uvec VS_IN_k = gammaMask( arma::find(  gammaMask.col(1) == k) , arma::zeros<arma::uvec>(1) );
+            arma::mat W_k;
+        
+            if( preComputedXtX )
+            {
+                switch ( beta_type )
+                {
+                    case Beta_Type::gprior :
+                    {
+                        W_k = (w*temperature)/(w+temperature) * arma::inv_sympd( XtX(VS_IN_k,VS_IN_k) );
+                        break;
+                    }
+                        
+                    case Beta_Type::independent :
+                    {
+                        W_k = arma::inv_sympd( XtX(VS_IN_k,VS_IN_k)/temperature + 1./w * arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
+                        break;
+                    }
+                        
+                    default:
+                        throw Bad_Beta_Type ( beta_type );
+                }
+            }
+            else
+            {
+                switch ( beta_type )
+                {
+                    case Beta_Type::gprior :
+                    {
+                        W_k = (w*temperature)/(w+temperature) * arma::inv_sympd( ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) );
+                        break;
+                    }
+                        
+                    case Beta_Type::independent :
+                    {
+                        W_k = arma::inv_sympd( ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) )/temperature + 1./w * arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
+                        break;
+                    }
+                        
+                    default:
+                        throw Bad_Beta_Type ( beta_type );
+                }
+            }
+        
+            arma::vec mu_k = W_k * ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->col( (*outcomesIdx)(k) ) ); // we divide by temp later
+        
+            double a_sigma_k = a_sigma + 0.5*(double)nObservations/temperature;
+            double b_sigma_k = b_sigma + 0.5* arma::as_scalar( (data->col( (*outcomesIdx)(k) ).t() * data->col( (*outcomesIdx)(k) )) - ( mu_k.t() * data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->col( (*outcomesIdx)(k) ) ) )/temperature;
+        
+            double sign, tmp;
+            arma::log_det(tmp, sign, W_k );
+            predLik(j,k) += 0.5*tmp;
+        
+            // arma::log_det(tmp, sign, w * arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
+            predLik(j,k) -= 0.5 * (double)VS_IN_k.n_elem * log(w);
+        
+            predLik(j,k) += a_sigma*log(b_sigma) - a_sigma_k*log(b_sigma_k);
+        
+            predLik(j,k) += std::lgamma(a_sigma_k) - std::lgamma(a_sigma);
+        }
+    
+    return predLik;
+}
+
 
 // LOG LIKELIHOODS
 double HRR_Chain::logLikelihood( )
