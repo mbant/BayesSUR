@@ -6,7 +6,14 @@ This is WIP repository for an R package interface to the [Bayesian SSUR](github.
 See `test.R` file for usage; see the package vignette `BayesSUR.pdf` (submitted to the Journal of Statistical Software) for more information.
 
 ## Update
-### New in the version `BayesSUR_0.1.16.tar.gz` (30 July 2019):
+### New in the version `BayesSUR_0.1.17.tar.gz` (13 August 2019):
+
+1) The function plotCPO() uses posterior predictive (i.e., conditional predictive ordinate) to check outliers.
+
+2) The function plotEstimator() can extract the CPOs matrix through argument `estimator="CPO"`.
+
+
+### The version `BayesSUR_0.1.16.tar.gz` (30 July 2019):
 
 1) The function plotEstimator() can choose to plot beta_hat and gamma_hat with the labeled axes rather than numbers only, though the arguments name.responses and name.predictors.
 
