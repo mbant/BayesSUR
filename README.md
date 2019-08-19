@@ -6,7 +6,13 @@ This is WIP repository for an R package interface to the [Bayesian SSUR](github.
 See `test.R` file for usage; see the package vignette `BayesSUR.pdf` (submitted to the Journal of Statistical Software) for more information.
 
 ## Update
-### New in the version `BayesSUR_0.1.17.tar.gz` (13 August 2019):
+### New in the version `BayesSUR_0.1.18.tar.gz` (20 August 2019):
+
+1) The function plotCPO() has been updated to check outliers overall response variables alternatively.
+
+2) The model prediction accuracy is measured by the function elpd() (expected log pointwise predictive density), which has two methods to estimate elpd, i.e., the LOO (leave-one-out cross- validation) and WAIC (widely applicable information criterion).
+
+### The version `BayesSUR_0.1.17.tar.gz` (13 August 2019):
 
 1) The function plotCPO() uses posterior predictive (i.e., conditional predictive ordinate) to check outliers.
 
@@ -32,4 +38,10 @@ Remaining issues:
 
 1) The runSUR() doesn’t print the running iterations information in the RGui of WinOS, but it works in the RStudio of WinOS, RStudio of MacOS and R Console of MacOS.
 
-### The version `BayesSUR_0.1.13.tar.gz` (30 June 2019)
+### The version `BayesSUR_0.1.13.tar.gz` (30 June 2019)# BayesSUR
+
+This is WIP repository for an R package interface to the [Bayesian SSUR](github.com/mbant/Bayesian_SSUR) C++ code.
+Please use only the C++ code for the moment.
+
+## R package instructions
+see `test.R` file for usage; vignette coming soon.
