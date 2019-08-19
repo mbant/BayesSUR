@@ -3,8 +3,8 @@
 #' @description
 #' Extract results from the object of fitted Bayesian Seemingly Unrelated Regression
 #' @name getEstimator
-#' @param object fitted "runSUR" model
-#' @param estimator the name of one estimator. Default is the latent indicator estimator "gamma". Other options "beta" and "Gy" correspond the posterior means of coefficient matrix, response graph and CPO, respectively 
+#' @param object fitted \code{runSUR} model
+#' @param estimator the name of one estimator. Default is the latent indicator estimator "\code{gamma}". Other options "\code{beta}" and "\code{Gy}" correspond the posterior means of coefficient matrix, response graph and CPO, respectively 
 #' @export
 getEstimator <- function(object, estimator="gamma"){
   

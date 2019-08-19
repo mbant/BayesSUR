@@ -2,6 +2,7 @@
 
 S3method(plot,BayesSUR)
 S3method(summary,BayesSUR)
+export(elpd)
 export(getEstimator)
 export(plotCPO)
 export(plotEstimator)

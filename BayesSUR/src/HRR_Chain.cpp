@@ -2111,15 +2111,15 @@ arma::umat HRR_Chain::createGammaMask( const arma::umat& gamma )
     {
         for(unsigned int k=0 ; k<nOutcomes ; ++k)  //add gammas for the fixed variables
         {
-            mask(k,0) = j; mask(k,1) = k;
+            mask(j*nOutcomes+k,0) = j; mask(j*nOutcomes+k,1) = k;
         }
     }
-
+    
     for(unsigned int k=0 ; k<nOutcomes ; ++k)  //add the other gammas
     {
         arma::uvec tmpUVec = arma::find(gamma.col(k) != 0);
         unsigned int tmpIdx = mask.n_rows;
-
+        
         if( tmpUVec.n_elem > 0 )
         {
             mask.insert_rows( tmpIdx , arma::zeros<arma::umat>( tmpUVec.n_elem , 2 ));
@@ -2143,15 +2143,15 @@ void HRR_Chain::updateGammaMask()
     {
         for(unsigned int k=0 ; k<nOutcomes ; ++k)  //add gammas for the fixed variables
         {
-            gammaMask(k,0) = j; gammaMask(k,1) = k;
+            gammaMask(j*nOutcomes+k,0) = j; gammaMask(j*nOutcomes+k,1) = k;
         }
     }
-
+    
     for(unsigned int k=0 ; k<nOutcomes ; ++k)   //add the other gammas
     {
         arma::uvec tmpUVec = arma::find(gamma.col(k) != 0);
         unsigned int tmpIdx = gammaMask.n_rows;
-
+        
         if( tmpUVec.n_elem > 0 )
         {
             gammaMask.insert_rows( tmpIdx , arma::zeros<arma::umat>( tmpUVec.n_elem , 2 ));

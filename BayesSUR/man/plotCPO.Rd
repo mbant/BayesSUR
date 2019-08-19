@@ -2,19 +2,17 @@
 % Please edit documentation in R/plotCPO.R
 \name{plotCPO}
 \alias{plotCPO}
-\title{plotCPO}
-\usage{
-plotCPO(object, outlier.mark = TRUE, outlier.thresh = 0.01,
-  scale.CPO = TRUE, x.loc = FALSE, axis.label = NULL, las = 0,
-  cex.axis = 1, mark.pos = c(0, -0.01), mark.color = 2,
-  mark.cex = 0.8)
-}
+\title{Conditional Predictive Ordinate}
 \arguments{
-\item{object}{the object from the runSUR}
+\item{object}{the object from the \code{runSUR}}
 
-\item{outlier.mark}{mark the outliers with the response names. The default is \code{FALSE}}
+\item{xlab}{a title for the x axis}
+
+\item{sum.responses}{compute CPOs aggreated in all response variables}
 
 \item{outlier.thresh}{threshold for the CPOs. The default is 0.01.}
+
+\item{outlier.mark}{mark the outliers with the response names. The default is \code{FALSE}}
 
 \item{scale.CPO}{scaled CPOs which is divided by their maximum. The default is \code{TRUE}}
 
@@ -22,23 +20,24 @@ plotCPO(object, outlier.mark = TRUE, outlier.thresh = 0.01,
 
 \item{axis.label}{a vector of predictor names which are shown in CPO plot. The default is \code{NULL} only showing the indices. The value \code{"auto"} show the predictor names from the orginal data.}
 
+\item{mark.pos}{the location of the marked text relative to the point}
+
 \item{las}{graphical parameter of plot.default}
 
 \item{cex.axis}{graphical parameter of plot.default}
 
-\item{mark.pos}{the location of the marked text relative to the point}
-
 \item{mark.color}{the color of the marked text. The default color is red.}
 
 \item{mark.cex}{the fontsize of the marked text. The default fontsize is 0.8.}
-
-\item{xlab}{a title for the x axis}
-
-\item{ylab}{a title for the y axis}
 }
 \description{
 Plot the conditional predictive ordinate (CPO) which is the leave-one-out cross-validation predictive density. The CPO is a handy posterior predictive check because it may be used to identify outliers, influential observations, and for hypothesis testing across different non-nested models.
 }
 \details{
 BayesSUR -- Bayesian Seemingly Unrelated Regression
+}
+\references{
+Statisticat, LLC (2013). \emph{Bayesian Inference.} Farmington, CT: Statisticat, LLC.
+
+Vehtari, A., Gelman, A., Gabry, J. (2017). \emph{Practical Bayesian model evaluation using leave-one-out cross-validation and WAIC.} Statistics and Computing, 27(5): 1413–1432.
 }

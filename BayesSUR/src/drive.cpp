@@ -129,7 +129,8 @@ int drive_SUR( Chain_Data& chainData )
 	arma::vec tmpVec; // temporary to store the pi parameter vector
 	arma::vec pi_out;
 	arma::vec hotspot_tail_prob_out;
-    arma::mat predLik_out;
+    arma::mat cpo_out, predLik;
+    arma::mat pwaic_out, pwaic_frac_sum;
 
 	if( chainData.burnin == 0 )
 	{	
@@ -239,10 +240,11 @@ int drive_SUR( Chain_Data& chainData )
     
     if ( chainData.output_CPO )
     {
-        predLik_out = 1./( sampler[0] -> getPredLikelihood() );
-        CPOOutFile.open( outFilePrefix+"CPO_out.txt" , std::ios_base::trunc);
-        CPOOutFile << (arma::conv_to<arma::mat>::from(predLik_out)) << std::flush;
-        CPOOutFile.close();
+        predLik =  sampler[0] -> getPredLikelihood() ;
+        cpo_out = 1./predLik;
+        
+        pwaic_out = arma::square( arma::log(predLik) );
+        pwaic_frac_sum = arma::log(predLik);
     }
     
 	// ########
@@ -294,7 +296,13 @@ int drive_SUR( Chain_Data& chainData )
 			}
             
             if( chainData.output_CPO )
-                predLik_out += 1./ (sampler[0] -> getPredLikelihood());
+            {
+                predLik = sampler[0] -> getPredLikelihood();
+                cpo_out += 1./predLik;
+                
+                pwaic_out += arma::square( arma::log(predLik) );
+                pwaic_frac_sum += arma::log(predLik);
+            }
 
 			// Nothing to update for model size
 		}
@@ -361,13 +369,6 @@ int drive_SUR( Chain_Data& chainData )
 					ModelSizeOutFile << sampler[0]->getModelSize() << " " << std::flush;
 					ModelSizeOutFile << endl << std::flush;
 				}*/
-                
-                if ( chainData.output_CPO )
-                {
-                    CPOOutFile.open( outFilePrefix+"CPO_out.txt" , std::ios_base::trunc);
-                    CPOOutFile << 1./( predLik_out/(i+1.0-chainData.burnin) ) << std::flush;
-                    CPOOutFile.close();
-                }
 
 				#ifndef CCODE
 				Rcpp::checkUserInterrupt(); // this checks for interrupts from R
@@ -455,8 +456,11 @@ int drive_SUR( Chain_Data& chainData )
     
     if ( chainData.output_CPO )
     {
-        predLik_out = 1./( predLik_out/(double)(chainData.nIter-chainData.burnin+1) ) ;
-        predLik_out.save( outFilePrefix+"CPO_out.txt",arma::raw_ascii);
+        cpo_out = 1./( cpo_out/(double)(chainData.nIter-chainData.burnin+1) );
+        cpo_out.save(outFilePrefix+"CPO_out.txt",arma::raw_ascii);
+        
+        pwaic_out = ( pwaic_out - arma::square(pwaic_frac_sum)/(double)(chainData.nIter-chainData.burnin+1) )/(double)(chainData.nIter-chainData.burnin);
+        pwaic_out.save(outFilePrefix+"pWAIC_out.txt",arma::raw_ascii);
     }
 	// -----
 
@@ -585,7 +589,8 @@ int drive_HRR( Chain_Data& chainData )
 	arma::vec pi_out;
 	arma::vec hotspot_tail_prob_out;
     
-    arma::mat predLik_out;
+    arma::mat cpo_out, predLik;
+    arma::mat pwaic_out, pwaic_frac_sum;
 
 	if( chainData.burnin == 0 )
 	{
@@ -657,10 +662,10 @@ int drive_HRR( Chain_Data& chainData )
     
     if ( chainData.output_CPO )
     {
-        predLik_out = 1./( sampler[0] -> getPredLikelihood() );
-        CPOOutFile.open( outFilePrefix+"CPO_out.txt" , std::ios_base::trunc);
-        CPOOutFile << (arma::conv_to<arma::mat>::from(predLik_out)) << std::flush;
-        CPOOutFile.close();
+        predLik =  sampler[0] -> getPredLikelihood() ;
+        cpo_out = 1./predLik;
+        pwaic_out = arma::square( arma::log(predLik) );
+        pwaic_frac_sum = arma::log(predLik);
     }
     
     logPOutFile <<     sampler[0] -> getLogPO() <<  " ";
@@ -721,7 +726,13 @@ int drive_HRR( Chain_Data& chainData )
 			}
             
             if( chainData.output_CPO )
-                predLik_out += 1./ (sampler[0] -> getPredLikelihood());
+            {
+                predLik = sampler[0] -> getPredLikelihood();
+                cpo_out += 1./predLik;
+                
+                pwaic_out += arma::square( arma::log(predLik) );
+                pwaic_frac_sum += arma::log(predLik);
+            }
 
 			// Nothing to update for model size
 		}
@@ -775,13 +786,6 @@ int drive_HRR( Chain_Data& chainData )
 					ModelSizeOutFile << sampler[0]->getModelSize() << " " << std::flush;
 					ModelSizeOutFile << endl << std::flush;
 				}
-                
-                if ( chainData.output_CPO )
-                {
-                    CPOOutFile.open( outFilePrefix+"CPO_out.txt" , std::ios_base::trunc);
-                    CPOOutFile << 1./( (arma::conv_to<arma::mat>::from(predLik_out))/(double)(i+1.0-chainData.burnin) ) << std::flush;
-                    CPOOutFile.close();
-                }
 
 				#ifndef CCODE
 				Rcpp::checkUserInterrupt(); // this checks for interrupts from R ... or does it?
@@ -830,8 +834,11 @@ int drive_HRR( Chain_Data& chainData )
     
     if ( chainData.output_CPO )
     {
-        predLik_out = 1./( predLik_out/(double)(chainData.nIter-chainData.burnin+1) ) ;
-        predLik_out.save( outFilePrefix+"CPO_out.txt",arma::raw_ascii);
+        cpo_out = 1./( cpo_out/(double)(chainData.nIter-chainData.burnin+1) );
+        cpo_out.save(outFilePrefix+"CPO_out.txt",arma::raw_ascii);
+        
+        pwaic_out = ( pwaic_out - arma::square(pwaic_frac_sum)/(double)(chainData.nIter-chainData.burnin+1) )/(double)(chainData.nIter-chainData.burnin);
+        pwaic_out.save(outFilePrefix+"pWAIC_out.txt",arma::raw_ascii);
     }
 
 	// -----

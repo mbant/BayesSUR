@@ -42,7 +42,7 @@ if the 'data' argument is not provided, these needs to be matrices containing th
 
 \item{standardize.response}{Standardization for the response variables. Default is standardize.response=TRUE.}
 
-\item{hyperpar}{a list of named hypeparameters to use instead of the default values; valid names are mrf_d, mrf_e, a_sigma, b_sigma, a_tau, b_tau, nu, a_eta, b_eta, a_o, b_o, a_pi, b_pi, a_w and b_w. See the vignette below for more information.}
+\item{hyperpar}{a list of named hypeparameters to use instead of the default values; valid names are mrf_d, mrf_e, a_sigma, b_sigma, a_tau, b_tau, nu, a_eta, b_eta, a_o, b_o, a_pi, b_pi, a_w and b_w. See the vignette for more information.}
 
 \item{tmpFolder}{the path to a temporary folder where intermediate data files are stored (will be erased at the end of the chain) default to local tmpFolder}
 
@@ -52,11 +52,18 @@ if the 'data' argument is not provided, these needs to be matrices containing th
 An object with list "\code{runSUR}":
 \item{status}{the running status}
 \item{input}{a list of all input parameters by the user}
-\item{output}{a list of the all output filenames. The file "\code{logP_out.txt}" contains each row for the \eqn{t*1000}-th iteration's log-likelihoods of parameters, i.e., Tau, Eta, JunctionTree, SigmaRho, O, Pi, Gamma, W, Beta and data marginal log-likelihood.
-The file "\code{gamma_out.txt}" is the posterior mean of the latent indicator matrix. The file "\code{pi_out.txt}" is the posterior mean of the predictor effects (prospensity) by decomposing the probability of the latent indicator. 
-The file "\code{hotspot_tail_p_out.txt}" is the posterior mean of the hotspot tail probability. The file "\code{beta_out.txt}" is the posterior mean of the coefficients matrix. The file "\code{G_out.txt}" is the posterior mean of
-the response graph. The file "\code{sigmaRho_out.txt}" is the posterior mean of the transformed parameters. The file "\code{model_size.txt}" contains each row for the\eqn{t*1000}-th iteration's model sizes of the multiple response variables.
-The file "\code{CPO_out.txt}" is the (scaled) conditional predictive ordinates. The file "\code{Y_out.txt}" is the responses dataset. The file "\code{X_out.txt}" is the predictors dataset. }
+\item{output}{a list of the all output filenames: The file "\code{logP_out.txt}"}
+\itemize{"\code{logP_out.txt}"}{contains each row for the \eqn{t*1000}-th iteration's log-likelihoods of parameters, i.e., Tau, Eta, JunctionTree, SigmaRho, O, Pi, Gamma, W, Beta and data marginal log-likelihood.}
+\itemize{"\code{gamma_out.txt}"}{posterior mean of the latent indicator matrix.} 
+\itemize{"\code{pi_out.txt}"}{posterior mean of the predictor effects (prospensity) by decomposing the probability of the latent indicator.} 
+\itemize{"\code{hotspot_tail_p_out.txt}"}{posterior mean of the hotspot tail probability.} 
+\itemize{"\code{beta_out.txt}"}{posterior mean of the coefficients matrix.}
+\itemize{"\code{G_out.txt}"}{posterior mean of the response graph.} 
+\itemize{"\code{sigmaRho_out.txt}"}{posterior mean of the transformed parameters.} 
+\itemize{"\code{model_size.txt}"}{contains each row for the\eqn{t*1000}-th iteration's model sizes of the multiple response variables.}
+\itemize{"\code{CPO_out.txt}"}{the (scaled) conditional predictive ordinates.} 
+\itemize{"\code{Y_out.txt}"}{responses dataset.} 
+\itemize{"\code{X_out.txt}"}{predictors dataset.}
 }
 \description{
 Run a SUR Bayesian sampler
@@ -84,4 +91,7 @@ plotEstimator(fit);
 
 }
 
+}
+\references{
+Banterle M, Bottolo L, Richardson S, Ala-Korpela M, Jarvelin MR, Lewin A (2018). \emph{Sparse variable and covariance selection for high-dimensional seemingly unrelated Bayesian regres- sion.} bioRxiv: 467019.
 }

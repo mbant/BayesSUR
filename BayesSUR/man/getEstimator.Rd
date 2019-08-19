@@ -7,9 +7,9 @@
 getEstimator(object, estimator = "gamma")
 }
 \arguments{
-\item{object}{fitted "runSUR" model}
+\item{object}{fitted \code{runSUR} model}
 
-\item{estimator}{the name of one estimator. Default is the latent indicator estimator "gamma". Other options "beta" and "Gy" correspond the posterior means of coefficient matrix, response graph and CPO, respectively}
+\item{estimator}{the name of one estimator. Default is the latent indicator estimator "\code{gamma}". Other options "\code{beta}" and "\code{Gy}" correspond the posterior means of coefficient matrix, response graph and CPO, respectively}
 }
 \description{
 Extract results from the object of fitted Bayesian Seemingly Unrelated Regression
