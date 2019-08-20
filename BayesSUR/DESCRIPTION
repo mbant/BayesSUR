@@ -18,7 +18,7 @@ Imports: Rcpp, utils, RcppArmadillo (>= 0.9.000), BH, igraph, Matrix,
 Suggests: xml2, knitr, rmarkdown, R.rsp
 LazyData: true
 NeedsCompilation: yes
-Packaged: 2019-08-19 23:31:04 UTC; zhiz
+Packaged: 2019-08-20 08:16:07 UTC; zhiz
 Author: Marco Banterle [aut],
   Zhi Zhao [aut, cre]
 Maintainer: Zhi Zhao <zhi.zhao@medisin.uio.no>

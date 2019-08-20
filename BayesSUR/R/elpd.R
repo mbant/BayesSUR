@@ -15,7 +15,7 @@ elpd <- function(object, method="LOO"){
     elpd <- sum(log(read.table(object$output$CPO)))
     names(elpd) <- "elpd.loo"
   }else if(toupper(method) == "WAIC"){
-    elpd <- sum(log(1/read.table(object$output$CPO))) - sum(read.table(object$output$pWAIC))
+    elpd <- sum(read.table(object$output$WAIC))
     names(elpd) <- "elpd.waic"
   }else{
     stop("Please give the correct method name!")

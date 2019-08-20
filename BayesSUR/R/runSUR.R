@@ -366,7 +366,7 @@ runSUR = function(data=NULL, Y, X, X_0=NULL,outFilePath="",
   
   if ( output_CPO ){
     ret$output["CPO"] = paste(sep="", dataString , "_",  methodString , "_CPO_out.txt")
-    ret$output["pWAIC"] = paste(sep="", dataString , "_",  methodString , "_pWAIC_out.txt")
+    ret$output["WAIC"] = paste(sep="", dataString , "_",  methodString , "_WAIC_out.txt")
   }
   
   if ( output_Y )
