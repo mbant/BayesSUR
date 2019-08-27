@@ -6,7 +6,12 @@ This is WIP repository for an R package interface to the [Bayesian SSUR](github.
 See `test.R` file for usage; see the package vignette `BayesSUR.pdf` (submitted to the Journal of Statistical Software) for more information.
 
 ## Update
-### New in the version `BayesSUR_0.1.18.tar.gz` (20 August 2019):
+
+### New in the version `BayesSUR_0.1.19.tar.gz` (27 August 2019):
+
+Fixing the warnings from the `devtools::check("BayesSUR")`......
+
+### The version `BayesSUR_0.1.18.tar.gz` (20 August 2019):
 
 1) The function plotCPO() has been updated to check outliers overall response variables alternatively.
 
@@ -23,6 +28,7 @@ See `test.R` file for usage; see the package vignette `BayesSUR.pdf` (submitted 
 ### The version `BayesSUR_0.1.16.tar.gz` (30 July 2019):
 
 1) The function plotEstimator() can choose to plot beta_hat and gamma_hat with the labeled axes rather than numbers only, though the arguments name.responses and name.predictors.
+
 
 2) The function plotEstimator() prints the legend of gamma_hat with fixed bar range [0,1].
 
