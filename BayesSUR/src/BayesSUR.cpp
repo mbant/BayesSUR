@@ -17,6 +17,8 @@
 
 #include "drive.h"
 
+#include <Rcpp.h>
+
 // [[Rcpp::export(rng=false)]]
 int BayesSUR_internal(const std::string& dataFile, const std::string& mrfGFile, const std::string& blockFile, const std::string& structureGraphFile, const std::string& hyperParFile, const std::string& outFilePath,
                     unsigned int nIter=10, unsigned int burnin=0, unsigned int nChains=1,
@@ -37,7 +39,7 @@ int BayesSUR_internal(const std::string& dataFile, const std::string& mrfGFile, 
   }
   catch(const std::exception& e)
   {
-    std::cerr << e.what() << '\n';
+    Rcpp::Rcout << e.what() << '\n';
   }
   
   return status;

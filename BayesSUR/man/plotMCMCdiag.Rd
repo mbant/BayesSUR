@@ -4,12 +4,14 @@
 \alias{plotMCMCdiag}
 \title{getEstimator}
 \usage{
-plotMCMCdiag(object, nbloc = 3)
+plotMCMCdiag(object, nbloc = 3, ...)
 }
 \arguments{
 \item{object}{fitted "runSUR" model}
 
 \item{nbloc}{number of splits for the last half iterations after substracting burn-in length}
+
+\item{...}{Other parameters in the function \code{plot.default.R} file for the penals of the log-likelihood and model size}
 }
 \description{
 Diagnose the convergence of the MCMC iterations

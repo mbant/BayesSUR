@@ -2,11 +2,13 @@
 #' @title summary
 #' @description
 #' Summarize the results from fitted model
+#' @importFrom Matrix Matrix
 #' @name summary.BayesSUR
 #' @param object fitted "runSUR" model
 #' @param PmaxPredictor cutpoint for thresholding the estimated latent indicator variable. Default is 0.5
+#' @param ... Other parameters in the function \code{summary.default.R} file
 #' @export
-summary.BayesSUR <- function(object, PmaxPredictor=0.5){
+summary.BayesSUR <- function(object, PmaxPredictor=0.5, ...){
   
   ans <- list(status=object$status)
   

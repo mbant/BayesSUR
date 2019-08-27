@@ -6,7 +6,7 @@
 \usage{
 plotResponseGraph(object, PmaxResponse = 0.5, PtrueResponse = NULL,
   name.responses = NA, edge.weight = FALSE, label.color = "black",
-  node.size = 30, node.color = "dodgerblue")
+  node.size = 30, node.color = "dodgerblue", ...)
 }
 \arguments{
 \item{object}{fitted "runSUR" model}
@@ -24,6 +24,8 @@ plotResponseGraph(object, PmaxResponse = 0.5, PtrueResponse = NULL,
 \item{node.size}{node size. Default is 30}
 
 \item{node.color}{node color. Default is "dodgerblue}
+
+\item{...}{Other parameters in the function \code{plot.default.R} file}
 }
 \description{
 Show the relationship between responses

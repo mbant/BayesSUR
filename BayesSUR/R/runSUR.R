@@ -2,6 +2,7 @@
 #' @title runSUR
 #' @description
 #' Run a SUR Bayesian sampler
+#' @importFrom utils head tail installed.packages
 #' @name runSUR
 #' @param data either a matrix/dataframe or the path to (a plain text) data file with variables on the columns and observations on the rows 
 #' @param Y,X,X_0 vectors of indexes (with respect to the data matrix) for the outcomes, the covariates to select and the fixed covariates respectively if data is either a path to a file or a matrix;
@@ -19,7 +20,16 @@
 #' @param standardize Logical flag for X variable standardization. Default is standardize=TRUE. The coefficients are returned on the standardized scale.
 #' @param standardize.response Standardization for the response variables. Default is standardize.response=TRUE.
 #' @param hyperpar a list of named hypeparameters to use instead of the default values; valid names are mrf_d, mrf_e, a_sigma, b_sigma, a_tau, b_tau, nu, a_eta, b_eta, a_o, b_o, a_pi, b_pi, a_w and b_w. See the vignette for more information.
-#' @param output_* allow ( TRUE ) or suppress ( FALSE ) the outut for *; possible outputs are gamma, G, beta, sigmaRho, pi, tail (hotspot tail probability), model_size, CPO. See the return value below for more information.
+#' @param output_gamma allow ( \code{TRUE} ) or suppress ( \code{FALSE} ) the output for  gamma. See the return value below for more information.
+#' @param output_beta allow ( \code{TRUE} ) or suppress ( \code{FALSE} ) the output for beta. See the return value below for more information.
+#' @param output_G allow ( \code{TRUE} ) or suppress ( \code{FALSE} ) the output for G. See the return value below for more information.
+#' @param output_sigmaRho allow ( \code{TRUE} ) or suppress ( \code{FALSE} ) the output for sigmaRho. See the return value below for more information.
+#' @param output_pi allow ( \code{TRUE} ) or suppress ( \code{FALSE} ) the output for pi. See the return value below for more information.
+#' @param output_tail allow ( \code{TRUE} ) or suppress ( \code{FALSE} ) the output for tail (hotspot tail probability). See the return value below for more information.
+#' @param output_model_size allow ( \code{TRUE} ) or suppress ( \code{FALSE} ) the output for model_size. See the return value below for more information.
+#' @param output_CPO allow ( \code{TRUE} ) or suppress ( \code{FALSE} ) the output for *; possible outputs are gamma, G, beta, sigmaRho, pi, tail (hotspot tail probability), model_size, CPO. See the return value below for more information.
+#' @param output_Y allow ( \code{TRUE} ) or suppress ( \code{FALSE} ) the output for responses dataset Y.
+#' @param output_X allow ( \code{TRUE} ) or suppress ( \code{FALSE} ) the output for predictors dataset X.
 #' @param tmpFolder the path to a temporary folder where intermediate data files are stored (will be erased at the end of the chain) default to local tmpFolder
 #'
 #' @return An object with list "\code{runSUR}":
@@ -182,7 +192,7 @@ runSUR = function(data=NULL, Y, X, X_0=NULL,outFilePath="",
 
     ## at this point data contains the path to a file that exists
     # try and read one line to check dimensions
-    dataHeader = read.table(data,header = FALSE,nrow = 1)
+    dataHeader = read.table(data,header = FALSE,nrows = 1)
     nVariables = ncol(dataHeader)
 
     ## Y, X (and X_0) should be some fixed variables that needs to be included in the model

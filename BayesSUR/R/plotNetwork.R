@@ -2,34 +2,42 @@
 #' @title plotNetwork
 #' @description
 #' Network representation of the associations between responses and features
+#' @importFrom graphics text 
+#' @importFrom grDevices gray
+#' @importFrom igraph V E gsize layout_in_circle plot.igraph degree layout.fruchterman.reingold delete.vertices graph.adjacency
 #' @name plotNetwork
-#' @param object fitted "runSUR" model
-#' @param includeResponse A vector of the response names which are shown in the network. 
-#' @param excludeResponse A vector of the response names which are not shown in the network. 
-#' @param includePredictor A vector of the predictor names which are shown in the network. 
-#' @param excludePredictor A vector of the predictor names which are not shown in the network. 
-#' @param MatrixGamma A matrix or dataframe of the latent indicator variable. Default is "NULL" and to extrate it from object of class inheriting from "runSUR"
+#' @param object fitted \code{runSUR} model
+#' @param includeResponse A vector of the response names which are shown in the network
+#' @param excludeResponse A vector of the response names which are not shown in the network
+#' @param includePredictor A vector of the predictor names which are shown in the network
+#' @param excludePredictor A vector of the predictor names which are not shown in the network
+#' @param MatrixGamma A matrix or dataframe of the latent indicator variable. Default is \code{NULL} and to extrate it from object of class inheriting from \code{runSUR}
 #' @param PmaxPredictor cutpoint for thresholding the estimated latent indicator variable. Default is 0.5
 #' @param PmaxResponse cutpoint for thresholding the learning structure matrix of multiple response variables. Default is 0.5
 #' @param nodesizePredictor node size of Predictors in the output graph. Default is 15
-#' @param nodesizePredictor node size of response variables in the output graph. Default is 25
+#' @param nodesizeResponse node size of response variables in the output graph. Default is 25
 #' @param no.isolates remove isolated nodes from responses graph and Full graph, may get problem if there are also isolated Predictors
 #' @param lineup A ratio of the heights between responses' area and Predictors'
+#' @param gray.alpha the opacity. The default is 0.6
 #' @param edgewith.response the edge width betwen response nodes
 #' @param edgewith.predictor the edge width betwen the predictor and response node
-#' @param edge.weight draw weighted edges after thresholding at 0.5. The defaul value "FALSE" is not to draw weigthed edges
+#' @param edge.weight draw weighted edges after thresholding at 0.5. The defaul value \code{FALSE} is not to draw weigthed edges
 #' @param label.predictor A vector of the names of predictors
 #' @param label.response A vector of the names of response variables
 #' @param color.predictor color of the predictor nodes
-#' @param color.predictor color of the reponse nodes
+#' @param color.response color of the reponse nodes
 #' @param name.predictors a subtitle for the predictors
 #' @param name.responses a subtitle for the responses
 #' @param vertex.frame.color The color of the frame of the vertices. If you don't want vertices to have a frame, supply NA as the color name
+#' @param layoutInCircle Place vertices on a circle, in the order of their vertex ids. The default is \code{FALSE}
+#' @param ... Other parameters in the function \code{plot.default.R} file
 #' @export 
 plotNetwork <- function(object, includeResponse=NULL, excludeResponse=NULL, includePredictor=NULL, excludePredictor=NULL, 
                         MatrixGamma=NULL, PmaxPredictor=0.5, PmaxResponse=0.5, nodesizePredictor=5, nodesizeResponse=25, no.isolates=FALSE,
                         lineup=1, gray.alpha=0.6, edgewith.response=5, edgewith.predictor=2, edge.weight=FALSE, label.predictor=NULL,
-                        label.response=NULL, color.predictor=NULL,color.response=NULL, name.predictors=NULL,name.responses=NULL, vertex.frame.color=NA,layoutInCircle=FALSE){
+                        label.response=NULL, color.predictor=NULL,color.response=NULL, name.predictors=NULL,name.responses=NULL, vertex.frame.color=NA,layoutInCircle=FALSE, ...){
+  
+  devAskNewPage(FALSE)
   
   object$output[-1] <- paste(object$output$outFilePath,object$output[-1],sep="")
   
@@ -73,13 +81,13 @@ plotNetwork <- function(object, includeResponse=NULL, excludeResponse=NULL, incl
   plotSEMgraph(Gy_thresh, t(gamma_thresh), nodesizeSNP=nodesizePredictor, nodesizeMET=nodesizeResponse, no.isolates=no.isolates, 
                lineup=lineup, gray.alpha=gray.alpha, edgewith.response=edgewith.response, edgewith.predictor=edgewith.predictor,edge.weight=edge.weight,
                label.predictor=label.predictor,label.response=label.response, color.predictor=color.predictor,color.response=color.response, 
-               name.predictors=name.predictors,name.responses=name.responses, vertex.frame.color=vertex.frame.color,layoutInCircle=layoutInCircle)
+               name.predictors=name.predictors,name.responses=name.responses, vertex.frame.color=vertex.frame.color,layoutInCircle=layoutInCircle,...)
 
 }
 plotSEMgraph <- function(ADJmatrix,GAMmatrix,nodesizeSNP=2,nodesizeMET=25,no.isolates=FALSE,
                          lineup=1,gray.alpha=0.6,edgewith.response=5,edgewith.predictor=2,
                          label.predictor=NULL,label.response=NULL, color.predictor=NULL,color.response=NULL, 
-                         name.predictors=NULL,name.responses=NULL,edge.weight=FALSE, vertex.frame.color=NA,layoutInCircle=FALSE){
+                         name.predictors=NULL,name.responses=NULL,edge.weight=FALSE, vertex.frame.color=NA,layoutInCircle=FALSE,...){
   
   # ADJmatrix must be a square qxq adjacency matrix (or data frame)
   qq <- dim(ADJmatrix)[1]
@@ -106,8 +114,8 @@ plotSEMgraph <- function(ADJmatrix,GAMmatrix,nodesizeSNP=2,nodesizeMET=25,no.iso
   #print(semgraph[201:206,1:6])
   
   # igraph objects
-  graphADJ <- graph.adjacency(as.matrix(ADJmatrix),weight=TRUE,diag=FALSE,mode="undirected")
-  graphSEM <- graph.adjacency(as.matrix(semgraph),weight=TRUE,diag=FALSE,mode="directed")
+  graphADJ <- graph.adjacency(as.matrix(ADJmatrix),weighted=TRUE,diag=FALSE,mode="undirected")
+  graphSEM <- graph.adjacency(as.matrix(semgraph),weighted=TRUE,diag=FALSE,mode="directed")
   
   # don't plot isolated nodes?
   if(no.isolates){
@@ -168,7 +176,7 @@ plotSEMgraph <- function(ADJmatrix,GAMmatrix,nodesizeSNP=2,nodesizeMET=25,no.iso
   }
   
   plot.igraph(graphSEM,edge.arrow.size=0.5, edge.width=edge.width, vertex.frame.color=vertex.frame.color,
-       edge.color=c(rep(gray(0),2*n.edgeADJ),rep(gray(0.7, alpha=gray.alpha),2*n.edgeGAM)),layout=layoutSEM)
+       edge.color=c(rep(gray(0),2*n.edgeADJ),rep(gray(0.7, alpha=gray.alpha),2*n.edgeGAM)),layout=layoutSEM,...)
   
   if(!is.null(name.predictors)) text(-1,-1.3,name.predictors,cex=1.2)
   if(!is.null(name.responses)) text(0.4,-1.3,name.responses,cex=1.2)

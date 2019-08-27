@@ -42,11 +42,29 @@ if the 'data' argument is not provided, these needs to be matrices containing th
 
 \item{standardize.response}{Standardization for the response variables. Default is standardize.response=TRUE.}
 
+\item{output_gamma}{allow ( \code{TRUE} ) or suppress ( \code{FALSE} ) the output for  gamma. See the return value below for more information.}
+
+\item{output_beta}{allow ( \code{TRUE} ) or suppress ( \code{FALSE} ) the output for beta. See the return value below for more information.}
+
+\item{output_G}{allow ( \code{TRUE} ) or suppress ( \code{FALSE} ) the output for G. See the return value below for more information.}
+
+\item{output_sigmaRho}{allow ( \code{TRUE} ) or suppress ( \code{FALSE} ) the output for sigmaRho. See the return value below for more information.}
+
+\item{output_pi}{allow ( \code{TRUE} ) or suppress ( \code{FALSE} ) the output for pi. See the return value below for more information.}
+
+\item{output_tail}{allow ( \code{TRUE} ) or suppress ( \code{FALSE} ) the output for tail (hotspot tail probability). See the return value below for more information.}
+
+\item{output_model_size}{allow ( \code{TRUE} ) or suppress ( \code{FALSE} ) the output for model_size. See the return value below for more information.}
+
+\item{output_CPO}{allow ( \code{TRUE} ) or suppress ( \code{FALSE} ) the output for *; possible outputs are gamma, G, beta, sigmaRho, pi, tail (hotspot tail probability), model_size, CPO. See the return value below for more information.}
+
+\item{output_Y}{allow ( \code{TRUE} ) or suppress ( \code{FALSE} ) the output for responses dataset Y.}
+
+\item{output_X}{allow ( \code{TRUE} ) or suppress ( \code{FALSE} ) the output for predictors dataset X.}
+
 \item{hyperpar}{a list of named hypeparameters to use instead of the default values; valid names are mrf_d, mrf_e, a_sigma, b_sigma, a_tau, b_tau, nu, a_eta, b_eta, a_o, b_o, a_pi, b_pi, a_w and b_w. See the vignette for more information.}
 
 \item{tmpFolder}{the path to a temporary folder where intermediate data files are stored (will be erased at the end of the chain) default to local tmpFolder}
-
-\item{output_*}{allow ( TRUE ) or suppress ( FALSE ) the outut for *; possible outputs are gamma, G, beta, sigmaRho, pi, tail (hotspot tail probability), model_size, CPO. See the return value below for more information.}
 }
 \value{
 An object with list "\code{runSUR}":

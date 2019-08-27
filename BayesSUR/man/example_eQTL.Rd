@@ -33,10 +33,8 @@ data(example_eQTL)
 
 rm(list=ls())
 
-library(readr)
-library(MCMCpack)
-library(mvtnorm)
 library(BDgraph)
+library(gRbase)
 
 ########################### Problem Dimensions
 n = 100
@@ -49,7 +47,7 @@ s = 10
 # but as the NFBC66 dataset is confidential we'll use scrime to sample similar data
 library(scrime)
 
-x = simulateSNPs(c(n,10), p, c(3, 2),prop.explain = c(0.9, 0.95))$data[1:n,]
+x = scrime::simulateSNPs(c(n,10), p, c(3, 2),prop.explain = c(0.9, 0.95))$data[1:n,]
 x = cbind(rep(1,n),x)
 
 ####################################################################
@@ -168,19 +166,12 @@ gamma[36:40,c(3:5,9:10)] =1
 gamma[46:50,] = 1
 
 combn11 = combn(rep((6:9-1)*p,each=length(6:10-1)) + rep(6:10-1,times=length(6:9)), 2)
-# combn12 = combn(rep((6:9-1)*p,each=length(26:30-1)) + rep(26:30-1,times=length(6:9)), 2)
-# combn13 = combn(rep((6:9-1)*p,each=length(46:50-1)) + rep(46:50-1,times=length(6:9)), 2)
-# combn21 = combn(rep((14:15-1)*p,each=length(16:20-1)) + rep(16:20-1,times=length(14:15)), 2)
-# combn22 = combn(rep((14:15-1)*p,each=length(26:30-1)) + rep(26:30-1,times=length(14:15)), 2)
-# combn23 = combn(rep((14:15-1)*p,each=length(46:50-1)) + rep(46:50-1,times=length(14:15)), 2)
 combn31 = combn(rep((4:8-1)*p,each=length(26:30-1)) + rep(26:30-1,times=length(4:8)), 2)
 combn32 = combn(rep((4:8-1)*p,each=length(46:50-1)) + rep(46:50-1,times=length(4:8)), 2)
 combn41 = combn(rep((3:5-1)*p,each=length(36:40-1)) + rep(36:40-1,times=length(3:5)), 2)
 combn42 = combn(rep((3:5-1)*p,each=length(46:50-1)) + rep(46:50-1,times=length(3:5)), 2)
 combn51 = combn(rep((9:10-1)*p,each=length(36:40-1)) + rep(36:40-1,times=length(9:10)), 2)
 combn52 = combn(rep((9:10-1)*p,each=length(46:50-1)) + rep(46:50-1,times=length(9:10)), 2)
-# combn61 = combn(rep((1:2-1)*p,each=length(46:50-1)) + rep(46:50-1,times=length(1:2)), 2)
-# combn71 = combn(rep((18:s-1)*p,each=length(46:50-1)) + rep(46:50-1,times=length(18:s)), 2)
 
 Gmrf = rbind(t(combn11), t(combn31), t(combn32), t(combn41), t(combn42), t(combn51), t(combn52))
 

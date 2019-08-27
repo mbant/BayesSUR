@@ -13,20 +13,20 @@ plotNetwork(object, includeResponse = NULL, excludeResponse = NULL,
   label.predictor = NULL, label.response = NULL,
   color.predictor = NULL, color.response = NULL,
   name.predictors = NULL, name.responses = NULL,
-  vertex.frame.color = NA, layoutInCircle = FALSE)
+  vertex.frame.color = NA, layoutInCircle = FALSE, ...)
 }
 \arguments{
-\item{object}{fitted "runSUR" model}
+\item{object}{fitted \code{runSUR} model}
 
-\item{includeResponse}{A vector of the response names which are shown in the network.}
+\item{includeResponse}{A vector of the response names which are shown in the network}
 
-\item{excludeResponse}{A vector of the response names which are not shown in the network.}
+\item{excludeResponse}{A vector of the response names which are not shown in the network}
 
-\item{includePredictor}{A vector of the predictor names which are shown in the network.}
+\item{includePredictor}{A vector of the predictor names which are shown in the network}
 
-\item{excludePredictor}{A vector of the predictor names which are not shown in the network.}
+\item{excludePredictor}{A vector of the predictor names which are not shown in the network}
 
-\item{MatrixGamma}{A matrix or dataframe of the latent indicator variable. Default is "NULL" and to extrate it from object of class inheriting from "runSUR"}
+\item{MatrixGamma}{A matrix or dataframe of the latent indicator variable. Default is \code{NULL} and to extrate it from object of class inheriting from \code{runSUR}}
 
 \item{PmaxPredictor}{cutpoint for thresholding the estimated latent indicator variable. Default is 0.5}
 
@@ -34,15 +34,19 @@ plotNetwork(object, includeResponse = NULL, excludeResponse = NULL,
 
 \item{nodesizePredictor}{node size of Predictors in the output graph. Default is 15}
 
+\item{nodesizeResponse}{node size of response variables in the output graph. Default is 25}
+
 \item{no.isolates}{remove isolated nodes from responses graph and Full graph, may get problem if there are also isolated Predictors}
 
 \item{lineup}{A ratio of the heights between responses' area and Predictors'}
+
+\item{gray.alpha}{the opacity. The default is 0.6}
 
 \item{edgewith.response}{the edge width betwen response nodes}
 
 \item{edgewith.predictor}{the edge width betwen the predictor and response node}
 
-\item{edge.weight}{draw weighted edges after thresholding at 0.5. The defaul value "FALSE" is not to draw weigthed edges}
+\item{edge.weight}{draw weighted edges after thresholding at 0.5. The defaul value \code{FALSE} is not to draw weigthed edges}
 
 \item{label.predictor}{A vector of the names of predictors}
 
@@ -50,15 +54,17 @@ plotNetwork(object, includeResponse = NULL, excludeResponse = NULL,
 
 \item{color.predictor}{color of the predictor nodes}
 
+\item{color.response}{color of the reponse nodes}
+
 \item{name.predictors}{a subtitle for the predictors}
 
 \item{name.responses}{a subtitle for the responses}
 
 \item{vertex.frame.color}{The color of the frame of the vertices. If you don't want vertices to have a frame, supply NA as the color name}
 
-\item{nodesizePredictor}{node size of response variables in the output graph. Default is 25}
+\item{layoutInCircle}{Place vertices on a circle, in the order of their vertex ids. The default is \code{FALSE}}
 
-\item{color.predictor}{color of the reponse nodes}
+\item{...}{Other parameters in the function \code{plot.default.R} file}
 }
 \description{
 Network representation of the associations between responses and features

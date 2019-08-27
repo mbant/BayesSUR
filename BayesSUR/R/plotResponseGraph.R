@@ -2,6 +2,8 @@
 #' @title plotResponseGraph
 #' @description
 #' Show the relationship between responses
+#' @importFrom igraph V E plot.igraph graph_from_adjacency_matrix V<-
+#' @importFrom graphics par
 #' @name plotResponseGraph
 #' @param object fitted "runSUR" model
 #' @param PmaxResponse cutpoint for thresholding the learning structure matrix of multiple response variables. Default is 0.5
@@ -11,8 +13,11 @@
 #' @param label.color label color. Default is "black"
 #' @param node.size node size. Default is 30
 #' @param node.color node color. Default is "dodgerblue
+#' @param ... Other parameters in the function \code{plot.default.R} file
 #' @export
-plotResponseGraph <- function(object, PmaxResponse=0.5, PtrueResponse=NULL, name.responses=NA, edge.weight=FALSE, label.color="black", node.size=30, node.color="dodgerblue"){
+plotResponseGraph <- function(object, PmaxResponse=0.5, PtrueResponse=NULL, name.responses=NA, edge.weight=FALSE, label.color="black", node.size=30, node.color="dodgerblue", ...){
+  
+  devAskNewPage(FALSE)
   
   object$output[-1] <- paste(object$output$outFilePath,object$output[-1],sep="")
   Gy_hat <- as.matrix( read.table(object$output$G) )
@@ -31,7 +36,7 @@ plotResponseGraph <- function(object, PmaxResponse=0.5, PtrueResponse=NULL, name
   }
   
   net <- graph_from_adjacency_matrix(  Gy_thresh, weighted=T, mode="undirected", diag=F)
-  V(net)$size = node.size
+  V(net)$size <- node.size
   V(net)$label.color <- label.color
   V(net)$color <- node.color
   
@@ -41,9 +46,9 @@ plotResponseGraph <- function(object, PmaxResponse=0.5, PtrueResponse=NULL, name
     V(netTRUE)$label.color <- label.color
     V(netTRUE)$color <- node.color
     V(netTRUE)$size <- node.size
-    plot.igraph(netTRUE, main = "True graph of responses", edge.width=E(netTRUE)$weight*ifelse(edge.weight,2,1), vertex.frame.color=NA,cex.main=1.5)
+    plot.igraph(netTRUE, main = "True graph of responses", edge.width=E(netTRUE)$weight*ifelse(edge.weight,2,1), vertex.frame.color=NA,cex.main=1.5, ...)
   }
-  plot.igraph(net, main = "Estimated graph of responses", edge.width=E(net)$weight*ifelse(edge.weight,2,1), vertex.frame.color=NA,cex.main=1.5)
+  plot.igraph(net, main = "Estimated graph of responses", edge.width=E(net)$weight*ifelse(edge.weight,2,1), vertex.frame.color=NA,cex.main=1.5, ...)
   par(mfrow=c(1,1))
   
 }

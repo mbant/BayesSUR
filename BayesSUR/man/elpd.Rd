@@ -3,6 +3,9 @@
 \name{elpd}
 \alias{elpd}
 \title{prediction accuracy}
+\usage{
+elpd(object, method = "LOO")
+}
 \arguments{
 \item{object}{the object from the runSUR}
 

@@ -5,12 +5,14 @@
 \alias{plot.BayesSUR}
 \title{plotEstimator}
 \usage{
-\method{plot}{BayesSUR}(object, which = c(1L:5L))
+\method{plot}{BayesSUR}(x, which = c(1L:5L), ...)
 }
 \arguments{
-\item{object}{fitted "runSUR" model.}
+\item{x}{object of the fitted "runSUR" model.}
 
 \item{which}{if a subset of the plots is required, specify a subset of the numbers 1:5 which are plots of estimators, response graph, network, manhattan and MCMC diagnosis, respectively.}
+
+\item{...}{Other parameters in the function \code{plot.default.R} file}
 }
 \description{
 Six available plots from the object of fitted Bayesian Seemingly Unrelated Regression

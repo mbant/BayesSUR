@@ -3,6 +3,12 @@
 \name{plotCPO}
 \alias{plotCPO}
 \title{Conditional Predictive Ordinate}
+\usage{
+plotCPO(object, xlab = "", sum.responses = FALSE,
+  outlier.mark = TRUE, outlier.thresh = 0.01, scale.CPO = TRUE,
+  x.loc = FALSE, axis.label = NULL, las = 0, cex.axis = 1,
+  mark.pos = c(0, -0.01), mark.color = 2, mark.cex = 0.8)
+}
 \arguments{
 \item{object}{the object from the \code{runSUR}}
 
@@ -10,9 +16,9 @@
 
 \item{sum.responses}{compute CPOs aggreated in all response variables}
 
-\item{outlier.thresh}{threshold for the CPOs. The default is 0.01.}
-
 \item{outlier.mark}{mark the outliers with the response names. The default is \code{FALSE}}
+
+\item{outlier.thresh}{threshold for the CPOs. The default is 0.01.}
 
 \item{scale.CPO}{scaled CPOs which is divided by their maximum. The default is \code{TRUE}}
 
@@ -20,11 +26,11 @@
 
 \item{axis.label}{a vector of predictor names which are shown in CPO plot. The default is \code{NULL} only showing the indices. The value \code{"auto"} show the predictor names from the orginal data.}
 
-\item{mark.pos}{the location of the marked text relative to the point}
-
 \item{las}{graphical parameter of plot.default}
 
 \item{cex.axis}{graphical parameter of plot.default}
+
+\item{mark.pos}{the location of the marked text relative to the point}
 
 \item{mark.color}{the color of the marked text. The default color is red.}
 

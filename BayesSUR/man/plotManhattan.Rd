@@ -8,7 +8,7 @@ plotManhattan(object, which = c(1, 2), x.loc = FALSE,
   axis.label = NULL, mark.responses = NULL, xlab1 = "",
   ylab1 = "mPIP", xlab2 = "", ylab2 = "No. of responses",
   threshold = 0.5, las = 0, cex.axis = 1, mark.pos = c(0, 0),
-  mark.color = 2, mark.cex = 0.8)
+  mark.color = 2, mark.cex = 0.8, ...)
 }
 \arguments{
 \item{object}{the object from the runSUR}
@@ -41,7 +41,7 @@ plotManhattan(object, which = c(1, 2), x.loc = FALSE,
 
 \item{mark.cex}{the fontsize of the marked text. The default fontsize is 0.8.}
 
-\item{show.all.xlab}{logical value for showing all labels on the x axis. The default value is to show 5 labels on the x axis}
+\item{...}{Other parameters in the function \code{plot.default.R} file}
 }
 \description{
 Manhattan plot

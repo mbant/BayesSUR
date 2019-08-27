@@ -11,6 +11,10 @@
 #include <boost/math/special_functions/erf.hpp> // can I do this?
 #include <boost/math/special_functions/binomial.hpp>
 
+#ifndef CCODE
+#include <Rcpp.h>
+#endif
+
 #ifdef _OPENMP
    #include <omp.h>
 #else
@@ -133,7 +137,7 @@ namespace Distributions{
 		//check
 		if(Sigma.n_rows != d || Sigma.n_cols != d )
 		{
-			std::cout << " Dimension not matching in the multivariate normal sampler" << std::flush;
+			Rcpp::Rcout << " Dimension not matching in the multivariate normal sampler" << std::flush;
 			return 0;
 		}
 
@@ -148,13 +152,13 @@ namespace Distributions{
 			}
 			else
 			{
-				// std::cout << Sigma << std::endl << std::endl;
+				// Rcpp::Rcout << Sigma << std::endl << std::endl;
 				// std::cin >> d; d = m.n_elem;
 				if( eig_sym(eigval, eigvec, Sigma) )
 				{
 					res = (eigvec * arma::diagmat(arma::sqrt(eigval)) * randNormal(d)).t();
 				}else{
-					std::cout << "randMvNorm failing because of singular Sigma matrix" << std::endl << std::flush;
+					Rcpp::Rcout << "randMvNorm failing because of singular Sigma matrix" << std::endl << std::flush;
 					throw negativeDefiniteParameters();
 				}
 			}
@@ -208,7 +212,7 @@ namespace Distributions{
 		//check
 		if(shape <= 0 || scale <= 0 )
 		{
-			std::cout << " Negative parameter in the gamma sampler " << std::flush;
+			Rcpp::Rcout << " Negative parameter in the gamma sampler " << std::flush;
 			throw; // THROW EXCPTION
 		}
 

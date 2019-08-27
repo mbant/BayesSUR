@@ -2,6 +2,7 @@
 #' @title Conditional Predictive Ordinate
 #' @description
 #' Plot the conditional predictive ordinate (CPO) which is the leave-one-out cross-validation predictive density. The CPO is a handy posterior predictive check because it may be used to identify outliers, influential observations, and for hypothesis testing across different non-nested models.
+#' @importFrom graphics axis box text par abline
 #' @name plotCPO
 #' @param object the object from the \code{runSUR}
 #' @param xlab a title for the x axis 
@@ -21,10 +22,12 @@
 #' @export
 plotCPO <- function(object, xlab="", sum.responses=FALSE, outlier.mark=TRUE, outlier.thresh=0.01, scale.CPO=TRUE, x.loc=FALSE, axis.label=NULL, las=0, cex.axis=1, mark.pos=c(0,-.01), mark.color=2, mark.cex=0.8){
   
+  devAskNewPage(FALSE)
+  
   object$output[-1] <- paste(object$output$outFilePath,object$output[-1],sep="")
   CPO <- as.matrix( read.table(object$output$CPO) )
   
-  name.predictors <- rownames(read.table(object$output$Y,header=T))
+  name.predictors <- rownames(as.matrix( read.table(object$output$Y,header=T) ))
     
   if(is.null(axis.label)){
     x.loc <- 1:nrow(CPO)
@@ -46,7 +49,7 @@ plotCPO <- function(object, xlab="", sum.responses=FALSE, outlier.mark=TRUE, out
   
   if(!sum.responses){
     if(scale.CPO) CPO <- CPO/max(CPO)
-    plot(as.vector(CPO) ~ rep(1:nrow(CPO), times=ncol(CPO)), xlim=c(1,nrow(CPO)), ylim=c(0,max(CPO)), xaxt = 'n',bty = "n", ylab = ifelse(scale.CPO,"scaled CPOs","CPOs"), xlab = xlab, main="Conditional predictive ordinate", pch=19)
+    plot.default(as.vector(CPO) ~ rep(1:nrow(CPO), times=ncol(CPO)), xlim=c(1,nrow(CPO)), ylim=c(0,max(CPO)), xaxt = 'n',bty = "n", ylab = ifelse(scale.CPO,"scaled CPOs","CPOs"), xlab = xlab, main="Conditional predictive ordinate", pch=19)
     axis(1, at=x.loc, labels=names(x.loc), las=las, cex.axis=cex.axis); box()
     
     # mark the names of the specified response variables corresponding to the given responses
@@ -54,7 +57,7 @@ plotCPO <- function(object, xlab="", sum.responses=FALSE, outlier.mark=TRUE, out
       if(min(CPO) > outlier.thresh){
         cat("Warning: The minimum CPO is larger than the threshold of the (scaled) CPO!\n")
       }else{
-        name.responses <- colnames(read.table(object$output$Y,header=T))
+        name.responses <- colnames(as.matrix( read.table(object$output$Y,header=T) ))
         text(rep(1:nrow(CPO), times=ncol(CPO))[which(as.vector(CPO) <= outlier.thresh)]+mark.pos[1], as.vector(CPO[CPO<outlier.thresh])+mark.pos[2], labels=rep(name.responses, each=nrow(CPO))[as.vector(CPO) < outlier.thresh], col=mark.color, cex=mark.cex)
         abline(h=outlier.thresh, lty=2, col=mark.color)
       }
@@ -62,7 +65,7 @@ plotCPO <- function(object, xlab="", sum.responses=FALSE, outlier.mark=TRUE, out
   }else{
     CPO <- rowSums(CPO)
     if(scale.CPO) CPO <- CPO/max(CPO)
-    plot(CPO ~ c(1:length(CPO)), xaxt = 'n',bty = "n", xlim=c(1,length(CPO)), ylim=c(min(CPO)+mark.pos[2]*2,max(CPO)), ylab = ifelse(scale.CPO,"scaled CPOs","CPOs"), xlab = xlab, main="Conditional predictive ordinate", pch=19)
+    plot.default(CPO ~ c(1:length(CPO)), xaxt = 'n',bty = "n", xlim=c(1,length(CPO)), ylim=c(min(CPO)+mark.pos[2]*2,max(CPO)), ylab = ifelse(scale.CPO,"scaled CPOs","CPOs"), xlab = xlab, main="Conditional predictive ordinate", pch=19)
     axis(1, at=x.loc, labels=names(x.loc), las=las, cex.axis=cex.axis); box()
     
     # mark the names of the specified response variables corresponding to the given responses
@@ -71,7 +74,7 @@ plotCPO <- function(object, xlab="", sum.responses=FALSE, outlier.mark=TRUE, out
         cat("Warning: The minimum CPO is larger than the threshold of the (scaled) CPO!\n")
       }else{
         par(new=T)
-        plot(CPO[CPO<outlier.thresh] ~ which(CPO<outlier.thresh), xaxt = 'n',bty = "n", xlim=c(1,length(CPO)), ylim=c(min(CPO)+mark.pos[2]*2,max(CPO)), ylab = "", xlab = "", main="", pch=19, col=mark.color)
+        plot.default(CPO[CPO<outlier.thresh] ~ which(CPO<outlier.thresh), xaxt = 'n',bty = "n", xlim=c(1,length(CPO)), ylim=c(min(CPO)+mark.pos[2]*2,max(CPO)), ylab = "", xlab = "", main="", pch=19, col=mark.color)
         text(which(CPO <= outlier.thresh)+mark.pos[1], CPO[CPO<outlier.thresh]+mark.pos[2], labels=name.predictors[CPO < outlier.thresh], col=mark.color, cex=mark.cex)
         abline(h=outlier.thresh, lty=2, col=mark.color)
       }
