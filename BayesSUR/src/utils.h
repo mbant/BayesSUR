@@ -6,6 +6,7 @@
 #include <memory>
 #include <armadillo>
 
+#include "global.h"
 #include "Parameter_types.h"
 #include "pugixml.hpp"
 

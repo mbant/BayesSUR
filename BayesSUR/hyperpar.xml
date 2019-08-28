@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<hyperparameters>
-  <mrf_d>-3</mrf_d>
-  <mrf_e>0.2</mrf_e>
-  <some_wrong_name>-999</some_wrong_name>
-</hyperparameters>

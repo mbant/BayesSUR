@@ -17,7 +17,7 @@ AC_LANG(C++)
 AC_PROG_CXX
 
 # Check for c++11 support
-CXXFLAGS="-Werror -std=c++11 -Wno-reorder"
+CXXFLAGS="-Werror -std=c++11 -Wno-reorder -fPIC"
 AC_MSG_CHECKING([whether CXX supports -std=c++11])
 AC_COMPILE_IFELSE(
 	[AC_LANG_PROGRAM([])], 

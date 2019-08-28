@@ -175,20 +175,20 @@ void JTComponent::setParent( const std::shared_ptr<JTComponent>& otherJTComponen
 
 void JTComponent::print() const
 {
-    Rcpp::Rcout << "JT Component @ address " << this <<" is made of Nodes :";
+    console_out() << "JT Component @ address " << this <<" is made of Nodes :";
     for( auto i : nodes )
-        Rcpp::Rcout << " " << i;
-    Rcpp::Rcout << std::endl;
+        console_out() << " " << i;
+    console_out() << std::endl;
 
-    Rcpp::Rcout << "  with Separator :";
+    console_out() << "  with Separator :";
     for( auto i : separator )
-        Rcpp::Rcout << " " << i;
-    Rcpp::Rcout << std::endl;
+        console_out() << " " << i;
+    console_out() << std::endl;
 
-    Rcpp::Rcout << "  Its Parent is @ " << parent.lock() << " and its Children are @:";
+    console_out() << "  Its Parent is @ " << parent.lock() << " and its Children are @:";
     for( auto i : childrens )
-        Rcpp::Rcout << " " << i;
-    Rcpp::Rcout << std::endl << std::endl;
+        console_out() << " " << i;
+    console_out() << std::endl << std::endl;
 }
 
 // ##########################################################################################
@@ -301,20 +301,20 @@ unsigned int JunctionTree::getDimension() const
 
 void JunctionTree::print() const
 {
-    Rcpp::Rcout << std::endl << " ---------------------------------- " << std::endl;
+    console_out() << std::endl << " ---------------------------------- " << std::endl;
     for( auto i : perfectCliqueSequence )
         i->print();
-    Rcpp::Rcout << " ---------------------------------- " << std::endl <<
+    console_out() << " ---------------------------------- " << std::endl <<
         "The PEO for this JT is :" << std::endl;
 
     for(auto i : perfectEliminationOrder )
-        Rcpp::Rcout << i << " ";
-    Rcpp::Rcout << std::endl << " ---------------------------------- " << std::endl;
+        console_out() << i << " ";
+    console_out() << std::endl << " ---------------------------------- " << std::endl;
 
     // adjacencyMatrix.print("Graph's Adjacency Matrix: ");
     arma::umat tmp(adjacencyMatrix);
     tmp.print("Graph's Adjacency Matrix: ");
-    Rcpp::Rcout << std::endl << std::endl;
+    console_out() << std::endl << std::endl;
 }
 
 void JunctionTree::cloneRoot( std::shared_ptr<JTComponent>& newComponent , 
@@ -492,8 +492,6 @@ std::pair<bool,double> JunctionTree::propose_single_edge_update( arma::uvec& upd
     if( Distributions::randU01() < 0.5 )
     {
         // propose addition
-        // Rcpp::Rcout << " A" << std::flush;
-
         // if there's one component only, return false and no update happened
         if( numComponents > 1 )
         {
@@ -503,8 +501,6 @@ std::pair<bool,double> JunctionTree::propose_single_edge_update( arma::uvec& upd
             // populate Cx and Cy
             Cx = perfectCliqueSequence[randomSep]->getParent();
             Cy = perfectCliqueSequence[randomSep];
-
-            // Rcpp::Rcout << randomSep << " " << std::flush;
 
             setCx = Cx->getNodes();
             setCy = Cy->getNodes();
@@ -521,13 +517,12 @@ std::pair<bool,double> JunctionTree::propose_single_edge_update( arma::uvec& upd
             x = setCxlS[ Distributions::randIntUniform(0,setCxlS.size()-1) ];
             y = setCylS[ Distributions::randIntUniform(0,setCylS.size()-1) ];
 
-            // Rcpp::Rcout << " " << x << " " << y << " " << std::flush;
             // check whether or not Cx and Cy are superset of x U S and y U S and act accordingly
             // note there's no way for it to be the other way around by construction
             if( setCxlS.size() == 1 && setCylS.size() == 1 ) // a) this means that both Cx and Cy are exactly just x and S (and y and S) 
             {
                 
-                // Rcpp::Rcout << " Type a) " << std::flush;
+                // Type a)
 
                 // compute new children set
                 newChildrens = Cy->getChildrens();
@@ -589,7 +584,7 @@ std::pair<bool,double> JunctionTree::propose_single_edge_update( arma::uvec& upd
             }else if( setCxlS.size() > 1 && setCylS.size() == 1 ) // b)
             {
 
-                // Rcpp::Rcout << " Type b) " << std::flush;
+                // Type b)
 
                 Cy->add1Node(x);
                 Cy->add1Separator(x);
@@ -598,7 +593,7 @@ std::pair<bool,double> JunctionTree::propose_single_edge_update( arma::uvec& upd
 
             }else if( setCxlS.size() == 1 && setCylS.size() > 1 ) //c)
             {
-                // Rcpp::Rcout << " Type c) " << std::flush;
+                // Type c)
 
                 Cx->add1Node(y);
                 Cy->add1Separator(y); // remember the separator is always the one from the Cy obj
@@ -607,7 +602,7 @@ std::pair<bool,double> JunctionTree::propose_single_edge_update( arma::uvec& upd
 
             }else if( setCxlS.size() > 1 && setCylS.size() > 1 ) // d) Cx and Cy contain more than just x and S (and y and S) 
             {
-                // Rcpp::Rcout << " Type d) " << std::flush;
+                // Type d)
 
                 // Create C* (the new Component)
                 newChildrens = std::vector<std::shared_ptr<JTComponent>>(1);
@@ -656,12 +651,9 @@ std::pair<bool,double> JunctionTree::propose_single_edge_update( arma::uvec& upd
     
     }else         // propose deletion
     {
-        // Rcpp::Rcout << " D" << std::flush;
         // get a random component
         randomComp = Distributions::randIntUniform(0,numComponents-1);
         C = perfectCliqueSequence[randomComp];
-
-        // Rcpp::Rcout << randomComp << " ";
 
         setC = C->getNodes();
 
@@ -752,17 +744,11 @@ std::pair<bool,double> JunctionTree::propose_single_edge_update( arma::uvec& upd
                 definedCy = true;
             }
 
-            // Rcpp::Rcout << " " << x << " " << y << " " << std::flush;
-            // Rcpp::Rcout << "  || " << std::flush;
-            // for( auto i : setS)
-            //     Rcpp::Rcout << i << " ";
-            // Rcpp::Rcout << std::flush;
-
             // Now onto the 4 cases
 
             if( !definedCx && !definedCy ) // if both are undefined
             {
-                // Rcpp::Rcout << " Type a) " << std::flush;
+                // Type a)
 
                 // Create two new JTComponents, separated by S and made up by xUS and yUS
                 ClX = std::make_shared<JTComponent>( setS );
@@ -873,7 +859,7 @@ std::pair<bool,double> JunctionTree::propose_single_edge_update( arma::uvec& upd
 
             }else if( definedCx && !definedCy ) // if only Cx is defined
             {
-                // Rcpp::Rcout << " Type b) " << std::flush;
+                // Type b)
 
                 // Separation is possible only if Nx contains only Cx
                 if( Nx.size() == 1 )
@@ -905,7 +891,7 @@ std::pair<bool,double> JunctionTree::propose_single_edge_update( arma::uvec& upd
 
             }else if( !definedCx && definedCy ) // if only Cy is defined
             {
-                // Rcpp::Rcout << " Type c) " << std::flush;
+                // Type c)
 
                 // Separation is possible only if Ny contains only Cy
                 if( Ny.size() == 1 )
@@ -936,8 +922,7 @@ std::pair<bool,double> JunctionTree::propose_single_edge_update( arma::uvec& upd
                 logP -= log(numComponents-1) + log(Cy->getNodes().size() - setS.size() ) + log(setC.size() - setS.size()) ; //backward probability
                 
             }else{ //if both are defined
-                // Rcpp::Rcout << " Type d) " << std::flush;
-                // Rcpp::Rcout << definedCx << " " << Cx << ", " << definedCy << " "<< Cy << std::flush;
+                // Type d)
 
                 // Separation is possible only if N* contains only C* [*=x,y] and N is empty
                 if( Nx.size() == 1 && Ny.size() == 1 && N.size() == 0 )
@@ -1078,8 +1063,6 @@ std::pair<bool,double> JunctionTree::propose_single_edge_update( )
     if( Distributions::randU01() < 0.5 )
     {
         // propose addition
-        // Rcpp::Rcout << " A" << std::flush;
-
         // if there's one component only, return false and no update happened
         if( numComponents > 1 )
         {
@@ -1089,8 +1072,6 @@ std::pair<bool,double> JunctionTree::propose_single_edge_update( )
             // populate Cx and Cy
             Cx = perfectCliqueSequence[randomSep]->getParent();
             Cy = perfectCliqueSequence[randomSep];
-
-            // Rcpp::Rcout << randomSep << " " << std::flush;
 
             setCx = Cx->getNodes();
             setCy = Cy->getNodes();
@@ -1107,13 +1088,12 @@ std::pair<bool,double> JunctionTree::propose_single_edge_update( )
             x = setCxlS[ Distributions::randIntUniform(0,setCxlS.size()-1) ];
             y = setCylS[ Distributions::randIntUniform(0,setCylS.size()-1) ];
 
-            // Rcpp::Rcout << " " << x << " " << y << " " << std::flush;
             // check whether or not Cx and Cy are superset of x U S and y U S and act accordingly
             // note there's no way for it to be the other way around by construction
             if( setCxlS.size() == 1 && setCylS.size() == 1 ) // a) this means that both Cx and Cy are exactly just x and S (and y and S) 
             {
                 
-                // Rcpp::Rcout << " Type a) " << std::flush;
+                // Type a)
 
                 // compute new children set
                 newChildrens = Cy->getChildrens();
@@ -1174,7 +1154,7 @@ std::pair<bool,double> JunctionTree::propose_single_edge_update( )
            }else if( setCxlS.size() > 1 && setCylS.size() == 1 ) // b)
             {
 
-                // Rcpp::Rcout << " Type b) " << std::flush;
+                // Type b)
 
                 Cy->add1Node(x);
                 Cy->add1Separator(x);
@@ -1183,7 +1163,7 @@ std::pair<bool,double> JunctionTree::propose_single_edge_update( )
 
             }else if( setCxlS.size() == 1 && setCylS.size() > 1 ) //c)
             {
-                // Rcpp::Rcout << " Type c) " << std::flush;
+                // Type c)
 
                 Cx->add1Node(y);
                 Cy->add1Separator(y); // remember the separator is always the one from the Cy obj
@@ -1191,7 +1171,7 @@ std::pair<bool,double> JunctionTree::propose_single_edge_update( )
                 logP -= log(numComponents) - log(2) + ( log( Cx->getNodes().size() ) + log( Cx->getNodes().size()-1 ) ); // backward probability
             }else if( setCxlS.size() > 1 && setCylS.size() > 1 ) // d) Cx and Cy contain more than just x and S (and y and S) 
             {
-                // Rcpp::Rcout << " Type d) " << std::flush;
+                // Type d)
 
                 // Create C* (the new Component)
                 newChildrens = std::vector<std::shared_ptr<JTComponent>>(1);
@@ -1240,12 +1220,9 @@ std::pair<bool,double> JunctionTree::propose_single_edge_update( )
     
     }else         // propose deletion
     {
-        // Rcpp::Rcout << " D" << std::flush;
         // get a random component
         randomComp = Distributions::randIntUniform(0,numComponents-1);
         C = perfectCliqueSequence[randomComp];
-
-        // Rcpp::Rcout << randomComp << " ";
 
         setC = C->getNodes();
 
@@ -1336,17 +1313,11 @@ std::pair<bool,double> JunctionTree::propose_single_edge_update( )
                 definedCy = true;
             }
 
-            // Rcpp::Rcout << " " << x << " " << y << " " << std::flush;
-            // Rcpp::Rcout << "  || " << std::flush;
-            // for( auto i : setS)
-            //     Rcpp::Rcout << i << " ";
-            // Rcpp::Rcout << std::flush;
-
             // Now onto the 4 cases
 
             if( !definedCx && !definedCy ) // if both are undefined
             {
-                // Rcpp::Rcout << " Type a) " << std::flush;
+                // Type a)
 
                 // Create two new JTComponents, separated by S and made up by xUS and yUS
                 ClX = std::make_shared<JTComponent>( setS );
@@ -1457,7 +1428,7 @@ std::pair<bool,double> JunctionTree::propose_single_edge_update( )
 
             }else if( definedCx && !definedCy ) // if only Cx is defined
             {
-                // Rcpp::Rcout << " Type b) " << std::flush;
+                // Type b)
 
                 // Separation is possible only if Nx contains only Cx
                 if( Nx.size() == 1 )
@@ -1489,7 +1460,7 @@ std::pair<bool,double> JunctionTree::propose_single_edge_update( )
 
             }else if( !definedCx && definedCy ) // if only Cy is defined
             {
-                // Rcpp::Rcout << " Type c) " << std::flush;
+                // Type c)
 
                 // Separation is possible only if Ny contains only Cy
                 if( Ny.size() == 1 )
@@ -1520,8 +1491,7 @@ std::pair<bool,double> JunctionTree::propose_single_edge_update( )
                 logP -= log(numComponents-1) + log(Cy->getNodes().size() - setS.size() ) + log(setC.size() - setS.size()) ; //backward probability
                 
             }else{ //if both are defined
-                // Rcpp::Rcout << " Type d) " << std::flush;
-                // Rcpp::Rcout << definedCx << " " << Cx << ", " << definedCy << " "<< Cy << std::flush;
+                // Type d)
 
                 // Separation is possible only if N* contains only C* [*=x,y] and N is empty
                 if( Nx.size() == 1 && Ny.size() == 1 && N.size() == 0 )
@@ -1666,8 +1636,6 @@ std::pair<bool,double> JunctionTree::propose_multiple_edge_update( )
     if( Distributions::randU01() < 0.5 )
     {
         // propose addition
-        // Rcpp::Rcout << " A" << std::flush;
-
         // if there's one component only, return false and no update happened
         if( numComponents > 1 )
         {
@@ -1677,8 +1645,6 @@ std::pair<bool,double> JunctionTree::propose_multiple_edge_update( )
             // populate Cx and Cy
             Cx = perfectCliqueSequence[randomSep]->getParent();
             Cy = perfectCliqueSequence[randomSep];
-
-            // Rcpp::Rcout << randomSep << " " << std::flush;
 
             setCx = Cx->getNodes();
             setCy = Cy->getNodes();
@@ -1713,7 +1679,7 @@ std::pair<bool,double> JunctionTree::propose_multiple_edge_update( )
             if( setCxlS.size() == X.size() && setCylS.size() == Y.size() ) // a) this means that both Cx and Cy are exactly just X and S (and Y and S) 
             {
                 
-                // Rcpp::Rcout << " Type a) " << std::flush;
+                // Type a)
 
                 // compute new children set
                 newChildrens = Cy->getChildrens();
@@ -1806,7 +1772,7 @@ std::pair<bool,double> JunctionTree::propose_multiple_edge_update( )
             }else if( setCxlS.size() > X.size() && setCylS.size() == Y.size() ) // b)
             {
 
-                // Rcpp::Rcout << " Type b) " << std::flush;
+                // Type b)
                 Cy->addNodes(X);
                 Cy->addSeparators(X);
 
@@ -1816,7 +1782,7 @@ std::pair<bool,double> JunctionTree::propose_multiple_edge_update( )
 
             }else if( setCxlS.size() == X.size() && setCylS.size() > Y.size() ) //c)
             {
-                // Rcpp::Rcout << " Type c) " << std::flush;
+                // Type c)
 
 
                 Cx->addNodes(Y);
@@ -1828,7 +1794,7 @@ std::pair<bool,double> JunctionTree::propose_multiple_edge_update( )
 
             }else if( setCxlS.size() > X.size() && setCylS.size() > Y.size() ) // d) Cx and Cy contain more than just x and S (and y and S) 
             {
-                // Rcpp::Rcout << " Type d) " << std::flush;
+                // Type d)
 
                 // Create C* (the new Component)
                 newChildrens = std::vector<std::shared_ptr<JTComponent>>(1);
@@ -1878,12 +1844,9 @@ std::pair<bool,double> JunctionTree::propose_multiple_edge_update( )
     
     }else         // propose deletion
     {
-        // Rcpp::Rcout << " D" << std::flush;
         // get a random component
         randomComp = Distributions::randIntUniform(0,numComponents-1);
         C = perfectCliqueSequence[randomComp];
-
-        // Rcpp::Rcout << randomComp << " ";
 
         setC = C->getNodes();
 
@@ -2008,7 +1971,7 @@ std::pair<bool,double> JunctionTree::propose_multiple_edge_update( )
             if( !definedCx && !definedCy ) // if both are undefined
             {
 
-                // Rcpp::Rcout << " Type a) " << std::flush;
+                // Type a)
 
                 // Create two new JTComponents, separated by S and made up by xUS and yUS
                 ClX = std::make_shared<JTComponent>( setS );
@@ -2122,7 +2085,7 @@ std::pair<bool,double> JunctionTree::propose_multiple_edge_update( )
 
             }else if( definedCx && !definedCy ) // if only Cx is defined
             {
-                // Rcpp::Rcout << " Type b) " << std::flush;
+                // Type b)
 
                 // Separation is possible only if Nx contains only Cx
                 if( Nx.size() == 1 )
@@ -2180,7 +2143,7 @@ std::pair<bool,double> JunctionTree::propose_multiple_edge_update( )
 
             }else if( !definedCx && definedCy ) // if only Cy is defined
             {
-                // Rcpp::Rcout << " Type c) " << std::flush;
+                // Type c)
 
                 // Separation is possible only if Ny contains only Cy
                 if( Ny.size() == 1 )
@@ -2235,8 +2198,7 @@ std::pair<bool,double> JunctionTree::propose_multiple_edge_update( )
 
 
             }else{ //if both are defined
-                // Rcpp::Rcout << " Type d) " << std::flush;
-                // Rcpp::Rcout << definedCx << " " << Cx << ", " << definedCy << " "<< Cy << std::flush;
+                // Type d)
 
                 // Separation is possible only if N* contains only C* [*=x,y] and N is empty
                 if( Nx.size() == 1 && Ny.size() == 1 && N.size() == 0 )
@@ -2451,10 +2413,6 @@ void JunctionTree::randomJTPermutation()
     if( numComponents > 1 ) // otherwise is at best the reverse of the above reRoot move
         this->reRoot();
 
-    // Rcpp::Rcout << " **************  Rebased  *************  " << std::endl;
-    // this->print();
-
-
     // then see if we can shuffle something
     if( numComponents > 2 ) // otherwise is at best the reverse of thea bove reRoot move
     {
@@ -2525,10 +2483,6 @@ void JunctionTree::randomJTPermutation()
             // updateAdjMat(); // this shouldn't be necessary !
             updatePEO();
 
-            // Rcpp::Rcout << " **************  Updated  *************  " << std::endl;
-            // this->print();
-            // std::cin >> pos;
-        
         } //else nothing to do  
     }
 }

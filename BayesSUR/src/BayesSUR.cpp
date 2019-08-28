@@ -39,7 +39,7 @@ int BayesSUR_internal(const std::string& dataFile, const std::string& mrfGFile, 
   }
   catch(const std::exception& e)
   {
-    Rcpp::Rcout << e.what() << '\n';
+    err_out() << e.what() << '\n';
   }
   
   return status;

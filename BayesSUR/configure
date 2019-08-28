@@ -2304,7 +2304,7 @@ ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 
 
 # Check for c++11 support
-CXXFLAGS="-Werror -std=c++11 -Wno-reorder"
+CXXFLAGS="-Werror -std=c++11 -Wno-reorder -fPIC"
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether CXX supports -std=c++11" >&5
 $as_echo_n "checking whether CXX supports -std=c++11... " >&6; }
 

@@ -18,7 +18,7 @@ str(example_eQTL)
 # show the simulated gamma matrix and G_y
 attach(example_eQTL)
 options(tikzMetricPackages = c("\\usepackage{amsmath}","\\usepackage{bm}", "\\usetikzlibrary{calc}"))
-tikz('ParamTrue.tex',width=5.5,height=3, standAlone = TRUE,packages = c("\\usepackage{tikz}","\\usepackage{amsmath}","\\usepackage{bm}"))
+tikzDevice::tikz('ParamTrue.tex',width=5.5,height=3, standAlone = TRUE,packages = c("\\usepackage{tikz}","\\usepackage{amsmath}","\\usepackage{bm}"))
 layout(matrix(1:2, ncol=2))
 image(z=gamma, x=1:150, y=1:10, col=grey(1:0), xlab="SNPs Index", 
       ylab="Responses", main=paste("True","$\\bm{\\gamma}$"));box()

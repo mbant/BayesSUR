@@ -137,7 +137,7 @@ namespace Distributions{
 		//check
 		if(Sigma.n_rows != d || Sigma.n_cols != d )
 		{
-			Rcpp::Rcout << " Dimension not matching in the multivariate normal sampler" << std::flush;
+			console_out() << " Dimension not matching in the multivariate normal sampler" << std::flush;
 			return 0;
 		}
 
@@ -152,13 +152,11 @@ namespace Distributions{
 			}
 			else
 			{
-				// Rcpp::Rcout << Sigma << std::endl << std::endl;
-				// std::cin >> d; d = m.n_elem;
 				if( eig_sym(eigval, eigvec, Sigma) )
 				{
 					res = (eigvec * arma::diagmat(arma::sqrt(eigval)) * randNormal(d)).t();
 				}else{
-					Rcpp::Rcout << "randMvNorm failing because of singular Sigma matrix" << std::endl << std::flush;
+					console_out() << "randMvNorm failing because of singular Sigma matrix" << std::endl << std::flush;
 					throw negativeDefiniteParameters();
 				}
 			}
@@ -212,7 +210,7 @@ namespace Distributions{
 		//check
 		if(shape <= 0 || scale <= 0 )
 		{
-			Rcpp::Rcout << " Negative parameter in the gamma sampler " << std::flush;
+			console_out() << " Negative parameter in the gamma sampler " << std::flush;
 			throw; // THROW EXCPTION
 		}
 

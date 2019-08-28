@@ -7,7 +7,7 @@ CFLAGS= -c -Wall -Wno-reorder -std=c++11 -I$(SOURCE_DIR)/ -DCCODE -fopenmp
 OPENLDFLAGS= -larmadillo -lpthread -lopenblas -fopenmp
 NVLDFLAGS= -larmadillo -lpthread -lnvblas -fopenmp
 
-SOURCES_BVS=$(SOURCE_DIR)/global.cpp $(SOURCE_DIR)/utils.cpp $(SOURCE_DIR)/distr.cpp $(SOURCE_DIR)/junction_tree.cpp $(SOURCE_DIR)/HESS_Chain.cpp $(SOURCE_DIR)/SUR_Chain.cpp $(SOURCE_DIR)/drive.cpp main.cpp 
+SOURCES_BVS=$(SOURCE_DIR)/global.cpp $(SOURCE_DIR)/utils.cpp $(SOURCE_DIR)/distr.cpp $(SOURCE_DIR)/junction_tree.cpp $(SOURCE_DIR)/HRR_Chain.cpp $(SOURCE_DIR)/SUR_Chain.cpp $(SOURCE_DIR)/drive.cpp main.cpp 
 #ESS_Atom.h and Parameters_type.h are interface only
 OBJECTS_BVS=$(SOURCES_BVS:.cpp=.o)
 
