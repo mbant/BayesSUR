@@ -12,8 +12,10 @@
 #include <boost/math/special_functions/binomial.hpp>
 
 #ifndef CCODE
-#include <Rcpp.h>
-using Rcpp::Rcout;
+	#include <Rcpp.h>
+	using Rcpp::Rcout;
+#else
+	#define Rcout std::cout
 #endif
 
 #ifdef _OPENMP

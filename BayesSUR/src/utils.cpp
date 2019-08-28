@@ -10,6 +10,8 @@
 #ifndef CCODE
 	#include <Rcpp.h>
 	using Rcpp::Rcout;
+#else
+	#define Rcout std::cout
 #endif
 
 namespace Utils{

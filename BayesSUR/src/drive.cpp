@@ -4,6 +4,9 @@
 	#include <Rcpp.h>
 	using Rcpp::Rcout;
 	using Rcpp::Rcerr;
+#else
+	#define Rcout std::cout
+	#define Rcerr std::cerr
 #endif
 
 using std::endl;
