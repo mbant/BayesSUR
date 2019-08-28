@@ -16,8 +16,9 @@
 // NOTE THAT THIS IS BASICALLY JUST A WRAPPER
 
 #include "drive.h"
-
 #include <Rcpp.h>
+using Rcpp::Rcerr;
+
 
 // [[Rcpp::export(rng=false)]]
 int BayesSUR_internal(const std::string& dataFile, const std::string& mrfGFile, const std::string& blockFile, const std::string& structureGraphFile, const std::string& hyperParFile, const std::string& outFilePath,
@@ -39,7 +40,7 @@ int BayesSUR_internal(const std::string& dataFile, const std::string& mrfGFile, 
   }
   catch(const std::exception& e)
   {
-    err_out() << e.what() << '\n';
+    Rcerr << e.what() << '\n'; // we can use Rcerr here because we're reaching here from R for sure
   }
   
   return status;

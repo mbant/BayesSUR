@@ -86,11 +86,11 @@ class ESS_Sampler{
 template<typename T>
 ESS_Sampler<T>::ESS_Sampler( Utils::SUR_Data& surData , unsigned int nChains_ , double temperatureRatio ,
     Gamma_Sampler_Type gamma_sampler_type, Gamma_Type gamma_type, Beta_Type beta_type, Covariance_Type covariance_type):
+        nChains(nChains_),
+        chain(std::vector<std::shared_ptr<T>>(nChains)),
         updateCounter(500), // how often do we update the temperatures?
         global_proposal_count(0),
-        global_acc_count(0),
-        nChains(nChains_),
-        chain(std::vector<std::shared_ptr<T>>(nChains))
+        global_acc_count(0)
 {
 
 

@@ -559,9 +559,9 @@ class SUR_Chain : public ESS_Atom<SUR_Chain>
         void setXtX();
 
         unsigned int nObservations; // number of samples
+        unsigned int nOutcomes; // number of outcomes
         unsigned int nVSPredictors; // number of predictors to be selected
         unsigned int nFixedPredictors; // number of predictors to be kept no matter what
-        unsigned int nOutcomes; // number of outcomes
 
         // usefull quantities to keep track of
         arma::umat gammaMask;

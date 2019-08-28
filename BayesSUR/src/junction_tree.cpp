@@ -1,8 +1,10 @@
 #include "junction_tree.h"
 
 #ifndef CCODE
-#include <Rcpp.h>
+  #include <Rcpp.h>
+  using Rcpp::Rcout;
 #endif
+
 /*
 I here decide that the Clique Sequence follows the JT in a Depth First manner, 
 so we follow each branch till the end, then come back andd follow another branch and so on...
@@ -175,20 +177,20 @@ void JTComponent::setParent( const std::shared_ptr<JTComponent>& otherJTComponen
 
 void JTComponent::print() const
 {
-    console_out() << "JT Component @ address " << this <<" is made of Nodes :";
+    Rcout << "JT Component @ address " << this <<" is made of Nodes :";
     for( auto i : nodes )
-        console_out() << " " << i;
-    console_out() << std::endl;
+        Rcout << " " << i;
+    Rcout << std::endl;
 
-    console_out() << "  with Separator :";
+    Rcout << "  with Separator :";
     for( auto i : separator )
-        console_out() << " " << i;
-    console_out() << std::endl;
+        Rcout << " " << i;
+    Rcout << std::endl;
 
-    console_out() << "  Its Parent is @ " << parent.lock() << " and its Children are @:";
+    Rcout << "  Its Parent is @ " << parent.lock() << " and its Children are @:";
     for( auto i : childrens )
-        console_out() << " " << i;
-    console_out() << std::endl << std::endl;
+        Rcout << " " << i;
+    Rcout << std::endl << std::endl;
 }
 
 // ##########################################################################################
@@ -249,8 +251,7 @@ JunctionTree::JunctionTree( const unsigned int n_ , const std::string type ) // 
 
         adjacencyMatrix.zeros(n,n); // the matrix is empty, no edges
 
-    }else if( type == "full" )
-    {
+    }else{
         perfectEliminationOrder = std::vector<unsigned int>(n);
         perfectCliqueSequence = std::deque<std::shared_ptr<JTComponent>>();
 
@@ -262,10 +263,7 @@ JunctionTree::JunctionTree( const unsigned int n_ , const std::string type ) // 
         arma::umat tmp = arma::ones<arma::umat>(n,n);
         adjacencyMatrix = tmp - arma::eye<arma::umat>(n,n); // the matrix is full of edges
 
-    }else
-        throw;
-
-
+    }
 
 }
 
@@ -301,20 +299,18 @@ unsigned int JunctionTree::getDimension() const
 
 void JunctionTree::print() const
 {
-    console_out() << std::endl << " ---------------------------------- " << std::endl;
+    Rcout << std::endl << " ---------------------------------- " << std::endl;
     for( auto i : perfectCliqueSequence )
         i->print();
-    console_out() << " ---------------------------------- " << std::endl <<
+    Rcout << " ---------------------------------- " << std::endl <<
         "The PEO for this JT is :" << std::endl;
 
     for(auto i : perfectEliminationOrder )
-        console_out() << i << " ";
-    console_out() << std::endl << " ---------------------------------- " << std::endl;
+        Rcout << i << " ";
+    Rcout << std::endl << " ---------------------------------- " << std::endl;
 
-    // adjacencyMatrix.print("Graph's Adjacency Matrix: ");
     arma::umat tmp(adjacencyMatrix);
-    tmp.print("Graph's Adjacency Matrix: ");
-    console_out() << std::endl << std::endl;
+    Rcout << "Graph's Adjacency Matrix: " << tmp << std::endl << std::endl;
 }
 
 void JunctionTree::cloneRoot( std::shared_ptr<JTComponent>& newComponent , 

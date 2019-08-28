@@ -20,6 +20,7 @@ Imports: Rcpp, utils, stats, RcppArmadillo (>= 0.9.000), BH, igraph,
 Suggests: xml2, R.rsp
 LazyData: true
 NeedsCompilation: yes
+SystemRequirements: C++11
 Packaged: 2019-08-27 15:42:04 UTC; zhiz
 Author: Marco Banterle [aut],
   Zhi Zhao [aut, cre]

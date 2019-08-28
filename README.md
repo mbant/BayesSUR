@@ -1,6 +1,6 @@
 # BayesSUR
 
-This is WIP repository for an R package interface to the [Bayesian SSUR](github.com/mbant/Bayesian_SSUR) C++ code but with some changes.
+This repository contains a [new and improved](https://github.com/mbant/BayesSUR/blob/master/BayesSUR/vignettes/vignettes.pdf) [R]() package for high-dimensional multivariate Bayesian variable and covariance selection in linear regression, started as an interface to the [Bayesian SSUR](https://github.com/mbant/Bayesian_SSUR) C++-only, UNIX-specific, code.
 
 ## R package instructions
 See `test.R` file for usage; see the package vignette `BayesSUR.pdf` (submitted to the Journal of Statistical Software) for more information.
@@ -47,3 +47,10 @@ Remaining issues:
 
 ### The version `BayesSUR_0.1.13.tar.gz` (30 June 2019)# BayesSUR
 
+### Libraries
+
+[Armadillo](http://arma.sourceforge.net/) and its respective [Rcpp interface](https://github.com/RcppCore/RcppArmadillo)
+
+[PugiXML](http://pugixml.org/)
+
+[Boost](www.boost.org) and [BoostHeaders](https://github.com/eddelbuettel/bh)

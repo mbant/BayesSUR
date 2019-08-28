@@ -389,9 +389,9 @@ class HRR_Chain : public ESS_Atom<HRR_Chain>
         void setXtX();
 
         unsigned int nObservations; // number of samples
+        unsigned int nOutcomes; // number of outcomes
         unsigned int nVSPredictors; // number of predictors to be selected
         unsigned int nFixedPredictors; // number of predictors to be kept no matter what
-        unsigned int nOutcomes; // number of outcomes
 
         // usefull quantities to keep track of
         arma::umat gammaMask;
@@ -400,7 +400,6 @@ class HRR_Chain : public ESS_Atom<HRR_Chain>
         // MCMC related tuning parameters
         double temperature;
         unsigned int internalIterationCounter;
-        std::string gammaSamplerType;
 
         // empirical mean/variances to adapt the proposal distribution
         double wEmpiricalMean;

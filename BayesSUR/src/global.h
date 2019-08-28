@@ -1,20 +1,16 @@
 #ifndef GLOBAL
 #define GLOBAL
 
-#ifdef _OPENMP
-  #include <omp.h>
-#endif
+  #include <armadillo>  // include this globally
+  #include <random>
+  #include <vector>
 
-#ifndef CCODE
-  #include <Rcpp.h>
-#endif
+  #ifdef _OPENMP
+    #include <omp.h>
+  #endif
 
-#include <vector>
-#include <random>
-#include <armadillo> // include this globally
-#include <iostream>
-
-std::ostream& console_out();
-std::ostream& err_out();
+  #ifndef CCODE
+    #include <Rcpp.h>
+  #endif
 
 #endif

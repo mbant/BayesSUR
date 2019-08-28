@@ -2,8 +2,8 @@
 
 #ifndef CCODE
 	#include <Rcpp.h>
-#else
-	using std::cout;
+	using Rcpp::Rcout;
+	using Rcpp::Rcerr;
 #endif
 
 using std::endl;
@@ -21,12 +21,12 @@ int drive_SUR( Chain_Data& chainData )
 	// ****************************************
 	// **********  INIT THE CHAIN *************
 	// ****************************************
-	console_out() << "Initialising the (SUR) MCMC Chain" << std::flush;
+	Rcout << "Initialising the (SUR) MCMC Chain" << std::flush;
 	
 	ESS_Sampler<SUR_Chain> sampler( chainData.surData , chainData.nChains , 1.2 ,
         	chainData.gamma_sampler_type, chainData.gamma_type, chainData.beta_type, chainData.covariance_type);
 	
-	console_out() << " ... " << std::flush;
+	Rcout << " ... " << std::flush;
 
 	// *****************************
 
@@ -45,7 +45,7 @@ int drive_SUR( Chain_Data& chainData )
 	// *****************************
 	sampler.setHyperParameters( chainData );
 
-	console_out() << " ... " << std::flush;
+	Rcout << " ... " << std::flush;
 
 	// *****************************
 
@@ -69,7 +69,7 @@ int drive_SUR( Chain_Data& chainData )
 
 
 	// ****************************************
-	console_out() << " DONE!\nDrafting the output files with the start of the chain ... " << std::flush;
+	Rcout << " DONE!\nDrafting the output files with the start of the chain ... " << std::flush;
 
 	// INIT THE FILE OUTPUT
 	std::string outFilePrefix = chainData.outFilePath+chainData.filePrefix;
@@ -248,7 +248,7 @@ int drive_SUR( Chain_Data& chainData )
 	// ########
 	// ########
 
-	console_out() << "DONE! \n\nStarting "<< chainData.nChains <<" (parallel) chain(s) for " << chainData.nIter << " iterations:" << endl << std::flush;
+	Rcout << "DONE! \n\nStarting "<< chainData.nChains <<" (parallel) chain(s) for " << chainData.nIter << " iterations:" << endl << std::flush;
 
 	unsigned int tick = 1000; // how many iter for each print?
 
@@ -306,13 +306,13 @@ int drive_SUR( Chain_Data& chainData )
 		// Print something on how the chain is going
 		if( (i+1) % tick == 0 )
 		{
-			console_out() << " Running iteration " << i+1 << " ... local Acc Rate: ~ gamma: " << Utils::round( sampler[0] -> getGammaAccRate() , 3 );
-			console_out() << " -- JT: " << Utils::round( sampler[0] -> getJTAccRate() , 3 ) ;
+			Rcout << " Running iteration " << i+1 << " ... local Acc Rate: ~ gamma: " << Utils::round( sampler[0] -> getGammaAccRate() , 3 );
+			Rcout << " -- JT: " << Utils::round( sampler[0] -> getJTAccRate() , 3 ) ;
 
 			if( chainData.nChains > 1){
-				console_out() << " -- Global: " << Utils::round( sampler.getGlobalAccRate() , 3 ) << endl;
+				Rcout << " -- Global: " << Utils::round( sampler.getGlobalAccRate() , 3 ) << endl;
 			}else{
-				console_out() << endl;
+				Rcout << endl;
 			}
 
 			// Output to files every now and then
@@ -398,7 +398,7 @@ int drive_SUR( Chain_Data& chainData )
 	} // end MCMC
 
 	// Print the end
-	console_out() << " MCMC ends. " /* << " Final temperature ratio ~ " << temperatureRatio  */<< "  --- Saving results and exiting" << endl;
+	Rcout << " MCMC ends. " /* << " Final temperature ratio ~ " << temperatureRatio  */<< "  --- Saving results and exiting" << endl;
 
 	// ### Collect results and save them
 	if ( chainData.output_gamma )
@@ -475,18 +475,18 @@ int drive_SUR( Chain_Data& chainData )
 	}
 	// -----
 
-	console_out() << "Saved to :   "+outFilePrefix+"****_out.txt" << endl;
-	console_out() << "Final w : " << sampler[0] -> getW() <<  endl;
-	console_out() << "Final tau : " << sampler[0] -> getTau() << "    w/ proposal variance: " << sampler[0] -> getVarTauProposal() << endl;
+	Rcout << "Saved to :   "+outFilePrefix+"****_out.txt" << endl;
+	Rcout << "Final w : " << sampler[0] -> getW() <<  endl;
+	Rcout << "Final tau : " << sampler[0] -> getTau() << "    w/ proposal variance: " << sampler[0] -> getVarTauProposal() << endl;
 	if ( chainData.covariance_type == Covariance_Type::HIW )
-		console_out() << "Final eta : " << sampler[0] -> getEta() <<  endl;
-	console_out() << "  -- Average Omega : " << arma::accu( sampler[0] -> getO() * sampler[0] -> getPi().t() )/((double)(sampler[0]->getP()*sampler[0]->getS())) <<  endl;
+		Rcout << "Final eta : " << sampler[0] -> getEta() <<  endl;
+	Rcout << "  -- Average Omega : " << arma::accu( sampler[0] -> getO() * sampler[0] -> getPi().t() )/((double)(sampler[0]->getP()*sampler[0]->getS())) <<  endl;
 	if( chainData.nChains > 1 ) 
-		console_out() << "Final temperature ratio : " << sampler[1]->getTemperature() <<  endl << endl ;
+		Rcout << "Final temperature ratio : " << sampler[1]->getTemperature() <<  endl << endl ;
 
 
 	// Exit
-	console_out() << "DONE, exiting! " << endl << endl ;
+	Rcout << "DONE, exiting! " << endl << endl ;
 	return 0;
 }
 
@@ -496,12 +496,12 @@ int drive_HRR( Chain_Data& chainData )
 	// ****************************************
 	// **********  INIT THE CHAIN *************
 	// ****************************************
-	console_out() << "Initialising the (HRR) MCMC Chain " << std::flush;
+	Rcout << "Initialising the (HRR) MCMC Chain " << std::flush;
 
 	ESS_Sampler<HRR_Chain> sampler( chainData.surData , chainData.nChains , 1.2 ,
         	chainData.gamma_sampler_type, chainData.gamma_type, chainData.beta_type, chainData.covariance_type);
 
-	console_out() << " ... " << std::flush;
+	Rcout << " ... " << std::flush;
 	// *****************************
 	
 	// extra step needed to read in the MRF prior G matrix if needed
@@ -518,7 +518,7 @@ int drive_HRR( Chain_Data& chainData )
 	// Init all parameters
 	// *****************************
 	sampler.setHyperParameters( chainData );
-	console_out() << " ... " << std::flush;
+	Rcout << " ... " << std::flush;
 
 	// Init gamma for the main chain
 	// *****************************
@@ -529,7 +529,7 @@ int drive_HRR( Chain_Data& chainData )
 
 	// ****************************************
 
-	console_out() << " DONE!\nDrafting the output files with the start of the chain ... " << std::flush;
+	Rcout << " DONE!\nDrafting the output files with the start of the chain ... " << std::flush;
 
 	// INIT THE FILE OUTPUT
 	std::string outFilePrefix = chainData.outFilePath+chainData.filePrefix;
@@ -676,7 +676,7 @@ int drive_HRR( Chain_Data& chainData )
 	// ########
 	// ########
 
-	console_out() << "DONE! \n\nStarting "<< chainData.nChains <<" (parallel) chain(s) for " << chainData.nIter << " iterations:" << endl << std::flush;
+	Rcout << "DONE! \n\nStarting "<< chainData.nChains <<" (parallel) chain(s) for " << chainData.nIter << " iterations:" << endl << std::flush;
 
 	unsigned int tick = 1000; // how many iter for each print?
 
@@ -731,12 +731,12 @@ int drive_HRR( Chain_Data& chainData )
 		if( (i+1) % tick == 0 )
 		{
 
-			console_out() << " Running iteration " << i+1 << " ... local Acc Rate: ~ gamma: " << Utils::round( sampler[0] -> getGammaAccRate() , 3 );
+			Rcout << " Running iteration " << i+1 << " ... local Acc Rate: ~ gamma: " << Utils::round( sampler[0] -> getGammaAccRate() , 3 );
 
 			if( chainData.nChains > 1)
-				console_out() << " -- Global: " << Utils::round( sampler.getGlobalAccRate() , 3 ) << endl;
+				Rcout << " -- Global: " << Utils::round( sampler.getGlobalAccRate() , 3 ) << endl;
 			else
-				console_out() << endl;
+				Rcout << endl;
 				
 			// Output to files every now and then
 			if( (i >= chainData.burnin) && ( (i-chainData.burnin+1) % (tick*1) == 0 ) ) 
@@ -789,7 +789,7 @@ int drive_HRR( Chain_Data& chainData )
 
 
 	// Print the end
-	console_out() << " MCMC ends. " /* << " Final temperature ratio ~ " << temperatureRatio  */<< "  --- Saving results and exiting" << endl;
+	Rcout << " MCMC ends. " /* << " Final temperature ratio ~ " << temperatureRatio  */<< "  --- Saving results and exiting" << endl;
 
 	// ### Collect results and save them
 	if ( chainData.output_gamma )
@@ -846,17 +846,17 @@ int drive_HRR( Chain_Data& chainData )
 		htpOutFile.close();
 	}
 	// -----
-	console_out() << "Saved to :   "+outFilePrefix+"****_out.txt" << endl;
-	console_out() << "Final w : " << sampler[0] -> getW() << "       w/ proposal variance: " << sampler[0] -> getVarWProposal() << endl;
-	// console_out() << "Final o : " << sampler[0] -> getO().t() << "       w/ proposal variance: " << sampler[0] -> getVarOProposal() << endl;
-	// console_out() << "Final pi : " << sampler[0] -> getPi().t() << "       w/ proposal variance: " << sampler[0] -> getVarPiProposal() << endl;
-	console_out() << "  -- Average Omega : " << arma::accu( sampler[0] -> getO() * sampler[0] -> getPi().t() )/((double)(sampler[0]->getP()*sampler[0]->getS())) <<  endl;
+	Rcout << "Saved to :   "+outFilePrefix+"****_out.txt" << endl;
+	Rcout << "Final w : " << sampler[0] -> getW() << "       w/ proposal variance: " << sampler[0] -> getVarWProposal() << endl;
+	// Rcout << "Final o : " << sampler[0] -> getO().t() << "       w/ proposal variance: " << sampler[0] -> getVarOProposal() << endl;
+	// Rcout << "Final pi : " << sampler[0] -> getPi().t() << "       w/ proposal variance: " << sampler[0] -> getVarPiProposal() << endl;
+	Rcout << "  -- Average Omega : " << arma::accu( sampler[0] -> getO() * sampler[0] -> getPi().t() )/((double)(sampler[0]->getP()*sampler[0]->getS())) <<  endl;
 	if( chainData.nChains > 1 ) 
-		console_out() << "Final temperature ratio : " << sampler[1]->getTemperature() <<  endl << endl ;
+		Rcout << "Final temperature ratio : " << sampler[1]->getTemperature() <<  endl << endl ;
 	
 
 	// Exit
-	console_out() << "DONE, exiting! " << endl << endl ;
+	Rcout << "DONE, exiting! " << endl << endl ;
 	return 0;
 
 }
@@ -875,11 +875,11 @@ int drive( const std::string& dataFile, const std::string& mrfGFile, const std::
 			bool output_gamma, bool output_beta, bool output_G, bool output_sigmaRho, bool output_pi, bool output_tail, bool output_model_size, bool output_CPO )
 {
 
-	console_out() << "BayesSUR -- Bayesian Seemingly Unrelated Regression Modelling" << endl;
+	Rcout << "BayesSUR -- Bayesian Seemingly Unrelated Regression Modelling" << endl;
 	
 	#ifdef _OPENMP
 
-		console_out() << "Using OpenMP" << std::endl;
+		Rcout << "Using OpenMP" << std::endl;
 
 		omp_init_lock(&RNGlock);  // init RNG lock for the parallel part
 
@@ -920,7 +920,7 @@ int drive( const std::string& dataFile, const std::string& mrfGFile, const std::
 		chainData.covariance_type = Covariance_Type::IG;
 	else
 	{
-		console_out() << "ERROR: Wrong type of Covariance prior given\n";
+		Rcout << "ERROR: Wrong type of Covariance prior given\n";
 		return 1;
 	}
 
@@ -941,13 +941,13 @@ int drive( const std::string& dataFile, const std::string& mrfGFile, const std::
 		}
 		catch(const std::exception& e)
 		{
-			err_out() << e.what() << '\n';
+			Rcerr << e.what() << '\n';
 			return 1;
 		}	*/
 	}
 	else
 	{
-		console_out() << "ERROR: Wrong type of Gamma prior given\n";
+		Rcout << "ERROR: Wrong type of Gamma prior given\n";
 		return 1;
 	}
 
@@ -960,7 +960,7 @@ int drive( const std::string& dataFile, const std::string& mrfGFile, const std::
 		chainData.gamma_sampler_type = Gamma_Sampler_Type::mc3 ;
 	else
 	{
-		console_out() << "ERROR: Wrong type of Gamma Sampler given\n";
+		Rcout << "ERROR: Wrong type of Gamma Sampler given\n";
 		return 1;
 	}
 
@@ -972,8 +972,8 @@ int drive( const std::string& dataFile, const std::string& mrfGFile, const std::
 		chainData.beta_type = Beta_Type::independent ;
 	else
 	{
-		console_out() << betaPrior << "\n";
-		console_out() << "ERROR: Wrong type of Beta prior given\n";
+		Rcout << betaPrior << "\n";
+		Rcout << "ERROR: Wrong type of Beta prior given\n";
 
 		return 1;
 	}
@@ -981,7 +981,7 @@ int drive( const std::string& dataFile, const std::string& mrfGFile, const std::
 	// need this untill g-prior code is not finalised
 	if( chainData.beta_type == Beta_Type::gprior )
 	{
-		console_out() << "ERROR: GPrior not implemented yet\n";
+		Rcout << "ERROR: GPrior not implemented yet\n";
 		return 1;
 	}
 
@@ -1002,7 +1002,7 @@ int drive( const std::string& dataFile, const std::string& mrfGFile, const std::
 
 
 	// read Data and format into usables
-	console_out() << "Reading input files ... ";
+	Rcout << "Reading input files ... ";
 
 	try
 	{
@@ -1010,7 +1010,7 @@ int drive( const std::string& dataFile, const std::string& mrfGFile, const std::
 	}
 	catch(const std::exception& e)
 	{
-		err_out() << e.what() << '\n';
+		Rcerr << e.what() << '\n';
 		return 1;
 	}	
 
@@ -1020,15 +1020,15 @@ int drive( const std::string& dataFile, const std::string& mrfGFile, const std::
 	}
 	catch(const std::exception& e)
 	{
-		err_out() << e.what() << '\n';
+		Rcerr << e.what() << '\n';
 		return 1;
 	}	
 
-		console_out() << "... successfull!" << endl;
+		Rcout << "... successfull!" << endl;
 
 	// ############
 
-	console_out() << "Clearing and initialising output files " << endl;
+	Rcout << "Clearing and initialising output files " << endl;
 
 	// Re-define dataFile so that I can use it in the output
 	chainData.filePrefix = dataFile;
@@ -1061,23 +1061,23 @@ int drive( const std::string& dataFile, const std::string& mrfGFile, const std::
 			throw Bad_Covariance_Type( chainData.covariance_type );
 	}
 
-	console_out() << "Init RNG engine .. ";
+	Rcout << "Init RNG engine .. ";
 
 	// ############# Init the RNG generator/engine
 	std::random_device r;
 	unsigned int nThreads{1};
 	
 	#ifdef _OPENMP
-        if ( omp_get_max_threads() == 1 )
-        {
-            nThreads = 1;
+		if ( omp_get_max_threads() == 1 )
+		{
+				nThreads = 1;
 
-						console_out() << "\n The parallelization is disable by giving one thread!" << std::endl;
-        }else
-        {
-            nThreads = std::min( 16, omp_get_max_threads()-1 ); //TODO: make 16 as parameter, note I still use -1 to allow PC to do work in the meantime
-        }
-        omp_set_num_threads(  nThreads );
+				Rcout << "\n The parallelization is disable by giving one thread!" << std::endl;
+		}else
+		{
+				nThreads = std::min( 16, omp_get_max_threads()-1 ); //TODO: make 16 as parameter, note I still use -1 to allow PC to do work in the meantime
+		}
+		omp_set_num_threads(  nThreads );
 	#endif
 
 	rng.reserve(nThreads);  // reserve the correct space for the vector of rng engines
@@ -1091,7 +1091,7 @@ int drive( const std::string& dataFile, const std::string& mrfGFile, const std::
 		rng[i] = std::mt19937_64(seed + i*(1000*(std::pow(chainData.surData.nOutcomes,3)*chainData.surData.nPredictors*3)*nIter) );
 	}
 
-	console_out() << " DONE ! " << endl;
+	Rcout << " DONE ! " << endl;
 
 	// ###################################
 	// Parameters Inits

@@ -13,10 +13,10 @@ SUR_Chain::SUR_Chain( std::shared_ptr<arma::mat> data_, std::shared_ptr<arma::ma
             Beta_Type beta_type_ , Covariance_Type covariance_type_ , 
             double externalTemperature ):
     data(data_), mrfG(mrfG_), outcomesIdx(outcomesIdx_), VSPredictorsIdx(VSPredictorsIdx_), fixedPredictorsIdx(fixedPredictorsIdx_),
-    nObservations(nObservations_), nOutcomes(nOutcomes_), nVSPredictors(nVSPredictors_), nFixedPredictors(nFixedPredictors_),
     missingDataArrayIdx(missingDataArrayIdx_), completeCases(completeCases_),
-    gamma_sampler_type(gamma_sampler_type_),gamma_type(gamma_type_),beta_type(beta_type_),covariance_type(covariance_type_),
-    temperature(externalTemperature),internalIterationCounter(0),jtStartIteration(0)
+    nObservations(nObservations_), nOutcomes(nOutcomes_), nVSPredictors(nVSPredictors_), nFixedPredictors(nFixedPredictors_),
+    temperature(externalTemperature),internalIterationCounter(0),jtStartIteration(0),
+    covariance_type(covariance_type_),gamma_type(gamma_type_),beta_type(beta_type_),gamma_sampler_type(gamma_sampler_type_)
     {
 
         predictorsIdx = std::make_shared<arma::uvec>(arma::join_vert( *fixedPredictorsIdx, *VSPredictorsIdx ));
