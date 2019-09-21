@@ -1,8 +1,8 @@
 Package: BayesSUR
 Type: Package
 Title: Bayesian Seemingly Unrelated Regression
-Version: 0.1.19
-Date: 2019-08-27
+Version: 0.1.20
+Date: 2019-09-22
 Authors@R: c(person("Marco", "Banterle", email = "marco.banterle@gmail.com", role = c("aut")), person("Zhi", "Zhao", email = "zhi.zhao@medisin.uio.no", role = c("aut", "cre")))
 Maintainer@R: person("Zhi", "Zhao", email = "zhi.zhao@medisin.uio.no",
         role = c("aut", "cre")) person("Marco", "Banterle", email =
@@ -13,8 +13,8 @@ VignetteBuilder: R.rsp
 RoxygenNote: 6.1.1
 Depends: R (>= 3.2)
 Encoding: UTF-8
-LinkingTo: Rcpp, RcppArmadillo (>= 0.9.000), BH
-Imports: Rcpp, utils, stats, BH, igraph,
+LinkingTo: Rcpp, RcppArmadillo (>= 0.9.000)
+Imports: Rcpp, utils, stats, igraph,
         Matrix, tikzDevice, grDevices, graphics, BDgraph, data.table,
         gRbase, plyr, scrime
 Suggests: xml2, R.rsp
