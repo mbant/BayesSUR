@@ -1,7 +1,10 @@
 #ifndef ESS_ATOM_H
 #define ESS_ATOM_H
 
-#include <iostream>  // for std::cout
+#ifdef CCODE
+	#include <iostream>
+#endif
+
 #include <string>
 #include <vector>
 #include <memory>

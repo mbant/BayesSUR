@@ -1148,11 +1148,6 @@ double SUR_Chain::logPGamma( const arma::umat& externalGamma , double d, double 
 
     arma::mat externalMRFG = mrfG->cols( arma::linspace<arma::uvec>(0,1,2) );
 
-//==============
-// debug the parameters passing
-/*std::cout << "MRF_d: " << d << "; MRF_e: " << e << "\n" << std::endl;
-std::cout << "GmrfFile: " << arma::size(externalMRFG) << (externalMRFG).submat(0,0,5,1) << "\n" << std::endl;*/
-//==============
     double logP = 0.;
     // calculate the quadratic form in MRF by using all edges of G
     arma::vec gammaVec = arma::conv_to< arma::vec >::from(arma::vectorise(externalGamma));
@@ -2576,9 +2571,6 @@ void SUR_Chain::stepWGibbs()
     double a = a_w + 0.5*( /*arma::accu(gamma) + intercept */ /*or*/ gammaMask.n_rows ); // divide by temperature if the prior on gamma is tempered
     double b = b_w + 0.5*( arma::accu( arma::square(arma::nonzeros(beta)) ) );   // all the beta_jk w/ gamma_jk=0 are 0 already // /temperature
 
-    // std::cout << a_w << " -> " << a << "   ---   "<< b_w << " -> " << b << std::endl; 
-    // std::cout << arma::nonzeros(beta).t() << std::endl; std::cin >> w;
-
     w = Distributions::randIGamma( a , b );
 
     logPW(); // update its prior value
@@ -3439,8 +3431,6 @@ int SUR_Chain::globalStep( std::shared_ptr<SUR_Chain>& that )
         default:
             break;
     }
-
-    // std::cout << globalType << std::flush;
 
     switch(globalType){
 

@@ -1,17 +1,11 @@
 #include "utils.h"
 
-#include <iostream>
-#include <string>
-#include <armadillo>
-#include <cmath>
-
-#include <limits>
-
 #ifndef CCODE
-	#include <Rcpp.h>
 	using Rcpp::Rcout;
+	using Rcpp::Rcerr;
 #else
 	#define Rcout std::cout
+	#define Rcerr std::cerr
 #endif
 
 namespace Utils{
@@ -182,8 +176,8 @@ namespace Utils{
 
 		if( print )
 		{
-			Rcout << 100. * missingDataVecIdx.n_elem/(double)(nObservations*data->n_cols) <<"% of missing data.." <<std::flush<<std::endl;
-			Rcout << 100. * completeCases->n_elem/(double)(nObservations) <<"% of Complete cases" <<std::flush<<std::endl;
+			Rcout << 100. * missingDataVecIdx.n_elem/(double)(nObservations*data->n_cols) <<"% of missing data.." << '\n';
+			Rcout << 100. * completeCases->n_elem/(double)(nObservations) <<"% of Complete cases" << '\n';
 		}
 
 		return;
@@ -286,26 +280,26 @@ namespace Utils{
 			{
 				if ( std::find(valid_top_level.begin(), valid_top_level.end(), node.name() ) == valid_top_level.end() )
 
-				Rcout << "\n\n\tWarning: " << node.name() << " not recognised as a valid top level node - only 'hyperparameters' is valid" << std::endl; // ,model and chain
+				Rcout << "\n\n\tWarning: " << node.name() << " not recognised as a valid top level node - only 'hyperparameters' is valid" << '\n'; // ,model and chain
 			}
 
 			for (pugi::xml_node node = doc.child("hyperparameters").first_child(); node; node = node.next_sibling())
 			{
 				if ( std::find(valid_hyperpar.begin(), valid_hyperpar.end(), node.name() ) == valid_hyperpar.end() )
 				{
-					Rcout << "\n\n\tWARNING: " << node.name() << " was not recognised as a valid hyperaparameter" << std::endl;
-					Rcout << "\t"<<node.name() << ": " << node.child_value() << " disregarded .. " << std::endl;
+					Rcout << "\n\n\tWARNING: " << node.name() << " was not recognised as a valid hyperaparameter" << '\n';
+					Rcout << "\t"<<node.name() << ": " << node.child_value() << " disregarded .. " << '\n';
 					Rcout << "\tValid hyperparameters are: \n\t";
 					for( auto& v : valid_hyperpar ) 
 						Rcout << v << ", ";
-					Rcout << " --- see the documentation for more details " << std::endl << std::endl;
+					Rcout << " --- see the documentation for more details " << '\n' << '\n';
 					
 				}
 			}
 
 		}
 		else{
-			Rcout << std::endl << "No hyperparameter input file was given (or wrong format detected), so default values will be used." << std::endl;
+			Rcout << '\n' << "No hyperparameter input file was given (or wrong format detected), so default values will be used." << '\n';
 		}
 
 	}

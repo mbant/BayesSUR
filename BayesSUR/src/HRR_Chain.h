@@ -1,7 +1,6 @@
 #ifndef HRR_CHAIN_H
 #define HRR_CHAIN_H
 
-#include <iostream>  // for std::cout
 #include <string>
 #include <vector>
 #include <memory>

@@ -1,12 +1,28 @@
 #ifndef DISTR
 #define DISTR
 
-#include <armadillo>
-#include <tgmath.h>
-#include <boost/math/special_functions/erf.hpp> // can I do this?
+#ifndef CCODE
+	#include <RcppArmadillo.h>
+#else
+	#include <armadillo>
+#endif
+
+#include <random>
+#include <cmath>
+
+#include <limits>
+#include <vector>
 #include <random>
 
 namespace Distributions{
+
+	class dimensionsNotMatching : public std::exception
+	{
+		const char * what () const throw ()
+		{
+			return "Parameter dimensions not matching (most likely mean vector and Covariance matrix).";
+		}
+	};
 
 	class negativeParameters : public std::exception
 	{
@@ -73,7 +89,11 @@ namespace Distributions{
 	double lMvGamma(unsigned int n, double a);
 
 	double CDFNormal(double x, double m=0., double sd=1.);
-	double invCDFNormal(double x, double m=0., double sd=1.);
+
+	// BELOW not needed and introduces extra dependency on
+	//#include <boost/math/special_functions/erf.hpp>
+	// hence excluded
+	// double invCDFNormal(double x, double m=0., double sd=1.); 
 
 	arma::uvec randSampleWithoutReplacement
 	(

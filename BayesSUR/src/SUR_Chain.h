@@ -1,7 +1,6 @@
 #ifndef SUR_Chain_H
 #define SUR_Chain_H
 
-#include <iostream>  // for std::cout
 #include <string>
 #include <vector>
 #include <memory>

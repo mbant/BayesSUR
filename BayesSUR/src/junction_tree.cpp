@@ -1,7 +1,6 @@
 #include "junction_tree.h"
 
 #ifndef CCODE
-  #include <Rcpp.h>
   using Rcpp::Rcout;
 #else
   #define Rcout std::cout
@@ -182,17 +181,17 @@ void JTComponent::print() const
     Rcout << "JT Component @ address " << this <<" is made of Nodes :";
     for( auto i : nodes )
         Rcout << " " << i;
-    Rcout << std::endl;
+    Rcout << '\n';
 
     Rcout << "  with Separator :";
     for( auto i : separator )
         Rcout << " " << i;
-    Rcout << std::endl;
+    Rcout << '\n';
 
     Rcout << "  Its Parent is @ " << parent.lock() << " and its Children are @:";
     for( auto i : childrens )
         Rcout << " " << i;
-    Rcout << std::endl << std::endl;
+    Rcout << '\n' << '\n';
 }
 
 // ##########################################################################################
@@ -301,18 +300,18 @@ unsigned int JunctionTree::getDimension() const
 
 void JunctionTree::print() const
 {
-    Rcout << std::endl << " ---------------------------------- " << std::endl;
+    Rcout << '\n' << " ---------------------------------- " << '\n';
     for( auto i : perfectCliqueSequence )
         i->print();
-    Rcout << " ---------------------------------- " << std::endl <<
-        "The PEO for this JT is :" << std::endl;
+    Rcout << " ---------------------------------- " << '\n' <<
+        "The PEO for this JT is :" << '\n';
 
     for(auto i : perfectEliminationOrder )
         Rcout << i << " ";
-    Rcout << std::endl << " ---------------------------------- " << std::endl;
+    Rcout << '\n' << " ---------------------------------- " << '\n';
 
     arma::umat tmp(adjacencyMatrix);
-    Rcout << "Graph's Adjacency Matrix: " << tmp << std::endl << std::endl;
+    Rcout << "Graph's Adjacency Matrix: " << tmp << '\n' << '\n';
 }
 
 void JunctionTree::cloneRoot( std::shared_ptr<JTComponent>& newComponent , 
@@ -2381,13 +2380,13 @@ void JunctionTree::reRoot()
 bool JunctionTree::isChild( std::shared_ptr<JTComponent>& parent , std::shared_ptr<JTComponent>& node )
 {
     std::vector<std::shared_ptr<JTComponent>> parentsChildrens = parent -> getChildrens();
-    unsigned int nChildrens = parentsChildrens.size();
+    const unsigned int nChildrens = parentsChildrens.size();
 
     if( nChildrens == 0 )
         return false;
 
-    boost::dynamic_bitset<> res(nChildrens);
-    res.reset(); // set all to false
+    std::vector<bool> res;
+    res.resize(nChildrens,false); // init and set all to false
 
     for( unsigned int i=0; i<nChildrens; ++i )
     {
@@ -2398,7 +2397,10 @@ bool JunctionTree::isChild( std::shared_ptr<JTComponent>& parent , std::shared_p
         }
     }
 
-    return res.any();
+    for( auto const& b : res)
+        if(b) return true;
+    return false;
+
 }
 
 void JunctionTree::randomJTPermutation()

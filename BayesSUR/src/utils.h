@@ -1,10 +1,17 @@
 #ifndef UTILS
 #define UTILS
 
-#include <iostream>
-#include <string>
+#ifdef CCODE
+	#include <iostream>
+	#include <armadillo>
+#else
+	#include <RcppArmadillo.h>
+#endif
+
 #include <memory>
-#include <armadillo>
+#include <string>
+#include <cmath>
+#include <limits>
 
 #include "global.h"
 #include "Parameter_types.h"

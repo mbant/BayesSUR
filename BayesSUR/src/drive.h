@@ -2,11 +2,16 @@
 #define DRIVESUR
 
 #include <vector>
-#include <iostream>
 #include <string>
-#include <armadillo>
-// #include <tgmath.h>
-// #include <limits>
+#ifndef CCODE
+	#include <RcppArmadillo.h>
+#else
+	#include <armadillo>
+#endif
+
+#ifdef CCODE
+	#include <iostream>
+#endif
 
 #ifdef _OPENMP
 	#include <omp.h>

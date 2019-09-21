@@ -16,7 +16,8 @@
 // NOTE THAT THIS IS BASICALLY JUST A WRAPPER
 
 #include "drive.h"
-#include <Rcpp.h>
+#include <RcppArmadillo.h>
+
 using Rcpp::Rcerr;
 
 

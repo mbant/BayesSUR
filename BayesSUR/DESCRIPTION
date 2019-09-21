@@ -14,7 +14,7 @@ RoxygenNote: 6.1.1
 Depends: R (>= 3.2)
 Encoding: UTF-8
 LinkingTo: Rcpp, RcppArmadillo (>= 0.9.000), BH
-Imports: Rcpp, utils, stats, RcppArmadillo (>= 0.9.000), BH, igraph,
+Imports: Rcpp, utils, stats, BH, igraph,
         Matrix, tikzDevice, grDevices, graphics, BDgraph, data.table,
         gRbase, plyr, scrime
 Suggests: xml2, R.rsp

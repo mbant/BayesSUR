@@ -3,6 +3,7 @@
 
 #include <RcppArmadillo.h>
 #include <Rcpp.h>
+#define NDEBUG 1
 
 using namespace Rcpp;
 

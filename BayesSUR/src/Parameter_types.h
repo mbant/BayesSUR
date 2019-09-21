@@ -1,7 +1,9 @@
 #ifndef PARAM_TYPES_H
 #define PARAM_TYPES_H
 
-#include <iostream>
+#ifdef CCODE
+	#include <iostream>
+#endif
 
 /******************************************************
  * Parameter types, to be used in all derived classes 

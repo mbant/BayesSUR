@@ -1,15 +1,20 @@
 #ifndef JUNCTION_TREE_H
 #define JUNCTION_TREE_H
 
-#include <iostream>  // for std::cout
+#ifdef CCODE
+	#include <iostream>
+    #include <armadillo>
+#else
+    #include <RcppArmadillo.h>
+#endif
+
+
 #include <string>
 #include <vector>
 #include <deque>
 #include <set>
 #include <memory>
 #include <algorithm> // std::set_difference, std::sort, ...
-
-#include <boost/dynamic_bitset.hpp>
 
 #include "distr.h"
 #include "utils.h"

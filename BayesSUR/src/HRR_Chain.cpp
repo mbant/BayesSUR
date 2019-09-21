@@ -2068,8 +2068,6 @@ int HRR_Chain::globalStep( std::shared_ptr<HRR_Chain>& that )
 
     unsigned int globalType = Distributions::randIntUniform(0,3);
 
-    // std::cout << globalType << std::flush;
-
     switch(globalType){
 
         // -- Exchange and CrossOver

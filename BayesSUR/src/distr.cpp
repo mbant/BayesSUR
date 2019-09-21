@@ -2,18 +2,10 @@
 #include "distr.h"
 #include "utils.h"
 
-#include <armadillo>
-#include <cmath>
-#include <limits>
-#include <vector>
-#include <random>
-
-#include <boost/math/special_functions/erf.hpp> // can I do this?
-#include <boost/math/special_functions/binomial.hpp>
 
 #ifndef CCODE
-	#include <Rcpp.h>
 	using Rcpp::Rcout;
+	#define BOOST_DISABLE_ASSERTS
 #else
 	#define Rcout std::cout
 #endif
@@ -140,8 +132,8 @@ namespace Distributions{
 		//check
 		if(Sigma.n_rows != d || Sigma.n_cols != d )
 		{
-			Rcout << " Dimension not matching in the multivariate normal sampler" << std::flush;
-			return 0;
+			Rcout << " Dimension not matching in the multivariate normal sampler";
+			throw dimensionsNotMatching();
 		}
 
 			arma::mat A;
@@ -159,7 +151,7 @@ namespace Distributions{
 				{
 					res = (eigvec * arma::diagmat(arma::sqrt(eigval)) * randNormal(d)).t();
 				}else{
-					Rcout << "randMvNorm failing because of singular Sigma matrix" << std::endl << std::flush;
+					Rcout << "randMvNorm failing because of singular Sigma matrix" << '\n';
 					throw negativeDefiniteParameters();
 				}
 			}
@@ -213,8 +205,8 @@ namespace Distributions{
 		//check
 		if(shape <= 0 || scale <= 0 )
 		{
-			Rcout << " Negative parameter in the gamma sampler " << std::flush;
-			throw; // THROW EXCPTION
+			Rcout << " Negative parameter in the gamma sampler " << '\n';
+			throw negativeParameters(); // THROW EXCPTION
 		}
 
 		std::gamma_distribution<> distr(shape,1./scale);
@@ -602,7 +594,6 @@ namespace Distributions{
 		return logP;
 	}
 
-
 	double lBeta(double a,double b){    //log beta function
 		return std::lgamma(a) + std::lgamma(b) - std::lgamma(a+b);
 	}
@@ -631,12 +622,16 @@ namespace Distributions{
 		return k*log(pi) + (n-k)*log(1.-pi);
 	}
 
+	// could be int but we'd need to cast them to doubles anyway...
+	double log_binomial_coefficient(double n, double k) { return -log(n+1)-lBeta(n-k+1,k+1); }
+
 	double logPDFBinomial(unsigned int k, unsigned int n, double pi)
 	{
 		if ( n < k )
 			return -std::numeric_limits<double>::infinity();
 		else
-			return log(boost::math::binomial_coefficient<double>(n, k) ) + k*log(pi) + (n-k)*log(1.-pi) ; // need double template https://www.boost.org/doc/libs/1_69_0/libs/math/doc/html/math_toolkit/factorials/sf_binomial.html
+			return log_binomial_coefficient(n, k) + k*log(pi) + (n-k)*log(1.-pi) ;
+			// return log(boost::math::binomial_coefficient<double>(n, k) ) + k*log(pi) + (n-k)*log(1.-pi) ; // need double template https://www.boost.org/doc/libs/1_69_0/libs/math/doc/html/math_toolkit/factorials/sf_binomial.html
 	}
 
 	double CDFNormal(double x, double m, double sd)
@@ -644,10 +639,13 @@ namespace Distributions{
 		return 0.5 * std::erfc(-((x-m)/sd) * M_SQRT1_2); // ... right?
 	}
 
-	double invCDFNormal(double x, double m, double sd)
-	{
-		return sqrt(2.) * boost::math::erf_inv(2.*((x-m)/sd)-1.);; // ... right?
-	}
+	// BELOW not needed and introduces extra dependency on
+	//#include <boost/math/special_functions/erf.hpp>
+	// hence excluded
+	// double invCDFNormal(double x, double m, double sd)
+	// {
+	// 	return sqrt(2.) * boost::math::erf_inv(2.*((x-m)/sd)-1.);; // ... right?
+	// }
 
 
 	double logPDFTruncNorm(double x, double m, double sd, double lower, double upper)
