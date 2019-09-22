@@ -7,7 +7,17 @@ See `test.R` file for usage; see the package vignette `BayesSUR.pdf` (submitted 
 
 ## Update
 
-### New in the version `BayesSUR_0.1.19.tar.gz` (27 August 2019):
+### New in the version `BayesSUR_0.1.21.tar.gz` (22 September 2019):
+
+1) Fixed the CPO of the HRR models.
+2) Modified function `summary()`.
+3) Added functions `print()`, `coef()`, `fitted()`, `predict()`.
+
+### The version `BayesSUR_0.1.20.tar.gz` (22 September 2019):
+
+Removed last warning about strand std::cou.
+
+### The version `BayesSUR_0.1.19.tar.gz` (27 August 2019):
 
 Fixing the warnings from the `devtools::check("BayesSUR")`......
 
