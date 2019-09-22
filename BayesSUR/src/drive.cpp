@@ -124,6 +124,7 @@ int drive_SUR( Chain_Data& chainData )
 	arma::vec pi_out;
 	arma::vec hotspot_tail_prob_out;
     arma::mat cpo_out, predLik;
+    arma::vec cposumy_out; // CPO with each element summerizing all response variables
     arma::mat lpd, waic_out, waic_frac_sum;
 
 	if( chainData.burnin == 0 )
@@ -218,6 +219,7 @@ int drive_SUR( Chain_Data& chainData )
 	{
 			predLik =  sampler[0] -> getPredLikelihood() ;
 			cpo_out = 1./predLik;
+            cposumy_out = 1./arma::exp( arma::sum( arma::log(predLik), 1 ) );
 			
 			lpd = predLik;
 			waic_out = arma::square( arma::log(predLik) );
@@ -277,6 +279,7 @@ int drive_SUR( Chain_Data& chainData )
             {
                 predLik = sampler[0] -> getPredLikelihood();
                 cpo_out += 1./predLik;
+                cposumy_out += 1./arma::exp( arma::sum( arma::log(predLik), 1 ) );
                 
                 lpd += predLik;
                 waic_out += arma::square( arma::log(predLik) );
@@ -418,6 +421,9 @@ int drive_SUR( Chain_Data& chainData )
         cpo_out = 1./( cpo_out/(double)(chainData.nIter-chainData.burnin+1) );
         cpo_out.save(outFilePrefix+"CPO_out.txt",arma::raw_ascii);
         
+        cposumy_out = 1./( cposumy_out/(double)(chainData.nIter-chainData.burnin+1) );
+        cposumy_out.save(outFilePrefix+"CPOsumy_out.txt",arma::raw_ascii);
+        
         waic_out = arma::log( lpd/(double)(chainData.nIter-chainData.burnin+1) ) - ( waic_out - arma::square(waic_frac_sum)/(double)(chainData.nIter-chainData.burnin+1) )/(double)(chainData.nIter-chainData.burnin);
         waic_out.save(outFilePrefix+"WAIC_out.txt",arma::raw_ascii);
     }
@@ -542,7 +548,8 @@ int drive_HRR( Chain_Data& chainData )
 	arma::vec hotspot_tail_prob_out;
     
 	arma::mat cpo_out, predLik;
-	arma::mat lpd, waic_out, waic_frac_sum;
+    arma::vec cposumy_out;
+	//arma::mat lpd, waic_out, waic_frac_sum;
 
 	if( chainData.burnin == 0 )
 	{
@@ -601,12 +608,13 @@ int drive_HRR( Chain_Data& chainData )
 	
 	if ( chainData.output_CPO )
 	{
-			predLik =  sampler[0] -> getPredLikelihood() ;
-			cpo_out = 1./predLik;
-			
-			lpd = predLik;
-			waic_out = arma::square( arma::log(predLik) );
-			waic_frac_sum = arma::log(predLik);
+        predLik =  sampler[0] -> getPredLikelihood() ;
+        cpo_out = predLik;
+        cposumy_out = arma::exp( arma::sum( arma::log(predLik), 1 ) );
+        
+        //lpd = predLik;
+        //waic_out = arma::square( arma::log(predLik) );
+        //waic_frac_sum = arma::log(predLik);
 	}
 	
 	logPOutFile <<     sampler[0] -> getLogPO() <<  " ";
@@ -669,11 +677,12 @@ int drive_HRR( Chain_Data& chainData )
             if( chainData.output_CPO )
             {
                 predLik = sampler[0] -> getPredLikelihood();
-                cpo_out += 1./predLik;
+                cpo_out += predLik;
+                cposumy_out += arma::exp( arma::sum( arma::log(predLik), 1 ) );
                 
-                lpd += predLik;
-                waic_out += arma::square( arma::log(predLik) );
-                waic_frac_sum += arma::log(predLik);
+                //lpd += predLik;
+                //waic_out += arma::square( arma::log(predLik) );
+                //waic_frac_sum += arma::log(predLik);
             }
 
 			// Nothing to update for model size
@@ -774,11 +783,14 @@ int drive_HRR( Chain_Data& chainData )
     
     if ( chainData.output_CPO )
     {
-        cpo_out = 1./( cpo_out/(double)(chainData.nIter-chainData.burnin+1) );
+        cpo_out = cpo_out/(double)(chainData.nIter-chainData.burnin+1);
         cpo_out.save(outFilePrefix+"CPO_out.txt",arma::raw_ascii);
         
-        waic_out = arma::log( lpd/(double)(chainData.nIter-chainData.burnin+1) ) - ( waic_out - arma::square(waic_frac_sum)/(double)(chainData.nIter-chainData.burnin+1) )/(double)(chainData.nIter-chainData.burnin);
-        waic_out.save(outFilePrefix+"WAIC_out.txt",arma::raw_ascii);
+        cposumy_out = cposumy_out/(double)(chainData.nIter-chainData.burnin+1);
+        cposumy_out.save(outFilePrefix+"CPOsumy_out.txt",arma::raw_ascii);
+        
+        //waic_out = arma::log( lpd/(double)(chainData.nIter-chainData.burnin+1) ) - ( waic_out - arma::square(waic_frac_sum)/(double)(chainData.nIter-chainData.burnin+1) )/(double)(chainData.nIter-chainData.burnin);
+        //waic_out.save(outFilePrefix+"WAIC_out.txt",arma::raw_ascii);
     }
 
 	// -----

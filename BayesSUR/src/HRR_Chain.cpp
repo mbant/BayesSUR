@@ -882,76 +882,6 @@ double HRR_Chain::logPW( double w_ )
 // PREDICTIVE LIKELIHOOD of the HRR model is not implemented
 arma::mat HRR_Chain::predLikelihood( )
 {
-    arma::mat predLik = arma::zeros<arma::mat>(nObservations, nOutcomes);
-    arma::mat dataOutcome = data->cols( *outcomesIdx );
-    
-#ifdef _OPENMP
-#pragma omp parallel for
-#endif
-    for( unsigned int k=0; k<nOutcomes; ++k)
-        for( unsigned int j=0; j<nObservations; ++j )
-        {
-            arma::uvec VS_IN_k = gammaMask( arma::find(  gammaMask.col(1) == k) , arma::zeros<arma::uvec>(1) );
-            arma::mat W_k;
-        
-            if( preComputedXtX )
-            {
-                switch ( beta_type )
-                {
-                    case Beta_Type::gprior :
-                    {
-                        W_k = (w*temperature)/(w+temperature) * arma::inv_sympd( XtX(VS_IN_k,VS_IN_k) );
-                        break;
-                    }
-                        
-                    case Beta_Type::independent :
-                    {
-                        W_k = arma::inv_sympd( XtX(VS_IN_k,VS_IN_k)/temperature + 1./w * arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
-                        break;
-                    }
-                        
-                    default:
-                        throw Bad_Beta_Type ( beta_type );
-                }
-            }
-            else
-            {
-                switch ( beta_type )
-                {
-                    case Beta_Type::gprior :
-                    {
-                        W_k = (w*temperature)/(w+temperature) * arma::inv_sympd( ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) );
-                        break;
-                    }
-                        
-                    case Beta_Type::independent :
-                    {
-                        W_k = arma::inv_sympd( ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) )/temperature + 1./w * arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
-                        break;
-                    }
-                        
-                    default:
-                        throw Bad_Beta_Type ( beta_type );
-                }
-            }
-        
-            arma::vec mu_k = W_k * ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->col( (*outcomesIdx)(k) ) ); // we divide by temp later
-        
-            double a_sigma_k = a_sigma + 0.5*(double)nObservations/temperature;
-            double b_sigma_k = b_sigma + 0.5* arma::as_scalar( (data->col( (*outcomesIdx)(k) ).t() * data->col( (*outcomesIdx)(k) )) - ( mu_k.t() * data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->col( (*outcomesIdx)(k) ) ) )/temperature;
-        
-            double sign, tmp;
-            arma::log_det(tmp, sign, W_k );
-            predLik(j,k) += 0.5*tmp;
-        
-            // arma::log_det(tmp, sign, w * arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
-            predLik(j,k) -= 0.5 * (double)VS_IN_k.n_elem * log(w);
-        
-            predLik(j,k) += a_sigma*log(b_sigma) - a_sigma_k*log(b_sigma_k);
-        
-            predLik(j,k) += std::lgamma(a_sigma_k) - std::lgamma(a_sigma);
-        }
-    
     return predLik;
 }
 
@@ -961,6 +891,7 @@ double HRR_Chain::logLikelihood( )
 {
 
     double logP {0};
+    arma::mat predLik = arma::zeros<arma::mat>(nObservations, nOutcomes);
 
     #ifdef _OPENMP
     #pragma omp parallel for default(shared) reduction(+:logP)
@@ -1026,6 +957,9 @@ double HRR_Chain::logLikelihood( )
         logP += a_sigma*log(b_sigma) - a_sigma_k*log(b_sigma_k);
 
         logP += std::lgamma(a_sigma_k) - std::lgamma(a_sigma);
+        
+        // posterior predictive
+        predLik.col(k) = Distributions::randMvT( 2*a_sigma_k, (data->col((*outcomesIdx)(k))) * mu_k, b_sigma_k/a_sigma_k*( arma::eye<arma::mat>(nObservations,nObservations) - (data->col((*outcomesIdx)(k)))*W_k*(data->col((*outcomesIdx)(k))).t() ) );
     }
 
     logP += -log(M_PI)*((double)nObservations*(double)nOutcomes*0.5); // normalising constant remaining from the likelhood
