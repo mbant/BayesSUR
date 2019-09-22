@@ -5,6 +5,17 @@
 #include <omp.h>
 #endif
 
+#ifndef CCODE
+	#include <RcppArmadillo.h>
+	using Rcpp::Rcout;
+	using Rcpp::Rcerr;
+#else
+	#include <armadillo>
+	#include <iostream>
+	#define Rcout std::cout
+	#define Rcerr std::cerr
+#endif
+
 #include <vector>
 #include <string>
 #include <memory>
@@ -227,7 +238,7 @@ void ESS_Sampler<T>::updateTemperatures()
             chain[i]->setTemperature( tempRatio * chain[i-1]->getTemperature() );
         }
 
-        std::cout << "Temperature ladder updated, new temperature ratio : " << tempRatio << std::endl;
+        Rcout << "Temperature ladder updated, new temperature ratio : " << tempRatio << std::endl;
 
     }else if( getGlobalAccRate() < 0.05 )
     {
@@ -238,7 +249,7 @@ void ESS_Sampler<T>::updateTemperatures()
             chain[i]->setTemperature( tempRatio * chain[i-1]->getTemperature() );
         }
         
-        std::cout << "Temperature ladder updated, new temperature ratio : " << tempRatio << std::endl;
+        Rcout << "Temperature ladder updated, new temperature ratio : " << tempRatio << std::endl;
     }
 
     // I want to maintain a sort-of-moving avaerage acceptance count for the global moves, so that 

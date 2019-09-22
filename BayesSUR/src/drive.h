@@ -3,13 +3,12 @@
 
 #include <vector>
 #include <string>
+
 #ifndef CCODE
 	#include <RcppArmadillo.h>
+	#include <fstream>
 #else
 	#include <armadillo>
-#endif
-
-#ifdef CCODE
 	#include <iostream>
 #endif
 

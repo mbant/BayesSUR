@@ -8,8 +8,6 @@
 	#define Rcerr std::cerr
 #endif
 
-#include <fstream>
-
 #ifdef _OPENMP
 extern omp_lock_t RNGlock; //defined in global.h
 #endif
@@ -34,15 +32,15 @@ int drive_SUR( Chain_Data& chainData )
 
 	// extra step needed to read in the MRF prior G matrix if needed
 	// ************************************
-/*	if ( chainData.gamma_type == Gamma_Type::mrf )
-	{
-		for( unsigned int i=0; i< chainData.nChains; ++i )
+	/*	if ( chainData.gamma_type == Gamma_Type::mrf )
 		{
-			sampler[i]->mrfGInit( chainData.mrfG );
-			sampler[i]->logPGamma();
+			for( unsigned int i=0; i< chainData.nChains; ++i )
+			{
+				sampler[i]->mrfGInit( chainData.mrfG );
+				sampler[i]->logPGamma();
+			}
 		}
-	}
-*/
+	*/
 	// Init all parameters
 	// *****************************
 	sampler.setHyperParameters( chainData );
@@ -146,18 +144,6 @@ int drive_SUR( Chain_Data& chainData )
 			gOutFile.close();
 		}
 
-		/*logPOutFile << 	sampler[0] -> getLogPTau() << " ";
-		logPOutFile << 	sampler[0] -> getLogPEta() <<  " ";
-		logPOutFile << 	sampler[0] -> getLogPJT() <<  " ";
-		logPOutFile << 	sampler[0] -> getLogPSigmaRho() <<  " ";
-		logPOutFile << 	sampler[0] -> getLogPO() <<  " ";
-		logPOutFile << 	sampler[0] -> getLogPPi() <<  " ";
-		logPOutFile << 	sampler[0] -> getLogPGamma() <<  " ";
-		logPOutFile << 	sampler[0] -> getLogPW() <<  " ";
-		logPOutFile << 	sampler[0] -> getLogPBeta() <<  " ";
-		logPOutFile << 	sampler[0] -> getLogLikelihood();
-		logPOutFile << 	'\n';*/
-
 		if ( ( chainData.gamma_type == Gamma_Type::hotspot || chainData.gamma_type == Gamma_Type::hierarchical ) &&
 			 ( chainData.output_pi || chainData.output_tail ) )
 		{
@@ -187,63 +173,58 @@ int drive_SUR( Chain_Data& chainData )
 		if ( chainData.output_sigmaRho )
 			sigmaRho_out = sampler[0] -> getSigmaRho();
 
-		/*if ( chainData.output_model_size )
+	}else{
+		if ( chainData.output_gamma )
+				gamma_out = sampler[0] -> getGamma();
+		if ( chainData.covariance_type == Covariance_Type::HIW && chainData.output_G )
+				g_out = arma::umat( sampler[0] -> getGAdjMat() );
+		if ( chainData.output_beta )
+				beta_out = sampler[0] -> getBeta();
+		if ( chainData.output_sigmaRho )
+				sigmaRho_out = sampler[0] -> getSigmaRho();
+		if ( ( chainData.gamma_type == Gamma_Type::hotspot || chainData.gamma_type == Gamma_Type::hierarchical ) &&
+				( chainData.output_pi || chainData.output_tail ) )
 		{
+				tmpVec = sampler[0] -> getPi();
+				if ( chainData.output_pi )
+						pi_out = tmpVec;
+				if ( chainData.gamma_type == Gamma_Type::hotspot && chainData.output_tail )
+				{
+						tmpVec.for_each( [](arma::vec::elem_type& val) { if(val>1.0) val = 1.0; else val=0.0; } );
+						hotspot_tail_prob_out = tmpVec;
+				}
+		}
+	}
+	
+	logPOutFile <<     sampler[0] -> getLogPTau() << " ";
+	logPOutFile <<     sampler[0] -> getLogPEta() <<  " ";
+	logPOutFile <<     sampler[0] -> getLogPJT() <<  " ";
+	logPOutFile <<     sampler[0] -> getLogPSigmaRho() <<  " ";
+	logPOutFile <<     sampler[0] -> getLogPO() <<  " ";
+	logPOutFile <<     sampler[0] -> getLogPPi() <<  " ";
+	logPOutFile <<     sampler[0] -> getLogPGamma() <<  " ";
+	logPOutFile <<     sampler[0] -> getLogPW() <<  " ";
+	logPOutFile <<     sampler[0] -> getLogPBeta() <<  " ";
+	logPOutFile <<     sampler[0] -> getLogLikelihood();
+	logPOutFile <<     '\n';
+	
+	if ( chainData.output_model_size )
+	{
 			ModelSizeOutFile << sampler[0]->getModelSize() << " ";
 			ModelSizeOutFile << '\n';
-		}*/
+	}
+	
+	if ( chainData.output_CPO )
+	{
+			predLik =  sampler[0] -> getPredLikelihood() ;
+			cpo_out = 1./predLik;
+			
+			lpd = predLik;
+			waic_out = arma::square( arma::log(predLik) );
+			waic_frac_sum = arma::log(predLik);
+	}
 
-    }else{
-        if ( chainData.output_gamma )
-            gamma_out = sampler[0] -> getGamma();
-        if ( chainData.covariance_type == Covariance_Type::HIW && chainData.output_G )
-            g_out = arma::umat( sampler[0] -> getGAdjMat() );
-        if ( chainData.output_beta )
-            beta_out = sampler[0] -> getBeta();
-        if ( chainData.output_sigmaRho )
-            sigmaRho_out = sampler[0] -> getSigmaRho();
-        if ( ( chainData.gamma_type == Gamma_Type::hotspot || chainData.gamma_type == Gamma_Type::hierarchical ) &&
-            ( chainData.output_pi || chainData.output_tail ) )
-        {
-            tmpVec = sampler[0] -> getPi();
-            if ( chainData.output_pi )
-                pi_out = tmpVec;
-            if ( chainData.gamma_type == Gamma_Type::hotspot && chainData.output_tail )
-            {
-                tmpVec.for_each( [](arma::vec::elem_type& val) { if(val>1.0) val = 1.0; else val=0.0; } );
-                hotspot_tail_prob_out = tmpVec;
-            }
-        }
-    }
-    
-    logPOutFile <<     sampler[0] -> getLogPTau() << " ";
-    logPOutFile <<     sampler[0] -> getLogPEta() <<  " ";
-    logPOutFile <<     sampler[0] -> getLogPJT() <<  " ";
-    logPOutFile <<     sampler[0] -> getLogPSigmaRho() <<  " ";
-    logPOutFile <<     sampler[0] -> getLogPO() <<  " ";
-    logPOutFile <<     sampler[0] -> getLogPPi() <<  " ";
-    logPOutFile <<     sampler[0] -> getLogPGamma() <<  " ";
-    logPOutFile <<     sampler[0] -> getLogPW() <<  " ";
-    logPOutFile <<     sampler[0] -> getLogPBeta() <<  " ";
-    logPOutFile <<     sampler[0] -> getLogLikelihood();
-    logPOutFile <<     '\n';
-    
-    if ( chainData.output_model_size )
-    {
-        ModelSizeOutFile << sampler[0]->getModelSize() << " ";
-        ModelSizeOutFile << '\n';
-    }
-    
-    if ( chainData.output_CPO )
-    {
-        predLik =  sampler[0] -> getPredLikelihood() ;
-        cpo_out = 1./predLik;
-        
-        lpd = predLik;
-        waic_out = arma::square( arma::log(predLik) );
-        waic_frac_sum = arma::log(predLik);
-    }
-    
+
 	// ########
 	// ########
 	// ######## Start
@@ -317,7 +298,12 @@ int drive_SUR( Chain_Data& chainData )
 				Rcout << '\n';
 			}
 
+			#ifndef CCODE
+			Rcpp::checkUserInterrupt(); // this checks for interrupts from R
+			#endif
+
 			// Output to files every now and then
+
 			if( (i >= chainData.burnin) && ( (i-chainData.burnin+1) % (tick*1) == 0 ) )
 			{
 
@@ -335,18 +321,6 @@ int drive_SUR( Chain_Data& chainData )
 					gOutFile.close();
 				}
 
-				/*logPOutFile << 	sampler[0] -> getLogPTau() << " ";
-				logPOutFile << 	sampler[0] -> getLogPEta() <<  " ";
-				logPOutFile << 	sampler[0] -> getLogPJT() <<  " ";
-				logPOutFile << 	sampler[0] -> getLogPSigmaRho() <<  " ";
-				logPOutFile << 	sampler[0] -> getLogPO() <<  " ";
-				logPOutFile << 	sampler[0] -> getLogPPi() <<  " ";
-				logPOutFile << 	sampler[0] -> getLogPGamma() <<  " ";
-				logPOutFile << 	sampler[0] -> getLogPW() <<  " ";
-				logPOutFile << 	sampler[0] -> getLogPBeta() <<  " ";
-				logPOutFile << 	sampler[0] -> getLogLikelihood();
-				logPOutFile << 	'\n';*/
-
 				if ( ( chainData.gamma_type == Gamma_Type::hotspot || chainData.gamma_type == Gamma_Type::hierarchical ) &&
 					   chainData.output_pi )
 				{
@@ -361,40 +335,28 @@ int drive_SUR( Chain_Data& chainData )
 					htpOutFile << hotspot_tail_prob_out/(double)(i+1.0-chainData.burnin);
 					htpOutFile.close();
 				}
-
-				/*if ( chainData.output_model_size )
-				{
-					ModelSizeOutFile << sampler[0]->getModelSize() << " ";
-					ModelSizeOutFile << '\n';
-				}*/
-
-				#ifndef CCODE
-				Rcpp::checkUserInterrupt(); // this checks for interrupts from R
-				#endif
-
 			}
-            
-            //if( (i-chainData.burnin+1) % (tick*1) == 0 )
-            if( (i+1) % (tick*1) == 0 )
-            {
-                logPOutFile <<     sampler[0] -> getLogPTau() << " ";
-                logPOutFile <<     sampler[0] -> getLogPEta() <<  " ";
-                logPOutFile <<     sampler[0] -> getLogPJT() <<  " ";
-                logPOutFile <<     sampler[0] -> getLogPSigmaRho() <<  " ";
-                logPOutFile <<     sampler[0] -> getLogPO() <<  " ";
-                logPOutFile <<     sampler[0] -> getLogPPi() <<  " ";
-                logPOutFile <<     sampler[0] -> getLogPGamma() <<  " ";
-                logPOutFile <<     sampler[0] -> getLogPW() <<  " ";
-                logPOutFile <<     sampler[0] -> getLogPBeta() <<  " ";
-                logPOutFile <<     sampler[0] -> getLogLikelihood();
-                logPOutFile <<     '\n';
-                if ( chainData.output_model_size )
-                {
-                    ModelSizeOutFile << sampler[0]->getModelSize() << " ";
-                    ModelSizeOutFile << '\n';
-                }
-            }
-
+			
+			//if( (i-chainData.burnin+1) % (tick*1) == 0 )
+			if( (i+1) % (tick*1) == 0 )
+			{
+					logPOutFile <<     sampler[0] -> getLogPTau() << " ";
+					logPOutFile <<     sampler[0] -> getLogPEta() <<  " ";
+					logPOutFile <<     sampler[0] -> getLogPJT() <<  " ";
+					logPOutFile <<     sampler[0] -> getLogPSigmaRho() <<  " ";
+					logPOutFile <<     sampler[0] -> getLogPO() <<  " ";
+					logPOutFile <<     sampler[0] -> getLogPPi() <<  " ";
+					logPOutFile <<     sampler[0] -> getLogPGamma() <<  " ";
+					logPOutFile <<     sampler[0] -> getLogPW() <<  " ";
+					logPOutFile <<     sampler[0] -> getLogPBeta() <<  " ";
+					logPOutFile <<     sampler[0] -> getLogLikelihood();
+					logPOutFile <<     '\n';
+					if ( chainData.output_model_size )
+					{
+							ModelSizeOutFile << sampler[0]->getModelSize() << " ";
+							ModelSizeOutFile << '\n';
+					}
+			}
 		}
 
 	} // end MCMC
@@ -508,15 +470,15 @@ int drive_HRR( Chain_Data& chainData )
 	
 	// extra step needed to read in the MRF prior G matrix if needed
 	// **********************************
-/*	if ( chainData.gamma_type == Gamma_Type::mrf )
-	{
-		for( unsigned int i=0; i< chainData.nChains; ++i)
+	/*	if ( chainData.gamma_type == Gamma_Type::mrf )
 		{
-			sampler[i]->mrfGInit( chainData.mrfG );
-			sampler[i]->logPGamma();
+			for( unsigned int i=0; i< chainData.nChains; ++i)
+			{
+				sampler[i]->mrfGInit( chainData.mrfG );
+				sampler[i]->logPGamma();
+			}
 		}
-	}
-*/
+	*/
 	// Init all parameters
 	// *****************************
 	sampler.setHyperParameters( chainData );
@@ -534,6 +496,7 @@ int drive_HRR( Chain_Data& chainData )
 	Rcout << " DONE!\nDrafting the output files with the start of the chain ... ";
 
 	// INIT THE FILE OUTPUT
+	
 	std::string outFilePrefix = chainData.outFilePath+chainData.filePrefix;
 
 	// clear the content of previous files
@@ -578,8 +541,8 @@ int drive_HRR( Chain_Data& chainData )
 	arma::vec pi_out;
 	arma::vec hotspot_tail_prob_out;
     
-    arma::mat cpo_out, predLik;
-    arma::mat lpd, waic_out, waic_frac_sum;
+	arma::mat cpo_out, predLik;
+	arma::mat lpd, waic_out, waic_frac_sum;
 
 	if( chainData.burnin == 0 )
 	{
@@ -590,13 +553,6 @@ int drive_HRR( Chain_Data& chainData )
 			gammaOutFile << (arma::conv_to<arma::mat>::from(gamma_out));
 			gammaOutFile.close();
 		}
-
-		/*logPOutFile << 	sampler[0] -> getLogPO() <<  " ";
-		logPOutFile << 	sampler[0] -> getLogPPi() <<  " ";
-		logPOutFile << 	sampler[0] -> getLogPGamma() <<  " ";
-		logPOutFile << 	sampler[0] -> getLogPW() <<  " ";
-		logPOutFile << 	sampler[0] -> getLogLikelihood();
-		logPOutFile << 	'\n';*/
 
 		if ( ( chainData.gamma_type == Gamma_Type::hotspot || chainData.gamma_type == Gamma_Type::hierarchical ) &&
 			 ( chainData.output_pi || chainData.output_tail ) )
@@ -624,53 +580,47 @@ int drive_HRR( Chain_Data& chainData )
 		if ( chainData.output_beta )
 			beta_out = sampler[0] -> getBeta();
 		
-		/*if ( chainData.output_model_size )
-		{
+	}else{
+			if ( chainData.output_gamma )
+					gamma_out = sampler[0] -> getGamma();
+			if ( chainData.output_beta )
+					beta_out = sampler[0] -> getBeta();
+			if ( ( chainData.gamma_type == Gamma_Type::hotspot || chainData.gamma_type == Gamma_Type::hierarchical ) &&
+					( chainData.output_pi || chainData.output_tail ) )
+			{
+					tmpVec = sampler[0] -> getPi();
+					if ( chainData.output_pi )
+							pi_out = tmpVec;
+					if ( chainData.gamma_type == Gamma_Type::hotspot && chainData.output_tail )
+					{
+							tmpVec.for_each( [](arma::vec::elem_type& val) { if(val>1.0) val = 1.0; else val=0.0; } );
+							hotspot_tail_prob_out = tmpVec;
+					}
+			}
+	}
+	
+	if ( chainData.output_CPO )
+	{
+			predLik =  sampler[0] -> getPredLikelihood() ;
+			cpo_out = 1./predLik;
+			
+			lpd = predLik;
+			waic_out = arma::square( arma::log(predLik) );
+			waic_frac_sum = arma::log(predLik);
+	}
+	
+	logPOutFile <<     sampler[0] -> getLogPO() <<  " ";
+	logPOutFile <<     sampler[0] -> getLogPPi() <<  " ";
+	logPOutFile <<     sampler[0] -> getLogPGamma() <<  " ";
+	logPOutFile <<     sampler[0] -> getLogPW() <<  " ";
+	logPOutFile <<     sampler[0] -> getLogLikelihood();
+	logPOutFile <<     '\n';
+	
+	if ( chainData.output_model_size )
+	{
 			ModelSizeOutFile << sampler[0]->getModelSize() << " ";
 			ModelSizeOutFile << '\n';
-		}*/
-
-    }else{
-        if ( chainData.output_gamma )
-            gamma_out = sampler[0] -> getGamma();
-        if ( chainData.output_beta )
-            beta_out = sampler[0] -> getBeta();
-        if ( ( chainData.gamma_type == Gamma_Type::hotspot || chainData.gamma_type == Gamma_Type::hierarchical ) &&
-            ( chainData.output_pi || chainData.output_tail ) )
-        {
-            tmpVec = sampler[0] -> getPi();
-            if ( chainData.output_pi )
-                pi_out = tmpVec;
-            if ( chainData.gamma_type == Gamma_Type::hotspot && chainData.output_tail )
-            {
-                tmpVec.for_each( [](arma::vec::elem_type& val) { if(val>1.0) val = 1.0; else val=0.0; } );
-                hotspot_tail_prob_out = tmpVec;
-            }
-        }
-    }
-    
-    if ( chainData.output_CPO )
-    {
-        predLik =  sampler[0] -> getPredLikelihood() ;
-        cpo_out = 1./predLik;
-        
-        lpd = predLik;
-        waic_out = arma::square( arma::log(predLik) );
-        waic_frac_sum = arma::log(predLik);
-    }
-    
-    logPOutFile <<     sampler[0] -> getLogPO() <<  " ";
-    logPOutFile <<     sampler[0] -> getLogPPi() <<  " ";
-    logPOutFile <<     sampler[0] -> getLogPGamma() <<  " ";
-    logPOutFile <<     sampler[0] -> getLogPW() <<  " ";
-    logPOutFile <<     sampler[0] -> getLogLikelihood();
-    logPOutFile <<     '\n';
-    
-    if ( chainData.output_model_size )
-    {
-        ModelSizeOutFile << sampler[0]->getModelSize() << " ";
-        ModelSizeOutFile << '\n';
-    }
+	}
 
 	// ########
 	// ########
@@ -740,6 +690,11 @@ int drive_HRR( Chain_Data& chainData )
 			else
 				Rcout << '\n';
 				
+			
+			#ifndef CCODE
+			Rcpp::checkUserInterrupt(); // this checks for interrupts from R ... or does it?
+			#endif
+			
 			// Output to files every now and then
 			if( (i >= chainData.burnin) && ( (i-chainData.burnin+1) % (tick*1) == 0 ) ) 
 			{
@@ -778,15 +733,8 @@ int drive_HRR( Chain_Data& chainData )
 					ModelSizeOutFile << sampler[0]->getModelSize() << " ";
 					ModelSizeOutFile << '\n';
 				}
-
-				#ifndef CCODE
-				Rcpp::checkUserInterrupt(); // this checks for interrupts from R ... or does it?
-				#endif
-
-			}
-
+			}			
 		}
-
 	} // end MCMC
 
 
@@ -936,16 +884,16 @@ int drive( const std::string& dataFile, const std::string& mrfGFile, const std::
 	{
 		chainData.gamma_type = Gamma_Type::mrf ;
 
-/*		try
-		{
-			if ( mrfGFile != "" )
-	        	Utils::readGmrf(mrfGFile, chainData.mrfG);
-		}
-		catch(const std::exception& e)
-		{
-			Rcerr << e.what() << '\n';
-			return 1;
-		}	*/
+	// try
+	// {
+	// 	if ( mrfGFile != "" )
+	//       	Utils::readGmrf(mrfGFile, chainData.mrfG);
+	// }
+	// catch(const std::exception& e)
+	// {
+	// 	Rcerr << e.what() << '\n';
+	// 	return 1;
+	// }
 	}
 	else
 	{
@@ -997,7 +945,7 @@ int drive( const std::string& dataFile, const std::string& mrfGFile, const std::
 	chainData.output_pi = output_pi;
 	chainData.output_tail = output_tail;
 	chainData.output_model_size = output_model_size;
-    chainData.output_CPO = output_CPO;
+	chainData.output_CPO = output_CPO;
 
 	// ***********************************
 	// ***********************************
