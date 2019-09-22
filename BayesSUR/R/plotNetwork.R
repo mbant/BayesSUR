@@ -3,7 +3,7 @@
 #' @description
 #' Network representation of the associations between responses and features
 #' @importFrom graphics text 
-#' @importFrom grDevices gray
+#' @importFrom grDevices gray devAskNewPage
 #' @importFrom igraph V E gsize layout_in_circle plot.igraph degree layout.fruchterman.reingold delete.vertices graph.adjacency
 #' @name plotNetwork
 #' @param object fitted \code{runSUR} model
@@ -31,19 +31,41 @@
 #' @param vertex.frame.color The color of the frame of the vertices. If you don't want vertices to have a frame, supply NA as the color name
 #' @param layoutInCircle Place vertices on a circle, in the order of their vertex ids. The default is \code{FALSE}
 #' @param ... Other parameters in the function \code{plot.default.R} file
+#' 
+#' @examples
+#' \donttest{
+#' data(example_eQTL, package = "BayesSUR")
+#' hyperpar <- list( a_w = 2 , b_w = 5 )
+#' 
+#' fit <- runSUR(example_eQTL[["data"]], outFilePath = "results/",
+#'                      Y = example_eQTL[["blockList"]][[1]],
+#'                      X = example_eQTL[["blockList"]][[2]],
+#'                      nIter = 1000, nChains = 2, gammaPrior = "hotspot",
+#'                      hyperpar = hyperpar, tmpFolder = "tmp/" )
+#' 
+#' ## check output
+#' # show the Network representation of the associations between responses and features
+#' plotNetwork(fit)
+#' }
+#' 
 #' @export 
 plotNetwork <- function(object, includeResponse=NULL, excludeResponse=NULL, includePredictor=NULL, excludePredictor=NULL, 
                         MatrixGamma=NULL, PmaxPredictor=0.5, PmaxResponse=0.5, nodesizePredictor=5, nodesizeResponse=25, no.isolates=FALSE,
                         lineup=1, gray.alpha=0.6, edgewith.response=5, edgewith.predictor=2, edge.weight=FALSE, label.predictor=NULL,
                         label.response=NULL, color.predictor=NULL,color.response=NULL, name.predictors=NULL,name.responses=NULL, vertex.frame.color=NA,layoutInCircle=FALSE, ...){
   
-  devAskNewPage(FALSE)
+  #devAskNewPage(FALSE)
   
   object$output[-1] <- paste(object$output$outFilePath,object$output[-1],sep="")
   
   gamma_hat <- as.matrix( read.table(object$output$gamma) )
   colnames(gamma_hat) <- names(read.table(object$output$Y,header=T))
   rownames(gamma_hat) <- names(read.table(object$output$X,header=T))
+  
+  if(sum(colnames(gamma_hat)==paste("V",1:ncol(gamma_hat),sep="")) == ncol(gamma_hat))
+    colnames(gamma_hat) <- paste("Y",1:ncol(gamma_hat),sep="")
+  if(sum(rownames(gamma_hat)==paste("V",1:nrow(gamma_hat),sep="")) == nrow(gamma_hat))
+    rownames(gamma_hat) <- paste("X",1:nrow(gamma_hat),sep="")
   
   # select the required resposes and predictors to plot the network
   excludeResponse.idx <- rep(FALSE, ncol(gamma_hat))

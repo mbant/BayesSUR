@@ -197,4 +197,4 @@
 #' 
 #' }
 #'
-"example_GDSC"
+"targetGene"

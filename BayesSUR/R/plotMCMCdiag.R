@@ -2,16 +2,34 @@
 #' @title getEstimator
 #' @description
 #' Diagnose the convergence of the MCMC iterations
-#' @importFrom graphics par plot.default legend
+#' @importFrom graphics par plot.default legend title
 #' @importFrom stats density
+#' @importFrom grDevices devAskNewPage
 #' @name plotMCMCdiag
 #' @param object fitted "runSUR" model
 #' @param nbloc number of splits for the last half iterations after substracting burn-in length
 #' @param ... Other parameters in the function \code{plot.default.R} file for the penals of the log-likelihood and model size
+#' 
+#' @examples
+#' \donttest{
+#' data(example_eQTL, package = "BayesSUR")
+#' hyperpar <- list( a_w = 2 , b_w = 5 )
+#' 
+#' fit <- runSUR(example_eQTL[["data"]], outFilePath = "results/",
+#'                      Y = example_eQTL[["blockList"]][[1]],
+#'                      X = example_eQTL[["blockList"]][[2]],
+#'                      nIter = 10000, nChains = 2, gammaPrior = "hotspot",
+#'                      hyperpar = hyperpar, tmpFolder = "tmp/" )
+#' 
+#' ## check output
+#' # show the diagnosis plots
+#' plotMCMCdiag(fit)
+#' }
+#' 
 #' @export
 plotMCMCdiag <- function(object, nbloc=3, ...){
   
-  devAskNewPage(FALSE)
+  #devAskNewPage(FALSE)
   
   object$output[-1] <- paste(object$output$outFilePath,object$output[-1],sep="")
   
@@ -56,17 +74,18 @@ plotMCMCdiag <- function(object, nbloc=3, ...){
   #legend("topleft", legend=paste("Chain",1:nChain), lty=1, cex=0.5)
   
   title.0 <- expression(paste("Log Posterior Distribution: log ",P(gamma~group("|",list(Y,.),""))))
-  plot.default(dens.all,main=title.0,col="black",xlim=c(xmin,xmax),ylim=c(ymin,ymax),xlab="")
+  plot.default(dens.all,main=title.0,col="black",xlim=c(xmin,xmax),ylim=c(ymin,ymax),xlab="",ylab="", type="l", lty=1)
   par(new=TRUE)
-  plot.default(dens.first,main="",col="red",xlim=c(xmin,xmax),ylim=c(ymin,ymax),xlab="")
+  plot.default(dens.first,main="",col="red",xlim=c(xmin,xmax),ylim=c(ymin,ymax),xlab="",ylab="", type="l", lty=1)
   par(new=TRUE)
-  plot.default(dens.last,main="",col="green",xlim=c(xmin,xmax),ylim=c(ymin,ymax),xlab="")
-  legend("topleft",title="sweep",legend=paste(c("ALL","First half","Last half")," = [",c(1,1,floor(ncol(logP)/2)*1000+1),":",c(ncol(logP),floor((ncol(logP))/2),ncol(logP))*1000,"]",sep=""),col=1:3,lty=1,text.col=1:3, cex=0.8)
+  plot.default(dens.last,main="",col="green",xlim=c(xmin,xmax),ylim=c(ymin,ymax),xlab="",,ylab="Density", type="l", lty=1)
+  legend("topleft",title="iteration",legend=paste(c("ALL","First half","Last half")," = [",c(1,1,floor(ncol(logP)/2)*1000+1),":",c(ncol(logP),floor((ncol(logP))/2),ncol(logP))*1000,"]",sep=""),col=1:3,lty=1,text.col=1:3, cex=0.8)
   
   for (i in 1:nbloc){
-    plot.default(list.dens[[i]],col=i,xlim=c(xmin2,xmax2),ylim=c(ymin,ymax2),xlab="",main=title.0)
+    plot.default(list.dens[[i]],col=i,xlim=c(xmin2,xmax2),ylim=c(ymin,ymax2),xlab="",ylab="", type="l", lty=1,main=title.0)
     par(new=TRUE)  
   }
+  title(ylab="Density")
   legend("topleft",title="moving window",legend=paste("set ",1:nbloc," = [",(floor((ncol(logP))/2)+mid*(nbloc:1-1))*1000+1,":",(ncol(logP))*1000,"]",sep=""),col=1:nbloc,lty=1,text.col=1:nbloc, cex=0.8)
   
   par(mfrow=c(1,1))

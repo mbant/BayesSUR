@@ -2,8 +2,9 @@
 #' BayesSUR -- Bayesian Seemingly Unrelated Regression
 #' @title plotManhattan
 #' @description
-#' Manhattan plot
+#' Manhattan-like plot
 #' @importFrom graphics axis box text par plot.default segments
+#' @importFrom grDevices devAskNewPage
 #' @param object the object from the runSUR
 #' @param which if it's value "1" showing the Manhattan-like plot of the marginal posterior inclusion probabilities (mPIP). If it's value "2" showing the Manhattan-like plot of the number of responses. The default is to show both figures.
 #' @param x.loc a vector of features distance
@@ -20,10 +21,27 @@
 #' @param mark.color the color of the marked text. The default color is red.
 #' @param mark.cex the fontsize of the marked text. The default fontsize is 0.8.
 #' @param ... Other parameters in the function \code{plot.default.R} file
+#' 
+#' @examples
+#' \donttest{
+#' data(example_eQTL, package = "BayesSUR")
+#' hyperpar <- list( a_w = 2 , b_w = 5 )
+#' 
+#' fit <- runSUR(example_eQTL[["data"]], outFilePath = "results/",
+#'                      Y = example_eQTL[["blockList"]][[1]],
+#'                      X = example_eQTL[["blockList"]][[2]],
+#'                      nIter = 1000, nChains = 2, gammaPrior = "hotspot",
+#'                      hyperpar = hyperpar, tmpFolder="tmp/" )
+#' 
+#' ## check output
+#' # show the Manhattan-like plots
+#' plotManhattan(fit)
+#' }
+#' 
 #' @export
 plotManhattan <- function(object, which=c(1,2), x.loc=FALSE, axis.label=NULL, mark.responses=NULL, xlab1="", ylab1="mPIP", xlab2="", ylab2="No. of responses",threshold=0.5,las=0, cex.axis=1, mark.pos=c(0,0), mark.color=2, mark.cex=0.8, ...){
   
-  devAskNewPage(FALSE)
+  #devAskNewPage(FALSE)
   
   object$output[-1] <- paste(object$output$outFilePath,object$output[-1],sep="")
   gamma <- as.matrix( read.table(object$output$gamma) )

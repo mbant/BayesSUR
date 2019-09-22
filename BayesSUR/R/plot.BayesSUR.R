@@ -7,6 +7,23 @@
 #' @param x object of the fitted "runSUR" model.
 #' @param which if a subset of the plots is required, specify a subset of the numbers 1:5 which are plots of estimators, response graph, network, manhattan and MCMC diagnosis, respectively.
 #' @param ... Other parameters in the function \code{plot.default.R} file
+#' 
+#' @examples
+#' \donttest{
+#' data(example_eQTL, package = "BayesSUR")
+#' hyperpar = list( a_w = 2 , b_w = 5 )
+#' 
+#' fit = runSUR(example_eQTL[["data"]], outFilePath = "results/",
+#'                      Y = example_eQTL[["blockList"]][[1]],
+#'                      X = example_eQTL[["blockList"]][[2]],
+#'                      nIter = 1000, nChains = 2, gammaPrior = "hotspot",
+#'                      hyperpar = hyperpar, tmpFolder="tmp/" )
+#' 
+#' ## check output
+#' # show the interactive plots
+#' plot(fit)
+#' }
+#' 
 #' @export
 plot.BayesSUR <- function(x, which = c(1L:5L), ...){
   

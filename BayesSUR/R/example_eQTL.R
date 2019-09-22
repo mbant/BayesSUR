@@ -10,7 +10,7 @@
 #' needed to run the algorithm.
 #' 
 #' @examples
-#' \donttest{
+#' \dontrun{
 #' 
 #' # Load the eQTL sample dataset
 #' data(example_eQTL)
@@ -256,13 +256,14 @@
 #' 
 #' #################
 #' colnames(y) <- paste("GEX",1:ncol(y),sep="")
-#' colnames(G) <- colnames(y)
+#' colnames(G) <- colnames(y); Gy <- G
+#' gamma <- gamma[-1,]
+#' mrfG <- GGmrf[!duplicated(Gmrf),]
 #' data = cbind(y,x[,-1])   # leave out the intercept because is coded inside already
 #' 
 #' ####################################################################
 #' ## Write data file
-#' example_eQTL = list(data=data, blockList=list(1:s,s+1:p), mrfG=Gmrf[!duplicated(Gmrf),],
-#'                     gamma=gamma[-1,], beta=b[gamma], Gy=G)
+#' example_eQTL = list(data=data, blockList=list(1:s,s+1:p))
 #' save(example_eQTL, file="example_eQTL.rda")
 #' 
 #' ## End(Not run)

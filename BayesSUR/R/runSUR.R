@@ -4,7 +4,7 @@
 #' Run a SUR Bayesian sampler
 #' @importFrom utils head tail installed.packages
 #' @name runSUR
-#' @param data either a matrix/dataframe or the path to (a plain text) data file with variables on the columns and observations on the rows 
+#' @param data a data frame if using \code{formula}. If not using \code{formula}, it is either a matrix/dataframe or the path to (a plain text) data file with variables on the columns and observations on the rows 
 #' @param Y,X,X_0 vectors of indexes (with respect to the data matrix) for the outcomes, the covariates to select and the fixed covariates respectively if data is either a path to a file or a matrix;
 #' if the 'data' argument is not provided, these needs to be matrices containing the data instead.
 #' @param outFilePath path to where the output files are to be written. The default path is the currect working directory.
@@ -52,28 +52,26 @@
 #' 
 #' @examples
 #' \donttest{
-#' 
 #' data(example_eQTL, package = "BayesSUR")
-#' hyperpar = list( a_w = 2 , b_w = 5 )
+#' hyperpar <- list( a_w = 2 , b_w = 5 )
 #' 
-#' fit = runSUR(example_eQTL[["data"]],outFilePath = "results/",
+#' fit <- runSUR(example_eQTL[["data"]], outFilePath = "results/",
 #'                      Y = example_eQTL[["blockList"]][[1]],
 #'                      X = example_eQTL[["blockList"]][[2]],
-#'                      nIter = 100, nChains = 2, gammaPrior = "hotspot",
-#'                      hyperpar = hyperpar, tmpFolder="tmp/" )
+#'                      nIter = 1000, nChains = 2, gammaPrior = "hotspot",
+#'                      hyperpar = hyperpar, tmpFolder = "tmp/" )
 #' 
-#' # show the interaction of plots
-#' plot(fit)
-
 #' ## check output
-#' # show the estimated beta, gamma and graph of responeses Gy
-#' plotEstimator(fit);
+#' # show the summary information
+#' summary(fit)
 #' 
+#' # show the estimated beta, gamma and graph of responeses Gy
+#' plotEstimator(fit)
 #' }
 #' 
 #' @export
-runSUR = function(data=NULL, Y, X, X_0=NULL,outFilePath="", 
-                nIter=10, burnin=0, nChains=1, 
+runSUR = function(data=NULL, Y, X, X_0=NULL,
+                outFilePath="", nIter=10, burnin=0, nChains=1, 
                 covariancePrior="HIW", gammaPrior="",
                 gammaSampler="bandit", gammaInit="MLE", mrfG=NULL,
                 standardize = TRUE, standardize.response=TRUE,
@@ -115,9 +113,26 @@ runSUR = function(data=NULL, Y, X, X_0=NULL,outFilePath="",
   }else{
     outFilePath = paste( getwd(), "/" )
   }
-
+  
+  # check the formula
+  cl <- match.call()
+  # mf <- match.call(expand.dots = FALSE)
+  # m <- match(c("formula", "data", "subset", "weights", "na.action", "offset"), names(mf), 0L)
+  # if( m[1] ){
+  #   if( !is.data.frame(data) )
+  #     stop("Arugment data must be a data.frame!")
+  # 
+  #   mf <- mf[c(1L, m)]
+  #   mf$drop.unused.levels <- TRUE
+  #   mf[[1L]] <- quote(stats::model.frame)
+  #   mf <- eval(mf, parent.frame())
+  #   mt <- attr(mf, "terms")
+  #   Y <- model.response(mf, "numeric")
+  #   X <- model.matrix(mt, mf, NULL)
+  # }
+  
   # we'll check in reverse order, is data NULL?
-  if ( is.null( data ) )
+  if ( is.null( data ) )# | m[1] )
   {
 
     # Y,X (and if there X_0) need to be valid numeric matrices then
@@ -260,14 +275,30 @@ runSUR = function(data=NULL, Y, X, X_0=NULL,outFilePath="",
   }}} # else assume is given as an absolute number
 
   ###############################
-
+  # prepare the print of all hyperparameters
+  hyperpar.all <- list(a_w=2, b_w=5, a_o=sum(blockLabels==1)-2, b_o=0.005, a_pi=NA, b_pi=NA, nu=sum(blockLabels==0)+2, a_tau=0.1, b_tau=10, a_eta=0.1, b_eta=1, a_sigma=1, b_sigma=1, mrf_d=-3, mrf_e=0.2)
+  if(toupper(gammaPrior) %in% c("HOTSPOT", "HOTSPOTS", "HS")){
+    hyperpar.all$a_pi <- 2
+    hyperpar.all$b_pi <- 1
+  }
+  if( toupper(gammaPrior) %in% c("HIERARCHICAL", "H")){
+    hyperpar.all$a_pi <- 1
+    hyperpar.all$b_pi <- sum(blockLabels==0) - 1
+  }
+  
+  if(length(hyperpar)>0)
+    for( i in 1:length(hyperpar)){
+      if(names(hyperpar)[[i]] %in% names(hyperpar.all))
+        hyperpar.all[[which(names(hyperpar.all)==names(hyperpar)[[i]])]] <- hyperpar[[i]]
+    }
+  
   # method to use
   if ( toupper(covariancePrior) %in% c("SPARSE", "HIW") ){
-    covariancePrior = "HIW"
+    covariancePrior <- "HIW"
   }else if ( toupper(covariancePrior) %in% c("DENSE", "IW") ){
-    covariancePrior = "IW"
+    covariancePrior <- "IW"
   }else if ( toupper(covariancePrior) %in% c("INDEPENDENT", "INDEP", "IG") ){
-    covariancePrior = "IG"
+    covariancePrior <- "IG"
   }else
     my_stop("Unknown covariancePrior argument: only sparse (HIW), dense(IW) or independent (IG) are available",tmpFolder)
   
@@ -340,7 +371,7 @@ runSUR = function(data=NULL, Y, X, X_0=NULL,outFilePath="",
   ret$input["gammaInit"] = gammaInit
   ret$input["mrfG"] = mrfG
   
-  ret$input$hyperParameters = hyperpar
+  ret$input$hyperParameters = hyperpar.all
 
   methodString = 
     switch( covariancePrior,
@@ -348,6 +379,8 @@ runSUR = function(data=NULL, Y, X, X_0=NULL,outFilePath="",
       "IW"  = "dSUR" ,
       "IG"  = "HRR" )
 
+  ret$call = cl
+  
   # Prepare path to outputs
   ret$output["outFilePath"] = outFilePath
   
@@ -376,6 +409,7 @@ runSUR = function(data=NULL, Y, X, X_0=NULL,outFilePath="",
   
   if ( output_CPO ){
     ret$output["CPO"] = paste(sep="", dataString , "_",  methodString , "_CPO_out.txt")
+    ret$output["CPOsumy"] = paste(sep="", dataString , "_",  methodString , "_CPOsumy_out.txt")
     ret$output["WAIC"] = paste(sep="", dataString , "_",  methodString , "_WAIC_out.txt")
   }
   
@@ -394,8 +428,12 @@ runSUR = function(data=NULL, Y, X, X_0=NULL,outFilePath="",
   if(outFilePath != tmpFolder)
     unlink(tmpFolder,recursive = TRUE)
    
+  class(print) <- c(class(print), "BayesSUR")
   class(summary) <- c(class(summary), "BayesSUR")
   class(plot) <- c(class(plot), "BayesSUR")
+  class(fitted) <- c(class(fitted), "BayesSUR")
+  class(predict) <- c(class(predict), "BayesSUR")
+  class(coef) <- c(class(coef), "BayesSUR")
   return(ret)
 }
 

@@ -3,6 +3,7 @@
 #' @description
 #' Plot the conditional predictive ordinate (CPO) which is the leave-one-out cross-validation predictive density. The CPO is a handy posterior predictive check because it may be used to identify outliers, influential observations, and for hypothesis testing across different non-nested models.
 #' @importFrom graphics axis box text par abline
+#' @importFrom grDevices devAskNewPage
 #' @name plotCPO
 #' @param object the object from the \code{runSUR}
 #' @param xlab a title for the x axis 
@@ -19,10 +20,27 @@
 #' @param mark.cex the fontsize of the marked text. The default fontsize is 0.8.
 #' @references Statisticat, LLC (2013). \emph{Bayesian Inference.} Farmington, CT: Statisticat, LLC.
 #' @references Vehtari, A., Gelman, A., Gabry, J. (2017). \emph{Practical Bayesian model evaluation using leave-one-out cross-validation and WAIC.} Statistics and Computing, 27(5): 1413–1432.
+#' 
+#' @examples
+#' \donttest{
+#' data(example_eQTL, package = "BayesSUR")
+#' hyperpar <- list( a_w = 2 , b_w = 5 )
+#' 
+#' fit <- runSUR(example_eQTL[["data"]], outFilePath = "results/",
+#'                      Y = example_eQTL[["blockList"]][[1]],
+#'                      X = example_eQTL[["blockList"]][[2]],
+#'                      nIter = 1000, nChains = 2, gammaPrior = "hotspot",
+#'                      hyperpar = hyperpar, tmpFolder="tmp/" )
+#' 
+#' ## check output
+#' # plot the conditional predictive ordinate (CPO)
+#' plotCPO(fit)
+#' }
+#' 
 #' @export
 plotCPO <- function(object, xlab="", sum.responses=FALSE, outlier.mark=TRUE, outlier.thresh=0.01, scale.CPO=TRUE, x.loc=FALSE, axis.label=NULL, las=0, cex.axis=1, mark.pos=c(0,-.01), mark.color=2, mark.cex=0.8){
   
-  devAskNewPage(FALSE)
+  #devAskNewPage(FALSE)
   
   object$output[-1] <- paste(object$output$outFilePath,object$output[-1],sep="")
   CPO <- as.matrix( read.table(object$output$CPO) )
@@ -63,7 +81,8 @@ plotCPO <- function(object, xlab="", sum.responses=FALSE, outlier.mark=TRUE, out
       }
     }
   }else{
-    CPO <- rowSums(CPO)
+    CPO <- as.matrix( read.table(object$output$CPOsumy) )
+    #CPO <- rowSums(CPO)
     if(scale.CPO) CPO <- CPO/max(CPO)
     plot.default(CPO ~ c(1:length(CPO)), xaxt = 'n',bty = "n", xlim=c(1,length(CPO)), ylim=c(min(CPO)+mark.pos[2]*2,max(CPO)), ylab = ifelse(scale.CPO,"scaled CPOs","CPOs"), xlab = xlab, main="Conditional predictive ordinate", pch=19)
     axis(1, at=x.loc, labels=names(x.loc), las=las, cex.axis=cex.axis); box()
