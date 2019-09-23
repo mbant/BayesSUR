@@ -10,8 +10,8 @@ See `test.R` file for usage; see the package vignette `BayesSUR.pdf` (submitted 
 ### New in the version `BayesSUR_0.1.21.tar.gz` (23 September 2019):
 
 1) Fixed the CPO, elpd (lpd and WAIC) of the HRR models.
-2) Modified function `summary()`.
-3) Added functions `print()`, `coef()`, `fitted()`, `predict()`.
+2) Modified the function `summary()`.
+3) Added the functions `print()`, `coef()`, `fitted()`, `predict()`.
 
 ### The version `BayesSUR_0.1.20.tar.gz` (22 September 2019):
 
