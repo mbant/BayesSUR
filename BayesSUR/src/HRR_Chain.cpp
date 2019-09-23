@@ -959,7 +959,7 @@ double HRR_Chain::logLikelihood( )
         logP += std::lgamma(a_sigma_k) - std::lgamma(a_sigma);
         
         // posterior predictive
-        predLik.col(k) = Distributions::randMvT( 2*a_sigma_k, (data->col((*outcomesIdx)(k))) * mu_k, b_sigma_k/a_sigma_k*( arma::eye<arma::mat>(nObservations,nObservations) - (data->col((*outcomesIdx)(k)))*W_k*(data->col((*outcomesIdx)(k))).t() ) );
+        predLik.col(k) = Distributions::randMvT( 2*a_sigma_k,  data->cols((*predictorsIdx)(VS_IN_k)) * mu_k, b_sigma_k/a_sigma_k*( arma::eye<arma::mat>(nObservations,nObservations) + data->cols((*predictorsIdx)(VS_IN_k)) *W_k* ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() ) ) );
     }
 
     logP += -log(M_PI)*((double)nObservations*(double)nOutcomes*0.5); // normalising constant remaining from the likelhood

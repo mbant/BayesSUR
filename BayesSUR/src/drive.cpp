@@ -549,7 +549,8 @@ int drive_HRR( Chain_Data& chainData )
     
 	arma::mat cpo_out, predLik;
     arma::vec cposumy_out;
-	//arma::mat lpd, waic_out, waic_frac_sum;
+    //arma::mat lpd;
+    arma::mat waic_out, waic_frac_sum;
 
 	if( chainData.burnin == 0 )
 	{
@@ -613,8 +614,8 @@ int drive_HRR( Chain_Data& chainData )
         cposumy_out = arma::exp( arma::sum( arma::log(predLik), 1 ) );
         
         //lpd = predLik;
-        //waic_out = arma::square( arma::log(predLik) );
-        //waic_frac_sum = arma::log(predLik);
+        waic_out = arma::square( arma::log(predLik) );
+        waic_frac_sum = arma::log(predLik);
 	}
 	
 	logPOutFile <<     sampler[0] -> getLogPO() <<  " ";
@@ -681,8 +682,8 @@ int drive_HRR( Chain_Data& chainData )
                 cposumy_out += arma::exp( arma::sum( arma::log(predLik), 1 ) );
                 
                 //lpd += predLik;
-                //waic_out += arma::square( arma::log(predLik) );
-                //waic_frac_sum += arma::log(predLik);
+                waic_out += arma::square( arma::log(predLik) );
+                waic_frac_sum += arma::log(predLik);
             }
 
 			// Nothing to update for model size
@@ -789,8 +790,8 @@ int drive_HRR( Chain_Data& chainData )
         cposumy_out = cposumy_out/(double)(chainData.nIter-chainData.burnin+1);
         cposumy_out.save(outFilePrefix+"CPOsumy_out.txt",arma::raw_ascii);
         
-        //waic_out = arma::log( lpd/(double)(chainData.nIter-chainData.burnin+1) ) - ( waic_out - arma::square(waic_frac_sum)/(double)(chainData.nIter-chainData.burnin+1) )/(double)(chainData.nIter-chainData.burnin);
-        //waic_out.save(outFilePrefix+"WAIC_out.txt",arma::raw_ascii);
+        waic_out = arma::log( cpo_out ) - ( waic_out - arma::square(waic_frac_sum)/(double)(chainData.nIter-chainData.burnin+1) )/(double)(chainData.nIter-chainData.burnin);
+        waic_out.save(outFilePrefix+"WAIC_out.txt",arma::raw_ascii);
     }
 
 	// -----
