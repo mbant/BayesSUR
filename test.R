@@ -38,7 +38,7 @@ plotEstimator(fit, fig.tex=TRUE)
 system(paste(getOption("pdfviewer"), "ParamEstimator.pdf"))
 
 # show the relationship of responses
-plotResponseGraph(fit, PtrueResponse=Gy, response.name=paste("GEX",1:ncol(Gy),sep=""))
+plotResponseGraph(fit)
 
 # show the network representation of the associations between responses and features
 plotNetwork(fit)
