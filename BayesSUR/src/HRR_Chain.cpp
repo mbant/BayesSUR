@@ -73,7 +73,7 @@ HRR_Chain::HRR_Chain( std::shared_ptr<arma::mat> data_, unsigned int nObservatio
         updateGammaMask();
 
         logLikelihood();
-        //predLikelihood();
+        predLikelihood();
 
     }
 
@@ -882,6 +882,19 @@ double HRR_Chain::logPW( double w_ )
 // PREDICTIVE LIKELIHOOD of the HRR model is not implemented
 arma::mat HRR_Chain::predLikelihood( )
 {
+    predLik.set_size(nObservations, nOutcomes);
+    
+    arma::mat dataOutcome = data->cols( *outcomesIdx );
+    
+    #ifdef _OPENMP
+    #pragma omp parallel for
+    #endif
+    for( unsigned int k=0; k<nOutcomes; ++k)
+        for( unsigned int j=0; j<nObservations; ++j )
+        {
+            predLik(j,k) = std::exp( Distributions::logPDFt( dataOutcome(j,k), 2.*(a_sigma+0.5*(double)nObservations )) );
+        }
+
     return predLik;
 }
 
@@ -891,7 +904,7 @@ double HRR_Chain::logLikelihood( )
 {
 
     double logP {0};
-    arma::mat predLik = arma::zeros<arma::mat>(nObservations, nOutcomes);
+    predLik.set_size(nObservations, nOutcomes);
 
     #ifdef _OPENMP
     #pragma omp parallel for default(shared) reduction(+:logP)
