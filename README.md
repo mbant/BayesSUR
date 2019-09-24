@@ -7,35 +7,39 @@ See `test.R` file for usage; see the package vignette `BayesSUR.pdf` (submitted 
 
 ## Update
 
-### New in the version `BayesSUR_0.1.21.tar.gz` (23 September 2019):
+### New in version `BayesSUR_0.1.22.tar.gz` (24 September 2019):
+
+Fixed bugs for the posterior predictives of the HRR models.
+
+### Version `BayesSUR_0.1.21.tar.gz` (23 September 2019):
 
 1) Fixed the CPO, elpd (lpd and WAIC) of the HRR models.
 2) Modified the function `summary()`.
 3) Added the functions `print()`, `coef()`, `fitted()`, `predict()`.
 
-### The version `BayesSUR_0.1.20.tar.gz` (22 September 2019):
+### Version `BayesSUR_0.1.20.tar.gz` (22 September 2019):
 
 Removed last warning about strand std::cou.
 
-### The version `BayesSUR_0.1.19.tar.gz` (27 August 2019):
+### Version `BayesSUR_0.1.19.tar.gz` (27 August 2019):
 
 Fixing the warnings from the `devtools::check("BayesSUR")`......
 
-### The version `BayesSUR_0.1.18.tar.gz` (20 August 2019):
+### Version `BayesSUR_0.1.18.tar.gz` (20 August 2019):
 
 1) The function plotCPO() has been updated to check outliers overall response variables alternatively.
 
 2) The model prediction accuracy is measured by the function elpd() (expected log pointwise predictive density), which has two methods to estimate elpd, i.e., the LOO (leave-one-out cross- validation) and WAIC (widely applicable information criterion
 ).
 
-### The version `BayesSUR_0.1.17.tar.gz` (13 August 2019):
+### Version `BayesSUR_0.1.17.tar.gz` (13 August 2019):
 
 1) The function plotCPO() uses posterior predictive (i.e., conditional predictive ordinate) to check outliers.
 
 2) The function plotEstimator() can extract the CPOs matrix through argument `estimator="CPO"`.
 
 
-### The version `BayesSUR_0.1.16.tar.gz` (30 July 2019):
+### Version `BayesSUR_0.1.16.tar.gz` (30 July 2019):
 
 1) The function plotEstimator() can choose to plot beta_hat and gamma_hat with the labeled axes rather than numbers only, though the arguments name.responses and name.predictors.
 
@@ -55,7 +59,7 @@ Remaining issues:
 
 1) The runSUR() doesn’t print the running iterations information in the RGui of WinOS, but it works in the RStudio of WinOS, RStudio of MacOS and R Console of MacOS.
 
-### The version `BayesSUR_0.1.13.tar.gz` (30 June 2019)# BayesSUR
+### Version `BayesSUR_0.1.13.tar.gz` (30 June 2019)# BayesSUR
 
 ### Libraries
 
