@@ -7,7 +7,7 @@ See `test.R` file for usage; see the package vignette `BayesSUR.pdf` (submitted 
 
 ## Update
 
-### New in version `BayesSUR_0.1.22.tar.gz` (24 September 2019):
+### New in version `BayesSUR_0.1.22.tar.gz` (26 September 2019):
 
 Fixed bugs for the posterior predictives of the HRR models.
 
