@@ -531,6 +531,13 @@ int drive_HRR( Chain_Data& chainData )
 		htpOutFile.open( outFilePrefix+"hotspot_tail_p_out.txt" , std::ios_base::trunc); 
 		htpOutFile.close();
 	}
+    
+    logPOutFile <<     sampler[0] -> getLogPO() <<  " ";
+    logPOutFile <<     sampler[0] -> getLogPPi() <<  " ";
+    logPOutFile <<     sampler[0] -> getLogPGamma() <<  " ";
+    logPOutFile <<     sampler[0] -> getLogPW() <<  " ";
+    logPOutFile <<     sampler[0] -> getLogLikelihood();
+    logPOutFile <<     '\n';
 
 	std::ofstream ModelSizeOutFile;
 	if ( chainData.output_model_size )
@@ -716,13 +723,6 @@ int drive_HRR( Chain_Data& chainData )
 					gammaOutFile.close();
 				}
 
-				logPOutFile << 	sampler[0] -> getLogPO() <<  " ";
-				logPOutFile << 	sampler[0] -> getLogPPi() <<  " ";
-				logPOutFile << 	sampler[0] -> getLogPGamma() <<  " ";
-				logPOutFile << 	sampler[0] -> getLogPW() <<  " ";
-				logPOutFile << 	sampler[0] -> getLogLikelihood();
-				logPOutFile << 	'\n';
-
 				if ( ( chainData.gamma_type == Gamma_Type::hotspot || chainData.gamma_type == Gamma_Type::hierarchical ) &&
 					   chainData.output_pi )
 				{
@@ -738,12 +738,22 @@ int drive_HRR( Chain_Data& chainData )
 					htpOutFile.close();
 				}
 
-				if ( chainData.output_model_size )
-				{
-					ModelSizeOutFile << sampler[0]->getModelSize() << " ";
-					ModelSizeOutFile << '\n';
-				}
-			}			
+			}
+            
+            if( (i+1) % (tick*1) == 0 )
+            {
+                logPOutFile <<     sampler[0] -> getLogPO() <<  " ";
+                logPOutFile <<     sampler[0] -> getLogPPi() <<  " ";
+                logPOutFile <<     sampler[0] -> getLogPGamma() <<  " ";
+                logPOutFile <<     sampler[0] -> getLogPW() <<  " ";
+                logPOutFile <<     sampler[0] -> getLogLikelihood();
+                logPOutFile <<     '\n';
+                if ( chainData.output_model_size )
+                {
+                    ModelSizeOutFile << sampler[0]->getModelSize() << " ";
+                    ModelSizeOutFile << '\n';
+                }
+            }
 		}
 	} // end MCMC
 

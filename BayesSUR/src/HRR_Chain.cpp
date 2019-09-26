@@ -882,19 +882,6 @@ double HRR_Chain::logPW( double w_ )
 // PREDICTIVE LIKELIHOOD of the HRR model is not implemented
 arma::mat HRR_Chain::predLikelihood( )
 {
-    predLik.set_size(nObservations, nOutcomes);
-    
-    arma::mat dataOutcome = data->cols( *outcomesIdx );
-    
-    #ifdef _OPENMP
-    #pragma omp parallel for
-    #endif
-    for( unsigned int k=0; k<nOutcomes; ++k)
-        for( unsigned int j=0; j<nObservations; ++j )
-        {
-            predLik(j,k) = std::exp( Distributions::logPDFt( dataOutcome(j,k), 2.*(a_sigma+0.5*(double)nObservations )) );
-        }
-
     return predLik;
 }
 
@@ -971,8 +958,20 @@ double HRR_Chain::logLikelihood( )
 
         logP += std::lgamma(a_sigma_k) - std::lgamma(a_sigma);
         
-        // posterior predictive
-        predLik.col(k) = Distributions::randMvT( 2*a_sigma_k,  data->cols((*predictorsIdx)(VS_IN_k)) * mu_k, b_sigma_k/a_sigma_k*( arma::eye<arma::mat>(nObservations,nObservations) + data->cols((*predictorsIdx)(VS_IN_k)) *W_k* ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() ) ) );
+        // posterior predictive - t distribution after shifting and scaling by some quantities; from the multivariate t distribution p(y_tilde |y)
+        for( unsigned int j=0; j<nObservations; ++j )
+        {
+            double mu_scale, W_scale, t1, t2;
+            
+            mu_scale = (data->col(k))(j) - arma::as_scalar(arma::conv_to<arma::vec>::from(data->row(j))((*predictorsIdx)(VS_IN_k)).t() *mu_k);
+            W_scale = b_sigma_k/a_sigma_k * ( 1. + arma::as_scalar(arma::conv_to<arma::vec>::from(data->row(j))((*predictorsIdx)(VS_IN_k)).t() * W_k * arma::conv_to<arma::vec>::from(data->row(j))((*predictorsIdx)(VS_IN_k))) );
+            
+            t1 = std::lgamma(a_sigma_k+0.5) - 0.5*std::log(2.*a_sigma_k*M_PI) - 0.5*std::log( W_scale ) - std::lgamma(a_sigma_k);
+            t2 = -(a_sigma_k+0.5) * std::log( 1. + mu_scale*mu_scale/W_scale/2./a_sigma_k );
+            
+            predLik(j,k) = std::exp( t1+t2 );
+        }
+        
     }
 
     logP += -log(M_PI)*((double)nObservations*(double)nOutcomes*0.5); // normalising constant remaining from the likelhood
