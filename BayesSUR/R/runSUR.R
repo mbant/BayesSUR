@@ -70,11 +70,11 @@
 #' }
 #' 
 #' @export
-runSUR = function(data=NULL, Y, X, X_0=NULL,
-                outFilePath="", nIter=10, burnin=0, nChains=1, 
-                covariancePrior="HIW", gammaPrior="",
-                gammaSampler="bandit", gammaInit="MLE", mrfG=NULL,
-                standardize = TRUE, standardize.response=TRUE,
+runSUR = function(data = NULL, Y, X, X_0 = NULL,
+                outFilePath = "", nIter = 10, burnin = 0, nChains = 1, 
+                covariancePrior = "HIW", gammaPrior = "",
+                gammaSampler = "bandit", gammaInit = "MLE", mrfG = NULL,
+                standardize = TRUE, standardize.response = TRUE,
                 output_gamma = TRUE, output_beta = TRUE, output_G = TRUE, output_sigmaRho = TRUE,
                 output_pi = TRUE, output_tail = TRUE, output_model_size = TRUE, output_CPO = TRUE,
                 output_Y = TRUE, output_X = TRUE, hyperpar=list(),tmpFolder="tmp/")

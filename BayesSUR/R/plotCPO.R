@@ -3,7 +3,6 @@
 #' @description
 #' Plot the conditional predictive ordinate (CPO) which is the leave-one-out cross-validation predictive density. The CPO is a handy posterior predictive check because it may be used to identify outliers, influential observations, and for hypothesis testing across different non-nested models.
 #' @importFrom graphics axis box text par abline
-#' @importFrom grDevices devAskNewPage
 #' @name plotCPO
 #' @param object the object from the \code{runSUR}
 #' @param xlab a title for the x axis 
@@ -19,8 +18,12 @@
 #' @param mark.color the color of the marked text. The default color is red.
 #' @param mark.cex the fontsize of the marked text. The default fontsize is 0.8.
 #' @references Statisticat, LLC (2013). \emph{Bayesian Inference.} Farmington, CT: Statisticat, LLC.
-#' @references Vehtari, A., Gelman, A., Gabry, J. (2017). \emph{Practical Bayesian model evaluation using leave-one-out cross-validation and WAIC.} Statistics and Computing, 27(5): 1413–1432.
+#'
+#' @details The default threshold for the CPOs to detect the outliers is 0.01 by Congdon (2005). It can be tuned by the argument \code{outlier.thresh}.
 #' 
+#' @references Gelfand A. (1996). \emph{Model Determination Using Sampling Based Methods}. In Gilks W., Richardson S., Spiegelhalter D. (eds.), Markov Chain Monte Carlo in Practice, pp. 145–161. Chapman & Hall, Boca Raton, FL.
+#' @references Congdon P. (2005). \emph{Bayesian Models for Categorical Data}. John Wiley & Sons, West Sussex, England.
+#'
 #' @examples
 #' \donttest{
 #' data(example_eQTL, package = "BayesSUR")
@@ -39,8 +42,6 @@
 #' 
 #' @export
 plotCPO <- function(object, xlab="", sum.responses=FALSE, outlier.mark=TRUE, outlier.thresh=0.01, scale.CPO=TRUE, x.loc=FALSE, axis.label=NULL, las=0, cex.axis=1, mark.pos=c(0,-.01), mark.color=2, mark.cex=0.8){
-  
-  #devAskNewPage(FALSE)
   
   object$output[-1] <- paste(object$output$outFilePath,object$output[-1],sep="")
   CPO <- as.matrix( read.table(object$output$CPO) )
