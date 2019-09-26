@@ -1324,9 +1324,7 @@ arma::mat SUR_Chain::predLikelihood( )
 {
     predLik.set_size(nObservations, nOutcomes);
     arma::mat dataOutcome = data->cols( *outcomesIdx );
-#ifdef _OPENMP
-#pragma omp parallel for
-#endif
+    
     for( unsigned int k=0; k<nOutcomes; ++k)
         for( unsigned int j=0; j<nObservations; ++j )
         {

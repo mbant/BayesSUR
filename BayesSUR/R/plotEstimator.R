@@ -3,7 +3,7 @@
 #' @description
 #' Plot the estimators from the object of fitted Bayesian Seemingly Unrelated Regression
 #' @importFrom graphics axis box text mtext par image
-#' @importFrom grDevices colorRampPalette dev.off grey devAskNewPage
+#' @importFrom grDevices colorRampPalette dev.off grey
 #' @importFrom tikzDevice tikz
 #' @name plotEstimator
 #' @param object fitted "runSUR" model
@@ -38,8 +38,6 @@
 #' @export
 plotEstimator <- function(object, estimator="all", colorScale.gamma=grey((100:0)/100), colorScale.beta=c("blue","white","red"), legend.cex.axis=1, 
                           name.responses=NA, name.predictors=NA, xlab="", ylab="", fig.tex=FALSE, output="ParamEstimator",...){
-  
-  #devAskNewPage(FALSE)
   
   object$output[-1] <- paste(object$output$outFilePath,object$output[-1],sep="")
   beta_hat <- as.matrix( read.table(object$output$beta) )

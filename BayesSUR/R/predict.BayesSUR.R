@@ -7,9 +7,9 @@
 #' @param object fitted \code{runSUR} model
 #' @param newx Matrix of new values for x at which predictions are to be made. Must be a matrix
 #' @param type Type of prediction required. Type "response" gives the fitted responses. Type "coefficients" computes the coefficients 
-#' truncated the estimated coefficients based on thresholding the estimated latent indicator variable at \code{PmaxPredictor}. 
-#' Type "nonzero" returns a list of the indices of the nonzero coefficients corresponding to the estimated latent indicator variable thresholding at \code{PmaxPredictor}
-#' @param PmaxPredictor truncate the estimated coefficients based on thresholding the estimated latent indicator variable at 0 by default
+#' truncated the estimated coefficients based on thresholding the estimated latent indicator variable at \code{Pmax}. 
+#' Type "nonzero" returns a list of the indices of the nonzero coefficients corresponding to the estimated latent indicator variable thresholding at \code{Pmax}
+#' @param Pmax truncate the estimated coefficients based on thresholding the estimated latent indicator variable at 0 by default
 #' @param ... other arguments
 #' 
 #' @return Predicted values extracted from the object \code{object}. If the \code{runSUR} specified data standardization, the fitted values are base based on standardized data.
@@ -30,7 +30,7 @@
 #' }
 #' 
 #' @export
-predict.BayesSUR <- function(object, newx, type=c("response", "coefficients", "nonzero"), PmaxPredictor=0, ...){
+predict.BayesSUR <- function(object, newx, type=c("response", "coefficients", "nonzero"), Pmax=0, ...){
   
   type = match.arg(type)
   if (missing(newx) & type=="response"){
@@ -46,7 +46,7 @@ predict.BayesSUR <- function(object, newx, type=c("response", "coefficients", "n
   if( "X0" %in% names(object$output) ){
     
     X0 <- as.matrix( read.table(object$output$X0) )
-    beta_hat[-c(1:ncol(X0)),][gamma_hat<=PmaxPredictor] <- 0
+    beta_hat[-c(1:ncol(X0)),][gamma_hat<=Pmax] <- 0
     
     if( missing(newx) ){
       y.pred <- cbind(X0, X) %*% beta_hat
@@ -55,7 +55,7 @@ predict.BayesSUR <- function(object, newx, type=c("response", "coefficients", "n
     }
    
   }else{
-    beta_hat[gamma_hat<=PmaxPredictor] <- 0
+    beta_hat[gamma_hat<=Pmax] <- 0
     if( missing(newx) ){
       y.pred <- X %*% beta_hat
     }else{
@@ -68,6 +68,6 @@ predict.BayesSUR <- function(object, newx, type=c("response", "coefficients", "n
   if(type == "coefficients")
     return(beta_hat)
   if(type == "nonzero")
-    return( which(gamma_hat<=PmaxPredictor, arr.ind=TRUE) )
+    return( which(gamma_hat<=Pmax, arr.ind=TRUE) )
   
 }

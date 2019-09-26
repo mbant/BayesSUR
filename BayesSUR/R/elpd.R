@@ -1,10 +1,11 @@
 #' BayesSUR -- Bayesian Seemingly Unrelated Regression
 #' @title prediction accuracy
 #' @description
-#' Measure the prediction accuracy by the elpd (expected log pointwise predictive density). One method to estimate elpd is by the Bayesian LOO estimate of out-of-sample predictive fit. The other method the WAIC (widely applicable information criterion).
+#' Measure the prediction accuracy by the elpd (expected log pointwise predictive density).
 #' @name elpd
 #' @param object the object from the runSUR
-#' @param method the name of the prediction accuracy index. Default is the "\code{LOO}". The other index is the "\code{WAIC}".
+#' @param method the name of the prediction accuracy index. Default is the "\code{LOO}" (Bayesian LOO estimate of out-of-sample predictive fit). The other index is the "\code{WAIC}" (widely applicable information criterion).
+#' For the HRR models, both "\code{LOO}" and "\code{WAIC}" are computed based on the multivate t-distribution of the posterior predictive rather than approximation of importance sampling.
 #' @references Vehtari, A., Gelman, A., Gabry, J. (2017). \emph{Practical Bayesian model evaluation using leave-one-out cross-validation and WAIC.} Statistics and Computing, 27(5): 1413–1432.
 #'
 #' @examples

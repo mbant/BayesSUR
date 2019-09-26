@@ -4,7 +4,6 @@
 #' @description
 #' Manhattan-like plot
 #' @importFrom graphics axis box text par plot.default segments
-#' @importFrom grDevices devAskNewPage
 #' @param object the object from the runSUR
 #' @param which if it's value "1" showing the Manhattan-like plot of the marginal posterior inclusion probabilities (mPIP). If it's value "2" showing the Manhattan-like plot of the number of responses. The default is to show both figures.
 #' @param x.loc a vector of features distance
@@ -40,8 +39,6 @@
 #' 
 #' @export
 plotManhattan <- function(object, which=c(1,2), x.loc=FALSE, axis.label=NULL, mark.responses=NULL, xlab1="", ylab1="mPIP", xlab2="", ylab2="No. of responses",threshold=0.5,las=0, cex.axis=1, mark.pos=c(0,0), mark.color=2, mark.cex=0.8, ...){
-  
-  #devAskNewPage(FALSE)
   
   object$output[-1] <- paste(object$output$outFilePath,object$output[-1],sep="")
   gamma <- as.matrix( read.table(object$output$gamma) )

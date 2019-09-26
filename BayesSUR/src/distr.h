@@ -77,7 +77,7 @@ namespace Distributions{
 	double logPDFNormal(const arma::vec& x, const arma::vec& m,const  double& Sigma);
 	double logPDFNormal(arma::vec& x, arma::vec& m, const arma::mat& rowCov, const arma::mat& colCov);
     
-    double logPDFt( double x, double d );
+    // double logPDFt( double x, double d );
 
 	double lBeta(double a,double b);
 	double logPDFBeta(double x, double a, double b);

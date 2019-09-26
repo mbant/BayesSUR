@@ -5,7 +5,7 @@
 #' @name coef
 #' 
 #' @param object fitted \code{runSUR} model
-#' @param PmaxPredictor truncate the estimated coefficients based on thresholding the estimated latent indicator variable at 0 by default
+#' @param Pmax truncate the estimated coefficients based on thresholding the estimated latent indicator variable at 0 by default
 #' @param ... other arguments
 #' 
 #' @return Estimated coefficients are from the object \code{object}. If the \code{runSUR} specified data standardization, the fitted values are base based on standardized data.
@@ -26,8 +26,8 @@
 #' }
 #' 
 #' @export
-coef.BayesSUR <- function(object, PmaxPredictor=0, ...){
+coef.BayesSUR <- function(object, Pmax=0, ...){
   
-  predict.BayesSUR(object, type="coefficients", PmaxPredictor=PmaxPredictor, ...)
+  predict.BayesSUR(object, type="coefficients", Pmax=Pmax, ...)
     
 }

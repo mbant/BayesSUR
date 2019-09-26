@@ -665,12 +665,12 @@ namespace Distributions{
 		return (n*(n-1.)*0.25)*log(M_PI) + lmvG;
 	}
     
-    double logPDFt( double x, double d )
+    /*double logPDFt( double x, double d )
     {
         
         return std::lgamma( (d+1.)/2. ) - 0.5*log(d*M_PI) - std::lgamma( d/2. ) - (d+1.)/2.*log( 1+x*x/d );
         
-    }
+    }*/
 
 
 

@@ -4,7 +4,6 @@
 #' Show the relationship between responses
 #' @importFrom igraph V E plot.igraph graph_from_adjacency_matrix V<-
 #' @importFrom graphics par
-#' @importFrom grDevices devAskNewPage
 #' @name plotResponseGraph
 #' @param object fitted "runSUR" model
 #' @param PmaxResponse cutpoint for thresholding the learning structure matrix of multiple response variables. Default is 0.5
@@ -34,8 +33,6 @@
 #' 
 #' @export
 plotResponseGraph <- function(object, PmaxResponse=0.5, PtrueResponse=NULL, name.responses=NA, edge.weight=FALSE, label.color="black", node.size=30, node.color="dodgerblue", ...){
-  
-  #devAskNewPage(FALSE)
   
   object$output[-1] <- paste(object$output$outFilePath,object$output[-1],sep="")
   Gy_hat <- as.matrix( read.table(object$output$G) )

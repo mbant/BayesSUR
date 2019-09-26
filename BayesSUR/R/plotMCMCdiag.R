@@ -4,7 +4,6 @@
 #' Diagnose the convergence of the MCMC iterations
 #' @importFrom graphics par plot.default legend title
 #' @importFrom stats density
-#' @importFrom grDevices devAskNewPage
 #' @name plotMCMCdiag
 #' @param object fitted "runSUR" model
 #' @param nbloc number of splits for the last half iterations after substracting burn-in length
@@ -28,8 +27,6 @@
 #' 
 #' @export
 plotMCMCdiag <- function(object, nbloc=3, ...){
-  
-  #devAskNewPage(FALSE)
   
   object$output[-1] <- paste(object$output$outFilePath,object$output[-1],sep="")
   

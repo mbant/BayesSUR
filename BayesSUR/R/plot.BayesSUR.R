@@ -2,7 +2,7 @@
 #' @title plotEstimator
 #' @description
 #' Six available plots from the object of fitted Bayesian Seemingly Unrelated Regression
-#' @importFrom grDevices dev.hold dev.flush
+#' @importFrom grDevices dev.hold dev.flush devAskNewPage
 #' @name plot
 #' @param x object of the fitted "runSUR" model.
 #' @param which if a subset of the plots is required, specify a subset of the numbers 1:5 which are plots of estimators, response graph, network, manhattan and MCMC diagnosis, respectively.
@@ -34,6 +34,9 @@ plot.BayesSUR <- function(x, which = c(1L:5L), ...){
   
   show <- rep(FALSE, 5)
   show[which] <- TRUE
+  
+  if(x$input$covariancePrior=="IG")
+    show[ 2:3 ] <- FALSE
   
   devAskNewPage(TRUE)
   
