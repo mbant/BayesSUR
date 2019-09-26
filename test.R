@@ -12,7 +12,7 @@
 ## Install the package
 library(devtools)
 install_github("mbant/BayesSUR/BayesSUR")
-#install.packages("BayesSUR_0.1.16.tar.gz",repos = NULL,type = "source")
+#install.packages("BayesSUR_0.1.22.tar.gz",repos = NULL,type = "source")
 
 
 #####################################################################################################
