@@ -1,6 +1,6 @@
 #' @title plot the network representation of the associations between responses and predictors
 #' @description
-#' Plot the network representation of the associations between responses and predictors, based on the estimated gamma matrix of a "BayesSUR" class object.
+#' Plot the network representation of the associations between responses and predictors, based on the estimated gamma matrix and graph of responses from a "BayesSUR" class object.
 #' @importFrom graphics text 
 #' @importFrom grDevices gray 
 #' @importFrom igraph V E gsize layout_in_circle plot.igraph degree layout.fruchterman.reingold delete.vertices graph.adjacency
@@ -29,6 +29,7 @@
 #' @param name.responses a subtitle for the responses
 #' @param vertex.frame.color The color of the frame of the vertices. If you don't want vertices to have a frame, supply NA as the color name
 #' @param layoutInCircle place vertices on a circle, in the order of their vertex ids. The default is \code{FALSE}
+#' @param header the main title
 #' @param ... other arguments
 #' 
 #' @examples
@@ -37,10 +38,10 @@
 #' hyperpar <- list( a_w = 2 , b_w = 5 )
 #' 
 #' fit <- BayesSUR(Y = example_eQTL[["blockList"]][[1]], 
-#'               X = example_eQTL[["blockList"]][[2]],
-#'               data = example_eQTL[["data"]], outFilePath = "results/",
-#'               nIter = 1000, nChains = 2, gammaPrior = "hotspot",
-#'               hyperpar = hyperpar, tmpFolder = "tmp/" )
+#'                 X = example_eQTL[["blockList"]][[2]],
+#'                 data = example_eQTL[["data"]], outFilePath = "results/",
+#'                 nIter = 1000, burnin = 500, nChains = 2, gammaPrior = "hotspot",
+#'                 hyperpar = hyperpar, tmpFolder = "tmp/" )
 #' 
 #' ## check output
 #' # show the Network representation of the associations between responses and features
@@ -51,7 +52,8 @@
 plotNetwork <- function(object, includeResponse=NULL, excludeResponse=NULL, includePredictor=NULL, excludePredictor=NULL, 
                         MatrixGamma=NULL, PmaxPredictor=0.5, PmaxResponse=0.5, nodesizePredictor=5, nodesizeResponse=25, no.isolates=FALSE,
                         lineup=1, gray.alpha=0.6, edgewith.response=5, edgewith.predictor=2, edge.weight=FALSE, label.predictor=NULL,
-                        label.response=NULL, color.predictor=NULL,color.response=NULL, name.predictors=NULL,name.responses=NULL, vertex.frame.color=NA,layoutInCircle=FALSE, ...){
+                        label.response=NULL, color.predictor=NULL,color.response=NULL, name.predictors=NULL,name.responses=NULL, 
+                        vertex.frame.color=NA,layoutInCircle=FALSE, header="", ...){
   
   object$output[-1] <- paste(object$output$outFilePath,object$output[-1],sep="")
   
@@ -101,7 +103,8 @@ plotNetwork <- function(object, includeResponse=NULL, excludeResponse=NULL, incl
                lineup=lineup, gray.alpha=gray.alpha, edgewith.response=edgewith.response, edgewith.predictor=edgewith.predictor,edge.weight=edge.weight,
                label.predictor=label.predictor,label.response=label.response, color.predictor=color.predictor,color.response=color.response, 
                name.predictors=name.predictors,name.responses=name.responses, vertex.frame.color=vertex.frame.color,layoutInCircle=layoutInCircle,...)
-
+  title(paste("\n\n",header,sep=""), outer=T)
+  
 }
 plotSEMgraph <- function(ADJmatrix,GAMmatrix,nodesizeSNP=2,nodesizeMET=25,no.isolates=FALSE,
                          lineup=1,gray.alpha=0.6,edgewith.response=5,edgewith.predictor=2,

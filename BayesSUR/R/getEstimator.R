@@ -3,8 +3,9 @@
 #' Extract the posterior mean of the parameters of a "BayesSUR" class object.
 #' @name getEstimator
 #' @param object an object of class "BayesSUR"
-#' @param estimator the name of one estimator. Default is the latent indicator estimator "\code{gamma}". Other options "\code{beta}" and "\code{Gy}" correspond the posterior means of coefficient matrix, response graph and CPO, respectively 
-#' @param Pmax truncate the estimator. Default is 0. If the estimator is beta, then beta is truncated based on the latent indicator matrix shresholding at \code{Pmax} 
+#' @param estimator the name of one estimator. Default is the latent indicator estimator "\code{gamma}". Other options "\code{beta}", "\code{Gy}" and "\code{CPO}" 
+#' correspond the posterior means of coefficient matrix, response graph and conditional predictive ordinate (CPO) respectively 
+#' @param Pmax threshold that truncate the estimator. Default is 0. If the estimator is beta, then beta is truncated based on the latent indicator matrix shresholding at \code{Pmax} 
 #' 
 #' @examples
 #' \donttest{
@@ -12,10 +13,10 @@
 #' hyperpar <- list( a_w = 2 , b_w = 5 )
 #' 
 #' fit <- BayesSUR(Y = example_eQTL[["blockList"]][[1]], 
-#'               X = example_eQTL[["blockList"]][[2]],
-#'               data = example_eQTL[["data"]], outFilePath = "results/",
-#'               nIter = 1000, nChains = 2, gammaPrior = "hotspot",
-#'               hyperpar = hyperpar, tmpFolder = "tmp/" )
+#'                 X = example_eQTL[["blockList"]][[2]],
+#'                 data = example_eQTL[["data"]], outFilePath = "results/",
+#'                 nIter = 1000, burnin = 500, nChains = 2, gammaPrior = "hotspot",
+#'                 hyperpar = hyperpar, tmpFolder = "tmp/" )
 #' 
 #' ## check output
 #' # extract the posterior mean of the coefficients matrix
@@ -31,17 +32,17 @@ getEstimator <- function(object, estimator="gamma", Pmax=0){
   
   if( estimator == "gamma" ){
     Est <- as.matrix( read.table(object$output$gamma) )
-    Est[Est<=0] <- 0
+    Est[Est<=Pmax] <- 0
   } 
   
   if( estimator == "beta" ){
     Est <- as.matrix( read.table(object$output$beta) )
-    Est[as.matrix( read.table(object$output$gamma) )<=0] <- 0
+    Est[as.matrix( read.table(object$output$gamma) )<=Pmax] <- 0
   } 
   
   if( estimator == "Gy" ){
     Est <- as.matrix( read.table(object$output$G) )
-    Est[Est<=0] <- 0
+    Est[Est<=Pmax] <- 0
   } 
   
   if( estimator == "CPO" ) Est <- as.matrix( read.table(object$output$CPO) )

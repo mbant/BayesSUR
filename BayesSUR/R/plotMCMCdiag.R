@@ -6,7 +6,8 @@
 #' @name plotMCMCdiag
 #' @param object an object of class "BayesSUR"
 #' @param nbloc number of splits for the last half iterations after substracting burn-in length
-#' @param ... other arguments for the penals of the log-likelihood and model size
+#' @param header the main title
+#' @param ... other arguments for the plots of the log-likelihood and model size
 #' 
 #' @examples
 #' \donttest{
@@ -14,10 +15,10 @@
 #' hyperpar <- list( a_w = 2 , b_w = 5 )
 #' 
 #' fit <- BayesSUR(Y = example_eQTL[["blockList"]][[1]], 
-#'               X = example_eQTL[["blockList"]][[2]],
-#'               data = example_eQTL[["data"]], outFilePath = "results/",
-#'               nIter = 10000, nChains = 2, gammaPrior = "hotspot",
-#'               hyperpar = hyperpar, tmpFolder = "tmp/" )
+#'                 X = example_eQTL[["blockList"]][[2]],
+#'                 data = example_eQTL[["data"]], outFilePath = "results/",
+#'                 nIter = 10000, burnin = 500, nChains = 2, gammaPrior = "hotspot",
+#'                 hyperpar = hyperpar, tmpFolder = "tmp/" )
 #' 
 #' ## check output
 #' # show the diagnosis plots
@@ -25,10 +26,10 @@
 #' }
 #' 
 #' @export
-plotMCMCdiag <- function(object, nbloc=3, ...){
+plotMCMCdiag <- function(object, nbloc=3, header="", ...){
   
   if(object$input$nIter < 4000)
-    step("The argument nIter should be at least 4000 for the diagnostic plots!")
+    stop("The argument nIter should be at least 4000 for the diagnostic plots!")
   
   object$output[-1] <- paste(object$output$outFilePath,object$output[-1],sep="")
   
@@ -88,7 +89,7 @@ plotMCMCdiag <- function(object, nbloc=3, ...){
   legend("topleft",title="moving window",legend=paste("set ",1:nbloc," = [",(floor((ncol(logP))/2)+mid*(nbloc:1-1))*1000+1,":",(ncol(logP))*1000,"]",sep=""),col=1:nbloc,lty=1,text.col=1:nbloc, cex=0.8)
   
   par(mfrow=c(1,1))
+  title(paste("\n",header,sep=""), outer=T)
   
-  # we might also need other diagnostic plots here together, like temperature, etc.
   
 }

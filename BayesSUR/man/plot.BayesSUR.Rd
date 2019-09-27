@@ -22,10 +22,10 @@ data("example_eQTL", package = "BayesSUR")
 hyperpar = list( a_w = 2 , b_w = 5 )
 
 fit <- BayesSUR(Y = example_eQTL[["blockList"]][[1]], 
-              X = example_eQTL[["blockList"]][[2]],
-              data = example_eQTL[["data"]], outFilePath = "results/",
-              nIter = 10000, nChains = 2, gammaPrior = "hotspot",
-              hyperpar = hyperpar, tmpFolder = "tmp/" )
+                X = example_eQTL[["blockList"]][[2]],
+                data = example_eQTL[["data"]], outFilePath = "results/",
+                nIter = 10000, burnin = 5000, nChains = 2, gammaPrior = "hotspot",
+                hyperpar = hyperpar, tmpFolder = "tmp/" )
 
 ## check output
 # show the interactive plots

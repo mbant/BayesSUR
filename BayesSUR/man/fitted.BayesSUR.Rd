@@ -2,14 +2,14 @@
 % Please edit documentation in R/fitted.BayesSUR.R
 \name{fitted.BayesSUR}
 \alias{fitted.BayesSUR}
-\title{fitted response values}
+\title{fitted response values corresponds to the posterior mean estimates}
 \usage{
 \method{fitted}{BayesSUR}(object, Pmax = 0, ...)
 }
 \arguments{
 \item{object}{an object of class "BayesSUR"}
 
-\item{Pmax}{truncate the estimated coefficients based on thresholding the estimated latent indicator variable at 0 by default}
+\item{Pmax}{threshold that truncates the estimated coefficients based on thresholding the estimated latent indicator variable. Default is 0.}
 
 \item{...}{other arguments}
 }
@@ -17,7 +17,7 @@
 Fitted values extracted from an object of class "BayesSUR". If the \code{BayesSUR} specified data standardization, the fitted values are base based on standardized data.
 }
 \description{
-Return the fitted response values that correspond to the posterior mean of the coefficients matrix of a "BayesSUR" class object.
+Return the fitted response values that correspond to the posterior mean estimates from a "BayesSUR" class object.
 }
 \examples{
 \donttest{
@@ -25,10 +25,10 @@ data("example_eQTL", package = "BayesSUR")
 hyperpar <- list( a_w = 2 , b_w = 5 )
 
 fit <- BayesSUR(Y = example_eQTL[["blockList"]][[1]], 
-              X = example_eQTL[["blockList"]][[2]],
-              data = example_eQTL[["data"]], outFilePath = "results/",
-              nIter = 1000, nChains = 2, gammaPrior = "hotspot",
-              hyperpar = hyperpar, tmpFolder = "tmp/" )
+                X = example_eQTL[["blockList"]][[2]],
+                data = example_eQTL[["data"]], outFilePath = "results/",
+                nIter = 1000, burnin = 500, nChains = 2, gammaPrior = "hotspot",
+                hyperpar = hyperpar, tmpFolder = "tmp/" )
 
 ## check fitted values
 fitted.val <- fitted(fit)

@@ -31,9 +31,9 @@ if the 'data' argument is not provided, these needs to be matrices containing th
 \item{nChains}{number of parallel chains to run}
 
 \item{covariancePrior}{string indicating the prior for the covariance $C$; it has to be either "HIW" for the hyper-inverse-Wishar (which will result in a sparse covariance matrix),
-"IW" for the inverse-Wishart prior ( dense covariance ) or "IG" for independent inverse-Gamma on all the diagonal elements and 0 otherwise.}
+"IW" for the inverse-Wishart prior ( dense covariance ) or "IG" for independent inverse-Gamma on all the diagonal elements and 0 otherwise. See the details for the model specification}
 
-\item{gammaPrior}{string indicating the gamma prior to use, either "hotspot" for the Hotspot prior of Bottolo (2011), "MRF" for the Markov Random Field prior or "hierarchical" for a simpler hierarchical prior}
+\item{gammaPrior}{string indicating the gamma prior to use, either "hotspot" for the Hotspot prior of Bottolo (2011), "MRF" for the Markov Random Field prior or "hierarchical" for a simpler hierarchical prior. See the details for the model specification}
 
 \item{gammaSampler}{string indicating the type of sampler for gamma, either "bandit" for the Thompson sampling inspired samper or "MC3" for the usual $MC^3$ sampler}
 
@@ -76,26 +76,39 @@ An object of class "BayesSUR":
 \item input - a list of all input parameters by the user
 \item output - a list of the all output filenames: 
 \itemize{
-\item "\code{logP_out.txt}" - contains each row for the \eqn{t*1000}-th iteration's log-likelihoods of parameters, i.e., Tau, Eta, JunctionTree, SigmaRho, O, Pi, Gamma, W, Beta and data conditional log-likelihood depending on the models.
-\item "\code{gamma_out.txt}" - posterior mean of the latent indicator matrix. 
-\item "\code{pi_out.txt}" - posterior mean of the predictor effects (prospensity) by decomposing the probability of the latent indicator.
-\item "\code{hotspot_tail_p_out.txt}" - posterior mean of the hotspot tail probability. Only available for the hotspot prior on the gamma.
-\item "\code{beta_out.txt}" - posterior mean of the coefficients matrix.
-\item "\code{G_out.txt}" - posterior mean of the response graph. Only available for the HIW prior on the covariance. 
-\item "\code{sigmaRho_out.txt}" - posterior mean of the transformed parameters. Not available for the IG prior on the covariance.
-\item "\code{model_size.txt}" - contains each row for the\eqn{t*1000}-th iteration's model sizes of the multiple response variables.
-\item "\code{CPO_out.txt}" - the (scaled) conditional predictive ordinates (CPO). 
-\item "\code{CPOsumy_out.txt}" - the (scaled) conditional predictive ordinates (CPO) with joint posterior predictive of the response variables.
-\item "\code{WAIC_out.txt}" - the widely applicable information criterion (WAIC). 
-\item "\code{Y_out.txt}" - responses dataset. 
-\item "\code{X_out.txt}" - predictors dataset.
-\item "\code{X0_out.txt}" - fixed predictors dataset.
+\item "\code{*_logP_out.txt}" - contains each row for the \eqn{1000t}-th iteration's log-likelihoods of parameters, i.e., Tau, Eta, JunctionTree, SigmaRho, O, Pi, Gamma, W, Beta and data conditional log-likelihood depending on the models.
+\item "\code{*_gamma_out.txt}" - posterior mean of the latent indicator matrix. 
+\item "\code{*_pi_out.txt}" - posterior mean of the predictor effects (prospensity) by decomposing the probability of the latent indicator.
+\item "\code{*_hotspot_tail_p_out.txt}" - posterior mean of the hotspot tail probability. Only available for the hotspot prior on the gamma.
+\item "\code{*_beta_out.txt}" - posterior mean of the coefficients matrix.
+\item "\code{*_G_out.txt}" - posterior mean of the response graph. Only available for the HIW prior on the covariance. 
+\item "\code{*_sigmaRho_out.txt}" - posterior mean of the transformed parameters. Not available for the IG prior on the covariance.
+\item "\code{*_model_size.txt}" - contains each row for the\eqn{1000t}-th iteration's model sizes of the multiple response variables.
+\item "\code{*_CPO_out.txt}" - the (scaled) conditional predictive ordinates (CPO). 
+\item "\code{*_CPOsumy_out.txt}" - the (scaled) conditional predictive ordinates (CPO) with joint posterior predictive of the response variables.
+\item "\code{*_WAIC_out.txt}" - the widely applicable information criterion (WAIC). 
+\item "\code{*_Y.txt}" - responses dataset. 
+\item "\code{*_X.txt}" - predictors dataset.
+\item "\code{*_X0.txt}" - fixed predictors dataset.
 }
 \item call - the matched call.
 }
 }
 \description{
-Main function of the package. Fit any of the HRR, dSUR and SSUR models.
+Main function of the package. Fits a range of models introduced in the package vignette \code{BayesSUR.pdf}. Returns an object of S3 class BayesSUR. 
+There are three options for the prior on the residual covariance matrix (i.e., independent inverse-Gamma, inverse-Wishart and hyper-inverse Wishart) 
+and three options for the prior on the latent indicator variable (i.e., independent Bernoulli, hotspot and Markov random field). 
+So there are nine models in total. See details for their combinations.
+}
+\details{
+The arguments \code{covariancePrior} and \code{gammaPrior} specify the model HRR, dSUR or SSUR with different gamma prior. Let \eqn{\gamma_{jk}} be latent indicator variable of each coefficient and \eqn{C} be covariance matrix of response variables.
+The nine models specified through the arguments \code{covariancePrior} and \code{gammaPrior} are as follows.
+\tabular{cccc}{
+                \tab \eqn{\gamma_{jk}}~Bernoulli \tab \eqn{\gamma_{jk}}~hotspot \tab \eqn{\gamma_{jk}}~MRF \cr
+  \eqn{C}~indep \tab HRR-B                       \tab HRR-H                     \tab HRR-M           \cr
+  \eqn{C}~IW    \tab dSUR-B                      \tab dSUR-H                    \tab dSUR-M          \cr
+  \eqn{C}~HIW   \tab SSUR-B                      \tab SSUR-H                    \tab SSUR-M           
+}
 }
 \examples{
 \donttest{
@@ -103,20 +116,23 @@ data("example_eQTL", package = "BayesSUR")
 hyperpar <- list( a_w = 2 , b_w = 5 )
 
 fit <- BayesSUR(Y = example_eQTL[["blockList"]][[1]], 
-              X = example_eQTL[["blockList"]][[2]],
-              data = example_eQTL[["data"]], outFilePath = "results/",
-              nIter = 1000, nChains = 2, gammaPrior = "hotspot",
-              hyperpar = hyperpar, tmpFolder = "tmp/" )
+                X = example_eQTL[["blockList"]][[2]],
+                data = example_eQTL[["data"]], outFilePath = "results/",
+                nIter = 1000, burnin = 500, nChains = 2, gammaPrior = "hotspot",
+                hyperpar = hyperpar, tmpFolder = "tmp/" )
 
 ## check output
 # show the summary information
 summary(fit)
 
 # show the estimated beta, gamma and graph of responeses Gy
-plotEstimator(fit)
+plotEstimator(fit, fig.tex = TRUE)
+system(paste(getOption("pdfviewer"), "ParamEstimator.pdf"))
 }
 
 }
 \references{
-Banterle M, Bottolo L, Richardson S, Ala-Korpela M, Jarvelin MR, Lewin A (2018). \emph{Sparse variable and covariance selection for high-dimensional seemingly unrelated Bayesian regres- sion.} bioRxiv: 467019.
+Banterle M, Bottolo L, Richardson S, Ala-Korpela M, Jarvelin MR, Lewin A (2018). \emph{Sparse variable and covariance selection for high-dimensional seemingly unrelated Bayesian regression.} bioRxiv: 467019.
+
+Banterle M#, Zhao Z#, Bottolo L, Richardson S, Lewin A\*, Zucknick M\* (2019). \emph{BayesSUR: An R package for high-dimensional multivariate Bayesian variable and covariance selection in linear regression.} URL: https://github.com/mbant/BayesSUR/tree/master/BayesSUR/vignettes/vignettes.pdf
 }

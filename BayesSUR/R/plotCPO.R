@@ -4,7 +4,6 @@
 #' @importFrom graphics axis box text par abline
 #' @name plotCPO
 #' @param object an object of class "BayesSUR"
-#' @param xlab a title for the x axis 
 #' @param sum.responses compute CPOs aggreated in all response variables
 #' @param outlier.thresh threshold for the CPOs. The default is 0.01.
 #' @param outlier.mark mark the outliers with the response names. The default is \code{FALSE}
@@ -16,6 +15,8 @@
 #' @param cex.axis graphical parameter of plot.default
 #' @param mark.color the color of the marked text. The default color is red.
 #' @param mark.cex the fontsize of the marked text. The default fontsize is 0.8.
+#' @param xlab a title for the x axis 
+#' @param ylab a title for the y axis 
 #' @references Statisticat, LLC (2013). \emph{Bayesian Inference.} Farmington, CT: Statisticat, LLC.
 #'
 #' @details The default threshold for the CPOs to detect the outliers is 0.01 by Congdon (2005). It can be tuned by the argument \code{outlier.thresh}.
@@ -29,10 +30,10 @@
 #' hyperpar <- list( a_w = 2 , b_w = 5 )
 #' 
 #' fit <- BayesSUR(Y = example_eQTL[["blockList"]][[1]], 
-#'               X = example_eQTL[["blockList"]][[2]],
-#'               data = example_eQTL[["data"]], outFilePath = "results/",
-#'               nIter = 1000, nChains = 2, gammaPrior = "hotspot",
-#'               hyperpar = hyperpar, tmpFolder = "tmp/" )
+#'                 X = example_eQTL[["blockList"]][[2]],
+#'                 data = example_eQTL[["data"]], outFilePath = "results/",
+#'                 nIter = 1000, burnin = 500, nChains = 2, gammaPrior = "hotspot",
+#'                 hyperpar = hyperpar, tmpFolder = "tmp/" )
 #' 
 #' ## check output
 #' # plot the conditional predictive ordinate (CPO)
@@ -40,10 +41,14 @@
 #' }
 #' 
 #' @export
-plotCPO <- function(object, xlab="", sum.responses=FALSE, outlier.mark=TRUE, outlier.thresh=0.01, scale.CPO=TRUE, x.loc=FALSE, axis.label=NULL, las=0, cex.axis=1, mark.pos=c(0,-.01), mark.color=2, mark.cex=0.8){
+plotCPO <- function(object, sum.responses=FALSE, outlier.mark=TRUE, outlier.thresh=0.01, scale.CPO=TRUE, x.loc=FALSE, axis.label=NULL, las=0, cex.axis=1, mark.pos=c(0,-.01), mark.color=2, mark.cex=0.8,
+                    xlab="Observations", ylab=NULL){
   
   object$output[-1] <- paste(object$output$outFilePath,object$output[-1],sep="")
   CPO <- as.matrix( read.table(object$output$CPO) )
+  
+  if(is.null(ylab))
+    ylab <- ifelse(scale.CPO,"scaled CPOs","CPOs")
   
   name.predictors <- rownames(as.matrix( read.table(object$output$Y,header=T) ))
     
@@ -67,13 +72,13 @@ plotCPO <- function(object, xlab="", sum.responses=FALSE, outlier.mark=TRUE, out
   
   if(!sum.responses){
     if(scale.CPO) CPO <- CPO/max(CPO)
-    plot.default(as.vector(CPO) ~ rep(1:nrow(CPO), times=ncol(CPO)), xlim=c(1,nrow(CPO)), ylim=c(0,max(CPO)), xaxt = 'n',bty = "n", ylab = ifelse(scale.CPO,"scaled CPOs","CPOs"), xlab = xlab, main="Conditional predictive ordinate", pch=19)
+    plot.default(as.vector(CPO) ~ rep(1:nrow(CPO), times=ncol(CPO)), xlim=c(1,nrow(CPO)), ylim=c(0,max(CPO)), xaxt = 'n',bty = "n", ylab = ylab, xlab = xlab, main="Conditional predictive ordinate", pch=19)
     axis(1, at=x.loc, labels=names(x.loc), las=las, cex.axis=cex.axis); box()
     
     # mark the names of the specified response variables corresponding to the given responses
     if(outlier.mark){
       if(min(CPO) > outlier.thresh){
-        cat("Warning: The minimum CPO is larger than the threshold of the (scaled) CPO!\n")
+        cat("NOTE: The minimum CPO is larger than the threshold of the (scaled) CPO!\n")
       }else{
         name.responses <- colnames(as.matrix( read.table(object$output$Y,header=T) ))
         text(rep(1:nrow(CPO), times=ncol(CPO))[which(as.vector(CPO) <= outlier.thresh)]+mark.pos[1], as.vector(CPO[CPO<outlier.thresh])+mark.pos[2], labels=rep(name.responses, each=nrow(CPO))[as.vector(CPO) < outlier.thresh], col=mark.color, cex=mark.cex)
@@ -84,7 +89,7 @@ plotCPO <- function(object, xlab="", sum.responses=FALSE, outlier.mark=TRUE, out
     CPO <- as.matrix( read.table(object$output$CPOsumy) )
     #CPO <- rowSums(CPO)
     if(scale.CPO) CPO <- CPO/max(CPO)
-    plot.default(CPO ~ c(1:length(CPO)), xaxt = 'n',bty = "n", xlim=c(1,length(CPO)), ylim=c(min(CPO)+mark.pos[2]*2,max(CPO)), ylab = ifelse(scale.CPO,"scaled CPOs","CPOs"), xlab = xlab, main="Conditional predictive ordinate", pch=19)
+    plot.default(CPO ~ c(1:length(CPO)), xaxt = 'n',bty = "n", xlim=c(1,length(CPO)), ylim=c(min(CPO)+mark.pos[2]*2,max(CPO)), ylab = ylab, xlab = xlab, main="Conditional predictive ordinate", pch=19)
     axis(1, at=x.loc, labels=names(x.loc), las=las, cex.axis=cex.axis); box()
     
     # mark the names of the specified response variables corresponding to the given responses

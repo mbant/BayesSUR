@@ -17,6 +17,7 @@
 #' @param cex.axis graphical parameter of plot.default
 #' @param mark.color the color of the marked text. The default color is red.
 #' @param mark.cex the fontsize of the marked text. The default fontsize is 0.8.
+#' @param header the main title
 #' @param ... other arguments
 #' 
 #' @examples
@@ -25,10 +26,10 @@
 #' hyperpar <- list( a_w = 2 , b_w = 5 )
 #' 
 #' fit <- BayesSUR(Y = example_eQTL[["blockList"]][[1]], 
-#'               X = example_eQTL[["blockList"]][[2]],
-#'               data = example_eQTL[["data"]], outFilePath = "results/",
-#'               nIter = 1000, nChains = 2, gammaPrior = "hotspot",
-#'               hyperpar = hyperpar, tmpFolder = "tmp/" )
+#'                 X = example_eQTL[["blockList"]][[2]],
+#'                 data = example_eQTL[["data"]], outFilePath = "results/",
+#'                 nIter = 1000, burnin = 500, nChains = 2, gammaPrior = "hotspot",
+#'                 hyperpar = hyperpar, tmpFolder = "tmp/" )
 #' 
 #' ## check output
 #' # show the Manhattan-like plots
@@ -36,7 +37,8 @@
 #' }
 #' 
 #' @export
-plotManhattan <- function(object, which=c(1,2), x.loc=FALSE, axis.label=NULL, mark.responses=NULL, xlab1="", ylab1="mPIP", xlab2="", ylab2="No. of responses",threshold=0.5,las=0, cex.axis=1, mark.pos=c(0,0), mark.color=2, mark.cex=0.8, ...){
+plotManhattan <- function(object, which=c(1,2), x.loc=FALSE, axis.label=NULL, mark.responses=NULL, xlab1="Predictors", ylab1="mPIP", xlab2="Predictors", ylab2="No. of responses",
+                          threshold=0.5,las=0, cex.axis=1, mark.pos=c(0,0), mark.color=2, mark.cex=0.8, header="", ...){
   
   object$output[-1] <- paste(object$output$outFilePath,object$output[-1],sep="")
   gamma <- as.matrix( read.table(object$output$gamma) )
@@ -61,9 +63,9 @@ plotManhattan <- function(object, which=c(1,2), x.loc=FALSE, axis.label=NULL, ma
   par(mfrow=c(2,1))
   # Manhattan plot for marginal posterior inclusion probabilities (mPIP) 
   if(1 %in% which){
-  par(mar=c(1,4,6.5,2)) 
+  par(mar=c(4,4,4,2)) 
   
-  plot.default(as.vector(gamma) ~ rep(1:nrow(gamma), times=ncol(gamma)), xlim=c(1,nrow(gamma)), ylim=c(0,max(gamma)), xaxt = 'n',bty = "n", ylab = "mPIP", xlab = "", main="", pch=19, ...)
+  plot.default(as.vector(gamma) ~ rep(1:nrow(gamma), times=ncol(gamma)), xlim=c(1,nrow(gamma)), ylim=c(0,max(gamma)), xaxt = 'n',bty = "n", ylab=ylab1, xlab=xlab1, main="", pch=19, ...)
   axis(1, at=x.loc, labels=names(x.loc), las=las, cex.axis=cex.axis); box()
   
   # mark the names of the specified response variables corresponding to the given predictors
@@ -86,5 +88,6 @@ plotManhattan <- function(object, which=c(1,2), x.loc=FALSE, axis.label=NULL, ma
   axis(1, at=x.loc, labels=names(x.loc), las=las, cex.axis=cex.axis)
   }
   par(mfrow=c(1,1))
+  title(paste("\n\n",header,sep=""), outer=T)
   
 }

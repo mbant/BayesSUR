@@ -3,21 +3,15 @@
 \docType{data}
 \name{example_eQTL}
 \alias{example_eQTL}
-\title{Sample small dataset to test the package}
+\title{Simulated data set to mimic a small expression quantitative trait loci (eQTL) example}
 \format{An object of class \code{list} of length 2.}
 \usage{
 example_eQTL
 }
 \description{
-Contains 'n' observations of 's' continuous responses
-and 'p' SNPs-like covariates
-}
-\details{
-n = 100 ; p = 150 ; s = 10
-
-Loading the data will load the associated 
-blockList and strucutreGraph
-needed to run the algorithm.
+Simulated data set to mimic a small expression quantitative trait loci (eQTL) example, with p=150 single nucleotide polymorphisms (SNPs) as explanatory variables, 
+s=10 gene expression features as response variables and data for n=100 observations. Loading the data will load the associated blockList object 
+needed to fit the model with BayesSUR(). The R code for generating the simulated data is given in the Examples paragraph.
 }
 \examples{
 \dontrun{

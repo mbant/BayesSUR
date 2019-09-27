@@ -13,10 +13,10 @@
 #' hyperpar = list( a_w = 2 , b_w = 5 )
 #' 
 #' fit <- BayesSUR(Y = example_eQTL[["blockList"]][[1]], 
-#'               X = example_eQTL[["blockList"]][[2]],
-#'               data = example_eQTL[["data"]], outFilePath = "results/",
-#'               nIter = 10000, nChains = 2, gammaPrior = "hotspot",
-#'               hyperpar = hyperpar, tmpFolder = "tmp/" )
+#'                 X = example_eQTL[["blockList"]][[2]],
+#'                 data = example_eQTL[["data"]], outFilePath = "results/",
+#'                 nIter = 10000, burnin = 5000, nChains = 2, gammaPrior = "hotspot",
+#'                 hyperpar = hyperpar, tmpFolder = "tmp/" )
 #' 
 #' ## check output
 #' # show the interactive plots
@@ -41,7 +41,7 @@ plot.BayesSUR <- function(x, which = c(1L:5L), ...){
   
   if (show[1L]) {
     dev.hold()
-    plotEstimator(x, ...)
+    plotEstimator(x, header="\nEstimators", ...)
     dev.flush()
   }
   if (show[2L]) {
@@ -51,17 +51,17 @@ plot.BayesSUR <- function(x, which = c(1L:5L), ...){
   }
   if (show[3L]) {
     dev.hold()
-    plotNetwork(x, ...)
+    plotNetwork(x, header="\n\nNetwork respresentation", ...)
     dev.flush()
   }
   if (show[4L]) {
     dev.hold()
-    plotManhattan(x, ...)
+    plotManhattan(x, header="\n\nManhattan-like plots", ...)
     dev.flush()
   }
   if (show[5L]) {
     dev.hold()
-    plotMCMCdiag(x, ...)
+    plotMCMCdiag(x, header="\nMCMC diagnostic plots", ...)
     dev.flush()
   }
   

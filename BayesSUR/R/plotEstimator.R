@@ -1,6 +1,6 @@
-#' @title plot the estimated relationships between response variables and estimated coefficients
+#' @title plot the posterior mean estimators
 #' @description
-#' Plot the estimated relationships between response variables and estimated coefficients of a "BayesSUR" class object.
+#' Plot the posterior mean estimators from a "BayesSUR" class object, including the coefficients beta, latent indicator variable gamma and graph of responses.
 #' @importFrom graphics axis box text mtext par image
 #' @importFrom grDevices colorRampPalette dev.off grey
 #' @importFrom tikzDevice tikz
@@ -16,6 +16,8 @@
 #' @param ylab a title for the y axis
 #' @param fig.tex print the figure through LaTex. Default is "FALSE"
 #' @param output the file name of printed figure
+#' @param header the main title
+#' @param header.cex size of the main title
 #' @param ... other arguments
 #' 
 #' @examples
@@ -24,19 +26,20 @@
 #' hyperpar <- list( a_w = 2 , b_w = 5 )
 #' 
 #' fit <- BayesSUR(Y = example_eQTL[["blockList"]][[1]], 
-#'               X = example_eQTL[["blockList"]][[2]],
-#'               data = example_eQTL[["data"]], outFilePath = "results/",
-#'               nIter = 1000, nChains = 2, gammaPrior = "hotspot",
-#'               hyperpar = hyperpar, tmpFolder = "tmp/" )
+#'                 X = example_eQTL[["blockList"]][[2]],
+#'                 data = example_eQTL[["data"]], outFilePath = "results/",
+#'                 nIter = 1000, burnin = 500, nChains = 2, gammaPrior = "hotspot",
+#'                 hyperpar = hyperpar, tmpFolder = "tmp/" )
 #' 
 #' ## check output
 #' # Plot the estimators from the fitted object
-#' plotEstimator(fit)
+#' plotEstimator(fit, fig.tex = TRUE)
+#' system(paste(getOption("pdfviewer"), "ParamEstimator.pdf"))
 #' }
 #' 
 #' @export
 plotEstimator <- function(object, estimator="all", colorScale.gamma=grey((100:0)/100), colorScale.beta=c("blue","white","red"), legend.cex.axis=1, 
-                          name.responses=NA, name.predictors=NA, xlab="", ylab="", fig.tex=FALSE, output="ParamEstimator",...){
+                          name.responses=NA, name.predictors=NA, xlab="", ylab="", fig.tex=FALSE, output="ParamEstimator", header="", header.cex=2, ...){
   
   object$output[-1] <- paste(object$output$outFilePath,object$output[-1],sep="")
   beta_hat <- as.matrix( read.table(object$output$beta) )
@@ -59,7 +62,7 @@ plotEstimator <- function(object, estimator="all", colorScale.gamma=grey((100:0)
     }
   }
   
-  par(mar=c(6,6,3.1,2.5))
+  par(mar=c(6,6,5,2.5))
   if(estimator[1]=="all"){
     par(mfrow=c(1,ifelse(toupper(object$input$covariancePrior)=="HIW",3,2))) 
   }
@@ -73,7 +76,7 @@ plotEstimator <- function(object, estimator="all", colorScale.gamma=grey((100:0)
       # floor(100*constant)+100-1 colours that your want in the legend bar which has the white middle colour
       colorbar <- c(colorRampPalette(c(colorScale.beta[1], colorScale.beta[2]))(floor(1000/(-(max(beta_hat)-min(beta_hat))/min(beta_hat)-1))), colorRampPalette(c(colorScale.beta[2],colorScale.beta[3]))(1000)[-1])
       
-      image(z=beta_hat, x=1:nrow(beta_hat), y=1:ncol(beta_hat), col=colorbar, axes=ifelse(is.na(name.responses)[1],TRUE,FALSE), xlab=xlab, ylab=ylab,main=mtext(bquote(hat(bold(beta)))),cex.main=1.5,...);box()
+      image(z=beta_hat, x=1:nrow(beta_hat), y=1:ncol(beta_hat), col=colorbar, axes=ifelse(is.na(name.responses)[1],TRUE,FALSE), xlab=xlab, ylab=ylab,main=expression(hat(bold(B))),cex.main=1.5,...);box()
       vertical.image.legend(col=colorbar, zlim=c(min(beta_hat),max(beta_hat)), legend.cex.axis=legend.cex.axis)
       if(!is.na(name.responses)[1]){
         par(las=2)
@@ -84,7 +87,7 @@ plotEstimator <- function(object, estimator="all", colorScale.gamma=grey((100:0)
       }
     }
     if(sum(estimator %in% c("all","beta"))){
-      image(z=gamma_hat, x=1:nrow(gamma_hat), y=1:ncol(gamma_hat), col=colorScale.gamma, axes=ifelse(is.na(name.responses)[1],TRUE,FALSE), xlab=xlab, ylab=ylab,main=mtext(bquote(hat(gamma))),cex.main=1.5,...);box()
+      image(z=gamma_hat, x=1:nrow(gamma_hat), y=1:ncol(gamma_hat), col=colorScale.gamma, axes=ifelse(is.na(name.responses)[1],TRUE,FALSE), xlab=xlab, ylab=ylab,main=expression(hat(bold(Gamma))),cex.main=1.5,...);box()
       vertical.image.legend(col=colorScale.gamma, zlim=c(0,1), legend.cex.axis=legend.cex.axis)
       if(!is.na(name.responses)[1]){
         par(las=2)
@@ -111,6 +114,7 @@ plotEstimator <- function(object, estimator="all", colorScale.gamma=grey((100:0)
         }
       }
     }
+    title(paste("\n",header,sep=""), cex.main=header.cex, outer=T)
     #par(mfrow=c(1,1))
   }else{
     #library(tikzDevice)
@@ -170,6 +174,7 @@ plotEstimator <- function(object, estimator="all", colorScale.gamma=grey((100:0)
         }
       }
     }
+    title(paste("\n",header,sep=""), cex.main=header.cex, outer=T)
     dev.off()
     tools::texi2pdf(paste(output,".tex",sep=""))
   }

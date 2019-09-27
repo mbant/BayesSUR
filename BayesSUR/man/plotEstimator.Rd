@@ -2,13 +2,13 @@
 % Please edit documentation in R/plotEstimator.R
 \name{plotEstimator}
 \alias{plotEstimator}
-\title{plot the estimated relationships between response variables and estimated coefficients}
+\title{plot the posterior mean estimators}
 \usage{
 plotEstimator(object, estimator = "all",
   colorScale.gamma = grey((100:0)/100), colorScale.beta = c("blue",
   "white", "red"), legend.cex.axis = 1, name.responses = NA,
   name.predictors = NA, xlab = "", ylab = "", fig.tex = FALSE,
-  output = "ParamEstimator", ...)
+  output = "ParamEstimator", header = "", header.cex = 2, ...)
 }
 \arguments{
 \item{object}{an object of class "BayesSUR"}
@@ -33,10 +33,14 @@ plotEstimator(object, estimator = "all",
 
 \item{output}{the file name of printed figure}
 
+\item{header}{the main title}
+
+\item{header.cex}{size of the main title}
+
 \item{...}{other arguments}
 }
 \description{
-Plot the estimated relationships between response variables and estimated coefficients of a "BayesSUR" class object.
+Plot the posterior mean estimators from a "BayesSUR" class object, including the coefficients beta, latent indicator variable gamma and graph of responses.
 }
 \examples{
 \donttest{
@@ -44,14 +48,15 @@ data("example_eQTL", package = "BayesSUR")
 hyperpar <- list( a_w = 2 , b_w = 5 )
 
 fit <- BayesSUR(Y = example_eQTL[["blockList"]][[1]], 
-              X = example_eQTL[["blockList"]][[2]],
-              data = example_eQTL[["data"]], outFilePath = "results/",
-              nIter = 1000, nChains = 2, gammaPrior = "hotspot",
-              hyperpar = hyperpar, tmpFolder = "tmp/" )
+                X = example_eQTL[["blockList"]][[2]],
+                data = example_eQTL[["data"]], outFilePath = "results/",
+                nIter = 1000, burnin = 500, nChains = 2, gammaPrior = "hotspot",
+                hyperpar = hyperpar, tmpFolder = "tmp/" )
 
 ## check output
 # Plot the estimators from the fitted object
-plotEstimator(fit)
+plotEstimator(fit, fig.tex = TRUE)
+system(paste(getOption("pdfviewer"), "ParamEstimator.pdf"))
 }
 
 }
