@@ -7,7 +7,7 @@ See `test.R` file for usage; see the package vignette `BayesSUR.pdf` (submitted 
 
 ## Update
 
-### New in version `BayesSUR_1.0-1.tar.gz` (27 September 2019):
+### New in version `BayesSUR_1.0-0.tar.gz` (27 September 2019):
 
 Improved help files.
 
