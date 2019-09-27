@@ -1,10 +1,9 @@
-#' BayesSUR -- Bayesian Seemingly Unrelated Regression
-#' @title make predictions from a "runSUR" object.
+#' @title predict responses corresponding to the posterior mean of the coefficients, return posterior mean of coefficients or indices of nonzero coefficients
 #' @description
-#' Similar to other predict methods. This function predicts fitted values, coefficients and indexes of nonzero coefficients.
-#' @name predict
+#' Predict responses corresponding to the posterior mean of the coefficients, return posterior mean of coefficients or indices of nonzero coefficients of a "BayesSUR" class object.
+#' @name predict.BayesSUR
 #' 
-#' @param object fitted \code{runSUR} model
+#' @param object an object of class "BayesSUR"
 #' @param newx Matrix of new values for x at which predictions are to be made. Must be a matrix
 #' @param type Type of prediction required. Type "response" gives the fitted responses. Type "coefficients" computes the coefficients 
 #' truncated the estimated coefficients based on thresholding the estimated latent indicator variable at \code{Pmax}. 
@@ -12,18 +11,18 @@
 #' @param Pmax truncate the estimated coefficients based on thresholding the estimated latent indicator variable at 0 by default
 #' @param ... other arguments
 #' 
-#' @return Predicted values extracted from the object \code{object}. If the \code{runSUR} specified data standardization, the fitted values are base based on standardized data.
+#' @return Predicted values extracted from an object of class "BayesSUR". If the \code{BayesSUR} specified data standardization, the fitted values are base based on standardized data.
 #' 
 #' @examples
 #' \donttest{
-#' data(example_eQTL, package = "BayesSUR")
+#' data("example_eQTL", package = "BayesSUR")
 #' hyperpar <- list( a_w = 2 , b_w = 5 )
 #' 
-#' fit <- runSUR(example_eQTL[["data"]], outFilePath = "results/",
-#'                      Y = example_eQTL[["blockList"]][[1]],
-#'                      X = example_eQTL[["blockList"]][[2]],
-#'                      nIter = 1000, nChains = 2, gammaPrior = "hotspot",
-#'                      hyperpar = hyperpar, tmpFolder = "tmp/" )
+#' fit <- BayesSUR(Y = example_eQTL[["blockList"]][[1]], 
+#'               X = example_eQTL[["blockList"]][[2]],
+#'               data = example_eQTL[["data"]], outFilePath = "results/",
+#'               nIter = 1000, nChains = 2, gammaPrior = "hotspot",
+#'               hyperpar = hyperpar, tmpFolder = "tmp/" )
 #' 
 #' ## check prediction
 #' predict.val <- predict(fit, newx=example_eQTL[["blockList"]][[2]])

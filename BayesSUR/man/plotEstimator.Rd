@@ -2,16 +2,16 @@
 % Please edit documentation in R/plotEstimator.R
 \name{plotEstimator}
 \alias{plotEstimator}
-\title{plotEstimator}
+\title{plot the estimated relationships between response variables and estimated coefficients}
 \usage{
 plotEstimator(object, estimator = "all",
   colorScale.gamma = grey((100:0)/100), colorScale.beta = c("blue",
   "white", "red"), legend.cex.axis = 1, name.responses = NA,
-  name.predictors = NA, fig.tex = FALSE, output = "ParamEstimator",
-  ...)
+  name.predictors = NA, xlab = "", ylab = "", fig.tex = FALSE,
+  output = "ParamEstimator", ...)
 }
 \arguments{
-\item{object}{fitted "runSUR" model}
+\item{object}{an object of class "BayesSUR"}
 
 \item{estimator}{print the heatmap of estimators. Default "all" is to print all estimators. The value "beta" is for the estimated coefficients matrix, "gamma" for the latent indicator matrix and "Gy" for the graph of responses}
 
@@ -25,15 +25,33 @@ plotEstimator(object, estimator = "all",
 
 \item{name.predictors}{a vector of the predictor names. The default is "NA" only to show the locations. The value "auto" show the predictor names from the orginal data.}
 
+\item{xlab}{a title for the x axis}
+
+\item{ylab}{a title for the y axis}
+
 \item{fig.tex}{print the figure through LaTex. Default is "FALSE"}
 
 \item{output}{the file name of printed figure}
 
-\item{...}{Other parameters in the function \code{plot.default.R} file}
+\item{...}{other arguments}
 }
 \description{
-Plot the estimators from the object of fitted Bayesian Seemingly Unrelated Regression
+Plot the estimated relationships between response variables and estimated coefficients of a "BayesSUR" class object.
 }
-\details{
-BayesSUR -- Bayesian Seemingly Unrelated Regression
+\examples{
+\donttest{
+data("example_eQTL", package = "BayesSUR")
+hyperpar <- list( a_w = 2 , b_w = 5 )
+
+fit <- BayesSUR(Y = example_eQTL[["blockList"]][[1]], 
+              X = example_eQTL[["blockList"]][[2]],
+              data = example_eQTL[["data"]], outFilePath = "results/",
+              nIter = 1000, nChains = 2, gammaPrior = "hotspot",
+              hyperpar = hyperpar, tmpFolder = "tmp/" )
+
+## check output
+# Plot the estimators from the fitted object
+plotEstimator(fit)
+}
+
 }

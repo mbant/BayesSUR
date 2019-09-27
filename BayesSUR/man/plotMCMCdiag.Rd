@@ -2,20 +2,34 @@
 % Please edit documentation in R/plotMCMCdiag.R
 \name{plotMCMCdiag}
 \alias{plotMCMCdiag}
-\title{getEstimator}
+\title{show trace plots and diagnostic density plots}
 \usage{
 plotMCMCdiag(object, nbloc = 3, ...)
 }
 \arguments{
-\item{object}{fitted "runSUR" model}
+\item{object}{an object of class "BayesSUR"}
 
 \item{nbloc}{number of splits for the last half iterations after substracting burn-in length}
 
-\item{...}{Other parameters in the function \code{plot.default.R} file for the penals of the log-likelihood and model size}
+\item{...}{other arguments for the penals of the log-likelihood and model size}
 }
 \description{
-Diagnose the convergence of the MCMC iterations
+Show trace plots and diagnostic density plots of a fitted model object of class "BayesSUR".
 }
-\details{
-BayesSUR -- Bayesian Seemingly Unrelated Regression
+\examples{
+\donttest{
+data("example_eQTL", package = "BayesSUR")
+hyperpar <- list( a_w = 2 , b_w = 5 )
+
+fit <- BayesSUR(Y = example_eQTL[["blockList"]][[1]], 
+              X = example_eQTL[["blockList"]][[2]],
+              data = example_eQTL[["data"]], outFilePath = "results/",
+              nIter = 10000, nChains = 2, gammaPrior = "hotspot",
+              hyperpar = hyperpar, tmpFolder = "tmp/" )
+
+## check output
+# show the diagnosis plots
+plotMCMCdiag(fit)
+}
+
 }

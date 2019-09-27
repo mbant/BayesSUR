@@ -797,7 +797,7 @@ void SUR_Chain::mrfGInit()
 
 //    mrf_G = arma::zeros<arma::mat>(0,2);
     mrf_d = -3. ;
-    mrf_e = 0.2 ;
+    mrf_e = 0.001 ;
 }
 /*
 void SUR_Chain::mrfGInit( arma::mat& mrf_G_ )

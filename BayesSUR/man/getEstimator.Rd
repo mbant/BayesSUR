@@ -2,18 +2,34 @@
 % Please edit documentation in R/getEstimator.R
 \name{getEstimator}
 \alias{getEstimator}
-\title{getEstimator}
+\title{extract the posterior mean of the parameters}
 \usage{
-getEstimator(object, estimator = "gamma")
+getEstimator(object, estimator = "gamma", Pmax = 0)
 }
 \arguments{
-\item{object}{fitted \code{runSUR} model}
+\item{object}{an object of class "BayesSUR"}
 
 \item{estimator}{the name of one estimator. Default is the latent indicator estimator "\code{gamma}". Other options "\code{beta}" and "\code{Gy}" correspond the posterior means of coefficient matrix, response graph and CPO, respectively}
+
+\item{Pmax}{truncate the estimator. Default is 0. If the estimator is beta, then beta is truncated based on the latent indicator matrix shresholding at \code{Pmax}}
 }
 \description{
-Extract results from the object of fitted Bayesian Seemingly Unrelated Regression
+Extract the posterior mean of the parameters of a "BayesSUR" class object.
 }
-\details{
-BayesSUR -- Bayesian Seemingly Unrelated Regression
+\examples{
+\donttest{
+data("example_eQTL", package = "BayesSUR")
+hyperpar <- list( a_w = 2 , b_w = 5 )
+
+fit <- BayesSUR(Y = example_eQTL[["blockList"]][[1]], 
+              X = example_eQTL[["blockList"]][[2]],
+              data = example_eQTL[["data"]], outFilePath = "results/",
+              nIter = 1000, nChains = 2, gammaPrior = "hotspot",
+              hyperpar = hyperpar, tmpFolder = "tmp/" )
+
+## check output
+# extract the posterior mean of the coefficients matrix
+beta_hat <- getEstimator(fit, estimator="beta")
+}
+
 }

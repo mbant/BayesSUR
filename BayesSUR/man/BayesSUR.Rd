@@ -4,7 +4,119 @@
 \name{BayesSUR}
 \alias{BayesSUR}
 \alias{BayesSUR-package}
-\title{Bayesian Sparse Seemingly Unrelated Regression}
+\title{main function of the package}
+\usage{
+BayesSUR(Y, X, X_0 = NULL, data = NULL, outFilePath = "",
+  nIter = 10000, burnin = 5000, nChains = 2,
+  covariancePrior = "HIW", gammaPrior = "", gammaSampler = "bandit",
+  gammaInit = "MLE", mrfG = NULL, standardize = TRUE,
+  standardize.response = TRUE, output_gamma = TRUE,
+  output_beta = TRUE, output_G = TRUE, output_sigmaRho = TRUE,
+  output_pi = TRUE, output_tail = TRUE, output_model_size = TRUE,
+  output_CPO = TRUE, output_Y = TRUE, output_X = TRUE,
+  hyperpar = list(), tmpFolder = "tmp/")
+}
+\arguments{
+\item{Y, X, X_0}{vectors of indexes (with respect to the data matrix) for the outcomes, the covariates to select and the fixed covariates respectively if data is either a path to a file or a matrix;
+if the 'data' argument is not provided, these needs to be matrices containing the data instead.}
+
+\item{data}{a data frame if using \code{formula}. If not using \code{formula}, it is either a matrix/dataframe or the path to (a plain text) data file with variables on the columns and observations on the rows}
+
+\item{outFilePath}{path to where the output files are to be written. The default path is the currect working directory.}
+
+\item{nIter}{number of iterations for the MCMC procedure}
+
+\item{burnin}{number of iterations (or fraction of iterations) to discard at the start of the chain Default = 0}
+
+\item{nChains}{number of parallel chains to run}
+
+\item{covariancePrior}{string indicating the prior for the covariance $C$; it has to be either "HIW" for the hyper-inverse-Wishar (which will result in a sparse covariance matrix),
+"IW" for the inverse-Wishart prior ( dense covariance ) or "IG" for independent inverse-Gamma on all the diagonal elements and 0 otherwise.}
+
+\item{gammaPrior}{string indicating the gamma prior to use, either "hotspot" for the Hotspot prior of Bottolo (2011), "MRF" for the Markov Random Field prior or "hierarchical" for a simpler hierarchical prior}
+
+\item{gammaSampler}{string indicating the type of sampler for gamma, either "bandit" for the Thompson sampling inspired samper or "MC3" for the usual $MC^3$ sampler}
+
+\item{gammaInit}{gamma initialisation to either all-zeros ("0"), all ones ("1"), randomly ("R") or (default) MLE-informed ("MLE").}
+
+\item{mrfG}{either a matrix or a path to the file containing the G matrix for the MRF prior on gamma (if necessary)}
+
+\item{standardize}{Logical flag for X variable standardization. Default is standardize=TRUE. The coefficients are returned on the standardized scale.}
+
+\item{standardize.response}{Standardization for the response variables. Default is standardize.response=TRUE.}
+
+\item{output_gamma}{allow ( \code{TRUE} ) or suppress ( \code{FALSE} ) the output for  gamma. See the return value below for more information.}
+
+\item{output_beta}{allow ( \code{TRUE} ) or suppress ( \code{FALSE} ) the output for beta. See the return value below for more information.}
+
+\item{output_G}{allow ( \code{TRUE} ) or suppress ( \code{FALSE} ) the output for G. See the return value below for more information.}
+
+\item{output_sigmaRho}{allow ( \code{TRUE} ) or suppress ( \code{FALSE} ) the output for sigmaRho. See the return value below for more information.}
+
+\item{output_pi}{allow ( \code{TRUE} ) or suppress ( \code{FALSE} ) the output for pi. See the return value below for more information.}
+
+\item{output_tail}{allow ( \code{TRUE} ) or suppress ( \code{FALSE} ) the output for tail (hotspot tail probability). See the return value below for more information.}
+
+\item{output_model_size}{allow ( \code{TRUE} ) or suppress ( \code{FALSE} ) the output for model_size. See the return value below for more information.}
+
+\item{output_CPO}{allow ( \code{TRUE} ) or suppress ( \code{FALSE} ) the output for *; possible outputs are gamma, G, beta, sigmaRho, pi, tail (hotspot tail probability), model_size, CPO. See the return value below for more information.}
+
+\item{output_Y}{allow ( \code{TRUE} ) or suppress ( \code{FALSE} ) the output for responses dataset Y.}
+
+\item{output_X}{allow ( \code{TRUE} ) or suppress ( \code{FALSE} ) the output for predictors dataset X.}
+
+\item{hyperpar}{a list of named hypeparameters to use instead of the default values; valid names are mrf_d, mrf_e, a_sigma, b_sigma, a_tau, b_tau, nu, a_eta, b_eta, a_o, b_o, a_pi, b_pi, a_w and b_w. See the vignette for more information.}
+
+\item{tmpFolder}{the path to a temporary folder where intermediate data files are stored (will be erased at the end of the chain) default to local tmpFolder}
+}
+\value{
+An object of class "BayesSUR":
+\itemize{
+\item status - the running status
+\item input - a list of all input parameters by the user
+\item output - a list of the all output filenames: 
+\itemize{
+\item "\code{logP_out.txt}" - contains each row for the \eqn{t*1000}-th iteration's log-likelihoods of parameters, i.e., Tau, Eta, JunctionTree, SigmaRho, O, Pi, Gamma, W, Beta and data conditional log-likelihood depending on the models.
+\item "\code{gamma_out.txt}" - posterior mean of the latent indicator matrix. 
+\item "\code{pi_out.txt}" - posterior mean of the predictor effects (prospensity) by decomposing the probability of the latent indicator.
+\item "\code{hotspot_tail_p_out.txt}" - posterior mean of the hotspot tail probability. Only available for the hotspot prior on the gamma.
+\item "\code{beta_out.txt}" - posterior mean of the coefficients matrix.
+\item "\code{G_out.txt}" - posterior mean of the response graph. Only available for the HIW prior on the covariance. 
+\item "\code{sigmaRho_out.txt}" - posterior mean of the transformed parameters. Not available for the IG prior on the covariance.
+\item "\code{model_size.txt}" - contains each row for the\eqn{t*1000}-th iteration's model sizes of the multiple response variables.
+\item "\code{CPO_out.txt}" - the (scaled) conditional predictive ordinates (CPO). 
+\item "\code{CPOsumy_out.txt}" - the (scaled) conditional predictive ordinates (CPO) with joint posterior predictive of the response variables.
+\item "\code{WAIC_out.txt}" - the widely applicable information criterion (WAIC). 
+\item "\code{Y_out.txt}" - responses dataset. 
+\item "\code{X_out.txt}" - predictors dataset.
+\item "\code{X0_out.txt}" - fixed predictors dataset.
+}
+\item call - the matched call.
+}
+}
 \description{
-BayesSUR -- Bayesian Seemingly Unrelated Regression
+Main function of the package. Fit any of the HRR, dSUR and SSUR models.
+}
+\examples{
+\donttest{
+data("example_eQTL", package = "BayesSUR")
+hyperpar <- list( a_w = 2 , b_w = 5 )
+
+fit <- BayesSUR(Y = example_eQTL[["blockList"]][[1]], 
+              X = example_eQTL[["blockList"]][[2]],
+              data = example_eQTL[["data"]], outFilePath = "results/",
+              nIter = 1000, nChains = 2, gammaPrior = "hotspot",
+              hyperpar = hyperpar, tmpFolder = "tmp/" )
+
+## check output
+# show the summary information
+summary(fit)
+
+# show the estimated beta, gamma and graph of responeses Gy
+plotEstimator(fit)
+}
+
+}
+\references{
+Banterle M, Bottolo L, Richardson S, Ala-Korpela M, Jarvelin MR, Lewin A (2018). \emph{Sparse variable and covariance selection for high-dimensional seemingly unrelated Bayesian regres- sion.} bioRxiv: 467019.
 }

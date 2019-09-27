@@ -1,17 +1,16 @@
-#' BayesSUR -- Bayesian Seemingly Unrelated Regression
-#' @title plotNetwork
+#' @title plot the network representation of the associations between responses and predictors
 #' @description
-#' Network representation of the associations between responses and features
+#' Plot the network representation of the associations between responses and predictors, based on the estimated gamma matrix of a "BayesSUR" class object.
 #' @importFrom graphics text 
 #' @importFrom grDevices gray 
 #' @importFrom igraph V E gsize layout_in_circle plot.igraph degree layout.fruchterman.reingold delete.vertices graph.adjacency
 #' @name plotNetwork
-#' @param object fitted \code{runSUR} model
+#' @param object an object of class "BayesSUR"
 #' @param includeResponse A vector of the response names which are shown in the network
 #' @param excludeResponse A vector of the response names which are not shown in the network
 #' @param includePredictor A vector of the predictor names which are shown in the network
 #' @param excludePredictor A vector of the predictor names which are not shown in the network
-#' @param MatrixGamma A matrix or dataframe of the latent indicator variable. Default is \code{NULL} and to extrate it from object of class inheriting from \code{runSUR}
+#' @param MatrixGamma A matrix or dataframe of the latent indicator variable. Default is \code{NULL} and to extrate it from object of class inheriting from an object of class "BayesSUR"
 #' @param PmaxPredictor cutpoint for thresholding the estimated latent indicator variable. Default is 0.5
 #' @param PmaxResponse cutpoint for thresholding the learning structure matrix of multiple response variables. Default is 0.5
 #' @param nodesizePredictor node size of Predictors in the output graph. Default is 15
@@ -29,19 +28,19 @@
 #' @param name.predictors a subtitle for the predictors
 #' @param name.responses a subtitle for the responses
 #' @param vertex.frame.color The color of the frame of the vertices. If you don't want vertices to have a frame, supply NA as the color name
-#' @param layoutInCircle Place vertices on a circle, in the order of their vertex ids. The default is \code{FALSE}
-#' @param ... Other parameters in the function \code{plot.default.R} file
+#' @param layoutInCircle place vertices on a circle, in the order of their vertex ids. The default is \code{FALSE}
+#' @param ... other arguments
 #' 
 #' @examples
 #' \donttest{
-#' data(example_eQTL, package = "BayesSUR")
+#' data("example_eQTL", package = "BayesSUR")
 #' hyperpar <- list( a_w = 2 , b_w = 5 )
 #' 
-#' fit <- runSUR(example_eQTL[["data"]], outFilePath = "results/",
-#'                      Y = example_eQTL[["blockList"]][[1]],
-#'                      X = example_eQTL[["blockList"]][[2]],
-#'                      nIter = 1000, nChains = 2, gammaPrior = "hotspot",
-#'                      hyperpar = hyperpar, tmpFolder = "tmp/" )
+#' fit <- BayesSUR(Y = example_eQTL[["blockList"]][[1]], 
+#'               X = example_eQTL[["blockList"]][[2]],
+#'               data = example_eQTL[["data"]], outFilePath = "results/",
+#'               nIter = 1000, nChains = 2, gammaPrior = "hotspot",
+#'               hyperpar = hyperpar, tmpFolder = "tmp/" )
 #' 
 #' ## check output
 #' # show the Network representation of the associations between responses and features

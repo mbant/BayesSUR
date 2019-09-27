@@ -2,7 +2,7 @@
 % Please edit documentation in R/plotManhattan.R
 \name{plotManhattan}
 \alias{plotManhattan}
-\title{plotManhattan}
+\title{plot Manhattan-like plots for marginal posterior inclusion probabilities (mPIP) and numbers of responses of association for predictors}
 \usage{
 plotManhattan(object, which = c(1, 2), x.loc = FALSE,
   axis.label = NULL, mark.responses = NULL, xlab1 = "",
@@ -11,7 +11,7 @@ plotManhattan(object, which = c(1, 2), x.loc = FALSE,
   mark.color = 2, mark.cex = 0.8, ...)
 }
 \arguments{
-\item{object}{the object from the runSUR}
+\item{object}{an object of class "BayesSUR"}
 
 \item{which}{if it's value "1" showing the Manhattan-like plot of the marginal posterior inclusion probabilities (mPIP). If it's value "2" showing the Manhattan-like plot of the number of responses. The default is to show both figures.}
 
@@ -41,11 +41,25 @@ plotManhattan(object, which = c(1, 2), x.loc = FALSE,
 
 \item{mark.cex}{the fontsize of the marked text. The default fontsize is 0.8.}
 
-\item{...}{Other parameters in the function \code{plot.default.R} file}
+\item{...}{other arguments}
 }
 \description{
-Manhattan plot
+Plot Manhattan-like plots for marginal posterior inclusion probabilities (mPIP) and numbers of responses of association for predictors of a "BayesSUR" class object.
 }
-\details{
-BayesSUR -- Bayesian Seemingly Unrelated Regression
+\examples{
+\donttest{
+data("example_eQTL", package = "BayesSUR")
+hyperpar <- list( a_w = 2 , b_w = 5 )
+
+fit <- BayesSUR(Y = example_eQTL[["blockList"]][[1]], 
+              X = example_eQTL[["blockList"]][[2]],
+              data = example_eQTL[["data"]], outFilePath = "results/",
+              nIter = 1000, nChains = 2, gammaPrior = "hotspot",
+              hyperpar = hyperpar, tmpFolder = "tmp/" )
+
+## check output
+# show the Manhattan-like plots
+plotManhattan(fit)
+}
+
 }

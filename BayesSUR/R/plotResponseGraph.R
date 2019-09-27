@@ -1,11 +1,10 @@
-#' BayesSUR -- Bayesian Seemingly Unrelated Regression
-#' @title plotResponseGraph
+#' @title plot the estimated graph for multiple response variables
 #' @description
-#' Show the relationship between responses
+#' Plot the estimated graph for multiple response variables from a "BayesSUR" class object.
 #' @importFrom igraph V E plot.igraph graph_from_adjacency_matrix V<-
 #' @importFrom graphics par
 #' @name plotResponseGraph
-#' @param object fitted "runSUR" model
+#' @param object an object of class "BayesSUR"
 #' @param PmaxResponse cutpoint for thresholding the learning structure matrix of multiple response variables. Default is 0.5
 #' @param PtrueResponse true adjacency matrix for the structure of multiple response variables
 #' @param name.responses A vector for the node names. The default is "NA" only to show the locations. Value "auto" show the response names from the orginal data. 
@@ -13,18 +12,18 @@
 #' @param label.color label color. Default is "black"
 #' @param node.size node size. Default is 30
 #' @param node.color node color. Default is "dodgerblue
-#' @param ... Other parameters in the function \code{plot.default.R} file
+#' @param ... other arguments
 #' 
 #' @examples
 #' \donttest{
-#' data(example_eQTL, package = "BayesSUR")
+#' data("example_eQTL", package = "BayesSUR")
 #' hyperpar <- list( a_w = 2 , b_w = 5 )
 #' 
-#' fit <- runSUR(example_eQTL[["data"]], outFilePath = "results/",
-#'                      Y = example_eQTL[["blockList"]][[1]],
-#'                      X = example_eQTL[["blockList"]][[2]],
-#'                      nIter = 1000, nChains = 2, gammaPrior = "hotspot",
-#'                      hyperpar = hyperpar, tmpFolder="tmp/" )
+#' fit <- BayesSUR(Y = example_eQTL[["blockList"]][[1]], 
+#'               X = example_eQTL[["blockList"]][[2]],
+#'               data = example_eQTL[["data"]], outFilePath = "results/",
+#'               nIter = 1000, nChains = 2, gammaPrior = "hotspot",
+#'               hyperpar = hyperpar, tmpFolder = "tmp/" )
 #' 
 #' ## check output
 #' # show the graph relationship between responses

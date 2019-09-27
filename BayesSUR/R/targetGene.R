@@ -13,7 +13,7 @@
 #' \dontrun{
 #' 
 #' # Load the GDSC sample dataset
-#' data(example_GDSC)
+#' data(example_GDSC, package = "BayesSUR")
 #' 
 #' #===============
 #' # This code below is to do preprocessing of GDSC data and obtain a complete dataset.

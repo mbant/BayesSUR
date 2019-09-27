@@ -1,22 +1,21 @@
-#' BayesSUR -- Bayesian Seemingly Unrelated Regression
-#' @title getEstimator
+#' @title extract the posterior mean of the parameters
 #' @description
-#' Extract results from the object of fitted Bayesian Seemingly Unrelated Regression
+#' Extract the posterior mean of the parameters of a "BayesSUR" class object.
 #' @name getEstimator
-#' @param object fitted \code{runSUR} model
+#' @param object an object of class "BayesSUR"
 #' @param estimator the name of one estimator. Default is the latent indicator estimator "\code{gamma}". Other options "\code{beta}" and "\code{Gy}" correspond the posterior means of coefficient matrix, response graph and CPO, respectively 
 #' @param Pmax truncate the estimator. Default is 0. If the estimator is beta, then beta is truncated based on the latent indicator matrix shresholding at \code{Pmax} 
 #' 
 #' @examples
 #' \donttest{
-#' data(example_eQTL, package = "BayesSUR")
+#' data("example_eQTL", package = "BayesSUR")
 #' hyperpar <- list( a_w = 2 , b_w = 5 )
 #' 
-#' fit <- runSUR(example_eQTL[["data"]], outFilePath = "results/",
-#'                      Y = example_eQTL[["blockList"]][[1]],
-#'                      X = example_eQTL[["blockList"]][[2]],
-#'                      nIter = 1000, nChains = 2, gammaPrior = "hotspot",
-#'                      hyperpar = hyperpar, tmpFolder="tmp/" )
+#' fit <- BayesSUR(Y = example_eQTL[["blockList"]][[1]], 
+#'               X = example_eQTL[["blockList"]][[2]],
+#'               data = example_eQTL[["data"]], outFilePath = "results/",
+#'               nIter = 1000, nChains = 2, gammaPrior = "hotspot",
+#'               hyperpar = hyperpar, tmpFolder = "tmp/" )
 #' 
 #' ## check output
 #' # extract the posterior mean of the coefficients matrix

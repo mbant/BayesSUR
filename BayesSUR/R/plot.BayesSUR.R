@@ -1,23 +1,22 @@
-#' BayesSUR -- Bayesian Seemingly Unrelated Regression
-#' @title plotEstimator
+#' @title create a selection of plots for a "BayesSUR" class object
 #' @description
-#' Six available plots from the object of fitted Bayesian Seemingly Unrelated Regression
+#' Convenience function to create a selection of plots for a "BayesSUR" class object. They are plots of estimators, response graph, network, manhattan and MCMC diagnosis indexed by numbers 1:5.
 #' @importFrom grDevices dev.hold dev.flush devAskNewPage
-#' @name plot
-#' @param x object of the fitted "runSUR" model.
-#' @param which if a subset of the plots is required, specify a subset of the numbers 1:5 which are plots of estimators, response graph, network, manhattan and MCMC diagnosis, respectively.
-#' @param ... Other parameters in the function \code{plot.default.R} file
+#' @name plot.BayesSUR
+#' @param x an object of class "BayesSUR".
+#' @param which if a subset of the plots is required, specify a subset of the numbers 1:5 which are plots of estimators, response graph, network, manhattan and MCMC diagnosis, respectively. Only \code{c(1,4,5)} is valid for the HRR models.
+#' @param ... other arguments
 #' 
 #' @examples
 #' \donttest{
-#' data(example_eQTL, package = "BayesSUR")
+#' data("example_eQTL", package = "BayesSUR")
 #' hyperpar = list( a_w = 2 , b_w = 5 )
 #' 
-#' fit = runSUR(example_eQTL[["data"]], outFilePath = "results/",
-#'                      Y = example_eQTL[["blockList"]][[1]],
-#'                      X = example_eQTL[["blockList"]][[2]],
-#'                      nIter = 1000, nChains = 2, gammaPrior = "hotspot",
-#'                      hyperpar = hyperpar, tmpFolder="tmp/" )
+#' fit <- BayesSUR(Y = example_eQTL[["blockList"]][[1]], 
+#'               X = example_eQTL[["blockList"]][[2]],
+#'               data = example_eQTL[["data"]], outFilePath = "results/",
+#'               nIter = 10000, nChains = 2, gammaPrior = "hotspot",
+#'               hyperpar = hyperpar, tmpFolder = "tmp/" )
 #' 
 #' ## check output
 #' # show the interactive plots

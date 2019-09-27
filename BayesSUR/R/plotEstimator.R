@@ -1,12 +1,11 @@
-#' BayesSUR -- Bayesian Seemingly Unrelated Regression
-#' @title plotEstimator
+#' @title plot the estimated relationships between response variables and estimated coefficients
 #' @description
-#' Plot the estimators from the object of fitted Bayesian Seemingly Unrelated Regression
+#' Plot the estimated relationships between response variables and estimated coefficients of a "BayesSUR" class object.
 #' @importFrom graphics axis box text mtext par image
 #' @importFrom grDevices colorRampPalette dev.off grey
 #' @importFrom tikzDevice tikz
 #' @name plotEstimator
-#' @param object fitted "runSUR" model
+#' @param object an object of class "BayesSUR"
 #' @param estimator print the heatmap of estimators. Default "all" is to print all estimators. The value "beta" is for the estimated coefficients matrix, "gamma" for the latent indicator matrix and "Gy" for the graph of responses
 #' @param colorScale.gamma value palette for gamma
 #' @param colorScale.beta a vector of three colors for diverging color schemes
@@ -17,18 +16,18 @@
 #' @param ylab a title for the y axis
 #' @param fig.tex print the figure through LaTex. Default is "FALSE"
 #' @param output the file name of printed figure
-#' @param ... Other parameters in the function \code{plot.default.R} file
+#' @param ... other arguments
 #' 
 #' @examples
 #' \donttest{
-#' data(example_eQTL, package = "BayesSUR")
+#' data("example_eQTL", package = "BayesSUR")
 #' hyperpar <- list( a_w = 2 , b_w = 5 )
 #' 
-#' fit <- runSUR(example_eQTL[["data"]], outFilePath = "results/",
-#'                      Y = example_eQTL[["blockList"]][[1]],
-#'                      X = example_eQTL[["blockList"]][[2]],
-#'                      nIter = 1000, nChains = 2, gammaPrior = "hotspot",
-#'                      hyperpar = hyperpar, tmpFolder="tmp/" )
+#' fit <- BayesSUR(Y = example_eQTL[["blockList"]][[1]], 
+#'               X = example_eQTL[["blockList"]][[2]],
+#'               data = example_eQTL[["data"]], outFilePath = "results/",
+#'               nIter = 1000, nChains = 2, gammaPrior = "hotspot",
+#'               hyperpar = hyperpar, tmpFolder = "tmp/" )
 #' 
 #' ## check output
 #' # Plot the estimators from the fitted object

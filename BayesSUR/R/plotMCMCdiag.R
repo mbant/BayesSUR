@@ -1,24 +1,23 @@
-#' BayesSUR -- Bayesian Seemingly Unrelated Regression
-#' @title getEstimator
+#' @title show trace plots and diagnostic density plots
 #' @description
-#' Diagnose the convergence of the MCMC iterations
+#' Show trace plots and diagnostic density plots of a fitted model object of class "BayesSUR".
 #' @importFrom graphics par plot.default legend title
 #' @importFrom stats density
 #' @name plotMCMCdiag
-#' @param object fitted "runSUR" model
+#' @param object an object of class "BayesSUR"
 #' @param nbloc number of splits for the last half iterations after substracting burn-in length
-#' @param ... Other parameters in the function \code{plot.default.R} file for the penals of the log-likelihood and model size
+#' @param ... other arguments for the penals of the log-likelihood and model size
 #' 
 #' @examples
 #' \donttest{
-#' data(example_eQTL, package = "BayesSUR")
+#' data("example_eQTL", package = "BayesSUR")
 #' hyperpar <- list( a_w = 2 , b_w = 5 )
 #' 
-#' fit <- runSUR(example_eQTL[["data"]], outFilePath = "results/",
-#'                      Y = example_eQTL[["blockList"]][[1]],
-#'                      X = example_eQTL[["blockList"]][[2]],
-#'                      nIter = 10000, nChains = 2, gammaPrior = "hotspot",
-#'                      hyperpar = hyperpar, tmpFolder = "tmp/" )
+#' fit <- BayesSUR(Y = example_eQTL[["blockList"]][[1]], 
+#'               X = example_eQTL[["blockList"]][[2]],
+#'               data = example_eQTL[["data"]], outFilePath = "results/",
+#'               nIter = 10000, nChains = 2, gammaPrior = "hotspot",
+#'               hyperpar = hyperpar, tmpFolder = "tmp/" )
 #' 
 #' ## check output
 #' # show the diagnosis plots
@@ -27,6 +26,9 @@
 #' 
 #' @export
 plotMCMCdiag <- function(object, nbloc=3, ...){
+  
+  if(object$input$nIter < 4000)
+    step("The argument nIter should be at least 4000 for the diagnostic plots!")
   
   object$output[-1] <- paste(object$output$outFilePath,object$output[-1],sep="")
   

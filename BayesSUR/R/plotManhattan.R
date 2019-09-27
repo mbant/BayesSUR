@@ -1,10 +1,8 @@
-
-#' BayesSUR -- Bayesian Seemingly Unrelated Regression
-#' @title plotManhattan
+#' @title plot Manhattan-like plots for marginal posterior inclusion probabilities (mPIP) and numbers of responses of association for predictors
 #' @description
-#' Manhattan-like plot
+#' Plot Manhattan-like plots for marginal posterior inclusion probabilities (mPIP) and numbers of responses of association for predictors of a "BayesSUR" class object.
 #' @importFrom graphics axis box text par plot.default segments
-#' @param object the object from the runSUR
+#' @param object an object of class "BayesSUR"
 #' @param which if it's value "1" showing the Manhattan-like plot of the marginal posterior inclusion probabilities (mPIP). If it's value "2" showing the Manhattan-like plot of the number of responses. The default is to show both figures.
 #' @param x.loc a vector of features distance
 #' @param axis.label a vector of predictor names which are shown in the Manhattan-like plot. The default is "NULL" only showing the indices. The value "auto" show the predictor names from the orginal data.
@@ -19,18 +17,18 @@
 #' @param cex.axis graphical parameter of plot.default
 #' @param mark.color the color of the marked text. The default color is red.
 #' @param mark.cex the fontsize of the marked text. The default fontsize is 0.8.
-#' @param ... Other parameters in the function \code{plot.default.R} file
+#' @param ... other arguments
 #' 
 #' @examples
 #' \donttest{
-#' data(example_eQTL, package = "BayesSUR")
+#' data("example_eQTL", package = "BayesSUR")
 #' hyperpar <- list( a_w = 2 , b_w = 5 )
 #' 
-#' fit <- runSUR(example_eQTL[["data"]], outFilePath = "results/",
-#'                      Y = example_eQTL[["blockList"]][[1]],
-#'                      X = example_eQTL[["blockList"]][[2]],
-#'                      nIter = 1000, nChains = 2, gammaPrior = "hotspot",
-#'                      hyperpar = hyperpar, tmpFolder="tmp/" )
+#' fit <- BayesSUR(Y = example_eQTL[["blockList"]][[1]], 
+#'               X = example_eQTL[["blockList"]][[2]],
+#'               data = example_eQTL[["data"]], outFilePath = "results/",
+#'               nIter = 1000, nChains = 2, gammaPrior = "hotspot",
+#'               hyperpar = hyperpar, tmpFolder = "tmp/" )
 #' 
 #' ## check output
 #' # show the Manhattan-like plots

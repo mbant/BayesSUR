@@ -13,7 +13,7 @@
 #' \dontrun{
 #' 
 #' # Load the eQTL sample dataset
-#' data(example_eQTL)
+#' data("example_eQTL", package = "BayesSUR")
 #' 
 #' #===============
 #' # The code below is to generate the dataset "example_eQTL.rda"

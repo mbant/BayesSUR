@@ -1,23 +1,22 @@
-#' BayesSUR -- Bayesian Seemingly Unrelated Regression
-#' @title prediction accuracy
+#' @title measure the prediction accuracy by the expected log pointwise predictive density
 #' @description
-#' Measure the prediction accuracy by the elpd (expected log pointwise predictive density).
+#' Measure the prediction accuracy by the elpd (expected log pointwise predictive density). The out-of-sample predictive fit can either be estimated by Bayesian leave-one-out cross-validation (LOO) or by widely applicable information criterion (WAIC) (Vehtari et al. 2017).
 #' @name elpd
-#' @param object the object from the runSUR
+#' @param object an object of class "BayesSUR"
 #' @param method the name of the prediction accuracy index. Default is the "\code{LOO}" (Bayesian LOO estimate of out-of-sample predictive fit). The other index is the "\code{WAIC}" (widely applicable information criterion).
 #' For the HRR models, both "\code{LOO}" and "\code{WAIC}" are computed based on the multivate t-distribution of the posterior predictive rather than approximation of importance sampling.
 #' @references Vehtari, A., Gelman, A., Gabry, J. (2017). \emph{Practical Bayesian model evaluation using leave-one-out cross-validation and WAIC.} Statistics and Computing, 27(5): 1413–1432.
 #'
 #' @examples
 #' \donttest{
-#' data(example_eQTL, package = "BayesSUR")
+#' data("example_eQTL", package = "BayesSUR")
 #' hyperpar = list( a_w = 2 , b_w = 5 )
 #' 
-#' fit = runSUR(example_eQTL[["data"]], outFilePath = "results/",
-#'                      Y = example_eQTL[["blockList"]][[1]],
-#'                      X = example_eQTL[["blockList"]][[2]],
-#'                      nIter = 1000, nChains = 2, gammaPrior = "hotspot",
-#'                      hyperpar = hyperpar, tmpFolder="tmp/" )
+#' fit <- BayesSUR(Y = example_eQTL[["blockList"]][[1]], 
+#'               X = example_eQTL[["blockList"]][[2]],
+#'               data = example_eQTL[["data"]], outFilePath = "results/",
+#'               nIter = 1000, nChains = 2, gammaPrior = "hotspot",
+#'               hyperpar = hyperpar, tmpFolder = "tmp/" )
 #' 
 #' ## check output
 #' # print the prediction accuracy elpd (expected log pointwise predictive density) 

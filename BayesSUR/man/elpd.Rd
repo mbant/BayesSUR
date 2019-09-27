@@ -2,20 +2,36 @@
 % Please edit documentation in R/elpd.R
 \name{elpd}
 \alias{elpd}
-\title{prediction accuracy}
+\title{measure the prediction accuracy by the expected log pointwise predictive density}
 \usage{
 elpd(object, method = "LOO")
 }
 \arguments{
-\item{object}{the object from the runSUR}
+\item{object}{an object of class "BayesSUR"}
 
-\item{method}{the name of the prediction accuracy index. Default is the "\code{LOO}". The other index is the "\code{WAIC}".}
+\item{method}{the name of the prediction accuracy index. Default is the "\code{LOO}" (Bayesian LOO estimate of out-of-sample predictive fit). The other index is the "\code{WAIC}" (widely applicable information criterion).
+For the HRR models, both "\code{LOO}" and "\code{WAIC}" are computed based on the multivate t-distribution of the posterior predictive rather than approximation of importance sampling.}
 }
 \description{
-Measure the prediction accuracy by the elpd (expected log pointwise predictive density). One method to estimate elpd is by the The Bayesian LOO estimate of out-of-sample predictive fit. The other method the WAIC (widely applicable information criterion).
+Measure the prediction accuracy by the elpd (expected log pointwise predictive density). The out-of-sample predictive fit can either be estimated by Bayesian leave-one-out cross-validation (LOO) or by widely applicable information criterion (WAIC) (Vehtari et al. 2017).
 }
-\details{
-BayesSUR -- Bayesian Seemingly Unrelated Regression
+\examples{
+\donttest{
+data("example_eQTL", package = "BayesSUR")
+hyperpar = list( a_w = 2 , b_w = 5 )
+
+fit <- BayesSUR(Y = example_eQTL[["blockList"]][[1]], 
+              X = example_eQTL[["blockList"]][[2]],
+              data = example_eQTL[["data"]], outFilePath = "results/",
+              nIter = 1000, nChains = 2, gammaPrior = "hotspot",
+              hyperpar = hyperpar, tmpFolder = "tmp/" )
+
+## check output
+# print the prediction accuracy elpd (expected log pointwise predictive density) 
+# by the Bayesian LOO estimate of out-of-sample predictive fit
+elpd(fit, method="LOO")
+}
+
 }
 \references{
 Vehtari, A., Gelman, A., Gabry, J. (2017). \emph{Practical Bayesian model evaluation using leave-one-out cross-validation and WAIC.} Statistics and Computing, 27(5): 1413–1432.

@@ -2,7 +2,7 @@
 % Please edit documentation in R/plotNetwork.R
 \name{plotNetwork}
 \alias{plotNetwork}
-\title{plotNetwork}
+\title{plot the network representation of the associations between responses and predictors}
 \usage{
 plotNetwork(object, includeResponse = NULL, excludeResponse = NULL,
   includePredictor = NULL, excludePredictor = NULL,
@@ -16,7 +16,7 @@ plotNetwork(object, includeResponse = NULL, excludeResponse = NULL,
   vertex.frame.color = NA, layoutInCircle = FALSE, ...)
 }
 \arguments{
-\item{object}{fitted \code{runSUR} model}
+\item{object}{an object of class "BayesSUR"}
 
 \item{includeResponse}{A vector of the response names which are shown in the network}
 
@@ -26,7 +26,7 @@ plotNetwork(object, includeResponse = NULL, excludeResponse = NULL,
 
 \item{excludePredictor}{A vector of the predictor names which are not shown in the network}
 
-\item{MatrixGamma}{A matrix or dataframe of the latent indicator variable. Default is \code{NULL} and to extrate it from object of class inheriting from \code{runSUR}}
+\item{MatrixGamma}{A matrix or dataframe of the latent indicator variable. Default is \code{NULL} and to extrate it from object of class inheriting from an object of class "BayesSUR"}
 
 \item{PmaxPredictor}{cutpoint for thresholding the estimated latent indicator variable. Default is 0.5}
 
@@ -62,13 +62,27 @@ plotNetwork(object, includeResponse = NULL, excludeResponse = NULL,
 
 \item{vertex.frame.color}{The color of the frame of the vertices. If you don't want vertices to have a frame, supply NA as the color name}
 
-\item{layoutInCircle}{Place vertices on a circle, in the order of their vertex ids. The default is \code{FALSE}}
+\item{layoutInCircle}{place vertices on a circle, in the order of their vertex ids. The default is \code{FALSE}}
 
-\item{...}{Other parameters in the function \code{plot.default.R} file}
+\item{...}{other arguments}
 }
 \description{
-Network representation of the associations between responses and features
+Plot the network representation of the associations between responses and predictors, based on the estimated gamma matrix of a "BayesSUR" class object.
 }
-\details{
-BayesSUR -- Bayesian Seemingly Unrelated Regression
+\examples{
+\donttest{
+data("example_eQTL", package = "BayesSUR")
+hyperpar <- list( a_w = 2 , b_w = 5 )
+
+fit <- BayesSUR(Y = example_eQTL[["blockList"]][[1]], 
+              X = example_eQTL[["blockList"]][[2]],
+              data = example_eQTL[["data"]], outFilePath = "results/",
+              nIter = 1000, nChains = 2, gammaPrior = "hotspot",
+              hyperpar = hyperpar, tmpFolder = "tmp/" )
+
+## check output
+# show the Network representation of the associations between responses and features
+plotNetwork(fit)
+}
+
 }

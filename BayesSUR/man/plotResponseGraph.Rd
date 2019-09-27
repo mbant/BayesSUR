@@ -2,14 +2,14 @@
 % Please edit documentation in R/plotResponseGraph.R
 \name{plotResponseGraph}
 \alias{plotResponseGraph}
-\title{plotResponseGraph}
+\title{plot the estimated graph for multiple response variables}
 \usage{
 plotResponseGraph(object, PmaxResponse = 0.5, PtrueResponse = NULL,
   name.responses = NA, edge.weight = FALSE, label.color = "black",
   node.size = 30, node.color = "dodgerblue", ...)
 }
 \arguments{
-\item{object}{fitted "runSUR" model}
+\item{object}{an object of class "BayesSUR"}
 
 \item{PmaxResponse}{cutpoint for thresholding the learning structure matrix of multiple response variables. Default is 0.5}
 
@@ -25,11 +25,25 @@ plotResponseGraph(object, PmaxResponse = 0.5, PtrueResponse = NULL,
 
 \item{node.color}{node color. Default is "dodgerblue}
 
-\item{...}{Other parameters in the function \code{plot.default.R} file}
+\item{...}{other arguments}
 }
 \description{
-Show the relationship between responses
+Plot the estimated graph for multiple response variables from a "BayesSUR" class object.
 }
-\details{
-BayesSUR -- Bayesian Seemingly Unrelated Regression
+\examples{
+\donttest{
+data("example_eQTL", package = "BayesSUR")
+hyperpar <- list( a_w = 2 , b_w = 5 )
+
+fit <- BayesSUR(Y = example_eQTL[["blockList"]][[1]], 
+              X = example_eQTL[["blockList"]][[2]],
+              data = example_eQTL[["data"]], outFilePath = "results/",
+              nIter = 1000, nChains = 2, gammaPrior = "hotspot",
+              hyperpar = hyperpar, tmpFolder = "tmp/" )
+
+## check output
+# show the graph relationship between responses
+plotResponseGraph(fit)
+}
+
 }
