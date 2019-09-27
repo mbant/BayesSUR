@@ -12,7 +12,7 @@
 ## Install the package
 library(devtools)
 install_github("mbant/BayesSUR/BayesSUR")
-#install.packages("BayesSUR_0.1.22.tar.gz",repos = NULL,type = "source")
+#install.packages("BayesSUR_0.1.24.tar.gz",repos = NULL,type = "source")
 
 
 #####################################################################################################
@@ -23,7 +23,7 @@ str(example_eQTL)
 
 # fit a SSUR model with hotspot prior
 attach(example_eQTL)
-fit <- runSUR(data = data, Y = blockList[[1]],
+fit <- BayesSUR(data = data, Y = blockList[[1]],
               X = blockList[[2]], outFilePath = "results/", 
               nIter = 2000, nChains = 5, covariancePrior = "HIW", burnin=1000,
               gammaPrior = "hotspot")
