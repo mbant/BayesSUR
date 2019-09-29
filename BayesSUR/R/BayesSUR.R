@@ -26,7 +26,8 @@
 #' @param mrfG either a matrix or a path to the file containing the G matrix for the MRF prior on gamma (if necessary)
 #' @param standardize Logical flag for X variable standardization. Default is standardize=TRUE. The coefficients are returned on the standardized scale.
 #' @param standardize.response Standardization for the response variables. Default is standardize.response=TRUE.
-#' @param hyperpar a list of named hypeparameters to use instead of the default values; valid names are mrf_d, mrf_e, a_sigma, b_sigma, a_tau, b_tau, nu, a_eta, b_eta, a_o, b_o, a_pi, b_pi, a_w and b_w. See the vignette for more information.
+#' @param hyperpar a list of named hypeparameters to use instead of the default values. Valid names are mrf_d, mrf_e, a_sigma, b_sigma, a_tau, b_tau, nu, a_eta, b_eta, a_o, b_o, a_pi, b_pi, a_w and b_w. 
+#' Their default values are a_w=2, b_w=5, a_o=p-2, b_o=0.005, a_pi=2 (hotspot) or 1 (hierarchical), b_pi=1 (hotspot) or s-1 (hierarchical), nu=s+2, a_tau=0.1, b_tau=10, a_eta=0.1, b_eta=1, a_sigma=1, b_sigma=1, mrf_d=-3 and mrf_e=0.001. See the vignette for more information.
 #' @param output_gamma allow ( \code{TRUE} ) or suppress ( \code{FALSE} ) the output for  gamma. See the return value below for more information.
 #' @param output_beta allow ( \code{TRUE} ) or suppress ( \code{FALSE} ) the output for beta. See the return value below for more information.
 #' @param output_G allow ( \code{TRUE} ) or suppress ( \code{FALSE} ) the output for G. See the return value below for more information.
@@ -301,15 +302,38 @@ BayesSUR <- function(Y, X, X_0 = NULL, data = NULL,
   }}} # else assume is given as an absolute number
 
   ###############################
-  # prepare the print of all hyperparameters
+  # prepare the print of hyperparameters corresponding the specified model
   hyperpar.all <- list(a_w=2, b_w=5, a_o=sum(blockLabels==1)-2, b_o=0.005, a_pi=NA, b_pi=NA, nu=sum(blockLabels==0)+2, a_tau=0.1, b_tau=10, a_eta=0.1, b_eta=1, a_sigma=1, b_sigma=1, mrf_d=-3, mrf_e=0.001)
   if(toupper(gammaPrior) %in% c("HOTSPOT", "HOTSPOTS", "HS")){
     hyperpar.all$a_pi <- 2
     hyperpar.all$b_pi <- 1
+    
+    if(toupper(covariancePrior) %in% c("INDEPENDENT", "INDEP", "IG"))
+      hyperpar.all <- hyperpar.all[-c(7:11,14:15)]
+    if(toupper(covariancePrior) %in% c("DENSE", "IW"))
+      hyperpar.all <- hyperpar.all[-c(10:11,12:15)]
+    if(toupper(covariancePrior) %in% c("SPARSE", "HIW"))
+      hyperpar.all <- hyperpar.all[-c(12:15)]
   }
   if( toupper(gammaPrior) %in% c("HIERARCHICAL", "H")){
-    hyperpar.all$a_pi <- 1
-    hyperpar.all$b_pi <- sum(blockLabels==0) - 1
+    #hyperpar.all$a_pi <- 1
+    #hyperpar.all$b_pi <- sum(blockLabels==0) - 1
+    
+    if(toupper(covariancePrior) %in% c("INDEPENDENT", "INDEP", "IG"))
+      hyperpar.all <- hyperpar.all[-c(3:6,7:11,14:15)]
+    if(toupper(covariancePrior) %in% c("DENSE", "IW"))
+      hyperpar.all <- hyperpar.all[-c(3:6,10:11,12:15)]
+    if(toupper(covariancePrior) %in% c("SPARSE", "HIW"))
+      hyperpar.all <- hyperpar.all[-c(3:6,12:15)]
+  }
+  if( toupper(gammaPrior) %in% c("MRF", "MARKOV RANDOM FIELD")){
+    
+    if(toupper(covariancePrior) %in% c("INDEPENDENT", "INDEP", "IG"))
+      hyperpar.all <- hyperpar.all[-c(3:6,7:13)]
+    if(toupper(covariancePrior) %in% c("DENSE", "IW"))
+      hyperpar.all <- hyperpar.all[-c(3:6,10:13)]
+    if(toupper(covariancePrior) %in% c("SPARSE", "HIW"))
+      hyperpar.all <- hyperpar.all[-c(3:6,12:13)]
   }
   
   if(length(hyperpar)>0)

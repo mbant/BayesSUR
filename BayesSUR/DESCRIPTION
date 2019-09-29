@@ -1,13 +1,15 @@
 Package: BayesSUR
 Type: Package
 Title: Bayesian Seemingly Unrelated Regression
-Version: 0.1.23
-Date: 2019-09-27
-Authors@R: c(person("Marco", "Banterle", email = "marco.banterle@gmail.com", role = c("aut")), person("Zhi", "Zhao", email = "zhi.zhao@medisin.uio.no", role = c("aut", "cre")))
-Maintainer@R: person("Zhi", "Zhao", email = "zhi.zhao@medisin.uio.no",
-        role = c("aut", "cre")) person("Marco", "Banterle", email =
-        "marco.banterle@gmail.com", role = c("aut", "cre")))
-Description: Bayesian Seemingly Unrelated Regression with general variable selection and dense/sparse covariance matrix.
+Version: 1.0-0
+Date: 2019-09-29
+Authors@R: c(person("Marco", "Banterle", email = "marco.banterle@gmail.com", role = c("aut")),
+             person("Zhi", "Zhao", email = "zhi.zhao@medisin.uio.no", role = c("aut", "cre")),
+             person("Leonardo", "Bottolo", email = "lb664@cam.ac.uk", role = c("aut")),
+             person("Sylvia", "Richardson", email = "sylvia.richardson@mrc-bsu.cam.ac.uk", role = c("aut")),
+             person("Alex", "Lewin", email = "alex.lewin@lshtm.ac.uk", role = c("aut")),
+             person("Manuela", "Zucknick", email = "manuela.zucknick@medisin.uio.no", role = c("aut")))
+Description: Bayesian Seemingly Unrelated Regression with general variable selection and dense/sparse covariance matrix. The sparse seemingly unrelated regression is described in 'Banterle et al.' (2018) <doi:10.1101/467019>.
 License: MIT + file LICENSE
 VignetteBuilder: R.rsp
 RoxygenNote: 6.1.1
@@ -20,7 +22,11 @@ Suggests: xml2, R.rsp
 LazyData: true
 NeedsCompilation: yes
 SystemRequirements: C++11
-Packaged: 2019-09-27 11:14:34 UTC; zhiz
+Packaged: 2019-09-29 20:40:19 UTC; zhiz
 Author: Marco Banterle [aut],
-  Zhi Zhao [aut, cre]
+  Zhi Zhao [aut, cre],
+  Leonardo Bottolo [aut],
+  Sylvia Richardson [aut],
+  Alex Lewin [aut],
+  Manuela Zucknick [aut]
 Maintainer: Zhi Zhao <zhi.zhao@medisin.uio.no>
