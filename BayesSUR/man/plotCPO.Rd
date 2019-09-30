@@ -5,10 +5,10 @@
 \title{plot the conditional predictive ordinate}
 \usage{
 plotCPO(object, sum.responses = FALSE, outlier.mark = TRUE,
-  outlier.thresh = 0.01, scale.CPO = TRUE, x.loc = FALSE,
-  axis.label = NULL, las = 0, cex.axis = 1, mark.pos = c(0, -0.01),
-  mark.color = 2, mark.cex = 0.8, xlab = "Observations",
-  ylab = NULL)
+  outlier.thresh = 0.01, outlier.thresh.responses = NA,
+  scale.CPO = TRUE, x.loc = FALSE, axis.label = NULL, las = 0,
+  cex.axis = 1, mark.pos = c(0, -0.01), mark.color = 2,
+  mark.cex = 0.8, xlab = "Observations", ylab = NULL)
 }
 \arguments{
 \item{object}{an object of class "BayesSUR"}
@@ -18,6 +18,8 @@ plotCPO(object, sum.responses = FALSE, outlier.mark = TRUE,
 \item{outlier.mark}{mark the outliers with the response names. The default is \code{FALSE}}
 
 \item{outlier.thresh}{threshold for the CPOs. The default is 0.01.}
+
+\item{outlier.thresh.responses}{a vector of thresholds for the CPOs corresponding multiple response variables. The default is \code{NA}.}
 
 \item{scale.CPO}{scaled CPOs which is divided by their maximum. The default is \code{TRUE}}
 
