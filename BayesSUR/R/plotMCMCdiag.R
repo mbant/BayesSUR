@@ -10,18 +10,18 @@
 #' @param ... other arguments for the plots of the log-likelihood and model size
 #' 
 #' @examples
-#' \donttest{
 #' data("example_eQTL", package = "BayesSUR")
 #' hyperpar <- list( a_w = 2 , b_w = 5 )
 #' 
 #' fit <- BayesSUR(Y = example_eQTL[["blockList"]][[1]], 
 #'                 X = example_eQTL[["blockList"]][[2]],
-#'                 data = example_eQTL[["data"]], outFilePath = "results/",
-#'                 nIter = 10000, burnin = 500, nChains = 2, gammaPrior = "hotspot",
+#'                 data = example_eQTL[["data"]], outFilePath = tempdir(),
+#'                 nIter = 100, burnin = 0, nChains = 2, gammaPrior = "hotspot",
 #'                 hyperpar = hyperpar, tmpFolder = "tmp/" )
 #' 
 #' ## check output
-#' # show the diagnosis plots
+#' # show the diagnosis plots with at least 4000 iterations
+#' \donttest{
 #' plotMCMCdiag(fit)
 #' }
 #' 
@@ -65,6 +65,8 @@ plotMCMCdiag <- function(object, nbloc=3, header="", ...){
   }
   
   ###plot the figures
+  opar <- par(no.readonly=TRUE)
+  on.exit(par(opar))    
   par(mfrow=c(2,2))
   
   plot.default(logP[Plik.indx,], xlab="Iterations (*1000)", ylab="Log likelihood (posterior)", type="l", lty=1, ...)
@@ -75,21 +77,19 @@ plotMCMCdiag <- function(object, nbloc=3, header="", ...){
   
   title.0 <- expression(paste("Log Posterior Distribution: log ",P(gamma~group("|",list(Y,.),""))))
   plot.default(dens.all,main=title.0,col="black",xlim=c(xmin,xmax),ylim=c(ymin,ymax),xlab="",ylab="", type="l", lty=1)
-  par(new=TRUE)
+  par(new=TRUE) 
   plot.default(dens.first,main="",col="red",xlim=c(xmin,xmax),ylim=c(ymin,ymax),xlab="",ylab="", type="l", lty=1)
-  par(new=TRUE)
+  par(new=TRUE) 
   plot.default(dens.last,main="",col="green",xlim=c(xmin,xmax),ylim=c(ymin,ymax),xlab="",,ylab="Density", type="l", lty=1)
   legend("topleft",title="iteration",legend=paste(c("ALL","First half","Last half")," = [",c(1,1,floor(ncol(logP)/2)*1000+1),":",c(ncol(logP),floor((ncol(logP))/2),ncol(logP))*1000,"]",sep=""),col=1:3,lty=1,text.col=1:3, cex=0.8)
   
   for (i in 1:nbloc){
     plot.default(list.dens[[i]],col=i,xlim=c(xmin2,xmax2),ylim=c(ymin,ymax2),xlab="",ylab="", type="l", lty=1,main=title.0)
-    par(new=TRUE)  
+    par(new=TRUE) 
   }
   title(ylab="Density")
   legend("topleft",title="moving window",legend=paste("set ",1:nbloc," = [",(floor((ncol(logP))/2)+mid*(nbloc:1-1))*1000+1,":",(ncol(logP))*1000,"]",sep=""),col=1:nbloc,lty=1,text.col=1:nbloc, cex=0.8)
   
-  par(mfrow=c(1,1))
   title(paste("\n",header,sep=""), outer=T)
-  
   
 }

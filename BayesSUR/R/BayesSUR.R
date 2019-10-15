@@ -7,8 +7,9 @@
 #' 
 #' @docType package
 #' @useDynLib BayesSUR
-#' @importFrom utils head tail installed.packages read.table write.table
+#' @importFrom utils head tail read.table write.table
 #' @importFrom Rcpp sourceCpp
+#' @importFrom xml2 as_xml_document write_xml
 #' 
 #' @name BayesSUR
 #' @param data a data frame if using \code{formula}. If not using \code{formula}, it is either a matrix/dataframe or the path to (a plain text) data file with variables on the columns and observations on the rows 
@@ -77,14 +78,13 @@
 #' @references Banterle M#, Zhao Z#, Bottolo L, Richardson S, Lewin A\*, Zucknick M\* (2019). \emph{BayesSUR: An R package for high-dimensional multivariate Bayesian variable and covariance selection in linear regression.} URL: https://github.com/mbant/BayesSUR/tree/master/BayesSUR/vignettes/vignettes.pdf
 #' 
 #' @examples
-#' \donttest{
 #' data("example_eQTL", package = "BayesSUR")
 #' hyperpar <- list( a_w = 2 , b_w = 5 )
 #' 
 #' fit <- BayesSUR(Y = example_eQTL[["blockList"]][[1]], 
 #'                 X = example_eQTL[["blockList"]][[2]],
-#'                 data = example_eQTL[["data"]], outFilePath = "results/",
-#'                 nIter = 1000, burnin = 500, nChains = 2, gammaPrior = "hotspot",
+#'                 data = example_eQTL[["data"]], outFilePath = tempdir(),
+#'                 nIter = 100, burnin = 50, nChains = 2, gammaPrior = "hotspot",
 #'                 hyperpar = hyperpar, tmpFolder = "tmp/" )
 #' 
 #' ## check output
@@ -92,6 +92,9 @@
 #' summary(fit)
 #' 
 #' # show the estimated beta, gamma and graph of responeses Gy
+#' plotEstimator(fit)
+#' 
+#' \donttest{
 #' plotEstimator(fit, fig.tex = TRUE)
 #' system(paste(getOption("pdfviewer"), "ParamEstimator.pdf"))
 #' }
@@ -107,18 +110,21 @@ BayesSUR <- function(Y, X, X_0 = NULL, data = NULL,
                      output_Y = TRUE, output_X = TRUE, hyperpar = list(), tmpFolder = "tmp/")
 {
   
+  # Check the directory for the output files
+  if(outFilePath == "")
+    stop("Warning: Please specify a directory to save all output files!")
+  
+  outFilePathLength = nchar(outFilePath)
+  if( substr(outFilePath,outFilePathLength,outFilePathLength) != "/" )
+    outFilePath = paste( outFilePath , "/" , sep="" )
+  dir.create(outFilePath)
+  
   # Create temporary directory
   tmpFolderLength = nchar(tmpFolder)
-  if( tmpFolderLength > 0 )
-  {
-    if( substr(tmpFolder,tmpFolderLength,tmpFolderLength) != "/" )
-      tmpFolder = paste( tmpFolder , "/" , sep="" )
-    if( (substr(tmpFolder,1,1) != "/") & (substr(tmpFolder,2,2) != ":") )
-      tmpFolder = paste( getwd(), "/", tmpFolder , sep="" )
-    dir.create(tmpFolder)
-  }else{
-    tmpFolder = paste( getwd(), "/" )
-  }
+  if( substr(tmpFolder,tmpFolderLength,tmpFolderLength) != "/" )
+    tmpFolder = paste( tmpFolder , "/" , sep="" )
+  tmpFolder = paste(outFilePath, tmpFolder, sep="")
+  dir.create(tmpFolder)
   
 
   ## Check the input: reasoning is that the user provides either
@@ -128,35 +134,8 @@ BayesSUR <- function(Y, X, X_0 = NULL, data = NULL,
   #     - in which case we write those in order into a new joint file
   # everything else throws an error
   
-  ## Create the directory for the results
-  outFilePathLength = nchar(outFilePath)
-  if( outFilePathLength > 0 )
-  {
-    if( substr(outFilePath,outFilePathLength,outFilePathLength) != "/" )
-      outFilePath = paste( outFilePath , "/" , sep="" )
-    if( (substr(outFilePath,1,1) != "/") & (substr(outFilePath,2,2) != ":") )
-      outFilePath = paste( getwd(), "/", outFilePath , sep="" )
-    dir.create(outFilePath)
-  }else{
-    outFilePath = paste( getwd(), "/" )
-  }
-  
   # check the formula
   cl <- match.call()
-  # mf <- match.call(expand.dots = FALSE)
-  # m <- match(c("formula", "data", "subset", "weights", "na.action", "offset"), names(mf), 0L)
-  # if( m[1] ){
-  #   if( !is.data.frame(data) )
-  #     stop("Arugment data must be a data.frame!")
-  # 
-  #   mf <- mf[c(1L, m)]
-  #   mf$drop.unused.levels <- TRUE
-  #   mf[[1L]] <- quote(stats::model.frame)
-  #   mf <- eval(mf, parent.frame())
-  #   mt <- attr(mf, "terms")
-  #   Y <- model.response(mf, "numeric")
-  #   X <- model.matrix(mt, mf, NULL)
-  # }
   
   # we'll check in reverse order, is data NULL?
   if ( is.null( data ) )# | m[1] )
@@ -397,15 +376,12 @@ BayesSUR <- function(Y, X, X_0 = NULL, data = NULL,
   }
   
   ## Set up the XML file for hyperparameters
-  if("xml2" %in% rownames(installed.packages()) == FALSE)
-    my_stop("Using non-default hyperparameters require an XML file to be written, please install the \"xml2\" package.",tmpFolder)
-    
-  xml  = xml2::as_xml_document(
+  xml  = as_xml_document(
     list( hyperparameters = list(
       lapply(hyperpar,function(x) list(x)) # every element in the list should be a list
     )))
   hyperParFile = paste(sep="",tmpFolder,"hyperpar.xml")
-  xml2::write_xml(xml,file = hyperParFile)
+  write_xml(xml,file = hyperParFile)
   
   ## Create the return object
   ret = list( status=1, input=list(), output = list() )

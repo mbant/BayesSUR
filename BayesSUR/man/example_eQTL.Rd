@@ -14,18 +14,14 @@ s=10 gene expression features as response variables and data for n=100 observati
 needed to fit the model with BayesSUR(). The R code for generating the simulated data is given in the Examples paragraph.
 }
 \examples{
-\dontrun{
-
 # Load the eQTL sample dataset
 data("example_eQTL", package = "BayesSUR")
+str(example_eQTL)
 
+\donttest{
 #===============
-# The code below is to generate the dataset "example_eQTL.rda"
+# The code below is to show how to generate the dataset "example_eQTL.rda" above
 #===============
-
-## Not run
-
-rm(list=ls())
 
 library(BDgraph)
 library(gRbase)
@@ -212,7 +208,7 @@ nu = s+1
 M = matrix(corr_param,s,s)
 diag(M) = rep(1,s)
 
-P = BDgraph::rgwish(n=1,adj.g=G,b=3,D=v_r*M)
+P = BDgraph::rgwish(n=1,adj=G,b=3,D=v_r*M)
 
 var = solve(P)
 
@@ -262,15 +258,13 @@ repeat{
 colnames(y) <- paste("GEX",1:ncol(y),sep="")
 colnames(G) <- colnames(y); Gy <- G
 gamma <- gamma[-1,]
-mrfG <- GGmrf[!duplicated(Gmrf),]
+mrfG <- Gmrf[!duplicated(Gmrf),]
 data = cbind(y,x[,-1])   # leave out the intercept because is coded inside already
 
-####################################################################
-## Write data file
 example_eQTL = list(data=data, blockList=list(1:s,s+1:p))
-save(example_eQTL, file="example_eQTL.rda")
 
-## End(Not run)
+## Write data file to the user's directory by save()
+
 }
 
 }

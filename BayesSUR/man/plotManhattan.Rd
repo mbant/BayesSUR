@@ -49,19 +49,17 @@ plotManhattan(object, which = c(1, 2), x.loc = FALSE,
 Plot Manhattan-like plots for marginal posterior inclusion probabilities (mPIP) and numbers of responses of association for predictors of a "BayesSUR" class object.
 }
 \examples{
-\donttest{
 data("example_eQTL", package = "BayesSUR")
 hyperpar <- list( a_w = 2 , b_w = 5 )
 
 fit <- BayesSUR(Y = example_eQTL[["blockList"]][[1]], 
                 X = example_eQTL[["blockList"]][[2]],
-                data = example_eQTL[["data"]], outFilePath = "results/",
-                nIter = 1000, burnin = 500, nChains = 2, gammaPrior = "hotspot",
+                data = example_eQTL[["data"]], outFilePath = tempdir(),
+                nIter = 100, burnin = 50, nChains = 2, gammaPrior = "hotspot",
                 hyperpar = hyperpar, tmpFolder = "tmp/" )
 
 ## check output
 # show the Manhattan-like plots
 plotManhattan(fit)
-}
 
 }

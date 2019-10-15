@@ -7,21 +7,21 @@
 #' @param Pmax threshold that truncates the estimated coefficients based on thresholding the estimated latent indicator variable. Default is 0.5
 #' @param ... other arguments
 #' 
+#' @return Return a short summary from an object of class "BayesSUR", including the number of selected predictors with mPIP>\code{Pmax} and the expected log pointwise predictive density estimates (i.e., elpd.LOO and elpd.WAIC).
+#' 
 #' @examples
-#' \donttest{
 #' data("example_eQTL", package = "BayesSUR")
 #' hyperpar = list( a_w = 2 , b_w = 5 )
 #' 
 #' fit <- BayesSUR(Y = example_eQTL[["blockList"]][[1]], 
 #'                 X = example_eQTL[["blockList"]][[2]],
-#'                 data = example_eQTL[["data"]], outFilePath = "results/",
-#'                 nIter = 1000, burnin = 500, nChains = 2, gammaPrior = "hotspot",
+#'                 data = example_eQTL[["data"]], outFilePath = tempdir(),
+#'                 nIter = 100, burnin = 50, nChains = 2, gammaPrior = "hotspot",
 #'                 hyperpar = hyperpar, tmpFolder = "tmp/" )
 #' 
 #' ## check output
 #' # show the print information
 #' print(fit)
-#' }
 #' 
 #' @export
 print.BayesSUR <- function(x, Pmax=0.5, ...){

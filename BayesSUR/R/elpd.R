@@ -5,24 +5,25 @@
 #' @param object an object of class "BayesSUR"
 #' @param method the name of the prediction accuracy index. Default is the "\code{LOO}" (Bayesian LOO estimate of out-of-sample predictive fit). The other index is the "\code{WAIC}" (widely applicable information criterion).
 #' For the HRR models, both "\code{LOO}" and "\code{WAIC}" are computed based on the multivate t-distribution of the posterior predictive rather than approximation of importance sampling.
+#' 
+#' @return Return the predictiion accuracy measure from an object of class "BayesSUR". It is elpd.loo if the argumnet \code{method="LOO"} and elpd.WAIC if \code{method="WAIC"}.
+#' 
 #' @references Vehtari, A., Gelman, A., Gabry, J. (2017). \emph{Practical Bayesian model evaluation using leave-one-out cross-validation and WAIC.} Statistics and Computing, 27(5): 1413–1432.
 #'
 #' @examples
-#' \donttest{
 #' data("example_eQTL", package = "BayesSUR")
 #' hyperpar = list( a_w = 2 , b_w = 5 )
 #' 
 #' fit <- BayesSUR(Y = example_eQTL[["blockList"]][[1]], 
 #'                 X = example_eQTL[["blockList"]][[2]],
-#'                 data = example_eQTL[["data"]], outFilePath = "results/",
-#'                 nIter = 1000, burnin = 500, nChains = 2, gammaPrior = "hotspot",
+#'                 data = example_eQTL[["data"]], outFilePath = tempdir(),
+#'                 nIter = 100, burnin = 50, nChains = 2, gammaPrior = "hotspot",
 #'                 hyperpar = hyperpar, tmpFolder = "tmp/" )
 #' 
 #' ## check output
 #' # print the prediction accuracy elpd (expected log pointwise predictive density) 
 #' # by the Bayesian LOO estimate of out-of-sample predictive fit
 #' elpd(fit, method="LOO")
-#' }
 #' 
 #' @export
 elpd <- function(object, method="LOO"){

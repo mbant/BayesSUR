@@ -4,12 +4,12 @@
 \alias{plot.BayesSUR}
 \title{create a selection of plots for a "BayesSUR" class object}
 \usage{
-\method{plot}{BayesSUR}(x, which = c(1L:5L), ...)
+\method{plot}{BayesSUR}(x, which = c(1L:4L), ...)
 }
 \arguments{
 \item{x}{an object of class "BayesSUR".}
 
-\item{which}{if a subset of the plots is required, specify a subset of the numbers 1:5 which are plots of estimators, response graph, network, manhattan and MCMC diagnosis, respectively. Only \code{c(1,4,5)} is valid for the HRR models.}
+\item{which}{if a subset of the plots is required, specify a subset of the numbers 1:5 which are plots of estimators, response graph, network, manhattan and MCMC diagnosis, respectively. Default is \code{c(1L:4L)} Only \code{c(1,4,5)} is valid for the HRR models.}
 
 \item{...}{other arguments}
 }
@@ -17,19 +17,17 @@
 Convenience function to create a selection of plots for a "BayesSUR" class object. They are plots of estimators, response graph, network, manhattan and MCMC diagnosis indexed by numbers 1:5.
 }
 \examples{
-\donttest{
 data("example_eQTL", package = "BayesSUR")
 hyperpar = list( a_w = 2 , b_w = 5 )
 
 fit <- BayesSUR(Y = example_eQTL[["blockList"]][[1]], 
                 X = example_eQTL[["blockList"]][[2]],
-                data = example_eQTL[["data"]], outFilePath = "results/",
-                nIter = 10000, burnin = 5000, nChains = 2, gammaPrior = "hotspot",
+                data = example_eQTL[["data"]], outFilePath = tempdir(),
+                nIter = 100, burnin = 0, nChains = 2, gammaPrior = "hotspot",
                 hyperpar = hyperpar, tmpFolder = "tmp/" )
 
 ## check output
-# show the interactive plots
+# show the interactive plots with at least 4000 iterations for the diagnosis plots
 plot(fit)
-}
 
 }

@@ -14,26 +14,18 @@ s=7 drugs sensitivity data as response variables and data for n=498 cell lines. 
 Loading the data will load the associated blockList (and mrfG) objects needed to fit the model with BayesSUR(). The R code for generating the simulated data is given in the Examples paragraph.
 }
 \examples{
-\dontrun{
-
 # Load the GDSC sample dataset
 data("example_GDSC", package = "BayesSUR")
+str(example_GDSC)
 
+\donttest{
 #===============
-# This code below is to do preprocessing of GDSC data and obtain a complete dataset.
-# You need load the datasets from ftp://ftp.sanger.ac.uk/pub4/cancerrxgene/releases/release-5.0/. 
+# This code below is to do preprocessing of GDSC data and obtain the complete dataset
+# "example_GDSC.rda" above. The user needs load the datasets from 
+# ftp://ftp.sanger.ac.uk/pub4/cancerrxgene/releases/release-5.0/. 
 # But downloading and transforming the three used datasets below to *.csv files first.
 #===============
 
-## Not run
-
-rm(list=ls())
-
-##================
-##================
-## clean the data
-##================
-##================
 features <- data.frame(read.csv("gdsc_en_input_w5.csv", head=T))
 names.fea <- strsplit(rownames(features), "")
 features <- t(features)
@@ -91,7 +83,7 @@ while(sum(is.na(y0[,2:(1+m0)]))>0){
     na.y0 <- apply(y0[,2:(1+m0)], 1, function(xx) sum(is.na(xx))/length(xx))
   }
   num.na <- sum(is.na(y0[,2:(1+m0)]))
-  cat("#{NA}=", num.na, "\\n", "r1.na =", r1.na, ", r2.na =", r2.na, "\\n")
+  message("#{NA}=", num.na, "\\n", "r1.na =", r1.na, ", r2.na =", r2.na, "\\n")
 }
 
 #===============
@@ -122,7 +114,8 @@ GDSC <- list(y=y, x=x, p=p, num.nonpen=num.nonpen, names.cell.line=names.cell.li
 ##================
 ##================
 
-name_drugs <- c("Methotrexate","RDEA119","PD-0325901","CI-1040","AZD6244","Nilotinib","Axitinib")
+name_drugs <- c("Methotrexate","RDEA119","PD-0325901","CI-1040","AZD6244","Nilotinib",
+                "Axitinib")
 
 # extract the drugs' pharmacological profiling and tissue dummy
 # delete the cell line with extreme log(IC50)=-36.49 for drug "AP-24534"
@@ -131,16 +124,17 @@ YX0 <- cbind(GDSC$y[-166,colnames(GDSC$y) \%in\% paste("IC50.",name_drugs,sep=""
 colnames(YX0) <- c(name_drugs, colnames(GDSC$x)[1:GDSC$num.nonpen])
 # extract the genetic information of CNV & MUT
 X23 <- GDSC$x[-166, GDSC$num.nonpen+GDSC$p[1]+1:(p[2]+p[3])]
-colnames(X23)[1:p[2]] <- paste(substr(colnames(X23)[1:p[2]], 1, nchar(colnames(X23)[1:p[2]] )-3), 
-                               ".CNV", sep="")
+colnames(X23)[1:p[2]] <- paste(substr(colnames(X23)[1:p[2]], 1, 
+                               nchar(colnames(X23)[1:p[2]] )-3), ".CNV", sep="")
 
 # locate all genes with CNV or MUT information
 name_genes_duplicate <- c( substr(colnames(X23)[1:p[2]], 1, nchar(colnames(X23)[1:p[2]])-4),
-                        substr(colnames(X23)[p[2]+1:p[3]], 1, nchar(colnames(X23)[p[2]+1:p[3]])-4) )
+                   substr(colnames(X23)[p[2]+1:p[3]], 1, nchar(colnames(X23)[p[2]+1:p[3]])-4) )
 name_genes <- name_genes_duplicate[!duplicated(name_genes_duplicate)]
 
 # select the GEX which have the common genes with CNV or MUT
-X1 <- GDSC$x[-166,GDSC$num.nonpen+which(colnames(GDSC$x)[GDSC$num.nonpen+1:p[1]] \%in\% name_genes)]
+X1 <- GDSC$x[-166,GDSC$num.nonpen+which(colnames(GDSC$x)[GDSC$num.nonpen+1:p[1]] \%in\% 
+             name_genes)]
 p[1] <- ncol(X1)
 X1 <- log2(X1)
 
@@ -175,8 +169,8 @@ k <- 1
 for(i in 1:length(name_genes)){
   Idx_CommonGene <- which(  c(colnames(X1),name_genes_duplicate) == name_genes[i] )
   if(length(Idx_CommonGene) > 1){
-    Gmrf_CommonGene <- rbind(Gmrf_CommonGene, t(combn(rep(Idx_CommonGene,each=length(name_drugs)) + 
-                       rep((1:length(name_drugs)-1)*sum(p),times=length(Idx_CommonGene)), 2)))
+    Gmrf_CommonGene <- rbind(Gmrf_CommonGene,t(combn(rep(Idx_CommonGene,each=length(name_drugs))
+                       + rep((1:length(name_drugs)-1)*sum(p),times=length(Idx_CommonGene)), 2)))
     k <- k+1
   }
 }
@@ -192,12 +186,9 @@ targetGenes2 <- matrix(Idx_Pathway2,nrow=1)
 colnames(targetGenes2) <- colnames(example_GDSC$data)[length(name_drugs)+
                                                       GDSC$num.nonpen+targetGenes]
 
-example_GDSC_targets<- list(group1=targetGenes1, group2=targetGenes2)
+example_GDSC_targets <- list(group1=targetGenes1, group2=targetGenes2)
 
-save(example_GDSC, file="example_GDSC.rda")
-save(example_GDSC_targets, file="example_GDSC_targets.rda")
-
-## End(Not run)
+## Write data file example_GDSC.rda to the user's directory by save()
 
 }
 

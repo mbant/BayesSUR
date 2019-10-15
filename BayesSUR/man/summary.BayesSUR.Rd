@@ -13,25 +13,27 @@
 
 \item{...}{other arguments}
 }
+\value{
+Return a result summary from an object of class "BayesSUR", including the CPOs, number of selected predictors with mPIP>\code{Pmax}, top 10 predictors on average mPIP across all responses,
+top 10 responses on average mPIP across all predictors, Expected log pointwise predictive density (elpd) estimates, MCMC specification, model specification (i.e., covariance prior and gamma prior) and hyper-parameters.
+}
 \description{
 Summary method for class "BayesSUR". It includes the argument matching information, Top predictors/responses on average mPIP across all responses/predictors, 
 elpd estimates, MCMC specification, model specification and hyper-parameters. The summarized number of the selected variable corresponds to the posterior 
 mean of the latent indicator variable thresholding at 0.5 by default.
 }
 \examples{
-\donttest{
 data(example_eQTL, package = "BayesSUR")
 hyperpar = list( a_w = 2 , b_w = 5 )
 
 fit <- BayesSUR(Y = example_eQTL[["blockList"]][[1]], 
                 X = example_eQTL[["blockList"]][[2]],
-                data = example_eQTL[["data"]], outFilePath = "results/",
-                nIter = 1000, burnin = 500, nChains = 2, gammaPrior = "hotspot",
+                data = example_eQTL[["data"]], outFilePath = tempdir(),
+                nIter = 100, burnin = 50, nChains = 2, gammaPrior = "hotspot",
                 hyperpar = hyperpar, tmpFolder = "tmp/" )
 
 ## check output
 # show the summary information
 summary(fit)
-}
 
 }

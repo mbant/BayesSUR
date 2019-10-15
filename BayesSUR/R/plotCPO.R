@@ -6,7 +6,6 @@
 #' @param object an object of class "BayesSUR"
 #' @param sum.responses compute CPOs aggreated in all response variables
 #' @param outlier.thresh threshold for the CPOs. The default is 0.01.
-#' @param outlier.thresh.responses a vector of thresholds for the CPOs corresponding multiple response variables. The default is \code{NA}.
 #' @param outlier.mark mark the outliers with the response names. The default is \code{FALSE}
 #' @param scale.CPO scaled CPOs which is divided by their maximum. The default is \code{TRUE}
 #' @param x.loc a vector of features distance
@@ -26,23 +25,21 @@
 #' @references Congdon P. (2005). \emph{Bayesian Models for Categorical Data}. John Wiley & Sons, West Sussex, England.
 #'
 #' @examples
-#' \donttest{
 #' data("example_eQTL", package = "BayesSUR")
 #' hyperpar <- list( a_w = 2 , b_w = 5 )
 #' 
 #' fit <- BayesSUR(Y = example_eQTL[["blockList"]][[1]], 
 #'                 X = example_eQTL[["blockList"]][[2]],
-#'                 data = example_eQTL[["data"]], outFilePath = "results/",
-#'                 nIter = 1000, burnin = 500, nChains = 2, gammaPrior = "hotspot",
+#'                 data = example_eQTL[["data"]], outFilePath = tempdir(),
+#'                 nIter = 100, burnin = 50, nChains = 2, gammaPrior = "hotspot",
 #'                 hyperpar = hyperpar, tmpFolder = "tmp/" )
 #' 
 #' ## check output
 #' # plot the conditional predictive ordinate (CPO)
 #' plotCPO(fit)
-#' }
 #' 
 #' @export
-plotCPO <- function(object, sum.responses=FALSE, outlier.mark=TRUE, outlier.thresh=0.01, outlier.thresh.responses=NA, scale.CPO=TRUE, x.loc=FALSE, axis.label=NULL, las=0, cex.axis=1, mark.pos=c(0,-.01), mark.color=2, mark.cex=0.8,
+plotCPO <- function(object, sum.responses=FALSE, outlier.mark=TRUE, outlier.thresh=0.01, scale.CPO=TRUE, x.loc=FALSE, axis.label=NULL, las=0, cex.axis=1, mark.pos=c(0,-.01), mark.color=2, mark.cex=0.8,
                     xlab="Observations", ylab=NULL){
   
   object$output[-1] <- paste(object$output$outFilePath,object$output[-1],sep="")
@@ -78,26 +75,12 @@ plotCPO <- function(object, sum.responses=FALSE, outlier.mark=TRUE, outlier.thre
     
     # mark the names of the specified response variables corresponding to the given responses
     if(outlier.mark){
-      
-      if(is.na(outlier.thresh.responses[1])){
-        if(min(CPO) > outlier.thresh){
-          cat("NOTE: The minimum CPO is larger than the threshold of the (scaled) CPO!\n")
-        }else{
-          name.responses <- colnames(as.matrix( read.table(object$output$Y,header=T) ))
-          text(rep(1:nrow(CPO), times=ncol(CPO))[which(as.vector(CPO) <= outlier.thresh)]+mark.pos[1], as.vector(CPO[CPO<=outlier.thresh])+mark.pos[2], labels=rep(name.responses, each=nrow(CPO))[as.vector(CPO) <= outlier.thresh], col=mark.color, cex=mark.cex)
-          abline(h=outlier.thresh, lty=2, col=mark.color)
-        }
+      if(min(CPO) > outlier.thresh){
+        message("NOTE: The minimum CPO is larger than the threshold of the (scaled) CPO!\n")
       }else{
-      
-        if( min(CPO) > max(outlier.thresh.responses) )
-          cat("NOTE: The minimum CPO is larger than the threshold of the (scaled) CPO!\n")
-          
         name.responses <- colnames(as.matrix( read.table(object$output$Y,header=T) ))
-        if(length(outlier.thresh.responses) != length(name.responses))
-          stop("The argument 'outlier.thresh.responses' doesn't have the same length as the number of response variables!\n")
-        
-        outlier.thresh.responses <- rep(outlier.thresh.responses, each=nrow(CPO))
-        text(rep(1:nrow(CPO), times=ncol(CPO))[which(as.vector(CPO) <= outlier.thresh.responses)]+mark.pos[1], as.vector(CPO[CPO<=outlier.thresh.responses])+mark.pos[2], labels=rep(name.responses, each=nrow(CPO))[as.vector(CPO) <= outlier.thresh.responses], col=mark.color, cex=mark.cex)
+        text(rep(1:nrow(CPO), times=ncol(CPO))[which(as.vector(CPO) <= outlier.thresh)]+mark.pos[1], as.vector(CPO[CPO<outlier.thresh])+mark.pos[2], labels=rep(name.responses, each=nrow(CPO))[as.vector(CPO) < outlier.thresh], col=mark.color, cex=mark.cex)
+        abline(h=outlier.thresh, lty=2, col=mark.color)
       }
     }
   }else{
@@ -110,8 +93,10 @@ plotCPO <- function(object, sum.responses=FALSE, outlier.mark=TRUE, outlier.thre
     # mark the names of the specified response variables corresponding to the given responses
     if(outlier.mark){
       if(min(CPO) > outlier.thresh){
-        cat("Warning: The minimum CPO is larger than the threshold of the (scaled) CPO!\n")
+        message("NOTE: The minimum CPO is larger than the threshold of the (scaled) CPO!\n")
       }else{
+        opar <- par(no.readonly=TRUE)
+        on.exit(par(opar))    
         par(new=T)
         plot.default(CPO[CPO<outlier.thresh] ~ which(CPO<outlier.thresh), xaxt = 'n',bty = "n", xlim=c(1,length(CPO)), ylim=c(min(CPO)+mark.pos[2]*2,max(CPO)), ylab = "", xlab = "", main="", pch=19, col=mark.color)
         text(which(CPO <= outlier.thresh)+mark.pos[1], CPO[CPO<outlier.thresh]+mark.pos[2], labels=name.predictors[CPO < outlier.thresh], col=mark.color, cex=mark.cex)

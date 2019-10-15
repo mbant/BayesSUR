@@ -6,9 +6,9 @@
 \usage{
 plotEstimator(object, estimator = "all",
   colorScale.gamma = grey((100:0)/100), colorScale.beta = c("blue",
-  "white", "red"), legend.cex.axis = 1, name.responses = NA,
-  name.predictors = NA, xlab = "", ylab = "", fig.tex = FALSE,
-  output = "ParamEstimator", header = "", header.cex = 2, ...)
+  "white", "red"), name.responses = NA, name.predictors = NA,
+  xlab = "", ylab = "", fig.tex = FALSE, output = "ParamEstimator",
+  header = "", header.cex = 2, ...)
 }
 \arguments{
 \item{object}{an object of class "BayesSUR"}
@@ -18,8 +18,6 @@ plotEstimator(object, estimator = "all",
 \item{colorScale.gamma}{value palette for gamma}
 
 \item{colorScale.beta}{a vector of three colors for diverging color schemes}
-
-\item{legend.cex.axis}{magnification of axis annotation relative to cex}
 
 \item{name.responses}{a vector of the response names. The default is "NA" only to show the locations. The value "auto" show the response names from the orginal data.}
 
@@ -43,18 +41,20 @@ plotEstimator(object, estimator = "all",
 Plot the posterior mean estimators from a "BayesSUR" class object, including the coefficients beta, latent indicator variable gamma and graph of responses.
 }
 \examples{
-\donttest{
 data("example_eQTL", package = "BayesSUR")
 hyperpar <- list( a_w = 2 , b_w = 5 )
 
 fit <- BayesSUR(Y = example_eQTL[["blockList"]][[1]], 
                 X = example_eQTL[["blockList"]][[2]],
-                data = example_eQTL[["data"]], outFilePath = "results/",
-                nIter = 1000, burnin = 500, nChains = 2, gammaPrior = "hotspot",
+                data = example_eQTL[["data"]], outFilePath = tempdir(),
+                nIter = 100, burnin = 50, nChains = 2, gammaPrior = "hotspot",
                 hyperpar = hyperpar, tmpFolder = "tmp/" )
 
 ## check output
 # Plot the estimators from the fitted object
+plotEstimator(fit)
+
+\donttest{
 plotEstimator(fit, fig.tex = TRUE)
 system(paste(getOption("pdfviewer"), "ParamEstimator.pdf"))
 }

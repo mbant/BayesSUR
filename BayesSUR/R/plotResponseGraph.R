@@ -15,20 +15,18 @@
 #' @param ... other arguments
 #' 
 #' @examples
-#' \donttest{
 #' data("example_eQTL", package = "BayesSUR")
 #' hyperpar <- list( a_w = 2 , b_w = 5 )
 #' 
 #' fit <- BayesSUR(Y = example_eQTL[["blockList"]][[1]], 
 #'                 X = example_eQTL[["blockList"]][[2]],
-#'                 data = example_eQTL[["data"]], outFilePath = "results/",
-#'                 nIter = 1000, burnin = 500, nChains = 2, gammaPrior = "hotspot",
+#'                 data = example_eQTL[["data"]], outFilePath = tempdir(),
+#'                 nIter = 100, burnin = 50, nChains = 2, gammaPrior = "hotspot",
 #'                 hyperpar = hyperpar, tmpFolder = "tmp/" )
 #' 
 #' ## check output
 #' # show the graph relationship between responses
 #' plotResponseGraph(fit)
-#' }
 #' 
 #' @export
 plotResponseGraph <- function(object, PmaxResponse=0.5, PtrueResponse=NULL, name.responses=NA, edge.weight=FALSE, label.color="black", node.size=30, node.color="dodgerblue", ...){
@@ -55,6 +53,8 @@ plotResponseGraph <- function(object, PmaxResponse=0.5, PtrueResponse=NULL, name
   V(net)$color <- node.color
   
   if( !is.null(PtrueResponse) ){
+    opar <- par(no.readonly=TRUE)
+    on.exit(par(opar))    
     par(mfrow=c(1,2))
     netTRUE <- graph_from_adjacency_matrix(  PtrueResponse, weighted=T, mode="undirected", diag=F)
     V(netTRUE)$label.color <- label.color
@@ -63,7 +63,6 @@ plotResponseGraph <- function(object, PmaxResponse=0.5, PtrueResponse=NULL, name
     plot.igraph(netTRUE, main = "True graph of responses", edge.width=E(netTRUE)$weight*ifelse(edge.weight,2,1), vertex.frame.color=NA,cex.main=1.5, ...)
   }
   plot.igraph(net, main = "Estimated graph of responses", edge.width=E(net)$weight*ifelse(edge.weight,2,1), vertex.frame.color=NA,cex.main=1.5, ...)
-  par(mfrow=c(1,1))
   
 }
 

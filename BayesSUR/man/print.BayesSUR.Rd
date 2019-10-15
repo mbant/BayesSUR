@@ -13,24 +13,25 @@
 
 \item{...}{other arguments}
 }
+\value{
+Return a short summary from an object of class "BayesSUR", including the number of selected predictors with mPIP>\code{Pmax} and the expected log pointwise predictive density estimates (i.e., elpd.LOO and elpd.WAIC).
+}
 \description{
 Print a short summary of a "BayesSUR" class object. It includes the argument matching information, 
 number of selected predictors based on thresholding the posterior mean of the latent indicator variable at 0.5 by default.
 }
 \examples{
-\donttest{
 data("example_eQTL", package = "BayesSUR")
 hyperpar = list( a_w = 2 , b_w = 5 )
 
 fit <- BayesSUR(Y = example_eQTL[["blockList"]][[1]], 
                 X = example_eQTL[["blockList"]][[2]],
-                data = example_eQTL[["data"]], outFilePath = "results/",
-                nIter = 1000, burnin = 500, nChains = 2, gammaPrior = "hotspot",
+                data = example_eQTL[["data"]], outFilePath = tempdir(),
+                nIter = 100, burnin = 50, nChains = 2, gammaPrior = "hotspot",
                 hyperpar = hyperpar, tmpFolder = "tmp/" )
 
 ## check output
 # show the print information
 print(fit)
-}
 
 }

@@ -21,20 +21,18 @@
 #' @param ... other arguments
 #' 
 #' @examples
-#' \donttest{
 #' data("example_eQTL", package = "BayesSUR")
 #' hyperpar <- list( a_w = 2 , b_w = 5 )
 #' 
 #' fit <- BayesSUR(Y = example_eQTL[["blockList"]][[1]], 
 #'                 X = example_eQTL[["blockList"]][[2]],
-#'                 data = example_eQTL[["data"]], outFilePath = "results/",
-#'                 nIter = 1000, burnin = 500, nChains = 2, gammaPrior = "hotspot",
+#'                 data = example_eQTL[["data"]], outFilePath = tempdir(),
+#'                 nIter = 100, burnin = 50, nChains = 2, gammaPrior = "hotspot",
 #'                 hyperpar = hyperpar, tmpFolder = "tmp/" )
 #' 
 #' ## check output
 #' # show the Manhattan-like plots
 #' plotManhattan(fit)
-#' }
 #' 
 #' @export
 plotManhattan <- function(object, which=c(1,2), x.loc=FALSE, axis.label=NULL, mark.responses=NULL, xlab1="Predictors", ylab1="mPIP", xlab2="Predictors", ylab2="No. of responses",
@@ -60,10 +58,17 @@ plotManhattan <- function(object, which=c(1,2), x.loc=FALSE, axis.label=NULL, ma
     }
   }
   
-  par(mfrow=c(2,1))
+  opar <- par(no.readonly=TRUE)
+  on.exit(par(opar))    
+  if(sum(which==c(1,2)) == 2){
+    par(mfrow=c(2,1))
+  }else{
+    par(mfrow=c(1,1))
+  }
+    
   # Manhattan plot for marginal posterior inclusion probabilities (mPIP) 
   if(1 %in% which){
-  par(mar=c(4,4,4,2)) 
+    par(mar=c(4,4,4,2)) 
   
   plot.default(as.vector(gamma) ~ rep(1:nrow(gamma), times=ncol(gamma)), xlim=c(1,nrow(gamma)), ylim=c(0,max(gamma)), xaxt = 'n',bty = "n", ylab=ylab1, xlab=xlab1, main="", pch=19, ...)
   axis(1, at=x.loc, labels=names(x.loc), las=las, cex.axis=cex.axis); box()
@@ -81,13 +86,13 @@ plotManhattan <- function(object, which=c(1,2), x.loc=FALSE, axis.label=NULL, ma
   
   # Manhattan plot for numbers of responses 
   if(2 %in% which){
-  par(mar=c(5,4,3,2))
+    par(mar=c(5,4,3,2))
   no.gamma <- rowSums(gamma>=threshold)
   plot.default(no.gamma ~ c(1:nrow(gamma)), xlim=c(1,nrow(gamma)), ylim=c(0,max(no.gamma)+0.3), type='n', xaxt = 'n', ylab=ylab2, xlab=xlab2, main="", ...)
   segments(1:nrow(gamma), 0, 1:nrow(gamma), no.gamma)
   axis(1, at=x.loc, labels=names(x.loc), las=las, cex.axis=cex.axis)
   }
-  par(mfrow=c(1,1))
+
   title(paste("\n\n",header,sep=""), outer=T)
   
 }
