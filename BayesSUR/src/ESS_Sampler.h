@@ -137,13 +137,17 @@ template<typename T>
 void ESS_Sampler<T>::localStep()
 {
     #ifdef _OPENMP    
-    #pragma omp parallel for schedule(static,1)
+    #pragma omp parallel for schedule(static,1) 
     #endif
-    for( auto i = chain.begin(); i < chain.end(); ++i )
-        (*i) -> step();
+    for( unsigned int i=0; i<nChains; ++i )
+        chain[i] -> step();
 
     // this sintactic sugar is disabled for omp
     // for( auto i : chain )
+    //     i->step();
+
+    // and also this for pedantic compilers
+    // for( auto i = chain.begin(); i!=chain.end();  ++i)
     //     i->step();
 }
 

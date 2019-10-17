@@ -66,11 +66,11 @@ HRR_Chain::HRR_Chain( std::shared_ptr<arma::mat> data_, unsigned int nObservatio
         }
 
         gammaInit();
+        updateGammaMask();
+
         wInit();
 
         sigmaABInit();
-
-        updateGammaMask();
 
         logLikelihood();
         predLikelihood();
@@ -898,9 +898,11 @@ double HRR_Chain::logLikelihood( )
     #endif
     for( unsigned int k=0; k<nOutcomes; ++k)
     {
-        arma::uvec VS_IN_k = gammaMask( arma::find(  gammaMask.col(1) == k) , arma::zeros<arma::uvec>(1) );
-        arma::mat W_k;
+        arma::uvec VS_IN_k = {}; // be sure it's empty by default
+        if(gammaMask.n_rows>0)
+            VS_IN_k = gammaMask( arma::find(  gammaMask.col(1) == k) , arma::zeros<arma::uvec>(1) );
         
+        arma::mat W_k;
         if( preComputedXtX )
         {
             switch ( beta_type )
@@ -989,9 +991,11 @@ double HRR_Chain::logLikelihood( const arma::umat&  externalGammaMask )
     #endif
     for( unsigned int k=0; k<nOutcomes; ++k)
     {
-        arma::uvec VS_IN_k = externalGammaMask( arma::find(  externalGammaMask.col(1) == k) , arma::zeros<arma::uvec>(1) );
-        arma::mat W_k;
+        arma::uvec VS_IN_k = {};
+        if(externalGammaMask.n_rows>0)
+            VS_IN_k = externalGammaMask( arma::find(  externalGammaMask.col(1) == k) , arma::zeros<arma::uvec>(1) );
 
+        arma::mat W_k;
         if( preComputedXtX )
         {
             switch ( beta_type )
@@ -1067,7 +1071,9 @@ double HRR_Chain::logLikelihood( arma::umat& externalGammaMask , const arma::uma
     #endif
     for( unsigned int k=0; k<nOutcomes; ++k)
     {
-        arma::uvec VS_IN_k = externalGammaMask( arma::find(  externalGammaMask.col(1) == k) , arma::zeros<arma::uvec>(1) );
+        arma::uvec VS_IN_k = {};
+        if(externalGammaMask.n_rows>0)
+            VS_IN_k = externalGammaMask( arma::find(  externalGammaMask.col(1) == k) , arma::zeros<arma::uvec>(1) );
 
         arma::mat W_k;
         if( preComputedXtX )
@@ -1143,7 +1149,9 @@ double HRR_Chain::logLikelihood( const arma::umat& externalGammaMask , const dou
     #endif
     for( unsigned int k=0; k<nOutcomes; ++k)
     {
-        arma::uvec VS_IN_k = externalGammaMask( arma::find(  externalGammaMask.col(1) == k) , arma::zeros<arma::uvec>(1) );
+        arma::uvec VS_IN_k = {};        
+        if(externalGammaMask.n_rows>0)
+            VS_IN_k = externalGammaMask( arma::find(  externalGammaMask.col(1) == k) , arma::zeros<arma::uvec>(1) );
 
         arma::mat W_k;
         if( preComputedXtX )

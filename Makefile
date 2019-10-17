@@ -2,6 +2,9 @@ SOURCE_DIR=BayesSUR/src
 VPATH=$(SOURCE_DIR)
 
 CC=g++
+# Uncomment clang++ and comment g++ to check compilation on both systems
+#CC=clang++  -fsanitize=address,undefined -fno-sanitize=float-divide-by-zero -fno-sanitize=alignment -fno-omit-frame-pointer -g
+
 CFLAGS= -c -Wall -Wno-reorder -std=c++11 -I$(SOURCE_DIR)/ -DCCODE -fopenmp
 
 OPENLDFLAGS= -larmadillo -lpthread -lopenblas -fopenmp
@@ -35,12 +38,12 @@ BVS_DEBUG: $(OBJECTS_XML) $(OBJECTS_BVS)
 
 %.o: %.cpp
 	@echo [Compiling]: $<
-	$(CC) $(CFLAGS) $(OPTIM_FLAGS) -o $@ -c $<	
+	$(CC) $(CFLAGS) $(OPTIM_FLAGS) -o $@ -c $<
 
-clean: 
+clean:
 	@echo [Cleaning: ]
 	rm *.o; rm $(SOURCE_DIR)/*.o; rm *_Reg; rm -rf results;
 
-remake: 
+remake:
 	@echo [Cleaning compilation objets only: ]
-	rm *.o; rm *_Reg; rm $(SOURCE_DIR)/*.o; 
+	rm *.o; rm *_Reg; rm $(SOURCE_DIR)/*.o;

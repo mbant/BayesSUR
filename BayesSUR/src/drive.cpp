@@ -61,6 +61,7 @@ int drive_SUR( Chain_Data& chainData )
 	// Init gamma and beta for the main chain
 	// *****************************
 	sampler[0] -> gammaInit( chainData.gammaInit );
+	// sampler[0] -> updateGammaMask();
 	sampler[0] -> betaInit( chainData.betaInit );
 	sampler[0] -> updateQuantities();
 	sampler[0] -> logLikelihood();
@@ -851,15 +852,8 @@ int drive( const std::string& dataFile, const std::string& mrfGFile, const std::
 	Rcout << "BayesSUR -- Bayesian Seemingly Unrelated Regression Modelling" << '\n';
 	
 	#ifdef _OPENMP
-
 		Rcout << "Using OpenMP" << '\n';
-
 		omp_init_lock(&RNGlock);  // init RNG lock for the parallel part
-
-		// ENABLING NESTED PARALLELISM SEEMS TO SLOW DOWN CODE MORE THAN ANYTHING, 
-		// I SUSPECT THE THREAD MANAGING OVERHEAD IS GREATER THAN EXPECTED
-		omp_set_nested(0); // 1=enable, 0=disable nested parallelism (run chains in parallel + compute likelihoods in parallel at least wrt to outcomes + wrt to individuals)
-		// MOST OF THE PARALLELISATION IMPROVEMENTS COME FROM OPENBLAS ANYWAY .. I WONDER IF ACCELERATING LA THOURGH GPU WOULD CHANGE THAT ..
 	#endif
 
 	// ###########################################################
@@ -1041,6 +1035,11 @@ int drive( const std::string& dataFile, const std::string& mrfGFile, const std::
 	unsigned int nThreads{1};
 	
 	#ifdef _OPENMP
+		// ENABLING NESTED PARALLELISM SEEMS TO SLOW DOWN CODE MORE THAN ANYTHING, 
+		// I SUSPECT THE THREAD MANAGING OVERHEAD IS GREATER THAN EXPECTED
+		omp_set_nested(1); // 1=enable, 0=disable nested parallelism (run chains in parallel + compute likelihoods in parallel at least wrt to outcomes + wrt to individuals)
+		// MOST OF THE PARALLELISATION IMPROVEMENTS COME FROM OPENBLAS ANYWAY .. I WONDER IF ACCELERATING LA THOURGH GPU WOULD CHANGE THAT ..
+
 		if ( omp_get_max_threads() == 1 )
 		{
 				nThreads = 1;
@@ -1053,7 +1052,8 @@ int drive( const std::string& dataFile, const std::string& mrfGFile, const std::
 		omp_set_num_threads(  nThreads );
 	#endif
 
-	rng.reserve(nThreads);  // reserve the correct space for the vector of rng engines
+	// rng.reserve(nThreads);  // reserve the correct space for the vector of rng engines
+	rng = std::vector<std::mt19937_64>(nThreads);
 	std::seed_seq seedSeq;	// and declare the seedSequence
 	std::vector<unsigned int> seedInit(8);
 	long long int seed = std::chrono::system_clock::now().time_since_epoch().count();

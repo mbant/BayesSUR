@@ -61,6 +61,7 @@ SUR_Chain::SUR_Chain( std::shared_ptr<arma::mat> data_, std::shared_ptr<arma::ma
         }
 
         gammaInit();
+        updateGammaMask();
         wInit();
 
         betaInit();
@@ -1245,60 +1246,62 @@ double SUR_Chain::logPBetaMask( const arma::mat&  externalBeta , const arma::uma
 
     double logP = 0.;
 
-
-    switch ( beta_type )
+    if(mask_.n_rows > 0)
     {
-        case Beta_Type::gprior :
+
+        switch ( beta_type )
         {
-            arma::uvec xi = arma::conv_to<arma::uvec>::from(jt.perfectEliminationOrder);
-            arma::vec xtxMultiplier(nOutcomes);
-
-            // prepare posterior full conditional's hyperparameters
-            xtxMultiplier(xi(nOutcomes-1)) = 0;
-
-            for( unsigned int k=0; k < (nOutcomes-1); ++k)
+            case Beta_Type::gprior :
             {
-                xtxMultiplier(xi(k)) = 0;
-                for(unsigned int l=k+1 ; l<nOutcomes ; ++l)
+                arma::uvec xi = arma::conv_to<arma::uvec>::from(jt.perfectEliminationOrder);
+                arma::vec xtxMultiplier(nOutcomes);
+
+                // prepare posterior full conditional's hyperparameters
+                xtxMultiplier(xi(nOutcomes-1)) = 0;
+
+                for( unsigned int k=0; k < (nOutcomes-1); ++k)
                 {
-                    xtxMultiplier(xi(k)) += pow( sigmaRho(xi(l),xi(k)) , 2 ) / sigmaRho(xi(l),xi(l));
+                    xtxMultiplier(xi(k)) = 0;
+                    for(unsigned int l=k+1 ; l<nOutcomes ; ++l)
+                    {
+                        xtxMultiplier(xi(k)) += pow( sigmaRho(xi(l),xi(k)) , 2 ) / sigmaRho(xi(l),xi(l));
+                    }
                 }
+
+                for(unsigned int k=0; k<nOutcomes ; ++k)
+                {
+                    singleIdx_k(0) = k;
+                    VS_IN_k = mask_( arma::find( mask_.col(1) == k ) , arma::zeros<arma::uvec>(1) );
+
+                    if( preComputedXtX )
+                        logP += logPBetaMaskgPriorK( externalBeta(VS_IN_k,singleIdx_k) , w_ , 
+                            arma::inv_sympd( XtX(VS_IN_k,VS_IN_k) ) , ( 1./ sigmaRho(k,k) + xtxMultiplier(k) ) );
+                    else
+                        logP += logPBetaMaskgPriorK( externalBeta(VS_IN_k,singleIdx_k) , w_ , 
+                            arma::inv_sympd( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) , 
+                                ( 1./ sigmaRho(k,k) + xtxMultiplier(k) ) );
+                }
+                break;
             }
 
-            for(unsigned int k=0; k<nOutcomes ; ++k)
+            case Beta_Type::independent :    
             {
-                singleIdx_k(0) = k;
-                VS_IN_k = mask_( arma::find( mask_.col(1) == k ) , arma::zeros<arma::uvec>(1) );
+                for(unsigned int k=0; k<nOutcomes ; ++k)
+                {
+                    singleIdx_k(0) = k;
+                    VS_IN_k = mask_( arma::find( mask_.col(1) == k ) , arma::zeros<arma::uvec>(1) );
 
-                if( preComputedXtX )
-                    logP += logPBetaMaskgPriorK( externalBeta(VS_IN_k,singleIdx_k) , w_ , 
-                        arma::inv_sympd( XtX(VS_IN_k,VS_IN_k) ) , ( 1./ sigmaRho(k,k) + xtxMultiplier(k) ) );
-                else
-                    logP += logPBetaMaskgPriorK( externalBeta(VS_IN_k,singleIdx_k) , w_ , 
-                        arma::inv_sympd( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) , 
-                            ( 1./ sigmaRho(k,k) + xtxMultiplier(k) ) );
+                    logP += Distributions::logPDFNormal( externalBeta(VS_IN_k,singleIdx_k) ,
+                                w_ * arma::eye(VS_IN_k.n_elem,VS_IN_k.n_elem) );
+                }
+                break;
             }
-            break;
+
+            default:
+                throw Bad_Beta_Type ( beta_type );
+
         }
-
-        case Beta_Type::independent :    
-        {
-            for(unsigned int k=0; k<nOutcomes ; ++k)
-            {
-                singleIdx_k(0) = k;
-                VS_IN_k = mask_( arma::find( mask_.col(1) == k ) , arma::zeros<arma::uvec>(1) );
-
-                logP += Distributions::logPDFNormal( externalBeta(VS_IN_k,singleIdx_k) ,
-                            w_ * arma::eye(VS_IN_k.n_elem,VS_IN_k.n_elem) );
-            }
-            break;
-        }
-
-        default:
-            throw Bad_Beta_Type ( beta_type );
-
     }
-
     return logP;
 }
 
@@ -1557,110 +1560,117 @@ double SUR_Chain::sampleSigmaRhoGivenBeta( const arma::mat&  externalBeta , arma
 double SUR_Chain::sampleBetaGivenSigmaRho( arma::mat& mutantBeta , const arma::mat&  externalSigmaRho , const JunctionTree& externalJT ,
                 const arma::umat&  externalGammaMask , arma::mat& mutantXB , arma::mat& mutantU , arma::mat& mutantRhoU )
 {
-    double logP = 0.;
-    double logPrior = 0.;
+    double logP{0.}; // this is the log probability of the proposal
+    // double logPrior{0.}; // this is the log prior of the new sample
+        // logPrior is wasteful here because we end up not using it as a return value.
+        // the prior is updated outside as this function is needed also in the global updates and we 
+        // don't want to update erroneously the state of a different chain
 
-    arma::vec mu_k; // beta samplers
-    arma::mat W_k , iXtX; // indep prior uses W_k, gPrior uses iXtX
-    double varianceFactor;
+    mutantBeta.set_size(nVSPredictors,nOutcomes); // resize to be sure
+    mutantBeta.fill(0.);
 
-    arma::uvec singleIdx_k(1); // needed for convention with arma::submat
-
-    arma::vec tmpVec;
-
-    arma::uvec VS_IN_k;
-    //bool test;
-
-    arma::uvec xi = arma::conv_to<arma::uvec>::from(externalJT.perfectEliminationOrder);
-    arma::vec xtxMultiplier(nOutcomes);
-    arma::mat y_tilde = data->cols( (*outcomesIdx) ) - mutantRhoU ;
-
-    // prepare posterior full conditional's hyperparameters
-    y_tilde.each_row() /= ( externalSigmaRho.diag().t()) ; // divide each col by the corresponding element of sigma
-    xtxMultiplier(xi(nOutcomes-1)) = 0;
-    // y_tilde.col(xi(nOutcomes-1)) is already ok;
-
-    for( unsigned int k=0; k < (nOutcomes-1); ++k)
+    if(externalGammaMask.n_rows>0)
     {
-        xtxMultiplier(xi(k)) = 0;
-        for(unsigned int l=k+1 ; l<nOutcomes ; ++l)
+
+        arma::vec mu_k; // beta samplers
+        arma::mat W_k , iXtX; // indep prior uses W_k, gPrior uses iXtX
+        double varianceFactor;
+
+        arma::uvec singleIdx_k(1); // needed for convention with arma::submat
+
+        arma::vec tmpVec;
+
+        arma::uvec VS_IN_k;
+        //bool test;
+
+        arma::uvec xi = arma::conv_to<arma::uvec>::from(externalJT.perfectEliminationOrder);
+        arma::vec xtxMultiplier(nOutcomes);
+        arma::mat y_tilde = data->cols( (*outcomesIdx) ) - mutantRhoU ;
+
+        // prepare posterior full conditional's hyperparameters
+        y_tilde.each_row() /= ( externalSigmaRho.diag().t()) ; // divide each col by the corresponding element of sigma
+        xtxMultiplier(xi(nOutcomes-1)) = 0;
+        // y_tilde.col(xi(nOutcomes-1)) is already ok;
+
+        for( unsigned int k=0; k < (nOutcomes-1); ++k)
         {
-            xtxMultiplier(xi(k)) += pow( externalSigmaRho(xi(l),xi(k)),2) /  externalSigmaRho(xi(l),xi(l));
-            y_tilde.col(xi(k)) -= (  externalSigmaRho(xi(l),xi(k)) /  externalSigmaRho(xi(l),xi(l)) ) * 
-                ( mutantU.col(xi(l)) - mutantRhoU.col(xi(l)) +  externalSigmaRho(xi(l),xi(k)) * ( mutantU.col(xi(k)) - data->col( (*outcomesIdx)(xi(k)) ) ) );
+            xtxMultiplier(xi(k)) = 0;
+            for(unsigned int l=k+1 ; l<nOutcomes ; ++l)
+            {
+                xtxMultiplier(xi(k)) += pow( externalSigmaRho(xi(l),xi(k)),2) /  externalSigmaRho(xi(l),xi(l));
+                y_tilde.col(xi(k)) -= (  externalSigmaRho(xi(l),xi(k)) /  externalSigmaRho(xi(l),xi(l)) ) * 
+                    ( mutantU.col(xi(l)) - mutantRhoU.col(xi(l)) +  externalSigmaRho(xi(l),xi(k)) * ( mutantU.col(xi(k)) - data->col( (*outcomesIdx)(xi(k)) ) ) );
+            }
+
         }
 
-    }
+        // actual sampling
+        tmpVec.clear();
 
-    // actual sampling
-    tmpVec.clear();
-
-    // for( unsigned int j : externalJT.perfectEliminationOrder ) //shouldn't make a difference..
-    for(unsigned int k=0; k<nOutcomes ; ++k)
-    {
-
-        VS_IN_k =  externalGammaMask( arma::find(  externalGammaMask.col(1) == k) , arma::zeros<arma::uvec>(1) );
-        singleIdx_k(0) = k;
-
-        switch ( beta_type )
+        // for( unsigned int j : externalJT.perfectEliminationOrder ) //shouldn't make a difference..
+        for(unsigned int k=0; k<nOutcomes ; ++k)
         {
-            case Beta_Type::gprior :
-            {
-                varianceFactor = ( 1./ externalSigmaRho(k,k) + xtxMultiplier(k) );
 
-                if( preComputedXtX )
+            VS_IN_k =  externalGammaMask( arma::find(  externalGammaMask.col(1) == k) , arma::zeros<arma::uvec>(1) );
+            if(VS_IN_k.n_elem>0)
+            {
+
+                singleIdx_k(0) = k;
+
+                switch ( beta_type )
                 {
-                    arma::inv_sympd( iXtX , XtX(VS_IN_k,VS_IN_k) );
-                    // W_k = iXtX * ( (w*temperature)/(w + temperature) ) / varianceFactor;
-                }else{
-                    arma::inv_sympd( iXtX , data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) );
-                    // W_k = iXtX * ( (w*temperature)/(w + temperature) ) / varianceFactor;          
+                    case Beta_Type::gprior :
+                    {
+                        varianceFactor = ( 1./ externalSigmaRho(k,k) + xtxMultiplier(k) );
+
+                        if( preComputedXtX )
+                        {
+                            arma::inv_sympd( iXtX , XtX(VS_IN_k,VS_IN_k) );
+                            // W_k = iXtX * ( (w*temperature)/(w + temperature) ) / varianceFactor;
+                        }else{
+                            arma::inv_sympd( iXtX , data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) );
+                            // W_k = iXtX * ( (w*temperature)/(w + temperature) ) / varianceFactor;          
+                        }
+
+                        mu_k = ( (w*temperature)/(w + temperature) / varianceFactor ) * iXtX *
+                            ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * y_tilde.col(k) / temperature );
+
+                        tmpVec = Distributions::randMvNormal( mu_k , ( (w*temperature)/(w + temperature) / varianceFactor ) * iXtX );
+                        logP += Distributions::logPDFNormal( tmpVec , mu_k , ( (w*temperature)/(w + temperature) / varianceFactor ) * iXtX );
+
+                        // logPrior += logPBetaMaskgPriorK( tmpVec , w , iXtX , varianceFactor );
+
+                        break;
+                    }
+
+                    case Beta_Type::independent :
+                    {
+                        
+                        if( preComputedXtX )
+                            arma::inv_sympd( W_k ,  ( XtX(VS_IN_k,VS_IN_k) / temperature ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier(k) ) + (1./w)*arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
+                        else                
+                            arma::inv_sympd( W_k ,  ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier(k) ) + (1./w)*arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
+
+                        mu_k = W_k * ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * y_tilde.col(k) / temperature ) ;
+
+                        tmpVec = Distributions::randMvNormal( mu_k , W_k );
+                        logP += Distributions::logPDFNormal( tmpVec , mu_k , W_k );
+
+                        break;   
+                    }
+
+                    default:
+                        throw Bad_Beta_Type ( beta_type );
                 }
+                mutantBeta(VS_IN_k,singleIdx_k) = tmpVec;
 
-                mu_k = ( (w*temperature)/(w + temperature) / varianceFactor ) * iXtX *
-                    ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * y_tilde.col(k) / temperature );
+            }// end if VS_IN_k is non-empty
+        }// end foreach outcome
+    } // end if mask is non-empty
 
-                tmpVec = Distributions::randMvNormal( mu_k , ( (w*temperature)/(w + temperature) / varianceFactor ) * iXtX );
-                logP += Distributions::logPDFNormal( tmpVec , mu_k , ( (w*temperature)/(w + temperature) / varianceFactor ) * iXtX );
-
-                logPrior += logPBetaMaskgPriorK( tmpVec , w , 
-                        iXtX , varianceFactor );
-
-                break;
-            }
-
-            case Beta_Type::independent :
-            {
-                
-                if( preComputedXtX )
-                    arma::inv_sympd( W_k ,  ( XtX(VS_IN_k,VS_IN_k) / temperature ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier(k) ) + (1./w)*arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
-                else                
-                    arma::inv_sympd( W_k ,  ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier(k) ) + (1./w)*arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
-
-                mu_k = W_k * ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * y_tilde.col(k) / temperature ) ;
-
-                tmpVec = Distributions::randMvNormal( mu_k , W_k );
-                logP += Distributions::logPDFNormal( tmpVec , mu_k , W_k );
-
-                break;   
-            }
-
-            default:
-                throw Bad_Beta_Type ( beta_type );
-        }
-
-        // to be sure
-        mutantBeta.col(k).fill( 0. );
-        mutantBeta(VS_IN_k,singleIdx_k) = tmpVec;
-
-        // for(unsigned int j=0 ; j<VS_IN_k.n_elem ; ++j)
-        //     mutantBeta(VS_IN_k(j),k) = tmpVec(j);
-
-    }
-
-    // if not gPrior, update the prior value here
-    if( beta_type != Beta_Type::gprior )
-        logPrior = logPBetaMask( mutantBeta , externalGammaMask , w );
+    // if not gPrior, update the prior value here at the end
+    // if( beta_type != Beta_Type::gprior )
+    //     logPrior = logPBetaMask( mutantBeta , externalGammaMask , w );
 
     // Now the beta have changed so X*B is changed as well as U, compute it to update it for the logLikelihood
     // finally as U changed, rhoU changes as well
@@ -1675,92 +1685,93 @@ double SUR_Chain::sampleBetaGivenSigmaRho( arma::mat& mutantBeta , const arma::m
 double SUR_Chain::sampleBetaKGivenSigmaRho( const unsigned int k , arma::mat& mutantBeta , const arma::mat&  externalSigmaRho , const JunctionTree& externalJT ,
                 const arma::umat&  externalGammaMask , arma::mat& mutantXB , arma::mat& mutantU , arma::mat& mutantRhoU )
 {
-    double logP;
+    double logP{0.};
 
-    arma::vec mu_k; arma::mat W_k; // beta samplers
-
-    arma::uvec singleIdx_k(1); // needed for convention with arma::submat
-
-    arma::vec tmpVec;
-
-    arma::uvec VS_IN_k;
-    //bool test;
-
-    arma::uvec xi = arma::conv_to<arma::uvec>::from(externalJT.perfectEliminationOrder);
-    double xtxMultiplier;
-    arma::vec y_tilde = data->col( (*outcomesIdx)(k) ) - mutantRhoU.col(k) ;
-
-    // prepare posterior full conditional's hyperparameters
-    xtxMultiplier = 0;
-    y_tilde /=  externalSigmaRho(k,k);
-
-    unsigned int k_idx = arma::as_scalar( arma::find( xi == k , 1 ) );
-
-    for(unsigned int l=k_idx+1 ; l<nOutcomes ; ++l)
-    {
-        xtxMultiplier += pow( externalSigmaRho(xi(l),k),2) /  externalSigmaRho(xi(l),xi(l));
-        y_tilde -= (  externalSigmaRho(xi(l),k) /  externalSigmaRho(xi(l),xi(l)) ) * 
-            ( mutantU.col(xi(l)) - mutantRhoU.col(xi(l)) +  externalSigmaRho(xi(l),k) * ( mutantU.col(k) - data->col( (*outcomesIdx)(k) ) ) );
-    }
-
-    // actual sampling
-    tmpVec.clear();
-
-    VS_IN_k =  externalGammaMask( arma::find(  externalGammaMask.col(1) == k) , arma::zeros<arma::uvec>(1) );
-    singleIdx_k(0) = k;
-
-    if( preComputedXtX )
-    {
-        switch ( beta_type )
-        {
-            case Beta_Type::gprior :
-            {
-                W_k = (w*temperature)/(w + temperature) * arma::inv_sympd( XtX(VS_IN_k,VS_IN_k) ) / ( 1./ externalSigmaRho(k,k) + xtxMultiplier );                
-                break;
-            }
-
-            case Beta_Type::independent :
-            {
-                arma::inv_sympd( W_k ,  ( XtX(VS_IN_k,VS_IN_k) / temperature ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier ) + (1./w)*arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
-                break;
-            }
-        
-            default:
-                throw Bad_Beta_Type ( beta_type );
-        }
-
-    }else{
-
-        switch ( beta_type )
-        {
-            case Beta_Type::gprior :
-            {
-                W_k = (w*temperature)/(w + temperature) * arma::inv_sympd( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) / ( 1./ externalSigmaRho(k,k) + xtxMultiplier );                
-                break;
-            }
-
-            case Beta_Type::independent :
-            {
-                arma::inv_sympd( W_k ,  ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier ) + (1./w)*arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
-                break;
-            }
-        
-            default:
-                throw Bad_Beta_Type ( beta_type );
-        }
-    }
-
-    mu_k = W_k * ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * y_tilde / temperature ) ;
-
-    tmpVec = Distributions::randMvNormal( mu_k , W_k );
-    logP = Distributions::logPDFNormal( tmpVec , mu_k , W_k );
-
-    // to be sure
     mutantBeta.col(k).fill( 0. );
-    mutantBeta(VS_IN_k,singleIdx_k) = tmpVec;
+
+    if(externalGammaMask.n_rows>0)
+    {
+        arma::uvec VS_IN_k;
+        VS_IN_k =  externalGammaMask( arma::find(  externalGammaMask.col(1) == k) , arma::zeros<arma::uvec>(1) );
+
+        if(VS_IN_k.n_elem>0)
+        {
+            arma::uvec singleIdx_k(1); // needed for convention with arma::submat
+            singleIdx_k(0) = k;
+
+            arma::vec mu_k; arma::mat W_k; // beta samplers
+            arma::vec tmpVec;
+            //bool test;
+
+            arma::uvec xi = arma::conv_to<arma::uvec>::from(externalJT.perfectEliminationOrder);
+            double xtxMultiplier;
+            arma::vec y_tilde = data->col( (*outcomesIdx)(k) ) - mutantRhoU.col(k) ;
+
+            // prepare posterior full conditional's hyperparameters
+            xtxMultiplier = 0;
+            y_tilde /=  externalSigmaRho(k,k);
+
+            unsigned int k_idx = arma::as_scalar( arma::find( xi == k , 1 ) );
+
+            for(unsigned int l=k_idx+1 ; l<nOutcomes ; ++l)
+            {
+                xtxMultiplier += pow( externalSigmaRho(xi(l),k),2) /  externalSigmaRho(xi(l),xi(l));
+                y_tilde -= (  externalSigmaRho(xi(l),k) /  externalSigmaRho(xi(l),xi(l)) ) * 
+                    ( mutantU.col(xi(l)) - mutantRhoU.col(xi(l)) +  externalSigmaRho(xi(l),k) * ( mutantU.col(k) - data->col( (*outcomesIdx)(k) ) ) );
+            }
+
+            // actual sampling
+            tmpVec.clear();
+
+            if( preComputedXtX )
+            {
+                switch ( beta_type )
+                {
+                    case Beta_Type::gprior :
+                    {
+                        W_k = (w*temperature)/(w + temperature) * arma::inv_sympd( XtX(VS_IN_k,VS_IN_k) ) / ( 1./ externalSigmaRho(k,k) + xtxMultiplier );                
+                        break;
+                    }
+
+                    case Beta_Type::independent :
+                    {
+                        arma::inv_sympd( W_k ,  ( XtX(VS_IN_k,VS_IN_k) / temperature ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier ) + (1./w)*arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
+                        break;
+                    }
+                
+                    default:
+                        throw Bad_Beta_Type ( beta_type );
+                }
+
+            }else{
+
+                switch ( beta_type )
+                {
+                    case Beta_Type::gprior :
+                    {
+                        W_k = (w*temperature)/(w + temperature) * arma::inv_sympd( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) / ( 1./ externalSigmaRho(k,k) + xtxMultiplier );                
+                        break;
+                    }
+
+                    case Beta_Type::independent :
+                    {
+                        arma::inv_sympd( W_k ,  ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier ) + (1./w)*arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
+                        break;
+                    }
+                
+                    default:
+                        throw Bad_Beta_Type ( beta_type );
+                }
+            }
+
+            mu_k = W_k * ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * y_tilde / temperature ) ;
+
+            tmpVec = Distributions::randMvNormal( mu_k , W_k );
+            logP = Distributions::logPDFNormal( tmpVec , mu_k , W_k );
+            mutantBeta(VS_IN_k,singleIdx_k) = tmpVec;
     
-    // for(unsigned int j=0 ; j<VS_IN_k.n_elem ; ++j)
-    //     mutantBeta(VS_IN_k(j),k) = tmpVec(j);
+        } // end if VS_IN_k is non-empty
+    } // end if gammaMask is non-empty    
 
     // Now the beta have changed so X*B is changed as well as U, compute it to update it for the logLikelihood
     // finally as U changed, rhoU changes as well
@@ -1910,88 +1921,96 @@ double SUR_Chain::logPSigmaRhoGivenBeta( const arma::mat&  externalBeta , const 
 double SUR_Chain::logPBetaGivenSigmaRho( const arma::mat& mutantBeta , const arma::mat&  externalSigmaRho , const JunctionTree& externalJT ,
                 const arma::umat& externalGammaMask , const arma::mat& mutantXB , const arma::mat& mutantU , const arma::mat& mutantRhoU )
 {
-    double logP = 0.;
+    double logP{0.};
 
-    arma::vec mu_k; arma::mat W_k; // beta samplers
-
-    arma::uvec singleIdx_k(1); // needed for convention with arma::submat
-
-    arma::uvec VS_IN_k;
-    //bool test;
-
-    arma::uvec xi = arma::conv_to<arma::uvec>::from( externalJT.perfectEliminationOrder );
-    arma::vec xtxMultiplier(nOutcomes);
-    arma::mat y_tilde = data->cols( *outcomesIdx ) - mutantRhoU ;
-
-    // prepare posterior full conditional's hyperparameters
-    y_tilde.each_row() /= ( externalSigmaRho.diag().t()) ; // divide each col by the corresponding element of sigma
-    xtxMultiplier(xi(nOutcomes-1)) = 0;
-    // y_tilde.col(xi(nOutcomes-1)) is already ok;
-
-    for( unsigned int k=0; k < (nOutcomes-1); ++k)
+    if(externalGammaMask.n_rows>0)
     {
-        xtxMultiplier(xi(k)) = 0;
-        for(unsigned int l=k+1 ; l<nOutcomes ; ++l)
+        arma::vec mu_k; arma::mat W_k; // beta samplers
+
+        arma::uvec singleIdx_k(1); // needed for convention with arma::submat
+
+        arma::uvec VS_IN_k;
+        //bool test;
+
+        arma::uvec xi = arma::conv_to<arma::uvec>::from( externalJT.perfectEliminationOrder );
+        arma::vec xtxMultiplier(nOutcomes);
+        arma::mat y_tilde = data->cols( *outcomesIdx ) - mutantRhoU ;
+
+        // prepare posterior full conditional's hyperparameters
+        y_tilde.each_row() /= ( externalSigmaRho.diag().t()) ; // divide each col by the corresponding element of sigma
+        xtxMultiplier(xi(nOutcomes-1)) = 0;
+        // y_tilde.col(xi(nOutcomes-1)) is already ok;
+
+        for( unsigned int k=0; k < (nOutcomes-1); ++k)
         {
-            xtxMultiplier(xi(k)) += pow( externalSigmaRho(xi(l),xi(k)),2) /  externalSigmaRho(xi(l),xi(l));
-            y_tilde.col(xi(k)) -= (  externalSigmaRho(xi(l),xi(k)) /  externalSigmaRho(xi(l),xi(l)) ) * 
-                ( U.col(xi(l)) - mutantRhoU.col(xi(l)) +  externalSigmaRho(xi(l),xi(k)) * ( mutantU.col(xi(k)) - data->col( (*outcomesIdx)(xi(k)) ) ) );
-        }
-
-    }
-
-    // for( unsigned int j : externalJT.perfectEliminationOrder ) //shouldn't make a difference..
-    for(unsigned int k=0; k<nOutcomes ; ++k)
-    {
-
-        VS_IN_k = externalGammaMask( arma::find( externalGammaMask.col(1) == k) , arma::zeros<arma::uvec>(1) );
-        singleIdx_k(0) = k;
-
-        if( preComputedXtX )
-        {
-            switch ( beta_type )
+            xtxMultiplier(xi(k)) = 0;
+            for(unsigned int l=k+1 ; l<nOutcomes ; ++l)
             {
-                case Beta_Type::gprior :
-                {
-                    W_k = (w*temperature)/(w + temperature) * arma::inv_sympd( XtX(VS_IN_k,VS_IN_k) ) / ( 1./ externalSigmaRho(k,k) + xtxMultiplier(k) );
-                    break;
-                }
-
-                case Beta_Type::independent :
-                {
-                    arma::inv_sympd( W_k ,  ( XtX(VS_IN_k,VS_IN_k) / temperature ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier(k) ) + (1./w)*arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
-                    break;
-                }
-            
-                default:
-                    throw Bad_Beta_Type ( beta_type );
+                xtxMultiplier(xi(k)) += pow( externalSigmaRho(xi(l),xi(k)),2) /  externalSigmaRho(xi(l),xi(l));
+                y_tilde.col(xi(k)) -= (  externalSigmaRho(xi(l),xi(k)) /  externalSigmaRho(xi(l),xi(l)) ) * 
+                    ( U.col(xi(l)) - mutantRhoU.col(xi(l)) +  externalSigmaRho(xi(l),xi(k)) * ( mutantU.col(xi(k)) - data->col( (*outcomesIdx)(xi(k)) ) ) );
             }
 
-        }else{
-
-            switch ( beta_type )
-            {
-                case Beta_Type::gprior :
-                {
-                    W_k = (w*temperature)/(w + temperature) * arma::inv_sympd( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) / ( 1./ externalSigmaRho(k,k) + xtxMultiplier(k) );
-                    break;
-                }
-
-                case Beta_Type::independent :
-                {
-                    arma::inv_sympd( W_k ,  ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier(k) ) + (1./w)*arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
-                    break;
-                }
-            
-                default:
-                    throw Bad_Beta_Type ( beta_type );
-            }
         }
 
-        mu_k = W_k * ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * y_tilde.col(k) / temperature ) ;
+        // for( unsigned int j : externalJT.perfectEliminationOrder ) //shouldn't make a difference..
+        for(unsigned int k=0; k<nOutcomes ; ++k)
+        {
 
-        logP += Distributions::logPDFNormal( mutantBeta(VS_IN_k,singleIdx_k) , mu_k , W_k );
-    }
+            VS_IN_k = externalGammaMask( arma::find( externalGammaMask.col(1) == k) , arma::zeros<arma::uvec>(1) );
+
+            if(VS_IN_k.n_elem>0)
+            {
+
+                singleIdx_k(0) = k;
+
+                if( preComputedXtX )
+                {
+                    switch ( beta_type )
+                    {
+                        case Beta_Type::gprior :
+                        {
+                            W_k = (w*temperature)/(w + temperature) * arma::inv_sympd( XtX(VS_IN_k,VS_IN_k) ) / ( 1./ externalSigmaRho(k,k) + xtxMultiplier(k) );
+                            break;
+                        }
+
+                        case Beta_Type::independent :
+                        {
+                            arma::inv_sympd( W_k ,  ( XtX(VS_IN_k,VS_IN_k) / temperature ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier(k) ) + (1./w)*arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
+                            break;
+                        }
+                    
+                        default:
+                            throw Bad_Beta_Type ( beta_type );
+                    }
+
+                }else{
+
+                    switch ( beta_type )
+                    {
+                        case Beta_Type::gprior :
+                        {
+                            W_k = (w*temperature)/(w + temperature) * arma::inv_sympd( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) / ( 1./ externalSigmaRho(k,k) + xtxMultiplier(k) );
+                            break;
+                        }
+
+                        case Beta_Type::independent :
+                        {
+                            arma::inv_sympd( W_k ,  ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier(k) ) + (1./w)*arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
+                            break;
+                        }
+                    
+                        default:
+                            throw Bad_Beta_Type ( beta_type );
+                    }
+                }
+
+                mu_k = W_k * ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * y_tilde.col(k) / temperature ) ;
+
+                logP += Distributions::logPDFNormal( mutantBeta(VS_IN_k,singleIdx_k) , mu_k , W_k );
+            } // end if VS_IN_k is non-empty
+        } // end for each outcome
+    } // end ifmask is non-empty
 
     return logP;
 }   
@@ -1999,85 +2018,90 @@ double SUR_Chain::logPBetaGivenSigmaRho( const arma::mat& mutantBeta , const arm
 double SUR_Chain::logPBetaKGivenSigmaRho( const unsigned int k , const arma::mat& mutantBeta , const arma::mat&  externalSigmaRho , const JunctionTree& externalJT ,
                 const arma::umat&  externalGammaMask , const arma::mat& mutantXB , const arma::mat& mutantU , const arma::mat& mutantRhoU )
 {
-    double logP;
+    double logP{0.};
 
-    arma::vec mu_k; arma::mat W_k; // beta samplers
-
-    arma::uvec singleIdx_k(1); // needed for convention with arma::submat
-
-    arma::vec tmpVec;
-
-    arma::uvec VS_IN_k;
-    //bool test;
-
-    arma::uvec xi = arma::conv_to<arma::uvec>::from(externalJT.perfectEliminationOrder);
-    double xtxMultiplier;
-    arma::vec y_tilde = data->col( (*outcomesIdx)(k) ) - mutantRhoU.col(k) ;
-
-    // prepare posterior full conditional's hyperparameters
-    xtxMultiplier = 0;
-    y_tilde /=  externalSigmaRho(k,k);
-
-    unsigned int k_idx = arma::as_scalar( arma::find( xi == k , 1 ) );
-
-    for(unsigned int l=k_idx+1 ; l<nOutcomes ; ++l)
+    if(externalGammaMask.n_rows>0)
     {
-        xtxMultiplier += pow( externalSigmaRho(xi(l),k),2) /  externalSigmaRho(xi(l),xi(l));
-        y_tilde -= (  externalSigmaRho(xi(l),k) /  externalSigmaRho(xi(l),xi(l)) ) * 
-            ( mutantU.col(xi(l)) - mutantRhoU.col(xi(l)) +  externalSigmaRho(xi(l),k) * ( mutantU.col(k) - data->col( (*outcomesIdx)(k) ) ) );
-    }
+        arma::uvec VS_IN_k;
+        VS_IN_k =  externalGammaMask( arma::find(  externalGammaMask.col(1) == k) , arma::zeros<arma::uvec>(1) );
 
-    VS_IN_k =  externalGammaMask( arma::find(  externalGammaMask.col(1) == k) , arma::zeros<arma::uvec>(1) );
-    singleIdx_k(0) = k;
-
-    if( preComputedXtX )
-    {
-        switch ( beta_type )
+        if(VS_IN_k.n_elem>0)
         {
-            case Beta_Type::gprior :
+            arma::vec mu_k; arma::mat W_k; // beta samplers
+            arma::vec tmpVec;
+
+            arma::uvec singleIdx_k(1); // needed for convention with arma::submat
+            singleIdx_k(0) = k;
+
+
+            arma::uvec xi = arma::conv_to<arma::uvec>::from(externalJT.perfectEliminationOrder);
+            double xtxMultiplier;
+            arma::vec y_tilde = data->col( (*outcomesIdx)(k) ) - mutantRhoU.col(k) ;
+
+            // prepare posterior full conditional's hyperparameters
+            xtxMultiplier = 0;
+            y_tilde /=  externalSigmaRho(k,k);
+
+            unsigned int k_idx = arma::as_scalar( arma::find( xi == k , 1 ) );
+
+            for(unsigned int l=k_idx+1 ; l<nOutcomes ; ++l)
             {
-                W_k = (w*temperature)/(w + temperature) * arma::inv_sympd( XtX(VS_IN_k,VS_IN_k) ) / ( 1./ externalSigmaRho(k,k) + xtxMultiplier );
-                break;
+                xtxMultiplier += pow( externalSigmaRho(xi(l),k),2) /  externalSigmaRho(xi(l),xi(l));
+                y_tilde -= (  externalSigmaRho(xi(l),k) /  externalSigmaRho(xi(l),xi(l)) ) * 
+                    ( mutantU.col(xi(l)) - mutantRhoU.col(xi(l)) +  externalSigmaRho(xi(l),k) * ( mutantU.col(k) - data->col( (*outcomesIdx)(k) ) ) );
             }
 
-            case Beta_Type::independent :
+
+            if( preComputedXtX )
             {
-                arma::inv_sympd( W_k ,  ( XtX(VS_IN_k,VS_IN_k) / temperature ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier ) + (1./w)*arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
-                break;
+                switch ( beta_type )
+                {
+                    case Beta_Type::gprior :
+                    {
+                        W_k = (w*temperature)/(w + temperature) * arma::inv_sympd( XtX(VS_IN_k,VS_IN_k) ) / ( 1./ externalSigmaRho(k,k) + xtxMultiplier );
+                        break;
+                    }
+
+                    case Beta_Type::independent :
+                    {
+                        arma::inv_sympd( W_k ,  ( XtX(VS_IN_k,VS_IN_k) / temperature ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier ) + (1./w)*arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
+                        break;
+                    }
+                
+                    default:
+                        throw Bad_Beta_Type ( beta_type );
+                }
+
+            }else{
+
+                switch ( beta_type )
+                {
+                    case Beta_Type::gprior :
+                    {
+                        W_k = (w*temperature)/(w + temperature) * arma::inv_sympd( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) / ( 1./ externalSigmaRho(k,k) + xtxMultiplier );
+                        break;
+                    }
+
+                    case Beta_Type::independent :
+                    {
+                        arma::inv_sympd( W_k ,  ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier ) + (1./w)*arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
+                        break;
+                    }
+                
+                    default:
+                        throw Bad_Beta_Type ( beta_type );
+                }         
             }
-        
-            default:
-                throw Bad_Beta_Type ( beta_type );
-        }
 
-    }else{
+            mu_k = W_k * ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * y_tilde / temperature ) ;
 
-        switch ( beta_type )
-        {
-            case Beta_Type::gprior :
-            {
-                W_k = (w*temperature)/(w + temperature) * arma::inv_sympd( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) / ( 1./ externalSigmaRho(k,k) + xtxMultiplier );
-                break;
-            }
+            logP = Distributions::logPDFNormal( mutantBeta(VS_IN_k,singleIdx_k) , mu_k , W_k );
 
-            case Beta_Type::independent :
-            {
-                arma::inv_sympd( W_k ,  ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier ) + (1./w)*arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
-                break;
-            }
-        
-            default:
-                throw Bad_Beta_Type ( beta_type );
-        }         
-    }
-
-    mu_k = W_k * ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * y_tilde / temperature ) ;
-
-    logP = Distributions::logPDFNormal( mutantBeta(VS_IN_k,singleIdx_k) , mu_k , W_k );
+        }// end if VS_IN_k is non-empty
+    } //end if mask is non-empty
 
     return logP;
-
-}  
+}
 
 
 // sample sigmaRho given Beta or Beta given sigmaRho
@@ -3552,13 +3576,16 @@ void SUR_Chain::updateGammaMask()
 arma::mat SUR_Chain::createXB( const arma::umat&  externalGammaMask , const arma::mat&  externalBeta )
 {
     arma::uvec singleIdx_k(1), VS_IN_k;
-    arma::mat externalXB(nObservations,nOutcomes);
+    arma::mat externalXB = arma::zeros<arma::mat>(nObservations,nOutcomes);
 
-    for(unsigned int k=0; k<nOutcomes; ++k)
+    if(gammaMask.n_rows > 0)
     {
-        singleIdx_k(0) = k;
-        VS_IN_k =  externalGammaMask( arma::find(  externalGammaMask.col(1) == k ) , arma::zeros<arma::uvec>(1) );
-        externalXB.col(k) = (data->cols( (*predictorsIdx)(VS_IN_k) ) *  externalBeta.submat(VS_IN_k,singleIdx_k) );
+        for(unsigned int k=0; k<nOutcomes; ++k)
+        {
+            singleIdx_k(0) = k;
+            VS_IN_k =  externalGammaMask( arma::find(  externalGammaMask.col(1) == k ) , arma::zeros<arma::uvec>(1) );
+            externalXB.col(k) = (data->cols( (*predictorsIdx)(VS_IN_k) ) *  externalBeta.submat(VS_IN_k,singleIdx_k) );
+        }
     }
     return externalXB;
 }
@@ -3567,14 +3594,17 @@ void SUR_Chain::updateXB()
 {
     arma::uvec singleIdx_k(1), VS_IN_k;
     XB.set_size(nObservations,nOutcomes); // reset without initialising nor preserving data
+    XB.fill(0.);
 
-    for(unsigned int k=0; k<nOutcomes; ++k)
+    if(gammaMask.n_rows > 0)
     {
-        singleIdx_k(0) = k;
-        VS_IN_k = gammaMask( arma::find( gammaMask.col(1) == k ) , arma::zeros<arma::uvec>(1) );
-        XB.col(k) = (data->cols( (*predictorsIdx)(VS_IN_k) ) * beta.submat(VS_IN_k,singleIdx_k) );
+        for(unsigned int k=0; k<nOutcomes; ++k)
+        {
+            singleIdx_k(0) = k;
+            VS_IN_k = gammaMask( arma::find( gammaMask.col(1) == k ) , arma::zeros<arma::uvec>(1) );
+            XB.col(k) = (data->cols( (*predictorsIdx)(VS_IN_k) ) * beta.submat(VS_IN_k,singleIdx_k) );
+        }
     }
-
 }
 
 arma::mat SUR_Chain::createU( const arma::mat& externalXB )
