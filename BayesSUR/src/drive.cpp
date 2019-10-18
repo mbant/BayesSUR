@@ -61,8 +61,8 @@ int drive_SUR( Chain_Data& chainData )
 	// Init gamma and beta for the main chain
 	// *****************************
 	sampler[0] -> gammaInit( chainData.gammaInit );
-	// sampler[0] -> updateGammaMask();
-	sampler[0] -> betaInit( chainData.betaInit );
+	if(!chainData.betaInit.is_empty())
+		sampler[0] -> betaInit( chainData.betaInit );
 	sampler[0] -> updateQuantities();
 	sampler[0] -> logLikelihood();
 	sampler[0] -> predLikelihood();
@@ -124,9 +124,9 @@ int drive_SUR( Chain_Data& chainData )
 	arma::vec tmpVec; // temporary to store the pi parameter vector
 	arma::vec pi_out;
 	arma::vec hotspot_tail_prob_out;
-    arma::mat cpo_out, predLik;
-    arma::vec cposumy_out; // CPO with each element summerizing all response variables
-    arma::mat lpd, waic_out, waic_frac_sum;
+	arma::mat cpo_out, predLik;
+	arma::vec cposumy_out; // CPO with each element summerizing all response variables
+	arma::mat lpd, waic_out, waic_frac_sum;
 
 	if( chainData.burnin == 0 )
 	{	
