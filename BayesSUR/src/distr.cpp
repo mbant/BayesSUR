@@ -506,7 +506,7 @@ namespace Distributions{
 	double logPDFIWishart(const arma::mat& X, double nu, const arma::mat& Sigma)
 	{
 		unsigned int p = X.n_rows;
-		double ret = -0.5*(double)p*nu*log(2) - lMvGamma(p,nu) - 0.5*arma::trace( Sigma * arma::inv_sympd(X) );
+		double ret = -0.5*(double)p*nu*log(2.) - lMvGamma(p,nu) - 0.5*arma::trace( Sigma * arma::inv_sympd(X) );
 		double sign, tmp;
 		arma::log_det(tmp, sign, X );
 		ret += -0.5*( (double)p + nu + 1. )*tmp;
@@ -524,7 +524,7 @@ namespace Distributions{
 		unsigned int m = X.n_cols;
 
 		double ret = -0.5*arma::trace( arma::inv_sympd(colCov) * X.t() * arma::inv_sympd(rowCov) * X ) -
-					(double)n*(double)m*0.5*log(2*M_PI);
+					(double)n*(double)m*0.5*log(2.*M_PI);
 		double sign, tmp;
 		arma::log_det(tmp, sign, colCov );
 		ret += -0.5*(double)n*tmp;
@@ -539,7 +539,7 @@ namespace Distributions{
  	double logPDFNormal(const double& x, const double& m,const  double& sigmaSquare)
 	{
 
-		return -0.5*log(2*M_PI) -0.5*log(sigmaSquare) -(0.5/sigmaSquare)*arma::as_scalar( pow(x-m,2) );
+		return -0.5*log(2.*M_PI) -0.5*log(sigmaSquare) -(0.5/sigmaSquare)*arma::as_scalar( pow(x-m,2) );
 
 	}
 
@@ -551,7 +551,7 @@ namespace Distributions{
 		double sign, tmp;
 		arma::log_det(tmp, sign, Sigma ); //sign is not importantas det SHOULD be > 0 as for positive definiteness!
 
-		return -0.5*(double)k*log(2*M_PI) -0.5*tmp -0.5* arma::as_scalar( (x).t() * arma::inv_sympd(Sigma) * (x) );
+		return -0.5*(double)k*log(2.*M_PI) -0.5*tmp -0.5* arma::as_scalar( (x).t() * arma::inv_sympd(Sigma) * (x) );
 
 	}
 
@@ -563,7 +563,7 @@ namespace Distributions{
 		double sign, tmp;
 		arma::log_det(tmp, sign, Sigma ); //sign is not importantas det SHOULD be > 0 as for positive definiteness!
 
-		return -0.5*(double)k*log(2*M_PI) -0.5*tmp -0.5* arma::as_scalar( (x-m).t() * arma::inv_sympd(Sigma) * (x-m) );
+		return -0.5*(double)k*log(2.*M_PI) -0.5*tmp -0.5* arma::as_scalar( (x-m).t() * arma::inv_sympd(Sigma) * (x-m) );
 
 	}
 
@@ -573,7 +573,7 @@ namespace Distributions{
 		// we rely on amradillo for parallelisation wrt to individuals
 		unsigned int n = x.n_elem;
 
-		return -0.5*(double)n*log(2*M_PI) -0.5*n*log(Sigma) -0.5/Sigma * arma::as_scalar( (x-m).t() * (x-m) );
+		return -0.5*(double)n*log(2.*M_PI) -0.5*n*log(Sigma) -0.5/Sigma * arma::as_scalar( (x-m).t() * (x-m) );
 
 	}
 
@@ -582,7 +582,7 @@ namespace Distributions{
 		unsigned int k = rowCov.n_rows;
 		unsigned int d = colCov.n_rows;
 
-		double logP = -0.5*(double)k*log(2*M_PI) - 0.5 * arma::as_scalar( ( (x-m).t() * arma::inv_sympd( arma::kron( colCov , rowCov ) ) * (x-m) ) );
+		double logP = -0.5*(double)k*log(2.*M_PI) - 0.5 * arma::as_scalar( ( (x-m).t() * arma::inv_sympd( arma::kron( colCov , rowCov ) ) * (x-m) ) );
 
 		double sign, tmp;
 		arma::log_det(tmp, sign, rowCov );
@@ -651,7 +651,7 @@ namespace Distributions{
 	double logPDFTruncNorm(double x, double m, double sd, double lower, double upper)
 	{
 		double truncNormConst = log( CDFNormal(upper,m,sd) - CDFNormal(lower,m,sd) );
-		return -log(sqrt(2*M_PI)) -log(sd) -0.5*(x-m)*(x-m)/(sd*sd) - truncNormConst;
+		return -log(sqrt(2.*M_PI)) -log(sd) -0.5*(x-m)*(x-m)/(sd*sd) - truncNormConst;
 	}
 
 	double lMvGamma(unsigned int n, double a)					// Multivariate GAMMA FUNCTION! NOT THE PDF/CDF

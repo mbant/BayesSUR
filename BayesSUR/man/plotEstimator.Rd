@@ -6,9 +6,10 @@
 \usage{
 plotEstimator(object, estimator = "all",
   colorScale.gamma = grey((100:0)/100), colorScale.beta = c("blue",
-  "white", "red"), name.responses = NA, name.predictors = NA,
-  xlab = "", ylab = "", fig.tex = FALSE, output = "ParamEstimator",
-  header = "", header.cex = 2, ...)
+  "white", "red"), legend.cex.axis = 1, name.responses = NA,
+  name.predictors = NA, xlab = "", ylab = "", fig.tex = FALSE,
+  output = "ParamEstimator", header = "", header.cex = 2,
+  mgp = c(2.5, 1, 0), ...)
 }
 \arguments{
 \item{object}{an object of class "BayesSUR"}
@@ -18,6 +19,8 @@ plotEstimator(object, estimator = "all",
 \item{colorScale.gamma}{value palette for gamma}
 
 \item{colorScale.beta}{a vector of three colors for diverging color schemes}
+
+\item{legend.cex.axis}{magnification of axis annotation relative to cex}
 
 \item{name.responses}{a vector of the response names. The default is "NA" only to show the locations. The value "auto" show the response names from the orginal data.}
 
@@ -34,6 +37,8 @@ plotEstimator(object, estimator = "all",
 \item{header}{the main title}
 
 \item{header.cex}{size of the main title}
+
+\item{mgp}{the margin line (in mex units) for the axis title, axis labels and axis line}
 
 \item{...}{other arguments}
 }

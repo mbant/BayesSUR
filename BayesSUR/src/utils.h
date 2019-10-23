@@ -80,7 +80,7 @@ namespace Utils{
 
 		// outputs
 		bool output_gamma, output_beta, output_sigmaRho,
-			output_G, output_pi, output_tail, output_model_size, output_CPO;
+			output_G, output_pi, output_tail, output_model_size, output_CPO, output_model_visit;
 	};
 
 	class badFile : public std::exception

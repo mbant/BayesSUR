@@ -12,6 +12,9 @@ example_GDSC
 Preprocessed data set to mimic a small pharmacogenetic example from the Genomics of Drug Sensitivity in Cancer (GDSC) database, with p=850 gene features as explanatory variables, 
 s=7 drugs sensitivity data as response variables and data for n=498 cell lines. Gene features include p1=343 gene expression features (GEX), p2=426 by copy number variations (CNV) and p3=68 mutated genes (MUT).
 Loading the data will load the associated blockList (and mrfG) objects needed to fit the model with BayesSUR(). The R code for generating the simulated data is given in the Examples paragraph.
+
+#importFrom plyr mapvalues
+#importFrom data.table like
 }
 \examples{
 # Load the GDSC sample dataset
@@ -25,6 +28,9 @@ str(example_GDSC)
 # ftp://ftp.sanger.ac.uk/pub4/cancerrxgene/releases/release-5.0/. 
 # But downloading and transforming the three used datasets below to *.csv files first.
 #===============
+
+requireNamespace("plyr", quietly = TRUE)
+requireNamespace("data.table", quietly = TRUE)
 
 features <- data.frame(read.csv("gdsc_en_input_w5.csv", head=T))
 names.fea <- strsplit(rownames(features), "")
@@ -44,10 +50,9 @@ drug.id2$drug.name <- as.character(drug.id2$drug.name)
 drug.id2$drug.name <- substr(drug.id2$drug.name, 1, nchar(drug.id2$drug.name)-6)
 drug.id2$drug.name <- gsub(" ", "-", drug.id2$drug.name)
 
-library(plyr)
 ic50 <- ic50_0
 # mapping the drug_id to drug names in drug sensitivity data set
-ic50$drug_id <- mapvalues(ic50$drug_id, from = drug.id2[,2], to = drug.id2[,1])
+ic50$drug_id <- plyr::mapvalues(ic50$drug_id, from = drug.id2[,2], to = drug.id2[,1])
 colnames(ic50) <- c("Cell.Line", "compound", "IC50")
 
 # transform drug sensitivity overall cell lines to a data matrix
@@ -155,7 +160,6 @@ Gmrf_Group1Pathway1 <- t(combn(rep(Idx_Pathway1,each=length(2:5)) +
                                rep((2:5-1)*sum(p),times=length(Idx_Pathway1)), 2))
 
 # edges between drugs: Group2 ("Nilotinib","Axitinib") indexed as (6:7)
-library(data.table)
 # delete gene ABL2
 Idx_Pathway2 <- which( c(colnames(X1),name_genes_duplicate) \%like\% "BCR" | 
                        c(colnames(X1),name_genes_duplicate) \%like\% "ABL" )[-c(3,5)] 

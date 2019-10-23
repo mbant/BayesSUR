@@ -43,6 +43,8 @@ class HRR_Chain : public ESS_Atom<HRR_Chain>
             double externalTemperature = 1. );
 
         HRR_Chain( Utils::SUR_Data& surData, double externalTemperature = 1. );
+    
+        virtual ~HRR_Chain() {};
 
         // *******************************
         // Getters and Setters

@@ -17,7 +17,7 @@
 #' if the 'data' argument is not provided, these needs to be matrices containing the data instead.
 #' @param outFilePath path to where the output files are to be written. The default path is the currect working directory.
 #' @param nIter number of iterations for the MCMC procedure
-#' @param burnin number of iterations (or fraction of iterations) to discard at the start of the chain Default = 0
+#' @param burnin number of iterations (or fraction of iterations) to discard at the start of the chain. Default is 0
 #' @param nChains number of parallel chains to run
 #' @param covariancePrior string indicating the prior for the covariance $C$; it has to be either "HIW" for the hyper-inverse-Wishar (which will result in a sparse covariance matrix),
 #' "IW" for the inverse-Wishart prior ( dense covariance ) or "IG" for independent inverse-Gamma on all the diagonal elements and 0 otherwise. See the details for the model specification
@@ -36,6 +36,7 @@
 #' @param output_pi allow ( \code{TRUE} ) or suppress ( \code{FALSE} ) the output for pi. See the return value below for more information.
 #' @param output_tail allow ( \code{TRUE} ) or suppress ( \code{FALSE} ) the output for tail (hotspot tail probability). See the return value below for more information.
 #' @param output_model_size allow ( \code{TRUE} ) or suppress ( \code{FALSE} ) the output for model_size. See the return value below for more information.
+#' @param output_model_visit allow ( \code{TRUE} ) or suppress ( \code{FALSE} ) the output for all visited models over the MCMC iterations. Default is \code{FALSE}. See the return value below for more information.
 #' @param output_CPO allow ( \code{TRUE} ) or suppress ( \code{FALSE} ) the output for *; possible outputs are gamma, G, beta, sigmaRho, pi, tail (hotspot tail probability), model_size, CPO. See the return value below for more information.
 #' @param output_Y allow ( \code{TRUE} ) or suppress ( \code{FALSE} ) the output for responses dataset Y.
 #' @param output_X allow ( \code{TRUE} ) or suppress ( \code{FALSE} ) the output for predictors dataset X.
@@ -63,7 +64,9 @@
 #' \item "\code{*_beta_out.txt}" - posterior mean of the coefficients matrix.
 #' \item "\code{*_G_out.txt}" - posterior mean of the response graph. Only available for the HIW prior on the covariance. 
 #' \item "\code{*_sigmaRho_out.txt}" - posterior mean of the transformed parameters. Not available for the IG prior on the covariance.
-#' \item "\code{*_model_size.txt}" - contains each row for the\eqn{1000t}-th iteration's model sizes of the multiple response variables.
+#' \item "\code{*_model_size_out.txt}" - contains each row for the\eqn{1000t}-th iteration's model sizes of the multiple response variables.
+#' \item "\code{*_model_visit_g_out.txt}" - contains each row for the nonzero indices of the vectorized estimated graph matrix for each iteration.
+#' \item "\code{*_model_visit_gamma_out.txt}" - contains each row for the nonzero indices of the vectorized estimated gamma matrix for each iteration.
 #' \item "\code{*_CPO_out.txt}" - the (scaled) conditional predictive ordinates (CPO). 
 #' \item "\code{*_CPOsumy_out.txt}" - the (scaled) conditional predictive ordinates (CPO) with joint posterior predictive of the response variables.
 #' \item "\code{*_WAIC_out.txt}" - the widely applicable information criterion (WAIC). 
@@ -106,8 +109,8 @@ BayesSUR <- function(Y, X, X_0 = NULL, data = NULL,
                      gammaSampler = "bandit", gammaInit = "MLE", mrfG = NULL,
                      standardize = TRUE, standardize.response = TRUE,
                      output_gamma = TRUE, output_beta = TRUE, output_G = TRUE, output_sigmaRho = TRUE,
-                     output_pi = TRUE, output_tail = TRUE, output_model_size = TRUE, output_CPO = TRUE,
-                     output_Y = TRUE, output_X = TRUE, hyperpar = list(), tmpFolder = "tmp/")
+                     output_pi = TRUE, output_tail = TRUE, output_model_size = TRUE, output_model_visit = FALSE, 
+                     output_CPO = TRUE, output_Y = TRUE, output_X = TRUE, hyperpar = list(), tmpFolder = "tmp/")
 {
   
   # Check the directory for the output files
@@ -449,7 +452,7 @@ BayesSUR <- function(Y, X, X_0 = NULL, data = NULL,
   ret$status = BayesSUR_internal(data, mrfG, blockList, structureGraph, hyperParFile, outFilePath, 
             nIter, burnin, nChains, 
             covariancePrior, gammaPrior, gammaSampler, gammaInit, betaPrior,
-            output_gamma, output_beta, output_G, output_sigmaRho, output_pi, output_tail, output_model_size, output_CPO)
+            output_gamma, output_beta, output_G, output_sigmaRho, output_pi, output_tail, output_model_size, output_CPO, output_model_visit)
 
   if(outFilePath != tmpFolder)
     unlink(tmpFolder,recursive = TRUE)

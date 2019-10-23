@@ -5,6 +5,10 @@
 #' s=10 gene expression features as response variables and data for n=100 observations. Loading the data will load the associated blockList object 
 #' needed to fit the model with BayesSUR(). The R code for generating the simulated data is given in the Examples paragraph.
 #' 
+#' #importFrom BDgraph rgwish
+#' #importFrom gRbase mcsMAT
+#' #importFrom scrime simulateSNPs
+#' 
 #' @examples
 #' # Load the eQTL sample dataset
 #' data("example_eQTL", package = "BayesSUR")
@@ -15,8 +19,9 @@
 #' # The code below is to show how to generate the dataset "example_eQTL.rda" above
 #' #===============
 #' 
-#' library(BDgraph)
-#' library(gRbase)
+#' requireNamespace("BDgraph", quietly = TRUE)
+#' requireNamespace("gRbase", quietly = TRUE)
+#' requireNamespace("scrime", quietly = TRUE)
 #' 
 #' ########################### Problem Dimensions
 #' n = 100
@@ -27,7 +32,6 @@
 #' 
 #' ## The synthetic data in the paper use a subset of the real SNPs as covariates, 
 #' # but as the NFBC66 dataset is confidential we'll use scrime to sample similar data
-#' library(scrime)
 #' 
 #' x = scrime::simulateSNPs(c(n,10), p, c(3, 2),prop.explain = c(0.9, 0.95))$data[1:n,]
 #' x = cbind(rep(1,n),x)

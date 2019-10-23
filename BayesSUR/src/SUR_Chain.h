@@ -51,6 +51,8 @@ class SUR_Chain : public ESS_Atom<SUR_Chain>
             double externalTemperature = 1. );
 
         SUR_Chain( Utils::SUR_Data& surData, double externalTemperature = 1. );
+    
+        virtual ~SUR_Chain() {};
 
         // *******************************
         // Getters and Setters

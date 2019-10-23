@@ -29,7 +29,7 @@ fit <- BayesSUR(Y = example_eQTL[["blockList"]][[1]],
                 hyperpar = hyperpar, tmpFolder = "tmp/" )
 
 ## check output
-# show the diagnosis plots with at least 4000 iterations
+# show the diagnosis plots with at least 2000*(nbloc+1) iterations where nbloc=3 by default
 \donttest{
 plotMCMCdiag(fit)
 }
