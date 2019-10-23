@@ -7,9 +7,11 @@ See `test.R` file for usage; see the package vignette `BayesSUR.pdf` (submitted 
 
 ## Update
 
-### New in version `BayesSUR_1.0-1.tar.gz` (30 September 2019):
+### New in version `BayesSUR_1.0-1.tar.gz` (23 October 2019):
 
-The function `plotCPO()` allows different cut-off for each outcome.
+1) Updated the vignettes, especailly adding an appendix for the elpd.
+2) Fixed the issues from the clang compling with AddressSanitizer.
+3) Added an argument `output_model_visit` in the main function `BayesSUR()` to print all visited models (indices of nonzero gamma and response graph) of MCMC iterations.
 
 ### Version `BayesSUR_1.0-0.tar.gz` (27 September 2019):
 
