@@ -5,14 +5,14 @@
 #devtools::document("BayesSUR")
 #devtools::build("BayesSUR", vignettes=TRUE, args="--compact-vignettes=both")
 
-### CRAN check
-#devtools::check("BayesSUR", build_args="--compact-vignettes=both")
+# $ R CMD check ./BayesSUR_1.0-2.tar.gz --as-cran
+# devtools::check("BayesSUR", cran=TRUE, build_args="--compact-vignettes=both")
 
 
 ## Install the package
 library(devtools)
 install_github("mbant/BayesSUR/BayesSUR")
-#install.packages("BayesSUR_0.1.24.tar.gz",repos = NULL,type = "source")
+#install.packages("BayesSUR_1.0-2.tar.gz",repos = NULL,type = "source",build_vignettes = TRUE)
 
 
 #####################################################################################################
