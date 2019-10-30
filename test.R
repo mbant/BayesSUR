@@ -7,6 +7,8 @@
 
 # $ R CMD check ./BayesSUR_1.0-2.tar.gz --as-cran
 # devtools::check("BayesSUR", cran=TRUE, build_args="--compact-vignettes=both")
+# $ ./BVS_Reg --covariancePrior HIW --gammaPrior MRF --dataFile data_test_GDSC.txt --blockFile blockLabels.txt
+# --structureGraphFile structureGraph.txt --outFilePath results/ --nChains 2 --nIter 50 --burnin 0 --mrfGFile mrfG.txt
 
 
 ## Install the package
