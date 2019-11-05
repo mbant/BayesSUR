@@ -95,9 +95,9 @@
 #' summary(fit)
 #' 
 #' # show the estimated beta, gamma and graph of responeses Gy
+#' \donttest{
 #' plotEstimator(fit)
 #' 
-#' \donttest{
 #' plotEstimator(fit, fig.tex = TRUE)
 #' system(paste(getOption("pdfviewer"), "ParamEstimator.pdf"))
 #' }
@@ -120,14 +120,16 @@ BayesSUR <- function(Y, X, X_0 = NULL, data = NULL,
   outFilePathLength = nchar(outFilePath)
   if( substr(outFilePath,outFilePathLength,outFilePathLength) != "/" )
     outFilePath = paste( outFilePath , "/" , sep="" )
-  dir.create(outFilePath)
+  if(!file.exists(outFilePath))
+    dir.create(outFilePath)
   
   # Create temporary directory
   tmpFolderLength = nchar(tmpFolder)
   if( substr(tmpFolder,tmpFolderLength,tmpFolderLength) != "/" )
     tmpFolder = paste( tmpFolder , "/" , sep="" )
   tmpFolder = paste(outFilePath, tmpFolder, sep="")
-  dir.create(tmpFolder)
+  if(!file.exists(tmpFolder))
+    dir.create(tmpFolder)
   
 
   ## Check the input: reasoning is that the user provides either

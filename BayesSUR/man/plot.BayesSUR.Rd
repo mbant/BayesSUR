@@ -29,6 +29,8 @@ fit <- BayesSUR(Y = example_eQTL[["blockList"]][[1]],
 ## check output
 # Show the interactive plots. Note that it needs at least 2000*(nbloc+1) iterations 
 # for the diagnosis plots where nbloc=3 by default 
+\donttest{
 plot(fit)
+}
 
 }

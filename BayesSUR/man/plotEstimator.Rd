@@ -57,9 +57,9 @@ fit <- BayesSUR(Y = example_eQTL[["blockList"]][[1]],
 
 ## check output
 # Plot the estimators from the fitted object
+\donttest{
 plotEstimator(fit)
 
-\donttest{
 plotEstimator(fit, fig.tex = TRUE)
 system(paste(getOption("pdfviewer"), "ParamEstimator.pdf"))
 }

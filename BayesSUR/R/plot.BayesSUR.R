@@ -20,7 +20,9 @@
 #' ## check output
 #' # Show the interactive plots. Note that it needs at least 2000*(nbloc+1) iterations 
 #' # for the diagnosis plots where nbloc=3 by default 
+#' \donttest{
 #' plot(fit)
+#' }
 #' 
 #' @export
 plot.BayesSUR <- function(x, which = c(1L:4L), ...){

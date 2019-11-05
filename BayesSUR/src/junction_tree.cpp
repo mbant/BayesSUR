@@ -575,8 +575,8 @@ std::pair<bool,double> JunctionTree::propose_single_edge_update( arma::uvec& upd
                     }
                 }
 
-                logP -= countN * log(2); // backward probability addition
-                logP -= log(numComponents-1) - log(2) + ( log( Cx->getNodes().size() ) + log( Cx->getNodes().size()-1 ) ); // backward probability (-1 because we reduce the # component by 1)
+                logP -= countN * log(2.); // backward probability addition
+                logP -= log((double)(numComponents-1.)) - log(2.) + ( log( (double)(Cx->getNodes().size()) ) + log( (double)(Cx->getNodes().size()-1.) ) ); // backward probability (-1 because we reduce the # component by 1)
 
             }else if( setCxlS.size() > 1 && setCylS.size() == 1 ) // b)
             {
@@ -586,7 +586,7 @@ std::pair<bool,double> JunctionTree::propose_single_edge_update( arma::uvec& upd
                 Cy->add1Node(x);
                 Cy->add1Separator(x);
 
-                logP -= log(numComponents) - log(2) + ( log( Cx->getNodes().size() ) + log( Cx->getNodes().size()-1 ) ); // backward probability
+                logP -= log((double)numComponents) - log(2.) + ( log( (double)(Cx->getNodes().size()) ) + log( (double)(Cx->getNodes().size()-1.) ) ); // backward probability
 
             }else if( setCxlS.size() == 1 && setCylS.size() > 1 ) //c)
             {
@@ -595,7 +595,7 @@ std::pair<bool,double> JunctionTree::propose_single_edge_update( arma::uvec& upd
                 Cx->add1Node(y);
                 Cy->add1Separator(y); // remember the separator is always the one from the Cy obj
 
-                logP -= log(numComponents) - log(2) + ( log( Cx->getNodes().size() ) + log( Cx->getNodes().size()-1 ) ); // backward probability
+                logP -= log((double)numComponents) - log(2.) + ( log( (double)(Cx->getNodes().size()) ) + log( (double)(Cx->getNodes().size()-1.) ) ); // backward probability
 
             }else if( setCxlS.size() > 1 && setCylS.size() > 1 ) // d) Cx and Cy contain more than just x and S (and y and S) 
             {
@@ -633,13 +633,13 @@ std::pair<bool,double> JunctionTree::propose_single_edge_update( arma::uvec& upd
                 Cy->add1Separator(y);         
 
 
-                logP -= log(numComponents+1) - log(2) +
-                    ( log( perfectCliqueSequence[randomSep]->getNodes().size() ) + 
-                        log( perfectCliqueSequence[randomSep]->getNodes().size()-1 ) ); // backward probability (+1 because we inserta new component here)
+                logP -= log((double)(numComponents+1.)) - log(2.) +
+                    ( log( (double)(perfectCliqueSequence[randomSep]->getNodes().size()) ) +
+                        log( (double)(perfectCliqueSequence[randomSep]->getNodes().size()-1.) ) ); // backward probability (+1 because we inserta new component here)
                 
             }
 
-            logP += log(numComponents-1) + log(setCxlS.size()) + log(setCylS.size()) ; // forward probability
+            logP += log((double)(numComponents-1.)) + log((double)(setCxlS.size())) + log((double)(setCylS.size())) ; // forward probability
 
         }else //if only one there's no option for edge addition
         {
@@ -657,7 +657,7 @@ std::pair<bool,double> JunctionTree::propose_single_edge_update( arma::uvec& upd
         if( setC.size() > 1 )
         {
             // deletion has its forward logP computed immediately as setC is likely to be modified after
-            logP += log(numComponents) - log(2) + ( log( setC.size() ) + log( setC.size()-1 ) ); // forward probability
+            logP += log((double)numComponents) - log(2.) + ( log( (double)(setC.size()) ) + log( (double)(setC.size()-1.) ) ); // forward probability
 
             // partition C into 3 sets, x y and S (S might be empty)"
             randomIndexes = Distributions::randWeightedIndexSampleWithoutReplacement(setC.size(),2);
@@ -851,8 +851,8 @@ std::pair<bool,double> JunctionTree::propose_single_edge_update( arma::uvec& upd
                 perfectCliqueSequence = newPCS; // substitute to the current one
                 // PEO updated below
 
-                logP += N.size() * log(2); // forward probability addition
-                logP -= log(numComponents) + log(ClX->getNodes().size() - setS.size()) + log(ClY->getNodes().size() - setS.size()) ; //backward probability (we added one component here so numComponents rather than numComponents-1)
+                logP += N.size() * log(2.); // forward probability addition
+                logP -= log((double)numComponents) + log((double)(ClX->getNodes().size() - setS.size())) + log((double)(ClY->getNodes().size() - setS.size())) ; //backward probability (we added one component here so numComponents rather than numComponents-1)
 
             }else if( definedCx && !definedCy ) // if only Cx is defined
             {
@@ -884,7 +884,7 @@ std::pair<bool,double> JunctionTree::propose_single_edge_update( arma::uvec& upd
                     return std::make_pair(false,0.0); // and the graph is unchanged
                 }
 
-                logP -= log(numComponents-1) + log(Cx->getNodes().size() - setS.size()) + log(setC.size() - setS.size()) ; //backward probability
+                logP -= log((double)(numComponents-1.)) + log((double)(Cx->getNodes().size() - setS.size())) + log((double)(setC.size() - setS.size())) ; //backward probability
 
             }else if( !definedCx && definedCy ) // if only Cy is defined
             {
@@ -916,7 +916,7 @@ std::pair<bool,double> JunctionTree::propose_single_edge_update( arma::uvec& upd
                     return std::make_pair(false,0.0); // and the graph is unchanged
                 }
                 
-                logP -= log(numComponents-1) + log(Cy->getNodes().size() - setS.size() ) + log(setC.size() - setS.size()) ; //backward probability
+                logP -= log((double)(numComponents-1.)) + log((double)(Cy->getNodes().size() - setS.size()) ) + log((double)(setC.size() - setS.size())) ; //backward probability
                 
             }else{ //if both are defined
                 // Type d)
@@ -1007,7 +1007,7 @@ std::pair<bool,double> JunctionTree::propose_single_edge_update( arma::uvec& upd
                     return std::make_pair(false,0.0); // and the graph is unchanged
                 }
                 
-                logP -= log(numComponents-2) + log(setCLeft.size()-newSeparator.size()) + log(setCRight.size()-newSeparator.size()) ; //backward probability (-2 here cause we further deleted one component)
+                logP -= log((double)(numComponents-2.)) + log((double)(setCLeft.size()-newSeparator.size())) + log((double)(setCRight.size()-newSeparator.size())) ; //backward probability (-2 here cause we further deleted one component)
         
             }
 
@@ -1145,8 +1145,8 @@ std::pair<bool,double> JunctionTree::propose_single_edge_update( )
                     }
                 }
 
-                logP -= countN * log(2); // backward probability addition
-                logP -= log(numComponents-1) - log(2) + ( log( Cx->getNodes().size() ) + log( Cx->getNodes().size()-1 ) ); // backward probability (-1 because we reduce the # component by 1)
+                logP -= countN * log(2.); // backward probability addition
+                logP -= log((double)(numComponents-1.)) - log(2.) + ( log( (double)(Cx->getNodes().size() )) + log( (double)(Cx->getNodes().size()-1. )) ); // backward probability (-1 because we reduce the # component by 1)
 
            }else if( setCxlS.size() > 1 && setCylS.size() == 1 ) // b)
             {
@@ -1156,7 +1156,7 @@ std::pair<bool,double> JunctionTree::propose_single_edge_update( )
                 Cy->add1Node(x);
                 Cy->add1Separator(x);
 
-                logP -= log(numComponents) - log(2) + ( log( Cx->getNodes().size() ) + log( Cx->getNodes().size()-1 ) ); // backward probability
+                logP -= log((double)numComponents) - log(2.) + ( log( (double)(Cx->getNodes().size() )) + log( (double)(Cx->getNodes().size()-1.) ) ); // backward probability
 
             }else if( setCxlS.size() == 1 && setCylS.size() > 1 ) //c)
             {
@@ -1165,7 +1165,7 @@ std::pair<bool,double> JunctionTree::propose_single_edge_update( )
                 Cx->add1Node(y);
                 Cy->add1Separator(y); // remember the separator is always the one from the Cy obj
 
-                logP -= log(numComponents) - log(2) + ( log( Cx->getNodes().size() ) + log( Cx->getNodes().size()-1 ) ); // backward probability
+                logP -= log((double)numComponents) - log(2.) + ( log( (double)(Cx->getNodes().size()) ) + log( (double)(Cx->getNodes().size()-1.) ) ); // backward probability
             }else if( setCxlS.size() > 1 && setCylS.size() > 1 ) // d) Cx and Cy contain more than just x and S (and y and S) 
             {
                 // Type d)
@@ -1202,13 +1202,13 @@ std::pair<bool,double> JunctionTree::propose_single_edge_update( )
                 Cy->add1Separator(y);         
 
 
-                logP -= log(numComponents+1) - log(2) +
-                    ( log( perfectCliqueSequence[randomSep]->getNodes().size() ) + 
-                        log( perfectCliqueSequence[randomSep]->getNodes().size()-1 ) ); // backward probability (+1 because we inserta new component here)
+                logP -= log((double)(numComponents+1.)) - log(2.) +
+                    ( log( (double)(perfectCliqueSequence[randomSep]->getNodes().size()) ) +
+                        log( (double)(perfectCliqueSequence[randomSep]->getNodes().size()-1.) ) ); // backward probability (+1 because we inserta new component here)
                 
             }
 
-            logP += log(numComponents-1) + log(setCxlS.size()) + log(setCylS.size()) ; // forward probability
+            logP += log((double)(numComponents-1.)) + log((double)(setCxlS.size())) + log((double)(setCylS.size())) ; // forward probability
 
         }else //if only one there's no option for edge addition
         {
@@ -1226,7 +1226,7 @@ std::pair<bool,double> JunctionTree::propose_single_edge_update( )
         if( setC.size() > 1 )
         {
             // deletion has its forward logP computed immediately as setC is likely to be modified after
-            logP += log(numComponents) - log(2) + ( log( setC.size() ) + log( setC.size()-1 ) ); // forward probability
+            logP += log((double)numComponents) - log(2.) + ( log( (double)(setC.size()) ) + log( (double)(setC.size()-1.) ) ); // forward probability
 
             // partition C into 3 sets, x y and S (S might be empty)"
             randomIndexes = Distributions::randWeightedIndexSampleWithoutReplacement(setC.size(),2);
@@ -1420,8 +1420,8 @@ std::pair<bool,double> JunctionTree::propose_single_edge_update( )
                 perfectCliqueSequence = newPCS; // substitute to the current one
                 // PEO updated below
 
-                logP += N.size() * log(2); // forward probability addition
-                logP -= log(numComponents) + log(ClX->getNodes().size() - setS.size()) + log(ClY->getNodes().size() - setS.size()) ; //backward probability (we added one component here so numComponents rather than numComponents-1)
+                logP += N.size() * log(2.); // forward probability addition
+                logP -= log((double)numComponents) + log((double)(ClX->getNodes().size() - setS.size())) + log((double)(ClY->getNodes().size() - setS.size())) ; //backward probability (we added one component here so numComponents rather than numComponents-1)
 
             }else if( definedCx && !definedCy ) // if only Cx is defined
             {
@@ -1453,7 +1453,7 @@ std::pair<bool,double> JunctionTree::propose_single_edge_update( )
                     return std::make_pair(false,0.0); // and the graph is unchanged
                 }
 
-                logP -= log(numComponents-1) + log(Cx->getNodes().size() - setS.size()) + log(setC.size() - setS.size()) ; //backward probability
+                logP -= log((double)(numComponents-1.)) + log((double)(Cx->getNodes().size() - setS.size())) + log((double)(setC.size() - setS.size())) ; //backward probability
 
             }else if( !definedCx && definedCy ) // if only Cy is defined
             {
@@ -1485,7 +1485,7 @@ std::pair<bool,double> JunctionTree::propose_single_edge_update( )
                     return std::make_pair(false,0.0); // and the graph is unchanged
                 }
                 
-                logP -= log(numComponents-1) + log(Cy->getNodes().size() - setS.size() ) + log(setC.size() - setS.size()) ; //backward probability
+                logP -= log((double)(numComponents-1.)) + log((double)(Cy->getNodes().size() - setS.size()) ) + log((double)(setC.size() - setS.size())) ; //backward probability
                 
             }else{ //if both are defined
                 // Type d)
@@ -1576,7 +1576,7 @@ std::pair<bool,double> JunctionTree::propose_single_edge_update( )
                     return std::make_pair(false,0.0); // and the graph is unchanged
                 }
                 
-                logP -= log(numComponents-2) + log(setCLeft.size()-newSeparator.size()) + log(setCRight.size()-newSeparator.size()) ; //backward probability (-2 here cause we further deleted one component)
+                logP -= log((double)(numComponents-2.)) + log((double)(setCLeft.size()-newSeparator.size())) + log((double)(setCRight.size()-newSeparator.size())) ; //backward probability (-2 here cause we further deleted one component)
         
             }
 
@@ -1668,9 +1668,9 @@ std::pair<bool,double> JunctionTree::propose_multiple_edge_update( )
 
 
             // forward probability (common for all merge moves)
-            logP += log(numComponents-1) + 
-                log(setCxlS.size()) - std::lgamma(dimX+1) - std::lgamma(setCxlS.size()-dimX+1) + std::lgamma(setCxlS.size()+1) + 
-                log(setCylS.size()) - std::lgamma(dimY+1) - std::lgamma(setCylS.size()-dimY+1) + std::lgamma(setCylS.size()+1) ;
+            logP += log((double)(numComponents-1.)) +
+                log((double)(setCxlS.size())) - std::lgamma((double)(dimX+1.)) - std::lgamma((double)(setCxlS.size()-dimX+1.)) + std::lgamma((double)(setCxlS.size()+1.)) +
+                log((double)(setCylS.size())) - std::lgamma((double)(dimY+1.)) - std::lgamma((double)(setCylS.size()-dimY+1.)) + std::lgamma((double)(setCylS.size()+1.)) ;
 
 
             if( setCxlS.size() == X.size() && setCylS.size() == Y.size() ) // a) this means that both Cx and Cy are exactly just X and S (and Y and S) 
@@ -1761,10 +1761,10 @@ std::pair<bool,double> JunctionTree::propose_multiple_edge_update( )
 
                 }
 
-                logP -= countN * log(2); // backward probability addition
+                logP -= countN * log(2.); // backward probability addition
                 logP -= // backward probability (-1 because we reduce the # component by 1)
-                        log(numComponents-1) - log(2) + log( Cx->getNodes().size()-1 ) + log( dimX+dimY-1 ) -
-                            std::lgamma(dimX+1) - std::lgamma(dimY+1) - std::lgamma(Cx->getSeparator().size()+1) + std::lgamma(Cx->getNodes().size()+1);
+                        log((double)(numComponents-1.)) - log(2.) + log( (double)(Cx->getNodes().size()-1.) ) + log( (double)(dimX+dimY-1.) ) -
+                            std::lgamma((double)(dimX+1.)) - std::lgamma((double)(dimY+1.)) - std::lgamma((double)(Cx->getSeparator().size()+1.)) + std::lgamma((double)(Cx->getNodes().size()+1.));
 
             }else if( setCxlS.size() > X.size() && setCylS.size() == Y.size() ) // b)
             {
@@ -1774,8 +1774,8 @@ std::pair<bool,double> JunctionTree::propose_multiple_edge_update( )
                 Cy->addSeparators(X);
 
                 logP -= // backward probability
-                        log(numComponents) - log(2) + ( log( Cy->getNodes().size()-1 ) + log( dimX+dimY-1 ) ) -
-                            std::lgamma(dimX+1) - std::lgamma(dimY+1) - std::lgamma(Cy->getSeparator().size()+1) + std::lgamma(Cy->getNodes().size()+1);
+                        log((double)numComponents) - log(2.) + ( log( (double)(Cy->getNodes().size()-1.) ) + log( (double)(dimX+dimY-1.) ) ) -
+                            std::lgamma((double)(dimX+1.)) - std::lgamma((double)(dimY+1.)) - std::lgamma((double)(Cy->getSeparator().size()+1.)) + std::lgamma((double)(Cy->getNodes().size()+1.));
 
             }else if( setCxlS.size() == X.size() && setCylS.size() > Y.size() ) //c)
             {
@@ -1786,8 +1786,8 @@ std::pair<bool,double> JunctionTree::propose_multiple_edge_update( )
                 Cy->addSeparators(Y); // remember the separator is always the one from the Cy obj
 
                 logP -= // backward probability
-                        log(numComponents) - log(2) + ( log( Cx->getNodes().size()-1 ) + log( dimX+dimY-1 ) ) -
-                            std::lgamma(dimX+1) - std::lgamma(dimY+1) - std::lgamma(Cy->getSeparator().size()+1) + std::lgamma(Cx->getNodes().size()+1);
+                        log((double)numComponents) - log(2.) + ( log( (double)(Cx->getNodes().size()-1.) ) + log( (double)(dimX+dimY-1.) ) ) -
+                            std::lgamma((double)(dimX+1.)) - std::lgamma((double)(dimY+1.)) - std::lgamma((double)(Cy->getSeparator().size()+1.)) + std::lgamma((double)(Cx->getNodes().size()+1.));
 
             }else if( setCxlS.size() > X.size() && setCylS.size() > Y.size() ) // d) Cx and Cy contain more than just x and S (and y and S) 
             {
@@ -1829,8 +1829,8 @@ std::pair<bool,double> JunctionTree::propose_multiple_edge_update( )
 
 
                 logP -= // backward probability (+1 because we insert a new component here)
-                    log(numComponents+1) - log(2) + log( perfectCliqueSequence[randomSep]->getNodes().size()-1 ) + log( dimX+dimY-1 ) -
-                        std::lgamma(dimX+1) - std::lgamma(dimY+1) - std::lgamma(perfectCliqueSequence[randomSep]->getSeparator().size()+1) + std::lgamma(perfectCliqueSequence[randomSep]->getNodes().size()+1);
+                    log((double)(numComponents+1.)) - log(2.) + log( (double)(perfectCliqueSequence[randomSep]->getNodes().size()-1.) ) + log( (double)(dimX+dimY-1.) ) -
+                        std::lgamma((double)(dimX+1.)) - std::lgamma((double)(dimY+1.)) - std::lgamma((double)(perfectCliqueSequence[randomSep]->getSeparator().size()+1.)) + std::lgamma((double)(perfectCliqueSequence[randomSep]->getNodes().size()+1.));
                 
             }
 
@@ -1882,8 +1882,8 @@ std::pair<bool,double> JunctionTree::propose_multiple_edge_update( )
             // what's left in setS is just S
 
             // forward logP computed immediately as setC is likely to be modified after
-            logP += log(numComponents) - log(2) + ( log( setC.size()-1 ) + log( dimX+dimY-1 ) ) -
-                std::lgamma(dimX+1) - std::lgamma(dimY+1) - std::lgamma(setS.size()+1) + std::lgamma(setC.size()+1); // forward probability
+            logP += log((double)numComponents) - log(2.) + ( log( (double)(setC.size()-1.) ) + log( (double)(dimX+dimY-1.) ) ) -
+                std::lgamma((double)(dimX+1.)) - std::lgamma((double)(dimY+1.)) - std::lgamma((double)(setS.size()+1.)) + std::lgamma((double)(setC.size()+1.)); // forward probability
 
             // now scan the neighbours of C and construct Nx, Ny and N"
             neighbours.clear();
@@ -2074,11 +2074,11 @@ std::pair<bool,double> JunctionTree::propose_multiple_edge_update( )
                 perfectCliqueSequence = newPCS; // substitute to the current one
                 // PEO updated below
 
-                logP += N.size() * log(2); // forward probability addition
+                logP += N.size() * log(2.); // forward probability addition
                 logP -= //backward probability (we added one component here so numComponents rather than numComponents-1)
-                        log(numComponents) + 
-                        log(ClY->getNodes().size() - setS.size()) - std::lgamma(dimX+1) - std::lgamma(ClY->getNodes().size()-setS.size()-dimX+1) + std::lgamma(ClY->getNodes().size()-setS.size()+1) +
-                        log(ClX->getNodes().size() - setS.size()) - std::lgamma(dimY+1) - std::lgamma(ClX->getNodes().size()-setS.size()-dimY+1) + std::lgamma(ClX->getNodes().size()-setS.size()+1) ; 
+                        log((double)numComponents) +
+                        log((double)(ClY->getNodes().size() - setS.size())) - std::lgamma((double)(dimX+1.)) - std::lgamma((double)(ClY->getNodes().size()-setS.size()-dimX+1.)) + std::lgamma((double)(ClY->getNodes().size()-setS.size()+1.)) +
+                        log((double)(ClX->getNodes().size() - setS.size())) - std::lgamma((double)(dimY+1.)) - std::lgamma((double)(ClX->getNodes().size()-setS.size()-dimY+1.)) + std::lgamma((double)(ClX->getNodes().size()-setS.size()+1.)) ;
 
             }else if( definedCx && !definedCy ) // if only Cx is defined
             {
@@ -2134,9 +2134,9 @@ std::pair<bool,double> JunctionTree::propose_multiple_edge_update( )
                 }
 
                 logP -= //backward probability
-                        log(numComponents-1) + 
-                        log(Cx->getNodes().size() - setS.size()) - std::lgamma(dimX+1) - std::lgamma(Cx->getNodes().size()-setS.size()-dimX+1) + std::lgamma(Cx->getNodes().size()-setS.size()+1) + 
-                        log(setC.size() - setS.size()) - std::lgamma(dimY+1) - std::lgamma(setC.size()-setS.size()-dimY+1) + std::lgamma(setC.size()-setS.size()+1) ;
+                        log((double)(numComponents-1.)) +
+                        log((double)(Cx->getNodes().size() - setS.size())) - std::lgamma((double)(dimX+1.)) - std::lgamma((double)(Cx->getNodes().size()-setS.size()-dimX+1.)) + std::lgamma((double)(Cx->getNodes().size()-setS.size()+1.)) +
+                        log((double)(setC.size() - setS.size())) - std::lgamma((double)(dimY+1.)) - std::lgamma((double)(setC.size()-setS.size()-dimY+1.)) + std::lgamma((double)(setC.size()-setS.size()+1.)) ;
 
             }else if( !definedCx && definedCy ) // if only Cy is defined
             {
@@ -2189,9 +2189,9 @@ std::pair<bool,double> JunctionTree::propose_multiple_edge_update( )
                 }
                 
                 logP -= //backward probability
-                    log(numComponents-1) + 
-                    log(setC.size() - setS.size()) - std::lgamma(dimX+1) - std::lgamma(setC.size()-setS.size()-dimX+1) + std::lgamma(setC.size()-setS.size()+1) +
-                    log(Cy->getNodes().size() - setS.size()) - std::lgamma(dimY+1) - std::lgamma(Cy->getNodes().size()-setS.size()-dimY+1) + std::lgamma(Cy->getNodes().size()-setS.size()+1);
+                    log((double)(numComponents-1.)) +
+                    log((double)(setC.size() - setS.size())) - std::lgamma((double)(dimX+1.)) - std::lgamma((double)(setC.size()-setS.size()-dimX+1.)) + std::lgamma((double)(setC.size()-setS.size()+1.)) +
+                    log((double)(Cy->getNodes().size() - setS.size())) - std::lgamma((double)(dimY+1.)) - std::lgamma((double)(Cy->getNodes().size()-setS.size()-dimY+1.)) + std::lgamma((double)(Cy->getNodes().size()-setS.size()+1.));
 
 
             }else{ //if both are defined
@@ -2285,14 +2285,14 @@ std::pair<bool,double> JunctionTree::propose_multiple_edge_update( )
                         if( XisRightYisLeft )
                         {
                             logP -= //backward probability (-2 here cause we further deleted one component)
-                                log(numComponents-2) + 
-                                log(setCLeft.size() - newSeparator.size()) - std::lgamma(dimY+1) - std::lgamma(setCLeft.size()-newSeparator.size()-dimY+1) + std::lgamma(setCLeft.size()-newSeparator.size()+1) +
-                                log(setCRight.size() - newSeparator.size()) - std::lgamma(dimX+1) - std::lgamma(setCRight.size()-newSeparator.size()-dimX+1) + std::lgamma(setCRight.size()-newSeparator.size()+1);
+                                log((double)(numComponents-2.)) +
+                                log((double)(setCLeft.size() - newSeparator.size())) - std::lgamma((double)(dimY+1.)) - std::lgamma((double)(setCLeft.size()-newSeparator.size()-dimY+1.)) + std::lgamma((double)(setCLeft.size()-newSeparator.size()+1.)) +
+                                log((double)(setCRight.size() - newSeparator.size())) - std::lgamma((double)(dimX+1.)) - std::lgamma((double)(setCRight.size()-newSeparator.size()-dimX+1.)) + std::lgamma((double)(setCRight.size()-newSeparator.size()+1.));
                         }else{
                             logP -= //backward probability (-2 here cause we further deleted one component)
-                                log(numComponents-2) + 
-                                log(setCLeft.size() - newSeparator.size()) - std::lgamma(dimX+1) - std::lgamma(setCLeft.size()-newSeparator.size()-dimX+1) + std::lgamma(setCLeft.size()-newSeparator.size()+1) +
-                                log(setCRight.size() - newSeparator.size()) - std::lgamma(dimY+1) - std::lgamma(setCRight.size()-newSeparator.size()-dimY+1) + std::lgamma(setCRight.size()-newSeparator.size()+1);
+                                log((double)(numComponents-2.)) +
+                                log((double)(setCLeft.size() - newSeparator.size())) - std::lgamma((double)(dimX+1.)) - std::lgamma((double)(setCLeft.size()-newSeparator.size()-dimX+1.)) + std::lgamma((double)(setCLeft.size()-newSeparator.size()+1.)) +
+                                log((double)(setCRight.size() - newSeparator.size())) - std::lgamma((double)(dimY+1.)) - std::lgamma((double)(setCRight.size()-newSeparator.size()-dimY+1.)) + std::lgamma((double)(setCRight.size()-newSeparator.size()+1.));
                         }
                         
 

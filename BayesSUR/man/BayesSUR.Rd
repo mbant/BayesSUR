@@ -130,9 +130,9 @@ fit <- BayesSUR(Y = example_eQTL[["blockList"]][[1]],
 summary(fit)
 
 # show the estimated beta, gamma and graph of responeses Gy
+\donttest{
 plotEstimator(fit)
 
-\donttest{
 plotEstimator(fit, fig.tex = TRUE)
 system(paste(getOption("pdfviewer"), "ParamEstimator.pdf"))
 }
