@@ -1,7 +1,10 @@
 #include <iostream>
 #include <string>
 #include <cmath>
-#include <sys/stat.h> // for mkdir -- yes this makes it platform DEPEDENT, waiting to be able to use c++17
+
+#ifndef CCODE
+#include <Rcpp.h>
+#endif
 
 // redeclare the drive funciton
 int drive( const std::string& dataFile, const std::string& mrfGFile, const std::string& blockFile, const std::string& structureGraphFile, const std::string& hyperParFile, const std::string& outFilePath,  
@@ -9,8 +12,7 @@ int drive( const std::string& dataFile, const std::string& mrfGFile, const std::
 			const std::string& covariancePrior, 
 			const std::string& gammaPrior, const std::string& gammaSampler, const std::string& gammaInit,
 			const std::string& betaPrior,
-			bool output_gamma, bool output_beta, bool output_G, bool output_sigmaRho, bool output_pi, bool output_tail, bool output_model_size, bool output_CPO );
-
+			bool output_gamma, bool output_beta, bool output_G, bool output_sigmaRho, bool output_pi, bool output_tail, bool output_model_size, bool output_CPO, bool output_model_visit );
 
 int main(int argc, char* argv[])
 {
@@ -30,6 +32,7 @@ int main(int argc, char* argv[])
 	std::string covariancePrior = "";
 	
 	std::string gammaPrior = "";
+//	std::string mrfGFile = "";
 	std::string gammaSampler = "bandit";
 	std::string gammaInit = "MLE";
 
@@ -37,7 +40,7 @@ int main(int argc, char* argv[])
 
 	bool out_gamma = true, out_beta = true, out_G = true,
 		 out_sigmaRho = true, out_pi = true, out_tail = true,
-		 out_model_size = true, out_cpo = true;;
+		 out_model_size = true, out_CPO = true, out_model_visit = false;
 
     // ### Read and interpret command line (to put in a separate file / function?)
     int na = 1;
@@ -267,18 +270,30 @@ int main(int argc, char* argv[])
 			if (na+1==argc) break;
 			++na;
 		}
-		else if ( 0 == std::string{argv[na]}.compare(std::string{"--CPOOut"}) ) 
-		{
-			out_cpo = true;
-			if (na+1==argc) break;
-			++na;
-		}
-		else if ( 0 == std::string{argv[na]}.compare(std::string{"--NOCPOOut"}) )
-		{
-			out_cpo = false;
-			if (na+1==argc) break;
-			++na;
-		}
+        else if ( 0 == std::string{argv[na]}.compare(std::string{"--CPOOut"}) )
+        {
+            out_CPO = true;
+            if (na+1==argc) break;
+            ++na;
+        }
+        else if ( 0 == std::string{argv[na]}.compare(std::string{"--NOCPOOut"}) )
+        {
+            out_CPO = false;
+            if (na+1==argc) break;
+            ++na;
+        }
+        else if ( 0 == std::string{argv[na]}.compare(std::string{"--ModelVisitOut"}) )
+        {
+            out_model_visit = true;
+            if (na+1==argc) break;
+            ++na;
+        }
+        else if ( 0 == std::string{argv[na]}.compare(std::string{"--NOModelVisitOut"}) )
+        {
+            out_model_visit = false;
+            if (na+1==argc) break;
+            ++na;
+        }
 		else
 		{
 			std::cout << "Unknown option: " << argv[na] << std::endl;
@@ -305,23 +320,16 @@ int main(int argc, char* argv[])
 	
 	try
 	{
-		mkdir( outFilePath.c_str() , 0777 );
-
 		status =  drive(dataFile,mrfGFile,blockFile,structureGraphFile,hpFile,outFilePath,
 			nIter,burnin,nChains,
 			covariancePrior,gammaPrior,gammaSampler,gammaInit,betaPrior,
-			out_gamma,out_beta,out_G,out_sigmaRho,out_pi,out_tail,out_model_size,out_cpo);
+			out_gamma,out_beta,out_G,out_sigmaRho,out_pi,out_tail,out_model_size,out_CPO,out_model_visit);
 	}
 	catch(const std::exception& e)
 	{
-		std::cerr << e.what() << std::endl; // we can use cerr here since it's only cpp code!
+		std::cerr << e.what() << std::endl;
 	}
 
 	return status;
 
 }
-
-/*
-call for example with
-./BVS_Reg --dataFile tmp/data.txt --blockFile tmp/blockLabels.txt --structureGraphFile tmp/structureGraph.txt --parFile tmp/hyperpar.xml --mrfGFile tmp/mrfG.txt --outFilePath results/ --covariancePrior HIW --gammaPrior hs --nIter 2000 --burnin 1000 --nChains 1
-*/
