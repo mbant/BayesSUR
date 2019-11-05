@@ -9,7 +9,7 @@ See `test.R` file for usage; see the package vignette `BayesSUR.pdf` (submitted 
 
 ### New in version `BayesSUR_1.0-2.tar.gz` (29 October 2019):
 
-Fixed log(2) and similar issues in the file `junction_tree.cpp for the solaris-x86 check. 
+Fixed log(2) and similar issues in the file `junction_tree.cpp` for the solaris-x86 check. 
 
 ### Version `BayesSUR_1.0-1.tar.gz` (23 October 2019):
 
