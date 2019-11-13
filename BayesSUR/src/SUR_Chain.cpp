@@ -1565,7 +1565,7 @@ double SUR_Chain::sampleBetaGivenSigmaRho( arma::mat& mutantBeta , const arma::m
     // the prior is updated outside as this function is needed also in the global updates and we
     // don't want to update erroneously the state of a different chain
     
-    mutantBeta.set_size(nVSPredictors,nOutcomes); // resize to be sure
+    mutantBeta.set_size(nFixedPredictors+nVSPredictors,nOutcomes); // resize to be sure
     mutantBeta.fill(0.);
     
     if(externalGammaMask.n_rows>0)
