@@ -4,11 +4,25 @@
 \alias{plotManhattan}
 \title{plot Manhattan-like plots for marginal posterior inclusion probabilities (mPIP) and numbers of responses of association for predictors}
 \usage{
-plotManhattan(object, which = c(1, 2), x.loc = FALSE,
-  axis.label = NULL, mark.responses = NULL, xlab1 = "Predictors",
-  ylab1 = "mPIP", xlab2 = "Predictors", ylab2 = "No. of responses",
-  threshold = 0.5, las = 0, cex.axis = 1, mark.pos = c(0, 0),
-  mark.color = 2, mark.cex = 0.8, header = "", ...)
+plotManhattan(
+  object,
+  which = c(1, 2),
+  x.loc = FALSE,
+  axis.label = NULL,
+  mark.responses = NULL,
+  xlab1 = "Predictors",
+  ylab1 = "mPIP",
+  xlab2 = "Predictors",
+  ylab2 = "No. of responses",
+  threshold = 0.5,
+  las = 0,
+  cex.axis = 1,
+  mark.pos = c(0, 0),
+  mark.color = 2,
+  mark.cex = 0.8,
+  header = "",
+  ...
+)
 }
 \arguments{
 \item{object}{an object of class "BayesSUR"}

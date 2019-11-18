@@ -18,7 +18,7 @@ Copyright: The C++ files pugixml.cpp, pugixml.hpp and pugiconfig.hpp
         vertical.image.legend() has Copyright (C) 2013 by Jenise Swall
         (jswall@vcu.edu).
 VignetteBuilder: R.rsp
-RoxygenNote: 6.1.1
+RoxygenNote: 7.0.0
 Depends: R (>= 3.5.0)
 Encoding: UTF-8
 LinkingTo: Rcpp, RcppArmadillo (>= 0.9.000)

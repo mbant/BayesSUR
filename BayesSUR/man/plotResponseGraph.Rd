@@ -4,9 +4,17 @@
 \alias{plotResponseGraph}
 \title{plot the estimated graph for multiple response variables}
 \usage{
-plotResponseGraph(object, PmaxResponse = 0.5, PtrueResponse = NULL,
-  name.responses = NA, edge.weight = FALSE, label.color = "black",
-  node.size = 30, node.color = "dodgerblue", ...)
+plotResponseGraph(
+  object,
+  PmaxResponse = 0.5,
+  PtrueResponse = NULL,
+  name.responses = NA,
+  edge.weight = FALSE,
+  label.color = "black",
+  node.size = 30,
+  node.color = "dodgerblue",
+  ...
+)
 }
 \arguments{
 \item{object}{an object of class "BayesSUR"}
