@@ -26,3 +26,5 @@ tmp/*
 BayesSUR/src/Makevars
 BayesSUR.Rcheck/00check.log
 *.tar.gz
+*.log
+*.status
