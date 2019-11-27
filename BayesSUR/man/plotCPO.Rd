@@ -4,11 +4,22 @@
 \alias{plotCPO}
 \title{plot the conditional predictive ordinate}
 \usage{
-plotCPO(object, sum.responses = FALSE, outlier.mark = TRUE,
-  outlier.thresh = 0.01, scale.CPO = TRUE, x.loc = FALSE,
-  axis.label = NULL, las = 0, cex.axis = 1, mark.pos = c(0, -0.01),
-  mark.color = 2, mark.cex = 0.8, xlab = "Observations",
-  ylab = NULL)
+plotCPO(
+  object,
+  sum.responses = FALSE,
+  outlier.mark = TRUE,
+  outlier.thresh = 0.01,
+  scale.CPO = TRUE,
+  x.loc = FALSE,
+  axis.label = NULL,
+  las = 0,
+  cex.axis = 1,
+  mark.pos = c(0, -0.01),
+  mark.color = 2,
+  mark.cex = 0.8,
+  xlab = "Observations",
+  ylab = NULL
+)
 }
 \arguments{
 \item{object}{an object of class "BayesSUR"}

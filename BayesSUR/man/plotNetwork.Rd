@@ -4,16 +4,34 @@
 \alias{plotNetwork}
 \title{plot the network representation of the associations between responses and predictors}
 \usage{
-plotNetwork(object, includeResponse = NULL, excludeResponse = NULL,
-  includePredictor = NULL, excludePredictor = NULL,
-  MatrixGamma = NULL, PmaxPredictor = 0.5, PmaxResponse = 0.5,
-  nodesizePredictor = 5, nodesizeResponse = 25, no.isolates = FALSE,
-  lineup = 1, gray.alpha = 0.6, edgewith.response = 5,
-  edgewith.predictor = 2, edge.weight = FALSE,
-  label.predictor = NULL, label.response = NULL,
-  color.predictor = NULL, color.response = NULL,
-  name.predictors = NULL, name.responses = NULL,
-  vertex.frame.color = NA, layoutInCircle = FALSE, header = "", ...)
+plotNetwork(
+  object,
+  includeResponse = NULL,
+  excludeResponse = NULL,
+  includePredictor = NULL,
+  excludePredictor = NULL,
+  MatrixGamma = NULL,
+  PmaxPredictor = 0.5,
+  PmaxResponse = 0.5,
+  nodesizePredictor = 5,
+  nodesizeResponse = 25,
+  no.isolates = FALSE,
+  lineup = 1,
+  gray.alpha = 0.6,
+  edgewith.response = 5,
+  edgewith.predictor = 2,
+  edge.weight = FALSE,
+  label.predictor = NULL,
+  label.response = NULL,
+  color.predictor = NULL,
+  color.response = NULL,
+  name.predictors = NULL,
+  name.responses = NULL,
+  vertex.frame.color = NA,
+  layoutInCircle = FALSE,
+  header = "",
+  ...
+)
 }
 \arguments{
 \item{object}{an object of class "BayesSUR"}

@@ -23,3 +23,8 @@ ParamTrue*
 results/*
 tmp/*
 .vscode/*
+BayesSUR/src/Makevars
+BayesSUR.Rcheck/*
+*.tar.gz
+*.log
+*.status
