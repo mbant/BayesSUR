@@ -2,7 +2,7 @@
 AC_PREREQ(2.62)
 
 ## Process this file with autoconf to produce a configure script.
-AC_INIT(BayesSUR, m4_esyscmd_s([awk -e '/^Version:/ {print $2}' DESCRIPTION]))
+AC_INIT(BayesSUR, m4_esyscmd_s([awk '/^Version:/ {print $2}' DESCRIPTION]))
 
 : ${R_HOME=$(R RHOME)}
 if test -z "${R_HOME}"; then
