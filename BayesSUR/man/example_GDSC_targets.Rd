@@ -158,6 +158,8 @@ example_GDSC$blockList <- list(1:length(name_drugs), length(name_drugs)+1:GDSC$n
 
 # edges between drugs: Group1 ("RDEA119","17-AAG","PD-0325901","CI-1040" and "AZD6244") 
 # indexed as (2:5)
+# The MAPK_pathway.txt file is originally from KEGG or GSEA database at
+# http://software.broadinstitute.org/gsea/msigdb/cards/KEGG_MAPK_SIGNALING_PATHWAY
 pathway_genes <- read.table("MAPK_pathway.txt")[[1]]
 X1_names_dup <- c(colnames(X1), name_genes_duplicate)
 Idx_Pathway1 <- which(X1_names_dup %in% pathway_genes)
