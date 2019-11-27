@@ -14,7 +14,7 @@
 #' data("example_eQTL", package = "BayesSUR")
 #' str(example_eQTL)
 #' 
-#' \donttest{
+#' \dontrun{
 #' #===============
 #' # The code below is to show how to generate the dataset "example_eQTL.rda" above
 #' #===============

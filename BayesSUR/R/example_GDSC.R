@@ -13,7 +13,7 @@
 #' data("example_GDSC", package = "BayesSUR")
 #' str(example_GDSC)
 #' 
-#' \donttest{
+#' \dontrun{
 #' #===============
 #' # This code below is to do preprocessing of GDSC data and obtain the complete dataset
 #' # "example_GDSC.rda" above. The user needs load the datasets from 
@@ -153,6 +153,8 @@
 #' 
 #' # edges between drugs: Group1 ("RDEA119","17-AAG","PD-0325901","CI-1040", "AZD6244") 
 #' # indexed as (2:5)
+#' # The MAPK_pathway.txt file is originally from KEGG or GSEA database at
+#' # http://software.broadinstitute.org/gsea/msigdb/cards/KEGG_MAPK_SIGNALING_PATHWAY
 #' pathway_genes <- read.table("MAPK_pathway.txt")[[1]]
 #' X1_names_dup <- c(colnames(X1), name_genes_duplicate)
 #' Idx_Pathway1 <- which(X1_names_dup %in% pathway_genes)
@@ -172,7 +174,7 @@
 #' list_CommonGene <- list(0)
 #' k <- 1
 #' for(i in 1:length(name_genes)){
-#'   Idx_CommonGene <- which(  c(colnames(X1),name_genes_duplicate) == name_genes[i] )
+#'   Idx_CommonGene <- which(c(colnames(X1),name_genes_duplicate) == name_genes[i])
 #'   if(length(Idx_CommonGene) > 1){
 #'     Gmrf_CommonGene <- rbind(Gmrf_CommonGene,t(combn(rep(Idx_CommonGene,each=length(name_drugs))
 #'                        + rep((1:length(name_drugs)-1)*sum(p),times=length(Idx_CommonGene)), 2)))
@@ -185,11 +187,9 @@
 #' 
 #' # create the target gene names of the two groups of drugs
 #' targetGenes1 <- matrix(Idx_Pathway1,nrow=1)
-#' colnames(targetGenes1) <- colnames(example_GDSC$data)[length(name_drugs)+
-#'                                                       GDSC$num.nonpen+targetGenes]
+#' colnames(targetGenes1) <- colnames(example_GDSC$data)[seq_along(targetGene$group1)]
 #' targetGenes2 <- matrix(Idx_Pathway2,nrow=1)
-#' colnames(targetGenes2) <- colnames(example_GDSC$data)[length(name_drugs)+
-#'                                                       GDSC$num.nonpen+targetGenes]
+#' colnames(targetGenes2) <- colnames(example_GDSC$data)[seq_along(targetGene$group2)]
 #' 
 #' example_GDSC_targets <- list(group1=targetGenes1, group2=targetGenes2)
 #' 
