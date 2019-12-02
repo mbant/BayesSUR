@@ -24,7 +24,7 @@ results/*
 tmp/*
 .vscode/*
 BayesSUR/src/Makevars
-BayesSUR.Rcheck/*
+BayesSUR/BayesSUR.Rcheck/
 *.tar.gz
 *.log
 *.status
