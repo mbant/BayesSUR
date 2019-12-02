@@ -24,7 +24,7 @@ Encoding: UTF-8
 LinkingTo: Rcpp, RcppArmadillo (>= 0.9.000)
 Imports: Rcpp, xml2, igraph, Matrix, tikzDevice, stats, utils,
         grDevices, graphics
-Suggests: R.rsp, BDgraph, data.table, plyr, scrime, gRbase
+Suggests: R.rsp, BDgraph, data.table, plyr, scrime
 LazyData: true
 NeedsCompilation: yes
 SystemRequirements: C++11
