@@ -198,7 +198,7 @@ xb = matrix(NA,n,s)
 
 for(i in 1:s){
   if(sum(gamma[,i])>1){
-    xb[,i] = x[,gamma[,i]==1] %*% b[gamma[,i]==1,i]
+    xb[,i] = x[,gamma[,i]==1] \%*\% b[gamma[,i]==1,i]
   }else{
     xb[,i] = rep(1,n) * b[1,i]
   }
@@ -227,20 +227,20 @@ repeat{
  
   ### Sample the errors and the Ys
   cVar = chol(as.matrix(var))
-  #err = matrix(rnorm(n*s),n,s) %*% cVar
-  err = matrix(rnorm(n*s,sd=0.5),n,s) %*% cVar
+  #err = matrix(rnorm(n*s),n,s) \%*\% cVar
+  err = matrix(rnorm(n*s,sd=0.5),n,s) \%*\% cVar
   y = xb+err
   
 ## Reparametrisation ( assuming PEO is 1:s )
   cVar = t(cVar) # make it lower-tri
   S = diag(diag(cVar))
   sigma = S*S
-  L = cVar %*% solve(S)
+  L = cVar \%*\% solve(S)
   rho =  diag(s) - solve(L)
   
   ### S/N Ratio
-  emp_snr = mean( diag( var(xb) %*% solve(sigma) ))
-  emp_g_snr = mean( diag( var( (err)%*%t(rho) ) %*% solve(sigma) ))
+  emp_snr = mean( diag( var(xb) \%*\% solve(sigma) ))
+  emp_g_snr = mean( diag( var( (err)\%*\%t(rho) ) \%*\% solve(sigma) ))
   
   ##############
   
