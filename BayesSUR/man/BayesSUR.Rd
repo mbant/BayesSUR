@@ -3,18 +3,38 @@
 \docType{package}
 \name{BayesSUR}
 \alias{BayesSUR}
-\alias{BayesSUR-package}
 \title{main function of the package}
 \usage{
-BayesSUR(Y, X, X_0 = NULL, data = NULL, outFilePath = "",
-  nIter = 10000, burnin = 5000, nChains = 2,
-  covariancePrior = "HIW", gammaPrior = "", gammaSampler = "bandit",
-  gammaInit = "MLE", mrfG = NULL, standardize = TRUE,
-  standardize.response = TRUE, output_gamma = TRUE,
-  output_beta = TRUE, output_G = TRUE, output_sigmaRho = TRUE,
-  output_pi = TRUE, output_tail = TRUE, output_model_size = TRUE,
-  output_model_visit = FALSE, output_CPO = TRUE, output_Y = TRUE,
-  output_X = TRUE, hyperpar = list(), tmpFolder = "tmp/")
+BayesSUR(
+  Y,
+  X,
+  X_0 = NULL,
+  data = NULL,
+  outFilePath = "",
+  nIter = 10000,
+  burnin = 5000,
+  nChains = 2,
+  covariancePrior = "HIW",
+  gammaPrior = "",
+  gammaSampler = "bandit",
+  gammaInit = "MLE",
+  mrfG = NULL,
+  standardize = TRUE,
+  standardize.response = TRUE,
+  output_gamma = TRUE,
+  output_beta = TRUE,
+  output_G = TRUE,
+  output_sigmaRho = TRUE,
+  output_pi = TRUE,
+  output_tail = TRUE,
+  output_model_size = TRUE,
+  output_model_visit = FALSE,
+  output_CPO = TRUE,
+  output_Y = TRUE,
+  output_X = TRUE,
+  hyperpar = list(),
+  tmpFolder = "tmp/"
+)
 }
 \arguments{
 \item{Y, X, X_0}{vectors of indexes (with respect to the data matrix) for the outcomes, the covariates to select and the fixed covariates respectively if data is either a path to a file or a matrix;

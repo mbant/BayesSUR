@@ -4,12 +4,23 @@
 \alias{plotEstimator}
 \title{plot the posterior mean estimators}
 \usage{
-plotEstimator(object, estimator = "all",
-  colorScale.gamma = grey((100:0)/100), colorScale.beta = c("blue",
-  "white", "red"), legend.cex.axis = 1, name.responses = NA,
-  name.predictors = NA, xlab = "", ylab = "", fig.tex = FALSE,
-  output = "ParamEstimator", header = "", header.cex = 2,
-  mgp = c(2.5, 1, 0), ...)
+plotEstimator(
+  object,
+  estimator = "all",
+  colorScale.gamma = grey((100:0)/100),
+  colorScale.beta = c("blue", "white", "red"),
+  legend.cex.axis = 1,
+  name.responses = NA,
+  name.predictors = NA,
+  xlab = "",
+  ylab = "",
+  fig.tex = FALSE,
+  output = "ParamEstimator",
+  header = "",
+  header.cex = 2,
+  mgp = c(2.5, 1, 0),
+  ...
+)
 }
 \arguments{
 \item{object}{an object of class "BayesSUR"}

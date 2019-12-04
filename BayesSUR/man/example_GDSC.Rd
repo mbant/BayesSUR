@@ -21,7 +21,7 @@ Loading the data will load the associated blockList (and mrfG) objects needed to
 data("example_GDSC", package = "BayesSUR")
 str(example_GDSC)
 
-\donttest{
+\dontrun{
 #===============
 # This code below is to do preprocessing of GDSC data and obtain the complete dataset
 # "example_GDSC.rda" above. The user needs load the datasets from 
@@ -88,7 +88,7 @@ while(sum(is.na(y0[,2:(1+m0)]))>0){
     na.y0 <- apply(y0[,2:(1+m0)], 1, function(xx) sum(is.na(xx))/length(xx))
   }
   num.na <- sum(is.na(y0[,2:(1+m0)]))
-  message("#{NA}=", num.na, "\\n", "r1.na =", r1.na, ", r2.na =", r2.na, "\\n")
+  message("#{NA}=", num.na, "\n", "r1.na =", r1.na, ", r2.na =", r2.na, "\n")
 }
 
 #===============
@@ -119,13 +119,16 @@ GDSC <- list(y=y, x=x, p=p, num.nonpen=num.nonpen, names.cell.line=names.cell.li
 ##================
 ##================
 
-name_drugs <- c("Methotrexate","RDEA119","PD-0325901","CI-1040","AZD6244","Nilotinib",
-                "Axitinib")
+name_drugs <- c("Methotrexate","RDEA119","PD-0325901","CI-1040",
+                "AZD6244","Nilotinib", "Axitinib")
 
 # extract the drugs' pharmacological profiling and tissue dummy
 # delete the cell line with extreme log(IC50)=-36.49 for drug "AP-24534"
-YX0 <- cbind(GDSC$y[-166,colnames(GDSC$y) \%in\% paste("IC50.",name_drugs,sep="")]
-                   [,c(1,3,6,4,7,2,5)], GDSC$x[-166,1:GDSC$num.nonpen])
+col_filter <- colnames(GDSC$y) \%in\% paste("IC50.", name_drugs,sep="")
+YX0 <- cbind(
+    GDSC$y[-166, col_filter][, c(1, 3, 6, 4, 7, 2, 5)],
+    GDSC$x[-166, 1:GDSC$num.nonpen]
+)
 colnames(YX0) <- c(name_drugs, colnames(GDSC$x)[1:GDSC$num.nonpen])
 # extract the genetic information of CNV & MUT
 X23 <- GDSC$x[-166, GDSC$num.nonpen+GDSC$p[1]+1:(p[2]+p[3])]
@@ -133,36 +136,44 @@ colnames(X23)[1:p[2]] <- paste(substr(colnames(X23)[1:p[2]], 1,
                                nchar(colnames(X23)[1:p[2]] )-3), ".CNV", sep="")
 
 # locate all genes with CNV or MUT information
-name_genes_duplicate <- c( substr(colnames(X23)[1:p[2]], 1, nchar(colnames(X23)[1:p[2]])-4),
-                   substr(colnames(X23)[p[2]+1:p[3]], 1, nchar(colnames(X23)[p[2]+1:p[3]])-4) )
+name_genes_duplicate <- c(
+     substr(colnames(X23)[1:p[2]], 1, nchar(colnames(X23)[1:p[2]])-4),
+     substr(colnames(X23)[p[2]+1:p[3]], 1, nchar(colnames(X23)[p[2]+1:p[3]])-4)
+)
 name_genes <- name_genes_duplicate[!duplicated(name_genes_duplicate)]
 
 # select the GEX which have the common genes with CNV or MUT
-X1 <- GDSC$x[-166,GDSC$num.nonpen+which(colnames(GDSC$x)[GDSC$num.nonpen+1:p[1]] \%in\% 
-             name_genes)]
-p[1] <- ncol(X1)
+col_filter <- GDSC$num.nonpen + which(
+    colnames(GDSC$x)[GDSC$num.nonpen+1:p[1]] \%in\% name_genes
+)
+X1 <- GDSC$x[-166, col_filter]#' p[1] <- ncol(X1)
 X1 <- log2(X1)
 
 # summary the data information
 example_GDSC <- list( data=cbind( YX0, X1, X23 ) )
-example_GDSC$blockList <- list(1:length(name_drugs), length(name_drugs)+1:GDSC$num.nonpen, 
+example_GDSC$blockList <- list(1:length(name_drugs),
+                               length(name_drugs)+1:GDSC$num.nonpen, 
                                ncol(YX0)+1:sum(p))
 
 #========================
 # construct the G matrix: edge potentials in the MRF prior
 #========================
 
-# edges between drugs: Group1 ("RDEA119","17-AAG","PD-0325901","CI-1040" and "AZD6244") 
+# edges between drugs: Group1 ("RDEA119","17-AAG","PD-0325901","CI-1040", "AZD6244") 
 # indexed as (2:5)
+# The MAPK_pathway.txt file is originally from KEGG or GSEA database at
+# http://software.broadinstitute.org/gsea/msigdb/cards/KEGG_MAPK_SIGNALING_PATHWAY
 pathway_genes <- read.table("MAPK_pathway.txt")[[1]]
-Idx_Pathway1 <- which(c(colnames(X1),name_genes_duplicate) \%in\% pathway_genes)
-Gmrf_Group1Pathway1 <- t(combn(rep(Idx_Pathway1,each=length(2:5)) + 
-                               rep((2:5-1)*sum(p),times=length(Idx_Pathway1)), 2))
+X1_names_dup <- c(colnames(X1), name_genes_duplicate)
+Idx_Pathway1 <- which(X1_names_dup \%in\% pathway_genes)
+rep1 <- rep(Idx_Pathway1, each=length(2:5))
+rep2 <- rep((2:5-1) * sum(p), times=length(Idx_Pathway1))
+rep3 <- rep1 + rep2
+Gmrf_Group1Pathway1 <- t(combn(rep3, 2))
 
 # edges between drugs: Group2 ("Nilotinib","Axitinib") indexed as (6:7)
 # delete gene ABL2
-Idx_Pathway2 <- which( c(colnames(X1),name_genes_duplicate) \%like\% "BCR" | 
-                       c(colnames(X1),name_genes_duplicate) \%like\% "ABL" )[-c(3,5)] 
+Idx_Pathway2 <- which(X1_names_dup \%like\% "BCR" | X1_names_dup \%like\% "ABL")[-c(3,5)]
 Gmrf_Group2Pathway2 <- t(combn(rep(Idx_Pathway2,each=length(6:7)) + 
                                rep((6:7-1)*sum(p),times=length(Idx_Pathway2)), 2))
 
@@ -171,7 +182,7 @@ Gmrf_CommonGene <- NULL
 list_CommonGene <- list(0)
 k <- 1
 for(i in 1:length(name_genes)){
-  Idx_CommonGene <- which(  c(colnames(X1),name_genes_duplicate) == name_genes[i] )
+  Idx_CommonGene <- which(c(colnames(X1),name_genes_duplicate) == name_genes[i])
   if(length(Idx_CommonGene) > 1){
     Gmrf_CommonGene <- rbind(Gmrf_CommonGene,t(combn(rep(Idx_CommonGene,each=length(name_drugs))
                        + rep((1:length(name_drugs)-1)*sum(p),times=length(Idx_CommonGene)), 2)))
@@ -184,11 +195,9 @@ example_GDSC$mrfG <- Gmrf
 
 # create the target gene names of the two groups of drugs
 targetGenes1 <- matrix(Idx_Pathway1,nrow=1)
-colnames(targetGenes1) <- colnames(example_GDSC$data)[length(name_drugs)+
-                                                      GDSC$num.nonpen+targetGenes]
+colnames(targetGenes1) <- colnames(example_GDSC$data)[seq_along(targetGene$group1)]
 targetGenes2 <- matrix(Idx_Pathway2,nrow=1)
-colnames(targetGenes2) <- colnames(example_GDSC$data)[length(name_drugs)+
-                                                      GDSC$num.nonpen+targetGenes]
+colnames(targetGenes2) <- colnames(example_GDSC$data)[seq_along(targetGene$group2)]
 
 example_GDSC_targets <- list(group1=targetGenes1, group2=targetGenes2)
 

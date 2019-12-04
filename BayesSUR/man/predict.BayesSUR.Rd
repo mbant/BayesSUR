@@ -4,8 +4,13 @@
 \alias{predict.BayesSUR}
 \title{predict responses corresponding to the posterior mean of the coefficients, return posterior mean of coefficients or indices of nonzero coefficients}
 \usage{
-\method{predict}{BayesSUR}(object, newx, type = c("response",
-  "coefficients", "nonzero"), Pmax = 0, ...)
+\method{predict}{BayesSUR}(
+  object,
+  newx,
+  type = c("response", "coefficients", "nonzero"),
+  Pmax = 0,
+  ...
+)
 }
 \arguments{
 \item{object}{an object of class "BayesSUR"}
