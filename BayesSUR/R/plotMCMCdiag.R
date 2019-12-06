@@ -98,12 +98,13 @@ plotMCMCdiag <- function(object, nbloc=3, header="", ...){
   
   title.0 <- expression(paste("Log Posterior Distribution: log ",P(gamma~group("|",list(Y,.),""))))
   plot.default(dens.all,main=title.0,col="black",xlim=c(xmin,xmax),ylim=c(ymin,ymax),xlab="",ylab="", type="l", lty=1)
-  par(new=TRUE) 
-  plot.default(dens.first,main="",col="red",xlim=c(xmin,xmax),ylim=c(ymin,ymax),xlab="",ylab="", type="l", lty=1)
-  par(new=TRUE) 
-  plot.default(dens.last,main="",col="green",xlim=c(xmin,xmax),ylim=c(ymin,ymax),xlab="",,ylab="Density", type="l", lty=1)
-  if(nbloc>1) 
+  if(nbloc>1){ 
+    par(new=TRUE) 
+    plot.default(dens.first,main="",col="red",xlim=c(xmin,xmax),ylim=c(ymin,ymax),xlab="",ylab="", type="l", lty=1)
+    par(new=TRUE) 
+    plot.default(dens.last,main="",col="green",xlim=c(xmin,xmax),ylim=c(ymin,ymax),xlab="",,ylab="Density", type="l", lty=1)
     legend("topleft",title="iteration",legend=paste(c("ALL","First half","Last half")," = [",c(1,1,floor(ncol(logP)/2)*1000+1),":",c(ncol(logP),floor((ncol(logP))/2),ncol(logP))*1000,"]",sep=""),col=1:3,lty=1,text.col=1:3, cex=0.8)
+  }
   
   for (i in 1:nbloc){
     plot.default(list.dens[[i]],col=i,xlim=c(xmin2,xmax2),ylim=c(ymin,ymax2),xlab="",ylab="", type="l", lty=1,main=title.0)
