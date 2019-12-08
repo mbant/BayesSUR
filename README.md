@@ -7,7 +7,23 @@ See `test.R` file for usage; see the package vignette `BayesSUR.pdf` (submitted 
 
 ## Update
 
-### New in version `BayesSUR_1.0-2.tar.gz` (29 October 2019):
+### New in version `BayesSUR_1.0-3.tar.gz` (08 December 2019):
+
+1) In the file `DESCRIPTION`, Waldir was added as a contributor, RoxygenNote version was increased and `gRbase` was removed from the list of suggested packages.
+
+2) Function `plotMCMCdiag()` was modified to allow any more than one MCMC iteration.
+
+3) Deprecated awk `-e` flag in file `configure.ac` was removed.
+
+4) The vignette-generation procedure was changed. Instead of having an Rnw file calling the pdf, now there is a `.pdf.asis` file containing the proper vignette engine LaTeX calls. This change puts the vignette-generation procedure in accordance with the [R.rsp package manual](https://cran.r-project.org/web/packages/R.rsp/vignettes/R_packages-Static_PDF_and_HTML_vignettes.pdf).
+
+5) The example code in `example_GDSC.R`, `example_GDSC_targets.R` and `example_eQTL.R` were wrapped in `\dontrun{}`, because `\donttest{}` was yielding errors on Ubuntu 18.04 (Linux 5.0.0) and Manjaro (5.3.12).
+
+6) Code in the files mentioned on the previous point was reformatted in order to reduce line width to less than 100 characters.
+
+7) `.gitignore` was modified to ignore Rcheck files, tarballs and log files.
+
+### version `BayesSUR_1.0-2.tar.gz` (29 October 2019):
 
 Fixed log(2) and similar issues in the file `junction_tree.cpp` for the solaris-x86 check. 
 
