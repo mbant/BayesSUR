@@ -21,6 +21,7 @@ BayesSUR(
   mrfG = NULL,
   standardize = TRUE,
   standardize.response = TRUE,
+  maxThreads = 2,
   output_gamma = TRUE,
   output_beta = TRUE,
   output_G = TRUE,
@@ -61,9 +62,11 @@ if the 'data' argument is not provided, these needs to be matrices containing th
 
 \item{mrfG}{either a matrix or a path to the file containing the G matrix for the MRF prior on gamma (if necessary)}
 
-\item{standardize}{Logical flag for X variable standardization. Default is standardize=TRUE. The coefficients are returned on the standardized scale.}
+\item{standardize}{logical flag for X variable standardization. Default is standardize=TRUE. The coefficients are returned on the standardized scale.}
 
-\item{standardize.response}{Standardization for the response variables. Default is standardize.response=TRUE.}
+\item{standardize.response}{standardization for the response variables. Default is standardize.response=TRUE.}
+
+\item{maxThreads}{maximum number of threads for the parallelization. Default is 2.}
 
 \item{output_gamma}{allow ( \code{TRUE} ) or suppress ( \code{FALSE} ) the output for  gamma. See the return value below for more information.}
 

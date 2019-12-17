@@ -47,6 +47,7 @@ plotEstimator <- function(object, estimator="all", colorScale.gamma=grey((100:0)
   object$output[-1] <- paste(object$output$outFilePath,object$output[-1],sep="")
   beta_hat <- as.matrix( read.table(object$output$beta) )
   gamma_hat <- as.matrix( read.table(object$output$gamma) )
+  nonpen <- nrow(beta_hat) - nrow(gamma_hat)
   
   # specify the labels of axes
   if(is.na(name.responses)) name.responses <- 1:ncol(beta_hat)
@@ -87,18 +88,18 @@ plotEstimator <- function(object, estimator="all", colorScale.gamma=grey((100:0)
       if(!is.na(name.responses)[1]){
         par(las=2, cex.axis=1)
         axis(2, at = 1:ncol(beta_hat), labels=name.responses)
-        #opar <- par(cex.axis=1)
         axis(1, at = 1:nrow(beta_hat), labels=name.predictors)
       }
     }
-    if(sum(estimator %in% c("all","beta"))){
+    if(sum(estimator %in% c("all","gamma"))){
       image(z=gamma_hat, x=1:nrow(gamma_hat), y=1:ncol(gamma_hat), col=colorScale.gamma, mgp=mgp, 
             axes=ifelse(is.na(name.responses)[1],TRUE,FALSE), xlab=xlab, ylab=ylab,main=expression(hat(bold(Gamma))),cex.main=1.5,cex.lab=1.5,...);box()
       vertical.image.legend(col=colorScale.gamma, zlim=c(0,1), legend.cex.axis=legend.cex.axis)
       if(!is.na(name.responses)[1]){
         par(las=2, cex.axis=1)
         axis(2, at = 1:ncol(gamma_hat), labels=name.responses)
-        #opar <- par(cex.axis=1)
+        if(nonpen > 0)
+          name.predictors <- name.predictors[-c(1:nonpen)]
         axis(1, at = 1:nrow(gamma_hat), labels=name.predictors)
       }
     }
@@ -113,7 +114,6 @@ plotEstimator <- function(object, estimator="all", colorScale.gamma=grey((100:0)
         if(!is.na(name.responses)[1]){
           par(las=2, cex.axis=1)
           axis(2, at = 1:ncol(Gy_hat), labels=name.responses)
-          #opar <- par(cex.axis=1)
           axis(1, at = 1:nrow(Gy_hat), labels=name.responses)
         }
       }
@@ -121,15 +121,14 @@ plotEstimator <- function(object, estimator="all", colorScale.gamma=grey((100:0)
     title(paste("\n",header,sep=""), cex.main=header.cex, outer=T)
     
   }else{
-    #par(mar=c(6,5,5,4))
     options(tikzMetricPackages = c("\\usepackage{amsmath}","\\usepackage{bm}","\\usetikzlibrary{calc}"))
     if(estimator[1]=="all"){
       tikz(paste(output,".tex",sep=""),width=6.5,height=2.3,standAlone=TRUE,packages=c("\\usepackage{tikz}","\\usepackage{amsmath}",
-            "\\usepackage{bm}","\\usepackage[active,tightpage,psfixbb]{preview}","\\PreviewEnvironment{pgfpicture}"))
+                                                                                       "\\usepackage{bm}","\\usepackage[active,tightpage,psfixbb]{preview}","\\PreviewEnvironment{pgfpicture}"))
       par(mfrow=c(1,ifelse(toupper(object$input$covariancePrior)=="HIW",3,2)))
     }else{
       tikz(paste(output,".tex",sep=""),width=3.5*length(estimator),height=4,standAlone=TRUE,packages=c("\\usepackage{tikz}","\\usepackage{amsmath}",
-            "\\usepackage{bm}","\\usepackage[active,tightpage,psfixbb]{preview}","\\PreviewEnvironment{pgfpicture}"))
+                                                                                                       "\\usepackage{bm}","\\usepackage[active,tightpage,psfixbb]{preview}","\\PreviewEnvironment{pgfpicture}"))
       if(length(estimator)>1){
         par(mfrow=c(1,length(estimator)))
       }
@@ -145,7 +144,6 @@ plotEstimator <- function(object, estimator="all", colorScale.gamma=grey((100:0)
       if(!is.na(name.responses)[1]){
         par(las=2, cex.axis=1)
         axis(2, at = 1:ncol(beta_hat), labels=name.responses)
-        #opar <- par(cex.axis=1)
         axis(1, at = 1:nrow(beta_hat), labels=name.predictors)
       }
     }
@@ -156,7 +154,8 @@ plotEstimator <- function(object, estimator="all", colorScale.gamma=grey((100:0)
       if(!is.na(name.responses)[1]){
         par(las=2, cex.axis=1)
         axis(2, at = 1:ncol(gamma_hat), labels=name.responses)
-        #opar <- par(cex.axis=1)
+        if(nonpen > 0)
+          name.predictors <- name.predictors[-c(1:nonpen)]
         axis(1, at = 1:nrow(gamma_hat), labels=name.predictors)
       }
     }
@@ -172,7 +171,6 @@ plotEstimator <- function(object, estimator="all", colorScale.gamma=grey((100:0)
         if(!is.na(name.responses)[1]){
           par(las=2, cex.axis=1)
           axis(2, at = 1:ncol(Gy_hat), labels=name.responses)
-          #opar <- par(cex.axis=1)
           axis(1, at = 1:nrow(Gy_hat), labels=name.responses)
         }
       }
@@ -181,7 +179,7 @@ plotEstimator <- function(object, estimator="all", colorScale.gamma=grey((100:0)
     dev.off()
     tools::texi2pdf(paste(output,".tex",sep=""))
   }
-
+  
 }
 # the function vertical.image.legend is orginally from the R package "aqfig"
 vertical.image.legend <- function (zlim, col, legend.cex.axis=1) 

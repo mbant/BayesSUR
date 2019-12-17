@@ -5,7 +5,7 @@
 #' @importFrom stats density
 #' @name plotMCMCdiag
 #' @param object an object of class "BayesSUR"
-#' @param nbloc number of splits for the last half iterations after substracting burn-in length
+#' @param nbloc number of splits for the last half iterations 
 #' @param header the main title
 #' @param ... other arguments for the plots of the log-likelihood and model size
 #' 
@@ -26,9 +26,9 @@
 plotMCMCdiag <- function(object, nbloc=3, header="", ...){
   
   if(object$input$nIter <= 1)
-    stop("The diagosis only shows results from more than one MCMC iteration!")
+    stop("The diagnosis only shows results from more than one MCMC iteration!")
   if(object$input$nIter < 4000)
-    message("NOTE: The diagosis only shows results of two iteration points due to less than 4000 MCMC iterations!")
+    message("NOTE: The diagnosis only shows results of two iteration points due to less than 4000 MCMC iterations!")
   
   object$output[-1] <- paste(object$output$outFilePath,object$output[-1],sep="")
   
@@ -58,14 +58,18 @@ plotMCMCdiag <- function(object, nbloc=3, header="", ...){
     ymax <- max(dens.all$y,dens.first$y,dens.last$y)
     xmin <- min(dens.all$x,dens.first$x,dens.last$x)
     xmax <- max(dens.all$x,dens.first$x,dens.last$x)
+    if(nIter/1000/2/nbloc < 2){
+      nbloc <- 1
+      message("NOTE: There are no splits for the last half iterations due to not enough MCMC iterations!")
+    }  
   }else{
     ymin <- min(dens.all$y)
     ymax <- max(dens.all$y)
     xmin <- min(dens.all$x)
     xmax <- max(dens.all$x)
     nbloc <- 1
+    message("NOTE: There are no splits due to not enough MCMC iterations!")
   }
-    
   ###nsplit number of split of the sweep
   mid <- floor(floor(ncol(logP)/2)/nbloc)
   ymax2 <- xmin2 <- xmax2 <- list.dens <- NULL
@@ -82,14 +86,14 @@ plotMCMCdiag <- function(object, nbloc=3, header="", ...){
   on.exit(par(opar))    
   par(mfrow=c(2,2))
   
-  if(nbloc>1){
+  if(nIter >= 4000){
     plot.default(logP[Plik.indx,], xlab="Iterations (*1000)", ylab="Log likelihood (posterior)", type="l", lty=1, ...)
   }else{
     plot.default(logP[Plik.indx,]~c(1,nIter), xlab="Iterations", ylab="Log likelihood (posterior)", type="l", lty=1, ...)
   }
   #legend("topleft", legend=paste("Chain",1:nChain), lty=1, cex=0.5)
   
-  if(nbloc>1){
+  if(nIter >= 4000){
     plot.default(model_size, xlab="Iterations (*1000)", ylab="Model size", type="l", lty=1, ...)
   }else{
     plot.default(model_size~c(1,nIter), xlab="Iterations", ylab="Model size", type="l", lty=1, ...)
@@ -98,7 +102,7 @@ plotMCMCdiag <- function(object, nbloc=3, header="", ...){
   
   title.0 <- expression(paste("Log Posterior Distribution: log ",P(gamma~group("|",list(Y,.),""))))
   plot.default(dens.all,main=title.0,col="black",xlim=c(xmin,xmax),ylim=c(ymin,ymax),xlab="",ylab="", type="l", lty=1)
-  if(nbloc>1){ 
+  if(nIter >= 4000){ 
     par(new=TRUE) 
     plot.default(dens.first,main="",col="red",xlim=c(xmin,xmax),ylim=c(ymin,ymax),xlab="",ylab="", type="l", lty=1)
     par(new=TRUE) 
@@ -107,12 +111,17 @@ plotMCMCdiag <- function(object, nbloc=3, header="", ...){
   }
   
   for (i in 1:nbloc){
-    plot.default(list.dens[[i]],col=i,xlim=c(xmin2,xmax2),ylim=c(ymin,ymax2),xlab="",ylab="", type="l", lty=1,main=title.0)
+    plot.default(list.dens[[i]],col=ifelse(nbloc==1 & nIter>=4000, 3, i),xlim=c(xmin2,xmax2),ylim=c(ymin,ymax2),xlab="",ylab="", type="l", lty=1,main=title.0)
     if(nbloc>1) par(new=TRUE) 
   }
   title(ylab="Density")
-  if(nbloc>1) 
+  if(nbloc>1){
     legend("topleft",title="moving window",legend=paste("set ",1:nbloc," = [",(floor((ncol(logP))/2)+mid*(nbloc:1-1))*1000+1,":",(ncol(logP))*1000,"]",sep=""),col=1:nbloc,lty=1,text.col=1:nbloc, cex=0.8)
+  }else{
+    if(nIter >= 4000)
+      legend("topleft",title="moving window",legend=paste("set ",1:nbloc," = [",(floor((ncol(logP))/2)+mid*(nbloc:1-1))*1000+1,":",(ncol(logP))*1000,"]",sep=""),col=3,lty=1,text.col=3, cex=0.8)
+  }
+    
   
   title(paste("\n",header,sep=""), outer=T)
   

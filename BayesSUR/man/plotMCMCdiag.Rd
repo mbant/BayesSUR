@@ -9,7 +9,7 @@ plotMCMCdiag(object, nbloc = 3, header = "", ...)
 \arguments{
 \item{object}{an object of class "BayesSUR"}
 
-\item{nbloc}{number of splits for the last half iterations after substracting burn-in length}
+\item{nbloc}{number of splits for the last half iterations}
 
 \item{header}{the main title}
 

@@ -905,7 +905,7 @@ int drive( const std::string& dataFile, const std::string& mrfGFile, const std::
           unsigned int nIter, unsigned int burnin, unsigned int nChains,
           const std::string& covariancePrior,
           const std::string& gammaPrior, const std::string& gammaSampler, const std::string& gammaInit,
-          const std::string& betaPrior,
+          const std::string& betaPrior, const int maxThreads,
           bool output_gamma, bool output_beta, bool output_G, bool output_sigmaRho, bool output_pi, bool output_tail, bool output_model_size, bool output_CPO, bool output_model_visit )
 {
     
@@ -1101,7 +1101,7 @@ int drive( const std::string& dataFile, const std::string& mrfGFile, const std::
     omp_set_nested(1); // 1=enable, 0=disable nested parallelism (run chains in parallel + compute likelihoods in parallel at least wrt to outcomes + wrt to individuals)
     // MOST OF THE PARALLELISATION IMPROVEMENTS COME FROM OPENBLAS ANYWAY .. I WONDER IF ACCELERATING LA THOURGH GPU WOULD CHANGE THAT ..
     
-    if ( omp_get_max_threads() == 1 )
+    /*if ( omp_get_max_threads() == 1 )
     {
         nThreads = 1;
         
@@ -1109,7 +1109,8 @@ int drive( const std::string& dataFile, const std::string& mrfGFile, const std::
     }else
     {
         nThreads = std::min( 16, omp_get_max_threads()-1 ); //TODO: make 16 as parameter, note I still use -1 to allow PC to do work in the meantime
-    }
+    }*/
+    nThreads = maxThreads;
     omp_set_num_threads(  nThreads );
 #endif
     

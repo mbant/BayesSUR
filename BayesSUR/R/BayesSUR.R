@@ -25,8 +25,9 @@
 #' @param gammaSampler string indicating the type of sampler for gamma, either "bandit" for the Thompson sampling inspired samper or "MC3" for the usual $MC^3$ sampler
 #' @param gammaInit gamma initialisation to either all-zeros ("0"), all ones ("1"), randomly ("R") or (default) MLE-informed ("MLE").
 #' @param mrfG either a matrix or a path to the file containing the G matrix for the MRF prior on gamma (if necessary)
-#' @param standardize Logical flag for X variable standardization. Default is standardize=TRUE. The coefficients are returned on the standardized scale.
-#' @param standardize.response Standardization for the response variables. Default is standardize.response=TRUE.
+#' @param standardize logical flag for X variable standardization. Default is standardize=TRUE. The coefficients are returned on the standardized scale.
+#' @param standardize.response standardization for the response variables. Default is standardize.response=TRUE.
+#' @param maxThreads maximum number of threads for the parallelization. Default is 2.
 #' @param hyperpar a list of named hypeparameters to use instead of the default values. Valid names are mrf_d, mrf_e, a_sigma, b_sigma, a_tau, b_tau, nu, a_eta, b_eta, a_o, b_o, a_pi, b_pi, a_w and b_w. 
 #' Their default values are a_w=2, b_w=5, a_o=p-2, b_o=0.005, a_pi=2 (hotspot) or 1 (hierarchical), b_pi=1 (hotspot) or s-1 (hierarchical), nu=s+2, a_tau=0.1, b_tau=10, a_eta=0.1, b_eta=1, a_sigma=1, b_sigma=1, mrf_d=-3 and mrf_e=0.001. See the vignette for more information.
 #' @param output_gamma allow ( \code{TRUE} ) or suppress ( \code{FALSE} ) the output for  gamma. See the return value below for more information.
@@ -107,7 +108,7 @@ BayesSUR <- function(Y, X, X_0 = NULL, data = NULL,
                      outFilePath = "", nIter = 10000, burnin = 5000, nChains = 2, 
                      covariancePrior = "HIW", gammaPrior = "",
                      gammaSampler = "bandit", gammaInit = "MLE", mrfG = NULL,
-                     standardize = TRUE, standardize.response = TRUE,
+                     standardize = TRUE, standardize.response = TRUE, maxThreads = 2,
                      output_gamma = TRUE, output_beta = TRUE, output_G = TRUE, output_sigmaRho = TRUE,
                      output_pi = TRUE, output_tail = TRUE, output_model_size = TRUE, output_model_visit = FALSE, 
                      output_CPO = TRUE, output_Y = TRUE, output_X = TRUE, hyperpar = list(), tmpFolder = "tmp/")
@@ -453,7 +454,7 @@ BayesSUR <- function(Y, X, X_0 = NULL, data = NULL,
   betaPrior="independent"
   ret$status = BayesSUR_internal(data, mrfG, blockList, structureGraph, hyperParFile, outFilePath, 
             nIter, burnin, nChains, 
-            covariancePrior, gammaPrior, gammaSampler, gammaInit, betaPrior,
+            covariancePrior, gammaPrior, gammaSampler, gammaInit, betaPrior, maxThreads,
             output_gamma, output_beta, output_G, output_sigmaRho, output_pi, output_tail, output_model_size, output_CPO, output_model_visit)
 
   if(outFilePath != tmpFolder)
