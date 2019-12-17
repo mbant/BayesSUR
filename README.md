@@ -7,7 +7,20 @@ See `test.R` file for usage; see the package vignette `BayesSUR.pdf` (submitted 
 
 ## Update
 
-### New in version `BayesSUR_1.0-3.tar.gz` (08 December 2019):
+### New in version `BayesSUR_1.0-4.tar.gz` (17 December 2019):
+
+1) An argument `maxThreads` was added in the main function `BayesSUR()` to allow users to specify the maximum number of threads for parallelisation.
+
+2) One issue in `plotEstimator()` was fixed, which didn't print the estimated Gamma matrix correctly when using random 
+Gamma matrix correctly when using random 
+ effects in previous version.
+
+3) More warning information can be printed if the user specifies very 
+ small MCMC iterations in function `plotMCMCdiag()`.
+
+4) The name of dataset `example_GDSC_target.rda` was changed to `targetGene.rda`. The corresponding help file `example_GDSC_target.R` was also changed to `targetGene.R`. 
+
+### Version `BayesSUR_1.0-3.tar.gz` (08 December 2019):
 
 1) In the file `DESCRIPTION`, Waldir was added as a contributor, RoxygenNote version was increased and `gRbase` was removed from the list of suggested packages.
 
