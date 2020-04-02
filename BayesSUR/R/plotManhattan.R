@@ -5,7 +5,7 @@
 #' @param object an object of class "BayesSUR"
 #' @param which if it's value "1" showing the Manhattan-like plot of the marginal posterior inclusion probabilities (mPIP). If it's value "2" showing the Manhattan-like plot of the number of responses. The default is to show both figures.
 #' @param x.loc a vector of features distance
-#' @param axis.label a vector of predictor names which are shown in the Manhattan-like plot. The default is "NULL" only showing the indices. The value "auto" show the predictor names from the orginal data.
+#' @param axis.label a vector of predictor names which are shown in the Manhattan-like plot. The value "NULL" only showing the indices. The default "auto" show the predictor names from the orginal data.
 #' @param mark.responses a vector of response names which are shown in the Manhattan-like plot for the mPIP
 #' @param mark.pos the location of the marked text relative to the point
 #' @param xlab1 a title for the x axis of Manhattan-like plot for the mPIP
@@ -35,7 +35,7 @@
 #' plotManhattan(fit)
 #' 
 #' @export
-plotManhattan <- function(object, which=c(1,2), x.loc=FALSE, axis.label=NULL, mark.responses=NULL, xlab1="Predictors", ylab1="mPIP", xlab2="Predictors", ylab2="No. of responses",
+plotManhattan <- function(object, which=c(1,2), x.loc=FALSE, axis.label="auto", mark.responses=NULL, xlab1="Predictors", ylab1="mPIP", xlab2="Predictors", ylab2="No. of responses",
                           threshold=0.5,las=0, cex.axis=1, mark.pos=c(0,0), mark.color=2, mark.cex=0.8, header="", ...){
   
   object$output[-1] <- paste(object$output$outFilePath,object$output[-1],sep="")

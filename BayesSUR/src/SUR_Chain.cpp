@@ -62,6 +62,7 @@ covariance_type(covariance_type_),gamma_type(gamma_type_),beta_type(beta_type_),
     
     gammaInit();
     updateGammaMask();
+    w0Init();
     wInit();
     
     betaInit();
@@ -540,6 +541,44 @@ void SUR_Chain::setWAB( double a_w_ , double b_w_ )
 double SUR_Chain::getLogPW() const{ return logP_w; }
 // no setter for this, dedicated setter below
 
+// W_0
+double SUR_Chain::getW0() const{ return w0 ; }
+void SUR_Chain::setW0( double w0_ )
+{
+  w0 = w0_ ;
+  logPW0();
+}
+
+void SUR_Chain::setW0( double w0_ , double logP_w0_ )
+{
+  w0 = w0_ ;
+  logP_w0 = logP_w0_ ;
+}
+
+double SUR_Chain::getW0A() const{ return a_w0 ; }
+void SUR_Chain::setW0A( double a_w0_ )
+{
+  a_w0 = a_w0_ ;
+  logPW0();
+}
+
+double SUR_Chain::getW0B() const{ return b_w0 ; }
+void SUR_Chain::setW0B( double b_w0_ )
+{
+  b_w0 = b_w0_ ;
+  logPW0();
+}
+
+void SUR_Chain::setW0AB( double a_w0_ , double b_w0_ )
+{
+  a_w0 = a_w0_ ;
+  b_w0 = b_w0_ ;
+  logPW0();
+}
+
+double SUR_Chain::getLogPW0() const{ return logP_w0; }
+// no setter for this, dedicated setter below
+
 // BETA
 arma::mat& SUR_Chain::getBeta(){ return beta ; }
 void SUR_Chain::setBeta( arma::mat&  externalBeta )
@@ -569,7 +608,7 @@ void SUR_Chain::setLogLikelihood( double log_likelihood_ ){ log_likelihood = log
 
 double SUR_Chain::getJointLogPrior() const
 {
-    return logP_tau + logP_eta + logP_jt + logP_sigmaRho + logP_o + logP_pi + logP_gamma + logP_w + logP_beta;
+    return logP_tau + logP_eta + logP_jt + logP_sigmaRho + logP_o + logP_pi + logP_gamma + logP_w + logP_w0 + logP_beta;
 }
 
 double SUR_Chain::getJointLogPosterior() const
@@ -851,6 +890,34 @@ void SUR_Chain::wInit( double w_init )
 void SUR_Chain::wInit()
 {
     wInit( 1. , 2. , 5. );
+}
+
+void SUR_Chain::w0Init( double w0_init , double a_w0_ , double b_w0_ , double var_w0_proposal_ )
+{
+  w0 = w0_init;
+  a_w0 = a_w0_;
+  b_w0 = b_w0_;
+
+  var_w0_proposal = var_w0_proposal_ ;
+
+  w0_acc_count = 0.;
+    
+  logPW0();
+}
+
+void SUR_Chain::w0Init( double w0_init , double a_w0_ , double b_w0_ )
+{
+  w0Init( w0_init , a_w0_ , b_w0_ , 0.02 );
+}
+
+void SUR_Chain::w0Init( double w0_init )
+{
+  w0Init( w0_init , 2. , 5. );
+}
+
+void SUR_Chain::w0Init()
+{
+  w0Init( 1. , 2. , 5. );
 }
 
 void SUR_Chain::betaInit( arma::mat& beta_init )
@@ -1231,6 +1298,23 @@ double SUR_Chain::logPW( double w_ )
     return logPW( w_ , a_w , b_w );
 }
 
+// W0
+double SUR_Chain::logPW0( double w0_ , double a_w0_ , double b_w0_ )
+{
+  return Distributions::logPDFIGamma( w0_ , a_w0_, b_w0_ );
+}
+
+double SUR_Chain::logPW0( )
+{
+  logP_w0 = logPW0( w0 , a_w0 , b_w0 );
+  return logP_w0;
+}
+
+double SUR_Chain::logPW0( double w0_ )
+{
+  return logPW0( w0_ , a_w0 , b_w0 );
+}
+
 // BETA
 double logPBetaMaskgPriorK( const arma::vec&  externalBeta_k , const double& w_ , const arma::mat& invXtX_k , const double varianceFactor_k )
 {
@@ -1238,7 +1322,7 @@ double logPBetaMaskgPriorK( const arma::vec&  externalBeta_k , const double& w_ 
 }
 
 
-double SUR_Chain::logPBetaMask( const arma::mat&  externalBeta , const arma::umat& mask_ , double w_ )
+double SUR_Chain::logPBetaMask( const arma::mat&  externalBeta , const arma::umat& mask_ , double w_ , double w0_  )
 {
     arma::uvec VS_IN_k;
     arma::uvec singleIdx_k(1);
@@ -1296,6 +1380,21 @@ double SUR_Chain::logPBetaMask( const arma::mat&  externalBeta , const arma::uma
                 break;
             }
                 
+            case Beta_Type::reGroup :
+            {
+              for(unsigned int k=0; k<nOutcomes ; ++k)
+                {
+                  singleIdx_k(0) = k;
+                  VS_IN_k = mask_( arma::find( mask_.col(1) == k ) , arma::zeros<arma::uvec>(1) );
+
+                  //logP += Distributions::logPDFNormal( externalBeta(VS_IN_k,singleIdx_k) ,
+                  //            w_ * arma::eye(VS_IN_k.n_elem,VS_IN_k.n_elem) );
+                  logP += Distributions::logPDFNormal( externalBeta(VS_IN_k,singleIdx_k) ,
+                                                       arma::diagmat( arma::join_cols(w0_*arma::ones(nFixedPredictors),w_*arma::ones(VS_IN_k.n_elem-nFixedPredictors)) ) );
+                }
+              break;
+            }
+                
             default:
                 throw Bad_Beta_Type ( beta_type );
                 
@@ -1304,21 +1403,21 @@ double SUR_Chain::logPBetaMask( const arma::mat&  externalBeta , const arma::uma
     return logP;
 }
 
-double SUR_Chain::logPBeta( const arma::mat&  externalBeta , const arma::umat& externalGamma , double w_ )
+double SUR_Chain::logPBeta( const arma::mat&  externalBeta , const arma::umat& externalGamma , double w_ , double w0_ )
 {
     arma::umat mask = createGammaMask( externalGamma );
-    return logPBetaMask( externalBeta , mask , w_ );
+    return logPBetaMask( externalBeta , mask , w_ , w0_  );
 }
 
 double SUR_Chain::logPBeta( )
 {
-    logP_beta = logPBetaMask( beta , gammaMask , w );
+    logP_beta = logPBetaMask( beta , gammaMask , w , w0 );
     return logP_beta;
 }
 
 double SUR_Chain::logPBeta( const arma::mat&  externalBeta )
 {
-    return logPBetaMask(  externalBeta , gammaMask , w );
+    return logPBetaMask(  externalBeta , gammaMask , w , w0 );
 }
 
 // PREDICTIVE LIKELIHOODS
@@ -1565,7 +1664,7 @@ double SUR_Chain::sampleBetaGivenSigmaRho( arma::mat& mutantBeta , const arma::m
     // the prior is updated outside as this function is needed also in the global updates and we
     // don't want to update erroneously the state of a different chain
     
-    mutantBeta.set_size(nFixedPredictors+nVSPredictors,nOutcomes); // resize to be sure
+    mutantBeta.set_size(nVSPredictors + nFixedPredictors,nOutcomes); // resize to be sure
     mutantBeta.fill(0.);
     
     if(externalGammaMask.n_rows>0)
@@ -1658,9 +1757,37 @@ double SUR_Chain::sampleBetaGivenSigmaRho( arma::mat& mutantBeta , const arma::m
                         break;
                     }
                         
+                    case Beta_Type::reGroup :
+                    {
+                        
+                        if( preComputedXtX )
+                            //arma::inv_sympd( W_k ,  ( XtX(VS_IN_k,VS_IN_k) / temperature ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier(k) ) + (1./w)*arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
+                            arma::inv_sympd( W_k ,  ( XtX(VS_IN_k,VS_IN_k) / temperature ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier(k) ) + arma::diagmat( arma::join_cols((1./w0)*arma::ones(nFixedPredictors),(1./w)*arma::ones(VS_IN_k.n_elem-nFixedPredictors)) ) );
+                        else
+                          //arma::inv_sympd( W_k ,  ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier(k) ) + (1./w)*arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
+                          arma::inv_sympd( W_k ,  ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier(k) ) +  arma::diagmat( arma::join_cols((1./w0)*arma::ones(nFixedPredictors),(1./w)*arma::ones(VS_IN_k.n_elem-nFixedPredictors)) ) );
+
+                        mu_k = W_k * ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * y_tilde.col(k) / temperature ) ;
+                        /*
+                        if( k==1 )
+                        {
+                            std::cout << "...Debug the update of w0 & w: " << w0 << "; " << w << std::endl;
+                          std::cout << "...Debug the updated length of mu_1: " << arma::size(mu_k) << std::endl;
+                          std::cout << "...Debug the update of b0: " << arma::conv_to<arma::rowvec>::from(beta.submat(0,0,2,0)) << std::endl;
+                          std::cout << "...Debug the update of b: " << arma::conv_to<arma::rowvec>::from(beta.submat(nFixedPredictors-1+0,0,nFixedPredictors-1+2,0)) << std::endl;
+
+                        }
+                        */
+                        tmpVec = Distributions::randMvNormal( mu_k , W_k );
+                        logP += Distributions::logPDFNormal( tmpVec , mu_k , W_k );
+                        
+                        break;
+                    }
+                        
                     default:
                         throw Bad_Beta_Type ( beta_type );
                 }
+                
                 mutantBeta(VS_IN_k,singleIdx_k) = tmpVec;
                 
             }// end if VS_IN_k is non-empty
@@ -1738,6 +1865,13 @@ double SUR_Chain::sampleBetaKGivenSigmaRho( const unsigned int k , arma::mat& mu
                         break;
                     }
                         
+                    case Beta_Type::reGroup :
+                    {
+                      //arma::inv_sympd( W_k ,  ( XtX(VS_IN_k,VS_IN_k) / temperature ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier ) + (1./w)*arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
+                      arma::inv_sympd( W_k ,  ( XtX(VS_IN_k,VS_IN_k) / temperature ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier ) + arma::diagmat( arma::join_cols((1./w0)*arma::ones(nFixedPredictors),(1./w)*arma::ones(VS_IN_k.n_elem-nFixedPredictors)) ) );
+                      break;
+                    }
+                        
                     default:
                         throw Bad_Beta_Type ( beta_type );
                 }
@@ -1755,6 +1889,13 @@ double SUR_Chain::sampleBetaKGivenSigmaRho( const unsigned int k , arma::mat& mu
                     case Beta_Type::independent :
                     {
                         arma::inv_sympd( W_k ,  ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier ) + (1./w)*arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
+                        break;
+                    }
+
+                    case Beta_Type::reGroup :
+                    {
+                        //arma::inv_sympd( W_k ,  ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier ) + (1./w)*arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
+                        arma::inv_sympd( W_k ,  ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier ) + arma::diagmat( arma::join_cols((1./w0)*arma::ones(nFixedPredictors),(1./w)*arma::ones(VS_IN_k.n_elem-nFixedPredictors)) ) );
                         break;
                     }
                         
@@ -1979,6 +2120,14 @@ double SUR_Chain::logPBetaGivenSigmaRho( const arma::mat& mutantBeta , const arm
                             break;
                         }
                             
+                        case Beta_Type::reGroup :
+                        {
+                          //arma::inv_sympd( W_k ,  ( XtX(VS_IN_k,VS_IN_k) / temperature ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier(k) ) + (1./w)*arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
+                          arma::inv_sympd( W_k ,  ( XtX(VS_IN_k,VS_IN_k) / temperature ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier(k) ) + arma::diagmat( arma::join_cols((1./w0)*arma::ones(nFixedPredictors),(1./w)*arma::ones(VS_IN_k.n_elem-nFixedPredictors)) ) );
+                              
+                          break;
+                        }
+                            
                         default:
                             throw Bad_Beta_Type ( beta_type );
                     }
@@ -1997,6 +2146,13 @@ double SUR_Chain::logPBetaGivenSigmaRho( const arma::mat& mutantBeta , const arm
                         {
                             arma::inv_sympd( W_k ,  ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier(k) ) + (1./w)*arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
                             break;
+                        }
+                            
+                        case Beta_Type::reGroup :
+                        {
+                          //arma::inv_sympd( W_k ,  ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier(k) ) + (1./w)*arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
+                          arma::inv_sympd( W_k ,  ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier(k) ) + arma::diagmat( arma::join_cols((1./w0)*arma::ones(nFixedPredictors),(1./w)*arma::ones(VS_IN_k.n_elem-nFixedPredictors)) ) );
+                          break;
                         }
                             
                         default:
@@ -2066,6 +2222,14 @@ double SUR_Chain::logPBetaKGivenSigmaRho( const unsigned int k , const arma::mat
                         arma::inv_sympd( W_k ,  ( XtX(VS_IN_k,VS_IN_k) / temperature ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier ) + (1./w)*arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
                         break;
                     }
+                    
+                    case Beta_Type::reGroup :
+                    {
+                      //arma::inv_sympd( W_k ,  ( XtX(VS_IN_k,VS_IN_k) / temperature ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier ) + (1./w)*arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
+                      arma::inv_sympd( W_k ,  ( XtX(VS_IN_k,VS_IN_k) / temperature ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier ) + arma::diagmat( arma::join_cols((1./w0)*arma::ones(nFixedPredictors),(1./w)*arma::ones(VS_IN_k.n_elem-nFixedPredictors)) ) );
+
+                      break;
+                    }
                         
                     default:
                         throw Bad_Beta_Type ( beta_type );
@@ -2085,6 +2249,13 @@ double SUR_Chain::logPBetaKGivenSigmaRho( const unsigned int k , const arma::mat
                     {
                         arma::inv_sympd( W_k ,  ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier ) + (1./w)*arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
                         break;
+                    }
+                        
+                    case Beta_Type::reGroup :
+                    {
+                      //arma::inv_sympd( W_k ,  ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier ) + (1./w)*arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
+                      arma::inv_sympd( W_k ,  ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier ) +  arma::diagmat( arma::join_cols((1./w0)*arma::ones(nFixedPredictors),(1./w)*arma::ones(VS_IN_k.n_elem-nFixedPredictors)) ) );
+                      break;
                     }
                         
                     default:
@@ -2580,6 +2751,12 @@ void SUR_Chain::stepW()
             break;
         }
             
+        case Beta_Type::reGroup :
+        {
+          stepW0Gibbs();
+          break;
+        }
+            
         default:
             throw Bad_Beta_Type ( beta_type );
     }
@@ -2598,19 +2775,42 @@ void SUR_Chain::stepWGibbs()
     logPBeta(); // update beta's log prior as it's impacted by the change in w
 }
 
+void SUR_Chain::stepW0Gibbs()
+{
+    double a = a_w + 0.5*( /*arma::accu(gamma) + intercept */ /*or*/ gammaMask.n_rows ); // divide by temperature if the prior on gamma is tempered
+    double b = b_w + 0.5*( arma::accu( arma::square(arma::nonzeros(beta.submat(nFixedPredictors,0,nObservations-1,nOutcomes-1))) ) );   // all the beta_jk w/ gamma_jk=0 are 0 already // /temperature
+
+    // std::cout << a_w << " -> " << a << "   ---   "<< b_w << " -> " << b << std::endl;
+    // std::cout << arma::nonzeros(beta).t() << std::endl; std::cin >> w;
+
+    w = Distributions::randIGamma( a , b );
+    logPW(); // update its prior value
+    
+    double a0 = a_w0 + 0.5*( nFixedPredictors*nOutcomes ); // divide by temperature if the prior on gamma is tempered
+    double b0 = b_w0 + 0.5*( arma::accu( arma::square(arma::nonzeros(beta.submat(0,0,nFixedPredictors-1,nOutcomes-1))) ) );   // all the beta_jk w/ gamma_jk=0 are 0 already // /temperature
+    w0 = Distributions::randIGamma( a0 , b0 );
+    logPW0(); // update its prior value
+
+    logPBeta(); // update beta's log prior as it's impacted by the change in w
+}
+
 void SUR_Chain::stepWMH()
 {
     double proposedW = std::exp( std::log(w) + Distributions::randNormal(0.0, var_w_proposal) );
+    double proposedW0 = std::exp( std::log(w0) + Distributions::randNormal(0.0, var_w0_proposal) );
     
     double proposedWPrior = logPW( proposedW );
-    double proposedBetaPrior = logPBetaMask( beta , gammaMask , proposedW );
+    double proposedW0Prior = logPW0( proposedW0 );
+    double proposedBetaPrior = logPBetaMask( beta , gammaMask , proposedW , proposedW0 );
     
-    double logAccProb = (proposedWPrior + proposedBetaPrior) - (logP_w + logP_beta);
+    double logAccProb = (proposedWPrior + proposedW0Prior + proposedBetaPrior) - (logP_w + logP_w0 + logP_beta);
     
     if( Distributions::randLogU01() < logAccProb )
     {
         w = proposedW;
+        w0 = proposedW0;
         logP_w = proposedWPrior;
+        logP_w0 = proposedW0Prior;
         logP_beta = proposedBetaPrior;
         
         ++w_acc_count;
@@ -2662,7 +2862,7 @@ void SUR_Chain::stepGamma()
     
     // update log probabilities
     double proposedGammaPrior = logPGamma( proposedGamma );
-    double proposedBetaPrior = logPBetaMask( proposedBeta , proposedGammaMask , w );
+    double proposedBetaPrior = logPBetaMask( proposedBeta , proposedGammaMask , w , w0 );
     double proposedLikelihood = logLikelihood( proposedGammaMask , proposedXB , proposedU , proposedRhoU , sigmaRho );
     
     double logAccProb = logProposalRatio +
@@ -2934,6 +3134,14 @@ void SUR_Chain::swapW( std::shared_ptr<SUR_Chain>& that )
     that->setW( par );
 }
 
+void SUR_Chain::swapW0( std::shared_ptr<SUR_Chain>& that )
+{
+    double par = this->getW0();
+    
+    this->setW0( that->getW0() );
+    that->setW0( par );
+}
+
 void SUR_Chain::swapBeta( std::shared_ptr<SUR_Chain>& that )
 {
     arma::mat par = this->getBeta();
@@ -3106,8 +3314,8 @@ int SUR_Chain::adapt_crossOver_step( std::shared_ptr<SUR_Chain>& that )
     double logLikFirst = this->logLikelihood( gammaMask_XO[0] , XB_XO[0] , U_XO[0] , rhoU_XO[0] , this->getSigmaRho() );
     double logLikSecond = that->logLikelihood( gammaMask_XO[1] , XB_XO[1] , U_XO[1] , rhoU_XO[1] , that->getSigmaRho() );
     
-    double logPBetaFirst = this->logPBetaMask( betaXO[0] , gammaMask_XO[0] , this->getW() );  // this and that are important for temperature and hyperparameters
-    double logPBetaSecond = that->logPBetaMask( betaXO[1] , gammaMask_XO[1] , that->getW() );
+    double logPBetaFirst = this->logPBetaMask( betaXO[0] , gammaMask_XO[0] , this->getW() , this->getW0() );  // this and that are important for temperature and hyperparameters
+    double logPBetaSecond = that->logPBetaMask( betaXO[1] , gammaMask_XO[1] , that->getW() , that->getW0() );
     
     double logPGammaFirst = this->logPGamma( gammaXO[0] );
     double logPGammaSecond = that->logPGamma( gammaXO[1] );
@@ -3213,8 +3421,8 @@ int SUR_Chain::uniform_crossOver_step( std::shared_ptr<SUR_Chain>& that )
     double logLikFirst = this->logLikelihood( gammaMask_XO[0] , XB_XO[0] , U_XO[0] , rhoU_XO[0] , this->getSigmaRho() );
     double logLikSecond = that->logLikelihood( gammaMask_XO[1] , XB_XO[1] , U_XO[1] , rhoU_XO[1] , that->getSigmaRho() );
     
-    double logPBetaFirst = this->logPBetaMask( betaXO[0] , gammaMask_XO[0] , this->getW() );  // this and that are important for temperature and hyperparameters
-    double logPBetaSecond = that->logPBetaMask( betaXO[1] , gammaMask_XO[1] , that->getW() );
+    double logPBetaFirst = this->logPBetaMask( betaXO[0] , gammaMask_XO[0] , this->getW() , this->getW0() );  // this and that are important for temperature and hyperparameters
+    double logPBetaSecond = that->logPBetaMask( betaXO[1] , gammaMask_XO[1] , that->getW() , that->getW0() );
     
     double logPGammaFirst = this->logPGamma( gammaXO[0] );
     double logPGammaSecond = that->logPGamma( gammaXO[1] );
@@ -3336,8 +3544,8 @@ int SUR_Chain::block_crossOver_step( std::shared_ptr<SUR_Chain>& that , arma::ma
     double logLikFirst = this->logLikelihood( gammaMask_XO[0] , XB_XO[0] , U_XO[0] , rhoU_XO[0] , this->getSigmaRho() );
     double logLikSecond = that->logLikelihood( gammaMask_XO[1] , XB_XO[1] , U_XO[1] , rhoU_XO[1] , that->getSigmaRho() );
     
-    double logPBetaFirst = this->logPBetaMask( betaXO[0] , gammaMask_XO[0] , this->getW() );  // this and that are important for temperature and hyperparameters
-    double logPBetaSecond = that->logPBetaMask( betaXO[1] , gammaMask_XO[1] , that->getW() );
+    double logPBetaFirst = this->logPBetaMask( betaXO[0] , gammaMask_XO[0] , this->getW() , this->getW0() );  // this and that are important for temperature and hyperparameters
+    double logPBetaSecond = that->logPBetaMask( betaXO[1] , gammaMask_XO[1] , that->getW() , that->getW0() );
     
     double logPGammaFirst = this->logPGamma( gammaXO[0] );
     double logPGammaSecond = that->logPGamma( gammaXO[1] );
@@ -3427,6 +3635,7 @@ void SUR_Chain::swapAll( std::shared_ptr<SUR_Chain>& thatChain )
     this->swapGamma( thatChain );
     
     this->swapW( thatChain );
+    this->swapW0( thatChain );
     this->swapBeta( thatChain );
     
     // recompute likelihood

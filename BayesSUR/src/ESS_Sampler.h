@@ -513,6 +513,26 @@ void ESS_Sampler<T>::setHyperParameters( const Utils::Chain_Data& chainData )
             c->setWB( chainData.wB );
     }
     
+    // a_w0 and b_w0
+    if ( ! std::isnan( chainData.w0A ) )
+    {
+        if ( ! std::isnan( chainData.w0B ) )
+        {
+            for( auto c : chain )
+                c->setW0AB( chainData.w0A, chainData.w0B );
+        }
+        else
+        {
+            for( auto c : chain )
+                c->setW0A( chainData.w0A );
+        }
+    }
+    else if ( ! std::isnan( chainData.w0B ) )
+    {
+        for( auto c : chain )
+            c->setW0B( chainData.w0B );
+    }
+    
 }
 
 #endif

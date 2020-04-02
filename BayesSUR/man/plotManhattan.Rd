@@ -8,7 +8,7 @@ plotManhattan(
   object,
   which = c(1, 2),
   x.loc = FALSE,
-  axis.label = NULL,
+  axis.label = "auto",
   mark.responses = NULL,
   xlab1 = "Predictors",
   ylab1 = "mPIP",
@@ -31,7 +31,7 @@ plotManhattan(
 
 \item{x.loc}{a vector of features distance}
 
-\item{axis.label}{a vector of predictor names which are shown in the Manhattan-like plot. The default is "NULL" only showing the indices. The value "auto" show the predictor names from the orginal data.}
+\item{axis.label}{a vector of predictor names which are shown in the Manhattan-like plot. The value "NULL" only showing the indices. The default "auto" show the predictor names from the orginal data.}
 
 \item{mark.responses}{a vector of response names which are shown in the Manhattan-like plot for the mPIP}
 

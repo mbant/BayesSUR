@@ -117,6 +117,10 @@ int drive_SUR( Chain_Data& chainData )
         ModelSizeOutFile.open( outFilePrefix+"model_size_out.txt" , std::ios_base::app); // note we don't close!
     }
     
+    std::ofstream GVisitOutFile;
+    GVisitOutFile.open( outFilePrefix+"G_visit.txt", std::ios::out | std::ios::trunc); GVisitOutFile.close();
+    GVisitOutFile.open( outFilePrefix+"G_visit.txt" , std::ios_base::app); // note we don't close!
+    
     std::ofstream ModelVisitGammaOutFile;
     std::ofstream ModelVisitGOutFile;
     if( chainData.output_model_visit )
@@ -130,7 +134,8 @@ int drive_SUR( Chain_Data& chainData )
     
     // Output to file the initial state (if burnin=0)
     arma::umat gamma_out; // out var for the gammas
-    arma::umat g_out; // out var for G
+    arma::umat g_out, tmpG; // out var for G and tmpG
+    arma::urowvec g_visit; // out var for visted G (vectorized upper triangle)
     arma::mat beta_out; // out var for the betas
     arma::mat sigmaRho_out; // out var for the sigmas and rhos
     arma::vec tmpVec; // temporary to store the pi parameter vector
@@ -152,7 +157,8 @@ int drive_SUR( Chain_Data& chainData )
         
         if ( chainData.covariance_type == Covariance_Type::HIW && chainData.output_G )
         {
-            g_out = arma::umat( sampler[0] -> getGAdjMat() );
+            tmpG = arma::umat( sampler[0] -> getGAdjMat() );
+            g_out = tmpG;
             gOutFile.open( outFilePrefix+"G_out.txt" , std::ios_base::trunc);
             gOutFile << ( arma::conv_to<arma::mat>::from(g_out) );   // this might be quite long...
             gOutFile.close();
@@ -191,7 +197,11 @@ int drive_SUR( Chain_Data& chainData )
         if ( chainData.output_gamma )
             gamma_out = sampler[0] -> getGamma();
         if ( chainData.covariance_type == Covariance_Type::HIW && chainData.output_G )
-            g_out = arma::umat( sampler[0] -> getGAdjMat() );
+        {
+            tmpG = arma::umat( sampler[0] -> getGAdjMat() );
+            g_out = tmpG;
+        }
+            
         if ( chainData.output_beta )
             beta_out = sampler[0] -> getBeta();
         if ( chainData.output_sigmaRho )
@@ -227,6 +237,14 @@ int drive_SUR( Chain_Data& chainData )
         ModelSizeOutFile << sampler[0]->getModelSize() << " ";
         ModelSizeOutFile << '\n';
     }
+    
+    g_visit.clear();
+    for(unsigned int k=0; k < tmpG.n_cols-1; ++k)
+    {
+        g_visit = join_rows( g_visit, tmpG.submat(k,k+1, k,tmpG.n_cols-1) );
+    }
+    GVisitOutFile << g_visit << " ";
+    GVisitOutFile << '\n';
     
     if ( chainData.output_model_visit )
     {
@@ -275,8 +293,11 @@ int drive_SUR( Chain_Data& chainData )
                 gamma_out += sampler[0] -> getGamma(); // the result of the whole procedure is now my new mcmc point, so add that up
             
             if ( chainData.covariance_type == Covariance_Type::HIW && chainData.output_G )
-                g_out += arma::umat( sampler[0] -> getGAdjMat() );
-            
+            {
+                tmpG = arma::umat( sampler[0] -> getGAdjMat() );
+                g_out += tmpG;
+            }
+                
             if ( chainData.output_beta )
                 beta_out += sampler[0] -> getBeta();
             
@@ -309,6 +330,9 @@ int drive_SUR( Chain_Data& chainData )
             }
             
             // Nothing to update for model size
+        }else{
+            if ( chainData.covariance_type == Covariance_Type::HIW && chainData.output_G )
+                tmpG = arma::umat( sampler[0] -> getGAdjMat() );
         }
         
         if ( chainData.output_model_visit )
@@ -386,6 +410,15 @@ int drive_SUR( Chain_Data& chainData )
                 logPOutFile <<     sampler[0] -> getLogLikelihood();
                 logPOutFile <<     '\n';
                 
+                //g_visit = arma::conv_to<arma::urowvec>::from( arma::trimatu(tmpG, 1) );
+                g_visit.clear();
+                for(unsigned int k=0; k < tmpG.n_cols-1; ++k)
+                {
+                    g_visit = join_rows( g_visit, tmpG.submat(k,k+1, k,tmpG.n_cols-1) );
+                }
+                GVisitOutFile << g_visit << " ";
+                GVisitOutFile << '\n';
+                
                 if ( chainData.output_model_size )
                 {
                     ModelSizeOutFile << sampler[0]->getModelSize() << " ";
@@ -433,6 +466,8 @@ int drive_SUR( Chain_Data& chainData )
         ModelSizeOutFile << '\n';
         ModelSizeOutFile.close();
     }
+    
+    GVisitOutFile.close();
     
     if ( chainData.output_model_visit )
     {
@@ -997,6 +1032,8 @@ int drive( const std::string& dataFile, const std::string& mrfGFile, const std::
         chainData.beta_type = Beta_Type::gprior ;
     else if ( betaPrior == "independent" )
         chainData.beta_type = Beta_Type::independent ;
+    else if ( betaPrior == "reGroup" )
+        chainData.beta_type = Beta_Type::reGroup ;
     else
     {
         Rcout << betaPrior << "\n";
@@ -1110,7 +1147,7 @@ int drive( const std::string& dataFile, const std::string& mrfGFile, const std::
     {
         nThreads = std::min( 16, omp_get_max_threads()-1 ); //TODO: make 16 as parameter, note I still use -1 to allow PC to do work in the meantime
     }*/
-    nThreads = maxThreads;
+    nThreads = std::min( omp_get_max_threads()-1, maxThreads );
     omp_set_num_threads(  nThreads );
 #endif
     

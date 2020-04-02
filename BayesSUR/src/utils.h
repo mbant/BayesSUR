@@ -70,6 +70,7 @@ namespace Utils{
 		double oA 		= std::nan("0"), oB 	= std::nan("0") ;
 		double piA 		= std::nan("0"), piB 	= std::nan("0") ;
 		double wA 		= std::nan("0"), wB 	= std::nan("0") ;
+        double w0A      = std::nan("0"), w0B    = std::nan("0") ;
 
 		// init for some variables
 		arma::mat betaInit;

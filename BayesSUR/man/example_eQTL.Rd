@@ -4,7 +4,7 @@
 \name{example_eQTL}
 \alias{example_eQTL}
 \title{Simulated data set to mimic a small expression quantitative trait loci (eQTL) example}
-\format{An object of class \code{list} of length 2.}
+\format{An object of class \code{list} of length 4.}
 \usage{
 example_eQTL
 }
@@ -192,7 +192,7 @@ if(graph_pattern<4){
 
 #### Sample the betas
 sd_b = 1
-b = matrix(rnorm((p+1)*s,5,sd_b),p+1,s)
+b = matrix(rnorm((p+1)*s,0,sd_b),p+1,s)
 
 xb = matrix(NA,n,s)
 

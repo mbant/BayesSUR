@@ -48,8 +48,8 @@
 #' 
 #' @export 
 plotNetwork <- function(object, includeResponse=NULL, excludeResponse=NULL, includePredictor=NULL, excludePredictor=NULL, 
-                        MatrixGamma=NULL, PmaxPredictor=0.5, PmaxResponse=0.5, nodesizePredictor=5, nodesizeResponse=25, no.isolates=FALSE,
-                        lineup=1, gray.alpha=0.6, edgewith.response=5, edgewith.predictor=2, edge.weight=FALSE, label.predictor=NULL,
+                        MatrixGamma=NULL, PmaxPredictor=0.5, PmaxResponse=0.5, nodesizePredictor=2, nodesizeResponse=15, no.isolates=FALSE,
+                        lineup=1.2, gray.alpha=0.6, edgewith.response=5, edgewith.predictor=2, edge.weight=FALSE, label.predictor=NULL,
                         label.response=NULL, color.predictor=NULL,color.response=NULL, name.predictors=NULL,name.responses=NULL, 
                         vertex.frame.color=NA,layoutInCircle=FALSE, header="", ...){
   
@@ -196,7 +196,7 @@ plotSEMgraph <- function(ADJmatrix,GAMmatrix,nodesizeSNP=2,nodesizeMET=25,no.iso
   }
   
   plot.igraph(graphSEM,edge.arrow.size=0.5, edge.width=edge.width, vertex.frame.color=vertex.frame.color,
-       edge.color=c(rep(gray(0),2*n.edgeADJ),rep(gray(0.7, alpha=gray.alpha),2*n.edgeGAM)),layout=layoutSEM,...)
+              edge.color=c(rep(gray(0),2*n.edgeADJ),rep(gray(0.7, alpha=gray.alpha),2*n.edgeGAM)),layout=layoutSEM,...)
   
   if(!is.null(name.predictors)) text(-1,-1.3,name.predictors,cex=1.2)
   if(!is.null(name.responses)) text(0.4,-1.3,name.responses,cex=1.2)

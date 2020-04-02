@@ -280,6 +280,22 @@ class SUR_Chain : public ESS_Atom<SUR_Chain>
         double getLogPW() const;
         // no setter for this, dedicated setter below
 
+        // W0
+        double getW0() const;
+        void setW0( double );
+        void setW0( double , double );
+
+        double getW0A() const;
+        void setW0A( double );
+              
+        double getW0B() const;
+        void setW0B( double );
+
+        void setW0AB( double, double );
+
+        double getLogPW0() const;
+        // no setter for this, dedicated setter below
+    
         // BETA
         arma::mat& getBeta();
         void setBeta( arma::mat& );
@@ -347,6 +363,11 @@ class SUR_Chain : public ESS_Atom<SUR_Chain>
         void wInit( double );
         void wInit( double , double , double );
         void wInit( double , double , double , double );
+    
+        void w0Init();
+        void w0Init( double );
+        void w0Init( double , double , double );
+        void w0Init( double , double , double , double );
 
         void betaInit();
         void betaInit( arma::mat& );
@@ -403,12 +424,17 @@ class SUR_Chain : public ESS_Atom<SUR_Chain>
         double logPW( );
         double logPW( double );
         double logPW( double , double , double );
+    
+        // W0
+        double logPW0( );
+        double logPW0( double );
+        double logPW0( double , double , double );
 
         // BETA
         double logPBeta( );
         double logPBeta( const arma::mat& );
-        double logPBeta( const arma::mat& , const arma::umat& , double );
-        double logPBetaMask( const arma::mat& , const arma::umat& , double ); // faster version if the gamma mask is available
+        double logPBeta( const arma::mat& , const arma::umat& , double , double );
+        double logPBetaMask( const arma::mat& , const arma::umat& , double , double ); // faster version if the gamma mask is available
     
         // PREDICTIVE LIKELIHOODS
         arma::mat predLikelihood();
@@ -471,8 +497,10 @@ class SUR_Chain : public ESS_Atom<SUR_Chain>
         void stepOnePi();
         void stepPi();
         void stepW();
+        void stepW0();
         void stepWMH();
         void stepWGibbs();
+        void stepW0Gibbs();
 
         void stepJT();
         void stepGamma();
@@ -501,6 +529,7 @@ class SUR_Chain : public ESS_Atom<SUR_Chain>
         void swapPi( std::shared_ptr<SUR_Chain>& );
         void swapGamma( std::shared_ptr<SUR_Chain>& );
         void swapW( std::shared_ptr<SUR_Chain>& );
+        void swapW0( std::shared_ptr<SUR_Chain>& );
         void swapBeta( std::shared_ptr<SUR_Chain>& );
         
         int exchangeAll_step( std::shared_ptr<SUR_Chain>& );
@@ -666,6 +695,12 @@ class SUR_Chain : public ESS_Atom<SUR_Chain>
         double logP_w;
         double w_acc_count;
         double var_w_proposal;
+    
+        double w0;
+        double a_w0,b_w0;
+        double logP_w0;
+        double w0_acc_count;
+        double var_w0_proposal;
 
         // BETA - regression coefficients
         // beta_jk | gamma_jk ~ gamma_jk * Normal( 0 , w ) + (1-gamma_jk) * delta(0) where delta(0) is a Dirac point mass on 0

@@ -4,12 +4,15 @@
 \alias{plotMCMCdiag}
 \title{show trace plots and diagnostic density plots}
 \usage{
-plotMCMCdiag(object, nbloc = 3, header = "", ...)
+plotMCMCdiag(object, nbloc = 3, HIWg = NULL, header = "", ...)
 }
 \arguments{
 \item{object}{an object of class "BayesSUR"}
 
-\item{nbloc}{number of splits for the last half iterations}
+\item{nbloc}{number of splits for the last half iterations after substracting burn-in length}
+
+\item{HIWg}{diagnostic plot of the response graph. Default is \code{NULL}. \code{HIW="degree"} prints the diagnostic of the degrees of response nodes. \code{HIW="edges"} prints the diagnostic 
+of every edge between two responses. \code{HIW="lik"} prints the diagnostic of the posterior likelihoods of the hyperparameters related to the response relationships}
 
 \item{header}{the main title}
 

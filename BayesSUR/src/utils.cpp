@@ -248,6 +248,9 @@ namespace Utils{
 			pugi::xpath_query query_a_w("/hyperparameters/a_w");
 			pugi::xpath_query query_b_w("/hyperparameters/b_w");
 
+            pugi::xpath_query query_a_w0("/hyperparameters/a_w0");
+            pugi::xpath_query query_b_w0("/hyperparameters/b_w0");
+
 			// get results
 			chainData.mrfD = query_mrf_d.evaluate_number(doc);
 			chainData.mrfE = query_mrf_e.evaluate_number(doc);
@@ -271,10 +274,12 @@ namespace Utils{
 			chainData.wA  = query_a_w.evaluate_number(doc);
 			chainData.wB = query_b_w.evaluate_number(doc);
 
+            chainData.w0A  = query_a_w0.evaluate_number(doc);
+            chainData.w0B = query_b_w0.evaluate_number(doc);
 
 			std::vector<std::string> valid_top_level = {"hyperparameters"}; // ,"model","chain"}; ?
 			std::vector<std::string> valid_hyperpar = {"mrf_d","mrf_e","a_sigma","b_sigma","a_tau","b_tau","nu",
-													"a_eta","b_eta","a_o","b_o","a_pi","b_pi","a_w","b_w"};
+													"a_eta","b_eta","a_o","b_o","a_pi","b_pi","a_w","b_w","a_w0","b_w0"};
 
 			for (pugi::xml_node node = doc.first_child(); node; node = node.next_sibling())
 			{

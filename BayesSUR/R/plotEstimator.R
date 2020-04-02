@@ -17,7 +17,12 @@
 #' @param fig.tex print the figure through LaTex. Default is "FALSE"
 #' @param output the file name of printed figure
 #' @param header the main title
-#' @param header.cex size of the main title
+#' @param header.cex size of the main title for all estimators
+#' @param cex.main size of the title for each estimator
+#' @param title.beta a title for the printed "beta" if \code{fig.tex=TRUE}
+#' @param title.gamma a title for the printed "gamma" if \code{fig.tex=TRUE}
+#' @param title.Gy a title for the printed "Gy" if \code{fig.tex=TRUE}
+#' @param tick a logical value specifying whether tickmarks and an axis line should be drawn. Default is "FALSE"
 #' @param mgp the margin line (in mex units) for the axis title, axis labels and axis line
 #' @param ... other arguments
 #' 
@@ -41,8 +46,10 @@
 #' }
 #' 
 #' @export
-plotEstimator <- function(object, estimator="all", colorScale.gamma=grey((100:0)/100), colorScale.beta=c("blue","white","red"), legend.cex.axis=1,
-                          name.responses=NA, name.predictors=NA, xlab="", ylab="", fig.tex=FALSE, output="ParamEstimator", header="", header.cex=2, mgp=c(2.5,1,0), ...){
+plotEstimator <- function(object, estimator="all", colorScale.gamma=grey((100:0)/100), colorScale.beta=c("blue","white","red"), legend.cex.axis=1, name.responses=NA, 
+                          name.predictors=NA, xlab="", ylab="", fig.tex=FALSE, output="ParamEstimator", header="", header.cex=2, tick=FALSE, mgp=c(2.5,1,0),
+                          title.beta=paste("Estimator","$\\hat{\\bm{B}}$"), title.gamma=paste("Estimator","$\\hat{\\mathbf{\\Gamma}}$"),
+                          title.Gy=paste("Estimator","$\\hat{\\mathcal{G}}$"), cex.main=1.5,...){
   
   object$output[-1] <- paste(object$output$outFilePath,object$output[-1],sep="")
   beta_hat <- as.matrix( read.table(object$output$beta) )
@@ -83,24 +90,26 @@ plotEstimator <- function(object, estimator="all", colorScale.gamma=grey((100:0)
       colorbar <- c(colorRampPalette(c(colorScale.beta[1], colorScale.beta[2]))(floor(1000/(-(max(beta_hat)-min(beta_hat))/min(beta_hat)-1))), colorRampPalette(c(colorScale.beta[2],colorScale.beta[3]))(1000)[-1])
       
       image(z=beta_hat, x=1:nrow(beta_hat), y=1:ncol(beta_hat), col=colorbar, mgp=mgp,  
-            axes=ifelse(is.na(name.responses)[1],TRUE,FALSE), xlab=xlab, ylab=ylab,main=expression(hat(bold(B))),cex.main=1.5,cex.lab=1.5,...);box()
+            axes=ifelse(is.na(name.responses)[1],TRUE,FALSE), xlab=xlab, ylab=ylab,main=expression(hat(bold(B))),cex.main=cex.main,cex.lab=1.5,...);box()
       vertical.image.legend(col=colorbar, zlim=c(min(beta_hat),max(beta_hat)), legend.cex.axis=legend.cex.axis)
       if(!is.na(name.responses)[1]){
         par(las=2, cex.axis=1)
-        axis(2, at = 1:ncol(beta_hat), labels=name.responses)
-        axis(1, at = 1:nrow(beta_hat), labels=name.predictors)
+        axis(2, at = 1:ncol(beta_hat), labels=name.responses, tick=tick)
+        #opar <- par(cex.axis=1)
+        axis(1, at = 1:nrow(beta_hat), labels=name.predictors, tick=tick)
       }
     }
     if(sum(estimator %in% c("all","gamma"))){
       image(z=gamma_hat, x=1:nrow(gamma_hat), y=1:ncol(gamma_hat), col=colorScale.gamma, mgp=mgp, 
-            axes=ifelse(is.na(name.responses)[1],TRUE,FALSE), xlab=xlab, ylab=ylab,main=expression(hat(bold(Gamma))),cex.main=1.5,cex.lab=1.5,...);box()
+            axes=ifelse(is.na(name.responses)[1],TRUE,FALSE), xlab=xlab, ylab=ylab,main=expression(hat(bold(Gamma))),cex.main=cex.main,cex.lab=1.5,...);box()
       vertical.image.legend(col=colorScale.gamma, zlim=c(0,1), legend.cex.axis=legend.cex.axis)
       if(!is.na(name.responses)[1]){
         par(las=2, cex.axis=1)
-        axis(2, at = 1:ncol(gamma_hat), labels=name.responses)
+        axis(2, at = 1:ncol(gamma_hat), labels=name.responses, tick=tick)
+        #opar <- par(cex.axis=1)
         if(nonpen > 0)
           name.predictors <- name.predictors[-c(1:nonpen)]
-        axis(1, at = 1:nrow(gamma_hat), labels=name.predictors)
+        axis(1, at = 1:nrow(gamma_hat), labels=name.predictors, tick=tick)
       }
     }
     
@@ -109,18 +118,20 @@ plotEstimator <- function(object, estimator="all", colorScale.gamma=grey((100:0)
         Gy_hat <- as.matrix( read.table(object$output$G) )
         
         image(z=Gy_hat+diag(ncol(Gy_hat)), x=1:nrow(Gy_hat), y=1:nrow(Gy_hat), col=colorScale.gamma, mgp=mgp, 
-              axes=ifelse(is.na(name.responses)[1],TRUE,FALSE), xlab=xlab, ylab=ylab,main="Estimated graph of responses",cex.main=1.5,cex.lab=1.5,...);box()
+              axes=ifelse(is.na(name.responses)[1],TRUE,FALSE), xlab=ylab, ylab=ylab,main="Estimated graph of responses",cex.main=cex.main,cex.lab=1.5,...);box()
         vertical.image.legend(col=colorScale.gamma, zlim=c(min(Gy_hat),max(Gy_hat)), legend.cex.axis=legend.cex.axis)
         if(!is.na(name.responses)[1]){
           par(las=2, cex.axis=1)
-          axis(2, at = 1:ncol(Gy_hat), labels=name.responses)
-          axis(1, at = 1:nrow(Gy_hat), labels=name.responses)
+          axis(2, at = 1:ncol(Gy_hat), labels=name.responses, tick=tick)
+          #opar <- par(cex.axis=1)
+          axis(1, at = 1:nrow(Gy_hat), labels=name.responses, tick=tick)
         }
       }
     }
     title(paste("\n",header,sep=""), cex.main=header.cex, outer=T)
     
   }else{
+    #par(mar=c(6,5,5,4))
     options(tikzMetricPackages = c("\\usepackage{amsmath}","\\usepackage{bm}","\\usetikzlibrary{calc}"))
     if(estimator[1]=="all"){
       tikz(paste(output,".tex",sep=""),width=6.5,height=2.3,standAlone=TRUE,packages=c("\\usepackage{tikz}","\\usepackage{amsmath}",
@@ -139,24 +150,26 @@ plotEstimator <- function(object, estimator="all", colorScale.gamma=grey((100:0)
       colorbar <- c(colorRampPalette(c(colorScale.beta[1], colorScale.beta[2]))(floor(1000/(-(max(beta_hat)-min(beta_hat))/min(beta_hat)-1))), colorRampPalette(c(colorScale.beta[2],colorScale.beta[3]))(1000)[-1])
       
       image(z=beta_hat, x=1:nrow(beta_hat), y=1:ncol(beta_hat), col=colorbar, axes=ifelse(is.na(name.responses)[1],TRUE,FALSE), mgp=mgp,  
-            xlab=xlab, ylab=ylab, main=paste("Estimator","$\\hat{\\bm{B}}$"),cex.main=1.5,cex.lab=1.5,...);box()
+            xlab=xlab, ylab=ylab, main=title.beta,cex.main=cex.main,cex.lab=1.5,...);box()
       vertical.image.legend(col=colorbar, zlim=c(min(beta_hat),max(beta_hat)), legend.cex.axis=legend.cex.axis)
       if(!is.na(name.responses)[1]){
         par(las=2, cex.axis=1)
-        axis(2, at = 1:ncol(beta_hat), labels=name.responses)
-        axis(1, at = 1:nrow(beta_hat), labels=name.predictors)
+        axis(2, at = 1:ncol(beta_hat), labels=name.responses, tick=tick)
+        #opar <- par(cex.axis=1)
+        axis(1, at = 1:nrow(beta_hat), labels=name.predictors, tick=tick)
       }
     }
     if(sum(estimator %in% c("all","gamma"))){
       image(z=gamma_hat, x=1:nrow(gamma_hat), y=1:ncol(gamma_hat), col=colorScale.gamma, axes=ifelse(is.na(name.responses)[1],TRUE,FALSE), mgp=mgp,  
-            xlab=xlab, ylab=ylab, main=paste("Estimator","$\\hat{\\mathbf{\\Gamma}}$"),cex.main=1.5,cex.lab=1.5,...);box()
+            xlab=xlab, ylab=ylab, main=title.gamma,cex.main=cex.main,cex.lab=1.5,...);box()
       vertical.image.legend(col=colorScale.gamma, zlim=c(0,1), legend.cex.axis=legend.cex.axis)
       if(!is.na(name.responses)[1]){
         par(las=2, cex.axis=1)
-        axis(2, at = 1:ncol(gamma_hat), labels=name.responses)
+        axis(2, at = 1:ncol(gamma_hat), labels=name.responses, tick=tick)
+        #opar <- par(cex.axis=1)
         if(nonpen > 0)
           name.predictors <- name.predictors[-c(1:nonpen)]
-        axis(1, at = 1:nrow(gamma_hat), labels=name.predictors)
+        axis(1, at = 1:nrow(gamma_hat), labels=name.predictors, tick=tick)
       }
     }
     
@@ -165,13 +178,14 @@ plotEstimator <- function(object, estimator="all", colorScale.gamma=grey((100:0)
         Gy_hat <- as.matrix( read.table(object$output$G) )
         
         image(z=Gy_hat+diag(ncol(Gy_hat)), x=1:nrow(Gy_hat), y=1:nrow(Gy_hat), col=colorScale.gamma, axes=ifelse(is.na(name.responses)[1],TRUE,FALSE), mgp=mgp, 
-              xlab=xlab, ylab=ylab, main=paste("Estimator","$\\hat{\\mathcal{G}}$"),cex.main=1.5,cex.lab=1.5,...);box()
+              xlab=ylab, ylab=ylab, main=title.Gy,cex.main=cex.main,cex.lab=1.5,...);box()
         vertical.image.legend(col=colorScale.gamma, zlim=c(min(Gy_hat),max(Gy_hat)), legend.cex.axis=legend.cex.axis)
         
         if(!is.na(name.responses)[1]){
           par(las=2, cex.axis=1)
-          axis(2, at = 1:ncol(Gy_hat), labels=name.responses)
-          axis(1, at = 1:nrow(Gy_hat), labels=name.responses)
+          axis(2, at = 1:ncol(Gy_hat), labels=name.responses, tick=tick)
+          #opar <- par(cex.axis=1)
+          axis(1, at = 1:nrow(Gy_hat), labels=name.responses, tick=tick)
         }
       }
     }
@@ -197,10 +211,13 @@ vertical.image.legend <- function (zlim, col, legend.cex.axis=1)
   cut.pts <- seq(zlim[1], zlim[2], length = length(col) + 1)
   z <- (cut.pts[1:length(col)] + cut.pts[2:(length(col) + 1)])/2
   par(new = TRUE, pty = "m", plt = c(x.legend.plt, y.legend.plt))
-  image(x = 1.5, y = z, z = matrix(z, nrow = 1, ncol = length(col)), 
+  # If z is not inincreasing, only two values
+  if(all(diff(z) > 0)){
+    image(x = 1.5, y = z, z = matrix(z, nrow = 1, ncol = length(col)), 
         col = col, xlab = "", ylab = "", xaxt = "n", yaxt = "n")
-  axis(4, mgp = c(3, 0.2, 0), las = 2, cex.axis = legend.cex.axis, tcl = -0.1)
-  box()
+    axis(4, mgp = c(3, 0.2, 0), las = 2, cex.axis = legend.cex.axis, tcl = -0.1)
+    box()
+  }
   mfg.settings <- par()$mfg
   par(starting.par.settings)
   par(mfg = mfg.settings, new = FALSE)

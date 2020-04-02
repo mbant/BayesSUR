@@ -16,6 +16,7 @@ BayesSUR(
   nChains = 2,
   covariancePrior = "HIW",
   gammaPrior = "",
+  betaPrior = "independent",
   gammaSampler = "bandit",
   gammaInit = "MLE",
   mrfG = NULL,
@@ -45,16 +46,18 @@ if the 'data' argument is not provided, these needs to be matrices containing th
 
 \item{outFilePath}{path to where the output files are to be written. The default path is the currect working directory.}
 
-\item{nIter}{number of iterations for the MCMC procedure}
+\item{nIter}{number of iterations for the MCMC procedure.}
 
-\item{burnin}{number of iterations (or fraction of iterations) to discard at the start of the chain. Default is 0}
+\item{burnin}{number of iterations (or fraction of iterations) to discard at the start of the chain. Default is 0.}
 
-\item{nChains}{number of parallel chains to run}
+\item{nChains}{number of parallel chains to run.}
 
 \item{covariancePrior}{string indicating the prior for the covariance $C$; it has to be either "HIW" for the hyper-inverse-Wishar (which will result in a sparse covariance matrix),
 "IW" for the inverse-Wishart prior ( dense covariance ) or "IG" for independent inverse-Gamma on all the diagonal elements and 0 otherwise. See the details for the model specification}
 
 \item{gammaPrior}{string indicating the gamma prior to use, either "hotspot" for the Hotspot prior of Bottolo (2011), "MRF" for the Markov Random Field prior or "hierarchical" for a simpler hierarchical prior. See the details for the model specification}
+
+\item{betaPrior}{string indicating the beta prior to use, either "independent" for the independent spike-and-slab prior or "reGroup" for the random effects for \code{X_0} and independent spike-and-slab priors for other predictors}
 
 \item{gammaSampler}{string indicating the type of sampler for gamma, either "bandit" for the Thompson sampling inspired samper or "MC3" for the usual $MC^3$ sampler}
 
@@ -64,9 +67,9 @@ if the 'data' argument is not provided, these needs to be matrices containing th
 
 \item{standardize}{logical flag for X variable standardization. Default is standardize=TRUE. The coefficients are returned on the standardized scale.}
 
-\item{standardize.response}{standardization for the response variables. Default is standardize.response=TRUE.}
+\item{standardize.response}{Standardization for the response variables. Default is standardize.response=TRUE.}
 
-\item{maxThreads}{maximum number of threads for the parallelization. Default is 2.}
+\item{maxThreads}{maximum threshods used for parallelization. Default is 2.}
 
 \item{output_gamma}{allow ( \code{TRUE} ) or suppress ( \code{FALSE} ) the output for  gamma. See the return value below for more information.}
 
@@ -91,7 +94,7 @@ if the 'data' argument is not provided, these needs to be matrices containing th
 \item{output_X}{allow ( \code{TRUE} ) or suppress ( \code{FALSE} ) the output for predictors dataset X.}
 
 \item{hyperpar}{a list of named hypeparameters to use instead of the default values. Valid names are mrf_d, mrf_e, a_sigma, b_sigma, a_tau, b_tau, nu, a_eta, b_eta, a_o, b_o, a_pi, b_pi, a_w and b_w. 
-Their default values are a_w=2, b_w=5, a_o=p-2, b_o=0.005, a_pi=2 (hotspot) or 1 (hierarchical), b_pi=1 (hotspot) or s-1 (hierarchical), nu=s+2, a_tau=0.1, b_tau=10, a_eta=0.1, b_eta=1, a_sigma=1, b_sigma=1, mrf_d=-3 and mrf_e=0.001. See the vignette for more information.}
+Their default values are a_w=2, b_w=5, a_o=2, b_o=p-2, a_pi=2 (hotspot) or 1 (hierarchical), b_pi=1 (hotspot) or s-1 (hierarchical), nu=s+2, a_tau=0.1, b_tau=10, a_eta=0.1, b_eta=1, a_sigma=1, b_sigma=1, mrf_d=-3 and mrf_e=0.03. See the vignette for more information.}
 
 \item{tmpFolder}{the path to a temporary folder where intermediate data files are stored (will be erased at the end of the chain) default to local tmpFolder}
 }

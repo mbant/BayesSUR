@@ -1,8 +1,8 @@
 Package: BayesSUR
 Type: Package
 Title: Bayesian Seemingly Unrelated Regression
-Version: 1.0-4
-Date: 2019-12-17
+Version: 1.1-0
+Date: 2020-04-02
 Authors@R: c(
         person("Marco", "Banterle",
                 email = "marco.banterle@gmail.com", role = c("aut")),
@@ -38,7 +38,7 @@ Suggests: R.rsp, BDgraph, data.table, plyr, scrime
 LazyData: true
 NeedsCompilation: yes
 SystemRequirements: C++11
-Packaged: 2019-12-17 10:16:35 UTC; zhiz
+Packaged: 2020-04-02 15:16:00 UTC; zhiz
 Author: Marco Banterle [aut],
   Zhi Zhao [aut, cre],
   Leonardo Bottolo [ctb],
@@ -47,3 +47,5 @@ Author: Marco Banterle [aut],
   Manuela Zucknick [ctb],
   Waldir Leoncio [ctb]
 Maintainer: Zhi Zhao <zhi.zhao@medisin.uio.no>
+Repository: CRAN
+Date/Publication: 2019-12-17 12:10:02 UTC

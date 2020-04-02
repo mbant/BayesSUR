@@ -18,7 +18,7 @@ enum class Gamma_Type {
 };
 
 enum class Beta_Type {
-    independent=1, gprior
+    independent=1, gprior, reGroup
 };
 
 enum class Gamma_Sampler_Type {
@@ -95,6 +95,9 @@ class Bad_Beta_Type : public std::exception{
       
         case Beta_Type::gprior :
           return "The GPRIOR BETA type is not valid here";
+
+        case Beta_Type::reGroup :
+        return "The REGROUP BETA type is not valid here";
       
         default:
           return "The beta type here is not valid -- unknown type";

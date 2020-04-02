@@ -210,6 +210,27 @@ class HRR_Chain : public ESS_Atom<HRR_Chain>
         double getLogPW() const;
         // no setter for this, dedicated setter below
         
+        // W0
+        double getW0() const;
+        void setW0( double );
+        void setW0( double , double );
+
+        double getW0A() const;
+        void setW0A( double );
+          
+        double getW0B() const;
+        void setW0B( double );
+
+        void setW0AB( double, double );
+
+        double getVarW0Proposal() const;
+        void setVarW0Proposal( double );
+
+        double getW0AccRate() const;
+
+        double getLogPW0() const;
+        // no setter for this, dedicated setter below
+    
         // get Beta, here we get a sample from the posterior for output reasons
         arma::mat& getBeta() const;
     
@@ -261,6 +282,11 @@ class HRR_Chain : public ESS_Atom<HRR_Chain>
         void wInit( double );
         void wInit( double , double , double );
         void wInit( double , double , double , double );
+    
+        void w0Init();
+        void w0Init( double );
+        void w0Init( double , double , double );
+        void w0Init( double , double , double , double );
 
         // *****************************
         // Methods for Log Probabilities
@@ -294,6 +320,11 @@ class HRR_Chain : public ESS_Atom<HRR_Chain>
         double logPW( double );
         double logPW( double , double , double );
     
+        // W0
+        double logPW0( );
+        double logPW0( double );
+        double logPW0( double , double , double );
+    
         // PREDICTIVE LIKELIHOODS
         arma::mat predLikelihood();
         arma::mat predLikelihood(const arma::mat& , const arma::mat& , const arma::mat&);
@@ -308,7 +339,7 @@ class HRR_Chain : public ESS_Atom<HRR_Chain>
         double logLikelihood( arma::umat& , const arma::umat& ); //gammaMask , gamma 
 
         // with full arguments for computing using different values
-        double logLikelihood( const arma::umat& , const double , const double , const double); //gammaMask , w, a_sigma, b_sigma
+        double logLikelihood( const arma::umat& , const double , const double , const double , const double); //gammaMask , w, w0, a_sigma, b_sigma
 
 
         // *********************
@@ -325,6 +356,7 @@ class HRR_Chain : public ESS_Atom<HRR_Chain>
         void stepOnePi();
         void stepPi();
         void stepW();
+        void stepW0();
 
         void stepGamma();
 
@@ -347,6 +379,7 @@ class HRR_Chain : public ESS_Atom<HRR_Chain>
         void swapPi( std::shared_ptr<HRR_Chain>& );
         void swapGamma( std::shared_ptr<HRR_Chain>& );
         void swapW( std::shared_ptr<HRR_Chain>& );
+        void swapW0( std::shared_ptr<HRR_Chain>& );
         
         int exchangeAll_step( std::shared_ptr<HRR_Chain>& );
         int exchangeGamma_step( std::shared_ptr<HRR_Chain>& );
@@ -408,6 +441,10 @@ class HRR_Chain : public ESS_Atom<HRR_Chain>
         double wEmpiricalM2;
         arma::vec oEmpiricalM2, piEmpiricalM2; // second moment ( nb, all on the log-scale )
         double var_w_proposal_init, var_o_proposal_init, var_pi_proposal_init ;
+    
+        double w0EmpiricalMean;
+        double w0EmpiricalM2;
+        double var_w0_proposal_init;
 
         // Bandit-sampling related quantities
         unsigned int n_updates_bandit;
@@ -467,6 +504,12 @@ class HRR_Chain : public ESS_Atom<HRR_Chain>
         double w_acc_count; // acceptance rate of the RW proposal
         double a_w,b_w;
         double logP_w;
+    
+        double w0;
+        double var_w0_proposal; // variance of the normal RW proposal
+        double w0_acc_count; // acceptance rate of the RW proposal
+        double a_w0,b_w0;
+        double logP_w0;
 
         // **************************
         // LOG-LIKELIHOOD FOR THE HRR MODEL

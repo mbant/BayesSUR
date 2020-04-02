@@ -184,7 +184,7 @@
 #' 
 #' #### Sample the betas
 #' sd_b = 1
-#' b = matrix(rnorm((p+1)*s,5,sd_b),p+1,s)
+#' b = matrix(rnorm((p+1)*s,0,sd_b),p+1,s)
 #' 
 #' xb = matrix(NA,n,s)
 #' 

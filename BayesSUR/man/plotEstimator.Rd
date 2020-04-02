@@ -18,7 +18,12 @@ plotEstimator(
   output = "ParamEstimator",
   header = "",
   header.cex = 2,
+  tick = FALSE,
   mgp = c(2.5, 1, 0),
+  title.beta = paste("Estimator", "$\\\\hat{\\\\bm{B}}$"),
+  title.gamma = paste("Estimator", "$\\\\hat{\\\\mathbf{\\\\Gamma}}$"),
+  title.Gy = paste("Estimator", "$\\\\hat{\\\\mathcal{G}}$"),
+  cex.main = 1.5,
   ...
 )
 }
@@ -47,9 +52,19 @@ plotEstimator(
 
 \item{header}{the main title}
 
-\item{header.cex}{size of the main title}
+\item{header.cex}{size of the main title for all estimators}
+
+\item{tick}{a logical value specifying whether tickmarks and an axis line should be drawn. Default is "FALSE"}
 
 \item{mgp}{the margin line (in mex units) for the axis title, axis labels and axis line}
+
+\item{title.beta}{a title for the printed "beta" if \code{fig.tex=TRUE}}
+
+\item{title.gamma}{a title for the printed "gamma" if \code{fig.tex=TRUE}}
+
+\item{title.Gy}{a title for the printed "Gy" if \code{fig.tex=TRUE}}
+
+\item{cex.main}{size of the title for each estimator}
 
 \item{...}{other arguments}
 }
