@@ -7,7 +7,11 @@ See `test.R` file for usage; see the package vignette `BayesSUR.pdf` (submitted 
 
 ## Update
 
-### New in version `BayesSUR_1.0-4.tar.gz` (17 December 2019):
+### New in version `BayesSUR_1.1-0.tar.gz` (02 April 2020):
+
+Random effects have been included in the SUR mdoels.
+
+### Version `BayesSUR_1.0-4.tar.gz` (17 December 2019):
 
 1) An argument `maxThreads` was added in the main function `BayesSUR()` to allow users to specify the maximum number of threads for parallelisation.
 
