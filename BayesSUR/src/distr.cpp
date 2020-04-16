@@ -27,14 +27,14 @@ namespace Distributions{
 	{
 		//std::uniform_real_distribution<> distr(0, std::nextafter(1, std::numeric_limits<double>::max())); // init U(0,1)
 		//return distr(rng[omp_get_thread_num()]);
-        return Rcpp::runif(1, 0., 1. )[0];
+        return R::runif( 0., 1. );
 	}
 
 	double randLogU01()
 	{
 		//std::uniform_real_distribution<> distr(0, std::nextafter(1, std::numeric_limits<double>::max())); // init U(0,1)
 		//return log(distr(rng[omp_get_thread_num()]));
-        return log( Rcpp::runif(1, 0., 1. )[0] );
+        return log( R::runif( 0., 1. ) );
 	}
 
 	int randIntUniform(const int a,const int b)
@@ -67,7 +67,7 @@ namespace Distributions{
           R::rmultinom( 1, probs.begin(), b-a+1, idTmp.begin() );
           res(i) = a-1+arma::conv_to<int>::from(arma::find(idTmp == 1));
         }*/
-        Rcpp::IntegerVector pool = Rcpp::seq(a, b);
+        //Rcpp::IntegerVector pool = Rcpp::seq(a, b);
         for(unsigned i=0; i<n; i++){
           res(i) = arma::conv_to<int>::from( Rcpp::RcppArmadillo::sample(arma::linspace(a, b, b-a+1), 1, true, arma::ones( b-a+1 )/(double)(b-a+1)) );
             //std::random_shuffle(pool.begin(), pool.end());
@@ -80,26 +80,26 @@ namespace Distributions{
 	{
 		//std::exponential_distribution<> distr(lambda);
 		//return distr(rng[omp_get_thread_num()]);
-        return Rcpp::rexp(1, lambda )[0];
+        return R::rexp( lambda );
 	}
 
 	arma::vec randExponential(const unsigned int n, const double lambda)
 	{
-		/*arma::vec res(n);
-		std::exponential_distribution<> distr(lambda);
+		arma::vec res(n);
+		//std::exponential_distribution<> distr(lambda);
 		for(unsigned int i=0; i<n; ++i)
 		{
-			res(i) = distr(rng[omp_get_thread_num()]);
+			//res(i) = distr(rng[omp_get_thread_num()]);
+            res(i) = R::rexp( lambda );
 		}
-		return res;*/
-        return ( Rcpp::rexp(n, lambda ) );
+		return res;
 	}
 
 	unsigned int randBinomial(const unsigned int n, const double p) // slow but safe (CARE, n here is the binomial parameters, return value is always ONE integer)
 	{
 		//std::binomial_distribution<> distr(n, p);
 		//return distr(rng[omp_get_thread_num()]);
-        return Rcpp::rbinom(1, n, p )[0];
+        return R::rbinom( n, p );
         
 	}
 
@@ -115,7 +115,7 @@ namespace Distributions{
 	  {
 	    if(prob(k)>0) {
 	    	pp = prob(k) / p_tot;
-	    	rN(k) = ((pp < 1.) ? randBinomial(n,  pp) : n);
+	    	rN(k) = ((pp < 1.) ? R::rbinom(n,  pp) : n);
 	    	n -= rN(k);
 	    }else{
 	    	rN(k) = 0;
@@ -138,7 +138,7 @@ namespace Distributions{
 
     	//std::normal_distribution<> distr(m,sqrt(sigmaSquare));
 		//return distr(rng[omp_get_thread_num()]);
-        return Rcpp::rnorm(1, m, sigmaSquare )[0];
+        return R::rnorm( m, sigmaSquare );
 	}
 
 	arma::vec randNormal(const unsigned int n, const double m=0., const double sigmaSquare=1.) // n-sample normal, parameters mean and variance
@@ -146,16 +146,15 @@ namespace Distributions{
 
 		if( sigmaSquare< 0 )
 			throw negativeParameters();
-        /*
+        
     	arma::vec res(n);
-    	std::normal_distribution<> distr(m,sqrt(sigmaSquare));
+    	//std::normal_distribution<> distr(m,sqrt(sigmaSquare));
     	for(unsigned int i=0; i<n; ++i)
 		{
-			res(i) = distr(rng[omp_get_thread_num()]);
+			//res(i) = distr(rng[omp_get_thread_num()]);
+            res(i) = R::rnorm( m, sigmaSquare );
 		}
-		return res;*/
-
-        return Rcpp::rnorm(n, m, sigmaSquare );
+		return res;
 	}
 
 	arma::vec randMvNormal(const arma::vec &m, const arma::mat &Sigma) // random normal interface to arma::randn
@@ -195,19 +194,19 @@ namespace Distributions{
 	{
     	//std::student_t_distribution<double> distr(nu);
 		//return distr(rng[omp_get_thread_num()]);
-        return Rcpp::rt(1, nu )[0];
+        return R::rt( nu );
 	}
 
 	arma::vec randT(const unsigned int n, const double nu)
 	{
-    	/*arma::vec res(n);
-    	std::student_t_distribution<double> distr(nu);
+    	arma::vec res(n);
+    	//std::student_t_distribution<double> distr(nu);
     	for(unsigned int i=0; i<n; ++i)
 		{
-			res(i) = distr(rng[omp_get_thread_num()]);
+			//res(i) = distr(rng[omp_get_thread_num()]);
+            res(i) = R::rt( nu );
 		}
-		return res;*/
-        return Rcpp::rt(n, nu );
+		return res;
 	}
 
 	arma::vec randMvT(const double &nu, const arma::vec &m, const arma::mat &Sigma)
@@ -230,7 +229,7 @@ namespace Distributions{
 
 		//std::gamma_distribution<> distr(shape,scale);
 		//return distr(rng[omp_get_thread_num()]);
-        return Rcpp::rgamma(1, shape, scale )[0];
+        return R::rgamma( shape, scale );
 	}
 
 
@@ -245,7 +244,8 @@ namespace Distributions{
 
 		//std::gamma_distribution<> distr(shape,1./scale);
 		//return  ( 1./distr(rng[omp_get_thread_num()]) );
-        return 1./Rcpp::rgamma(1, shape, 1./scale)[0];
+        return 1./R::rgamma(shape, 1./scale);
+        //return 1./Rcpp::rgamma(1, shape, 1./scale)[0];
 	}
 
 
@@ -273,7 +273,7 @@ namespace Distributions{
 		for(unsigned int j = 0; j < m; j++){
 			for(unsigned int i = j+1; i < m; i++){
 		  		//Z(i,j) = normal01(rng[omp_get_thread_num()]);
-                Z(i,j) = Rcpp::rnorm(1)[0];
+                Z(i,j) = R::rnorm(0.,1.);
 			}
 		}
 
@@ -303,10 +303,11 @@ namespace Distributions{
 
 	double randBeta(double a, double b)
 	{
-		double num = randGamma(a,1.);
-		double den = randGamma(b,1.) + num;
+		//double num = randGamma(a,1.);
+		//double den = randGamma(b,1.) + num;
 
-		return num/den;
+		//return num/den;
+        return R::rbeta( a, b );
 	}
 
 
@@ -314,7 +315,7 @@ namespace Distributions{
 	{
 		//std::bernoulli_distribution distr(pi);
 		//return distr(rng[omp_get_thread_num()]);
-        return Rcpp::rbinom(1, 1, pi)[0];
+        return R::rbinom( 1, pi );
 	}
 
 	double randTruncNorm(double m, double sd,double lower, double upper) // Naive, but it'll do for now -- notice now parameters are mean and standard deviation!

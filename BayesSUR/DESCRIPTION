@@ -28,7 +28,7 @@ Suggests: R.rsp
 LazyData: true
 NeedsCompilation: yes
 SystemRequirements: C++11
-Packaged: 2020-04-16 14:36:44 UTC; zhiz
+Packaged: 2020-04-16 20:29:12 UTC; zhiz
 Author: Marco Banterle [aut],
   Zhi Zhao [aut, cre],
   Leonardo Bottolo [ctb],

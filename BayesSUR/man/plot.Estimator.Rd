@@ -6,7 +6,7 @@
 \usage{
 \method{plot}{Estimator}(
   object,
-  estimator = "all",
+  estimator = NULL,
   colorScale.gamma = grey((100:0)/100),
   colorScale.beta = c("blue", "white", "red"),
   legend.cex.axis = 1,
@@ -30,7 +30,7 @@
 \arguments{
 \item{object}{an object of class \code{getEstimator} with \code{estimator=c("beta","gamma","Gy")}}
 
-\item{estimator}{print the heatmap of estimators. Default "all" is to print all estimators. The value "beta" is for the estimated coefficients matrix, "gamma" for the latent indicator matrix and "Gy" for the graph of responses}
+\item{estimator}{print the heatmap of estimators. The value "beta" is for the estimated coefficients matrix, "gamma" for the latent indicator matrix and "Gy" for the graph of responses}
 
 \item{colorScale.gamma}{value palette for gamma}
 

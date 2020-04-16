@@ -146,8 +146,7 @@ BayesSUR <- function(Y, X, X_0 = NULL, data = NULL,
   cl <- match.call()
   
   # we'll check in reverse order, is data NULL?
-  if ( is.null( data ) )# | m[1] )
-  {
+  if ( is.null( data ) ){
     
     # Y,X (and if there X_0) need to be valid numeric matrices then
     # check Y and X have comfortable number of observations
@@ -464,8 +463,11 @@ BayesSUR <- function(Y, X, X_0 = NULL, data = NULL,
   if ( output_Y )
     ret$output["Y"] = paste(sep="", "data_Y.txt")
   
-  if ( output_X )
+  if ( output_X ){
     ret$output["X"] = paste(sep="", "data_X.txt")
+    if( length(X_0)>0 )
+      ret$output["X0"] = paste(sep="", "data_X0.txt")
+  }
   
   #seed = as.integer(.GlobalEnv$.Random.seed[length(.GlobalEnv$.Random.seed)])
   #set.seed(seed)
