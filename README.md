@@ -3,7 +3,7 @@
 This repository contains a [new and improved](https://github.com/mbant/BayesSUR/blob/master/BayesSUR/vignettes/vignettes.pdf) [R]() package for high-dimensional multivariate Bayesian variable and covariance selection in linear regression, started as an interface to the [Bayesian SSUR](https://github.com/mbant/Bayesian_SSUR) C++-only, UNIX-specific, code.
 
 ## R package instructions
-See `test.R` file for usage; see the package vignette `BayesSUR.pdf` (submitted to the Journal of Statistical Software) for more information.
+See `test.R` file for usage; see the package vignette `BayesSUR.pdf` for more information.
 
 ## Installation
 
