@@ -4,7 +4,9 @@
 \name{example_eQTL}
 \alias{example_eQTL}
 \title{Simulated data set to mimic a small expression quantitative trait loci (eQTL) example}
-\format{An object of class \code{list} of length 4.}
+\format{
+An object of class \code{list} of length 4.
+}
 \usage{
 example_eQTL
 }

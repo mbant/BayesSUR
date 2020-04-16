@@ -4,7 +4,9 @@
 \name{example_GDSC}
 \alias{example_GDSC}
 \title{Preprocessed data set to mimic a small pharmacogenetic example}
-\format{An object of class \code{list} of length 3.}
+\format{
+An object of class \code{list} of length 3.
+}
 \usage{
 example_GDSC
 }
@@ -198,7 +200,7 @@ colnames(targetGenes1) <- colnames(example_GDSC$data)[seq_along(targetGene$group
 targetGenes2 <- matrix(Idx_Pathway2,nrow=1)
 colnames(targetGenes2) <- colnames(example_GDSC$data)[seq_along(targetGene$group2)]
 
-example_GDSC_targets <- list(group1=targetGenes1, group2=targetGenes2)
+targetGene <- list(group1=targetGenes1, group2=targetGenes2)
 
 ## Write data file example_GDSC.rda to the user's directory by save()
 

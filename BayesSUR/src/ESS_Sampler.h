@@ -1,9 +1,9 @@
 #ifndef ESS_SAMPLER_H
 #define ESS_SAMPLER_H
 
-#ifdef _OPENMP
-#include <omp.h>
-#endif
+//#ifdef _OPENMP
+//#include <omp.h>
+//#endif
 
 #ifndef CCODE
 #include <RcppArmadillo.h>
@@ -34,11 +34,11 @@ public:
     
     // Constructor - nChains and type of MCMC
     ESS_Sampler( Utils::SUR_Data& surData , unsigned int nChains_ , double temperatureRatio ,
-                Gamma_Sampler_Type gamma_sampler_type, Gamma_Type gamma_type, Beta_Type beta_type, Covariance_Type covariance_type);
+                Gamma_Sampler_Type gamma_sampler_type, Gamma_Type gamma_type, Beta_Type beta_type, Covariance_Type covariance_type, bool output_CPO);
     
     ESS_Sampler( Utils::SUR_Data& surData , unsigned int nChains_ , double temperatureRatio ) :
     ESS_Sampler( surData , nChains_ , temperatureRatio ,
-    Gamma_Sampler_Type::bandit, Gamma_Type::hotspot , Beta_Type::independent , Covariance_Type::HIW){}
+    Gamma_Sampler_Type::bandit, Gamma_Type::hotspot , Beta_Type::independent , Covariance_Type::HIW, false){}
     
     ESS_Sampler( Utils::SUR_Data& surData , unsigned int nChains_ ) : ESS_Sampler( surData , nChains_ , 1.2 ){}
     
@@ -96,7 +96,7 @@ private:
 
 template<typename T>
 ESS_Sampler<T>::ESS_Sampler( Utils::SUR_Data& surData , unsigned int nChains_ , double temperatureRatio ,
-                            Gamma_Sampler_Type gamma_sampler_type, Gamma_Type gamma_type, Beta_Type beta_type, Covariance_Type covariance_type):
+                            Gamma_Sampler_Type gamma_sampler_type, Gamma_Type gamma_type, Beta_Type beta_type, Covariance_Type covariance_type, bool output_CPO):
 nChains(nChains_),
 chain(std::vector<std::shared_ptr<T>>(nChains)),
 updateCounter(500), // how often do we update the temperatures?
@@ -110,7 +110,7 @@ global_acc_count(0)
     
     for( unsigned int i=0; i<nChains; ++i )
         chain[i] = std::make_shared<T>( surData ,
-                                       gamma_sampler_type, gamma_type, beta_type, covariance_type,
+                                       gamma_sampler_type, gamma_type, beta_type, covariance_type, output_CPO,
                                        std::pow( temperatureRatio , (double)i ) );  // default init for now
 }
 

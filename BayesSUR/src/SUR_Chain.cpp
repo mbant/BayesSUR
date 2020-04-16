@@ -10,13 +10,13 @@ SUR_Chain::SUR_Chain( std::shared_ptr<arma::mat> data_, std::shared_ptr<arma::ma
                      std::shared_ptr<arma::uvec> outcomesIdx_, std::shared_ptr<arma::uvec> VSPredictorsIdx_,
                      std::shared_ptr<arma::uvec> fixedPredictorsIdx_, std::shared_ptr<arma::umat> missingDataArrayIdx_, std::shared_ptr<arma::uvec> completeCases_,
                      Gamma_Sampler_Type gamma_sampler_type_ , Gamma_Type gamma_type_ ,
-                     Beta_Type beta_type_ , Covariance_Type covariance_type_ ,
+                     Beta_Type beta_type_ , Covariance_Type covariance_type_ , bool output_CPO ,
                      double externalTemperature ):
 data(data_), mrfG(mrfG_), outcomesIdx(outcomesIdx_), VSPredictorsIdx(VSPredictorsIdx_), fixedPredictorsIdx(fixedPredictorsIdx_),
 missingDataArrayIdx(missingDataArrayIdx_), completeCases(completeCases_),
 nObservations(nObservations_), nOutcomes(nOutcomes_), nVSPredictors(nVSPredictors_), nFixedPredictors(nFixedPredictors_),
 temperature(externalTemperature),internalIterationCounter(0),jtStartIteration(0),
-covariance_type(covariance_type_),gamma_type(gamma_type_),beta_type(beta_type_),gamma_sampler_type(gamma_sampler_type_)
+covariance_type(covariance_type_), gamma_type(gamma_type_),beta_type(beta_type_),gamma_sampler_type(gamma_sampler_type_)
 {
     
     predictorsIdx = std::make_shared<arma::uvec>(arma::join_vert( *fixedPredictorsIdx, *VSPredictorsIdx ));
@@ -74,23 +74,25 @@ covariance_type(covariance_type_),gamma_type(gamma_type_),beta_type(beta_type_),
     
     // init for sigma rho and beta to reasonable values -- one step of gibbs
     stepSigmaRhoAndBeta();
-    predLikelihood();
+    if( output_CPO ){
+        predLikelihood();
+    }
     
 }
 
 
 SUR_Chain::SUR_Chain( Utils::SUR_Data& surData,
                      Gamma_Sampler_Type gamma_sampler_type_ , Gamma_Type gamma_type_ ,
-                     Beta_Type beta_type_ , Covariance_Type covariance_type_  ,
+                     Beta_Type beta_type_ , Covariance_Type covariance_type_  , bool output_CPO ,
                      double externalTemperature ):
 SUR_Chain(surData.data,surData.mrfG,surData.nObservations,surData.nOutcomes,surData.nVSPredictors,surData.nFixedPredictors,
 surData.outcomesIdx,surData.VSPredictorsIdx,surData.fixedPredictorsIdx,surData.missingDataArrayIdx,surData.completeCases,
-          gamma_sampler_type_,gamma_type_,beta_type_,covariance_type_,externalTemperature){ }
+          gamma_sampler_type_,gamma_type_,beta_type_,covariance_type_,output_CPO,externalTemperature){ }
 
 SUR_Chain::SUR_Chain( Utils::SUR_Data& surData, double externalTemperature ):
 SUR_Chain(surData.data,surData.mrfG,surData.nObservations,surData.nOutcomes,surData.nVSPredictors,surData.nFixedPredictors,
 surData.outcomesIdx,surData.VSPredictorsIdx,surData.fixedPredictorsIdx,surData.missingDataArrayIdx,surData.completeCases,
-          Gamma_Sampler_Type::bandit , Gamma_Type::hotspot , Beta_Type::independent , Covariance_Type::HIW ,
+          Gamma_Sampler_Type::bandit , Gamma_Type::hotspot , Beta_Type::independent , Covariance_Type::HIW , false,
           externalTemperature){ }
 
 
@@ -837,7 +839,7 @@ void SUR_Chain::mrfGInit()
     
     //    mrf_G = arma::zeros<arma::mat>(0,2);
     mrf_d = -3. ;
-    mrf_e = 0.001 ;
+    mrf_e = 0.3 ;
 }
 /*
  void SUR_Chain::mrfGInit( arma::mat& mrf_G_ )
@@ -1213,17 +1215,27 @@ double SUR_Chain::logPGamma( const arma::umat& externalGamma , double d, double 
     if( gamma_type != Gamma_Type::mrf )
         throw Bad_Gamma_Type ( gamma_type );
     
-    arma::mat externalMRFG = mrfG->cols( arma::linspace<arma::uvec>(0,1,2) );
+    arma::mat externalMRFG = mrfG->cols( arma::linspace<arma::uvec>(0,2,3) );
     
     double logP = 0.;
-    // calculate the quadratic form in MRF by using all edges of G
+    // calculate the linear and quadratic parts in MRF by using all edges of G
     arma::vec gammaVec = arma::conv_to< arma::vec >::from(arma::vectorise(externalGamma));
-    double quad_mrf = 0;
+    double quad_mrf = 0.;
+    double linear_mrf = 0.;
+    int count_linear_mrf = 0;
     for( unsigned i=0; i < (externalMRFG).n_rows; ++i )
     {
-        quad_mrf += gammaVec( (externalMRFG)(i,0) ) * gammaVec( (externalMRFG)(i,1) );
+        if( (externalMRFG)(i,0) != (externalMRFG)(i,1) ){
+            quad_mrf += e * 2.0 * gammaVec( (externalMRFG)(i,0) ) * gammaVec( (externalMRFG)(i,1) ) * (externalMRFG)(i,2);
+        }else{
+            if( gammaVec( (externalMRFG)(i,0) ) == 1 ){
+                linear_mrf += d * gammaVec( (externalMRFG)(i,0) ) * (externalMRFG)(i,2);
+                count_linear_mrf ++;
+            }
+        }
+        
     }
-    logP = arma::as_scalar( d * arma::accu( externalGamma ) + e * 2.0 * quad_mrf );
+    logP = arma::as_scalar( linear_mrf + d * (arma::accu( externalGamma ) - count_linear_mrf) + e * 2.0 * quad_mrf );
     
     return logP;
 }
@@ -2318,14 +2330,13 @@ double SUR_Chain::gammaBanditProposal( arma::umat& mutantGamma , arma::uvec& upd
     
     if( Distributions::randU01() < 0.5 )   // one deterministic update
     {
-        
         // Decide which to update
         updateIdx = arma::zeros<arma::uvec>(1);
         updateIdx(0) = Distributions::randWeightedIndexSampleWithoutReplacement(nVSPredictors,normalised_mismatch); // sample the one
         
         // Update
         mutantGamma(updateIdx(0),outcomeUpdateIdx) = 1 - gamma(updateIdx(0),outcomeUpdateIdx); // deterministic, just switch
-        
+
         // Compute logProposalRatio probabilities
         normalised_mismatch_backwards = mismatch;
         normalised_mismatch_backwards(updateIdx(0)) = 1. - normalised_mismatch_backwards(updateIdx(0)) ;
@@ -2342,7 +2353,7 @@ double SUR_Chain::gammaBanditProposal( arma::umat& mutantGamma , arma::uvec& upd
          n_updates_bandit random (bern) updates
          Note that we make use of column indexing here for armadillo matrices
          */
-        
+
         logProposalRatio = 0.;
         // Decide which to update
         updateIdx = arma::zeros<arma::uvec>(n_updates_bandit);
@@ -2360,6 +2371,7 @@ double SUR_Chain::gammaBanditProposal( arma::umat& mutantGamma , arma::uvec& upd
             logProposalRatio += Distributions::logPDFBernoulli(gamma(updateIdx(i),outcomeUpdateIdx),banditZeta(updateIdx(i))) -
             Distributions::logPDFBernoulli(mutantGamma(updateIdx(i),outcomeUpdateIdx),banditZeta(updateIdx(i)));
         }
+
         // note that above I might be resampling a value equal to the current one, thus not updating da facto ... TODO
         
         // Compute logProposalRatio probabilities
@@ -2840,10 +2852,9 @@ void SUR_Chain::stepGamma()
         default:
             break;
     }
-    
     // given proposedGamma now, sample a new proposedBeta matrix and corresponging quantities
     arma::umat proposedGammaMask = createGammaMask( proposedGamma );
-    
+     
     // note only one outcome is updated
     // note for quantities below. The firt call to sampleXXX has the proposedQuantities set to the current value,
     // for them to be updated; the second call to logPXXX has them updated, needed for the backward probability
@@ -2858,8 +2869,7 @@ void SUR_Chain::stepGamma()
                                                  proposedGammaMask , proposedXB , proposedU , proposedRhoU );
     logProposalRatio += logPBetaKGivenSigmaRho( outcomeUpdateIdx , beta , sigmaRho , jt ,
                                                gammaMask , proposedXB , proposedU , proposedRhoU );
-    
-    
+     
     // update log probabilities
     double proposedGammaPrior = logPGamma( proposedGamma );
     double proposedBetaPrior = logPBetaMask( proposedBeta , proposedGammaMask , w , w0 );
@@ -2886,7 +2896,7 @@ void SUR_Chain::stepGamma()
         // ++gamma_acc_count;
         gamma_acc_count += 1. ; // / updatedOutcomesIdx.n_elem
     }
-    
+     
     // after A/R, update bandit Related variables
     if( gamma_sampler_type == Gamma_Sampler_Type::bandit )
     {
@@ -2962,13 +2972,13 @@ void SUR_Chain::step()
         if( internalIterationCounter >= jtStartIteration )
             stepJT();
     }
-    
+     
     // update gamma
     stepGamma();
-    
+     
     // Update Sigmas, Rhos and Betas given all rest
     stepSigmaRhoAndBeta();
-    
+     
     // increase iteration counter
     ++ internalIterationCounter;
     

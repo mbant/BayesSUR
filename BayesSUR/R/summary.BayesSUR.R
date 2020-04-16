@@ -17,11 +17,12 @@
 #' data(example_eQTL, package = "BayesSUR")
 #' hyperpar = list( a_w = 2 , b_w = 5 )
 #' 
+#' set.seed(9173)
 #' fit <- BayesSUR(Y = example_eQTL[["blockList"]][[1]], 
 #'                 X = example_eQTL[["blockList"]][[2]],
 #'                 data = example_eQTL[["data"]], outFilePath = tempdir(),
 #'                 nIter = 100, burnin = 50, nChains = 2, gammaPrior = "hotspot",
-#'                 hyperpar = hyperpar, tmpFolder = "tmp/" )
+#'                 hyperpar = hyperpar, tmpFolder = "tmp/", output_CPO=TRUE)
 #' 
 #' ## check output
 #' # show the summary information
@@ -31,11 +32,18 @@
 summary.BayesSUR <- function(object, Pmax=0.5, ...){
   
   ans <- list(status=object$status)
-  ans$elpd <- c(elpd(object, method="LOO"), elpd(object, method="WAIC"))
+  if(is.null(object$output$CPO)){
+    ans$elpd <- NA
+  }else{
+    ans$elpd <- c(elpd(object, method="LOO"), elpd(object, method="WAIC"))
+  }
   
   object$output[-1] <- paste(object$output$outFilePath,object$output[-1],sep="")
-  
-  ans$CPO <- summary.default(as.vector(as.matrix(read.table(object$output$CPO))))[-4]
+  if(is.null(object$output$CPO)){
+    ans$CPO <- NA
+  }else{
+    ans$CPO <- summary.default(as.vector(as.matrix(read.table(object$output$CPO))))[-4]
+  }
   
   gamma <- as.matrix( read.table(object$output$gamma) )
   ans$df <- sum(gamma > Pmax)

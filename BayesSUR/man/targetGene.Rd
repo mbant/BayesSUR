@@ -4,7 +4,9 @@
 \name{targetGene}
 \alias{targetGene}
 \title{targetGene}
-\format{An object of class \code{list} of length 2.}
+\format{
+An object of class \code{list} of length 2.
+}
 \usage{
 targetGene
 }
@@ -124,13 +126,13 @@ name_drugs <- c("Methotrexate","RDEA119","PD-0325901","CI-1040","AZD6244","Nilot
 # delete the cell line with extreme log(IC50)=-36.49 for drug "AP-24534"
 col_filter <- colnames(GDSC$y) \%in\% paste("IC50.", name_drugs,sep="")
 YX0 <- cbind(
-    GDSC$y[-166, col_filter][, c(1, 3, 6, 4, 7, 2, 5)],
-    GDSC$x[-166, 1:GDSC$num.nonpen]
+    GDSC$y[, col_filter][, c(1, 3, 6, 4, 7, 2, 5)],
+    GDSC$x[, 1:GDSC$num.nonpen]
 )
 
 colnames(YX0) <- c(name_drugs, colnames(GDSC$x)[1:GDSC$num.nonpen])
 # extract the genetic information of CNV & MUT
-X23 <- GDSC$x[-166, GDSC$num.nonpen+GDSC$p[1]+1:(p[2]+p[3])]
+X23 <- GDSC$x[, GDSC$num.nonpen+GDSC$p[1]+1:(p[2]+p[3])]
 colnames(X23)[1:p[2]] <- paste(substr(colnames(X23)[1:p[2]], 1, 
                                nchar(colnames(X23)[1:p[2]] )-3), ".CNV", sep="")
 
@@ -143,7 +145,7 @@ name_genes <- name_genes_duplicate[!duplicated(name_genes_duplicate)]
 col_filter <- GDSC$num.nonpen + which(
     colnames(GDSC$x)[GDSC$num.nonpen+1:p[1]] \%in\% name_genes
 )
-X1 <- GDSC$x[-166, col_filter]
+X1 <- GDSC$x[, col_filter]
 p[1] <- ncol(X1)
 X1 <- log2(X1)
 

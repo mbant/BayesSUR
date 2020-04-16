@@ -42,12 +42,12 @@ class SUR_Chain : public ESS_Atom<SUR_Chain>
             std::shared_ptr<arma::uvec> outcomesIdx_, std::shared_ptr<arma::uvec> VSPredictorsIdx_,
             std::shared_ptr<arma::uvec> fixedPredictorsIdx_, std::shared_ptr<arma::umat> missingDataArrayIdx_, std::shared_ptr<arma::uvec> completeCases_, 
             Gamma_Sampler_Type gamma_sampler_type_ , Gamma_Type gamma_type_ ,
-            Beta_Type beta_type_ , Covariance_Type covariance_type_ ,
+            Beta_Type beta_type_ , Covariance_Type covariance_type_ , bool output_CPO = false ,
             double externalTemperature = 1. );
 
         SUR_Chain( Utils::SUR_Data& surData, 
             Gamma_Sampler_Type gamma_sampler_type_ , Gamma_Type gamma_type_ ,
-            Beta_Type beta_type_ , Covariance_Type covariance_type_ ,
+            Beta_Type beta_type_ , Covariance_Type covariance_type_ ,  bool output_CPO = false ,
             double externalTemperature = 1. );
 
         SUR_Chain( Utils::SUR_Data& surData, double externalTemperature = 1. );
@@ -592,6 +592,7 @@ class SUR_Chain : public ESS_Atom<SUR_Chain>
         unsigned int nOutcomes; // number of outcomes
         unsigned int nVSPredictors; // number of predictors to be selected
         unsigned int nFixedPredictors; // number of predictors to be kept no matter what
+        bool output_CPO;
 
         // usefull quantities to keep track of
         arma::umat gammaMask;

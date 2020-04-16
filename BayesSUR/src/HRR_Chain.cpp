@@ -12,14 +12,14 @@
 // Constructors
 // *******************************
 
-HRR_Chain::HRR_Chain( std::shared_ptr<arma::mat> data_, unsigned int nObservations_,
+HRR_Chain::HRR_Chain( std::shared_ptr<arma::mat> data_, std::shared_ptr<arma::mat> mrfG_, unsigned int nObservations_,
                      unsigned int nOutcomes_, unsigned int nVSPredictors_, unsigned int nFixedPredictors_,
                      std::shared_ptr<arma::uvec> outcomesIdx_, std::shared_ptr<arma::uvec> VSPredictorsIdx_,
                      std::shared_ptr<arma::uvec> fixedPredictorsIdx_, std::shared_ptr<arma::umat> missingDataArrayIdx_, std::shared_ptr<arma::uvec> completeCases_,
                      Gamma_Sampler_Type gamma_sampler_type_ , Gamma_Type gamma_type_ ,
-                     Beta_Type beta_type_ , Covariance_Type covariance_type_ ,
+                     Beta_Type beta_type_ , Covariance_Type covariance_type_ , bool output_CPO ,
                      double externalTemperature ):
-data(data_), outcomesIdx(outcomesIdx_), VSPredictorsIdx(VSPredictorsIdx_), fixedPredictorsIdx(fixedPredictorsIdx_),
+data(data_), mrfG(mrfG_), outcomesIdx(outcomesIdx_), VSPredictorsIdx(VSPredictorsIdx_), fixedPredictorsIdx(fixedPredictorsIdx_),
 missingDataArrayIdx(missingDataArrayIdx_), completeCases(completeCases_),
 nObservations(nObservations_), nOutcomes(nOutcomes_), nVSPredictors(nVSPredictors_), nFixedPredictors(nFixedPredictors_),
 temperature(externalTemperature),internalIterationCounter(0),
@@ -74,23 +74,25 @@ covariance_type(covariance_type_),gamma_type(gamma_type_),beta_type(beta_type_),
     sigmaABInit();
     
     logLikelihood();
-    predLikelihood();
+    if( output_CPO ){
+        predLikelihood();
+    }
     
 }
 
 
 HRR_Chain::HRR_Chain( Utils::SUR_Data& surData,
                      Gamma_Sampler_Type gamma_sampler_type_ , Gamma_Type gamma_type_ ,
-                     Beta_Type beta_type_ , Covariance_Type covariance_type_ ,
+                     Beta_Type beta_type_ , Covariance_Type covariance_type_ , bool output_CPO ,
                      double externalTemperature ):
-HRR_Chain(surData.data,surData.nObservations,surData.nOutcomes,surData.nVSPredictors,surData.nFixedPredictors,
+HRR_Chain(surData.data,surData.mrfG,surData.nObservations,surData.nOutcomes,surData.nVSPredictors,surData.nFixedPredictors,
 surData.outcomesIdx,surData.VSPredictorsIdx,surData.fixedPredictorsIdx,surData.missingDataArrayIdx,surData.completeCases,
-          gamma_sampler_type_,gamma_type_,beta_type_,covariance_type_,externalTemperature){ }
+          gamma_sampler_type_,gamma_type_,beta_type_,covariance_type_,output_CPO,externalTemperature){ }
 
 HRR_Chain::HRR_Chain( Utils::SUR_Data& surData, double externalTemperature ):
-HRR_Chain(surData.data,surData.nObservations,surData.nOutcomes,surData.nVSPredictors,surData.nFixedPredictors,
+HRR_Chain(surData.data,surData.mrfG,surData.nObservations,surData.nOutcomes,surData.nVSPredictors,surData.nFixedPredictors,
 surData.outcomesIdx,surData.VSPredictorsIdx,surData.fixedPredictorsIdx,surData.missingDataArrayIdx,surData.completeCases,
-          Gamma_Sampler_Type::bandit , Gamma_Type::hotspot , Beta_Type::independent , Covariance_Type::IG ,
+          Gamma_Sampler_Type::bandit , Gamma_Type::hotspot , Beta_Type::independent , Covariance_Type::IG , false ,
           externalTemperature){ }
 
 // *******************************
@@ -680,7 +682,7 @@ void HRR_Chain::mrfGInit()
     mrf_d = -3. ;
     mrf_e = 0.2 ;
 }
-
+/*
 void HRR_Chain::mrfGInit( arma::mat& mrf_G_ )
 {
     if( gamma_type != Gamma_Type::mrf )
@@ -690,7 +692,7 @@ void HRR_Chain::mrfGInit( arma::mat& mrf_G_ )
     mrf_d = -3. ;
     mrf_e = 0.2 ;
 }
-
+*/
 void HRR_Chain::gammaInit( arma::umat& gamma_init )
 {
     gamma = gamma_init;
@@ -883,20 +885,31 @@ double HRR_Chain::logPGamma( const arma::umat& externalGamma , const arma::vec& 
 }
 
 // this is the MRF prior
-double HRR_Chain::logPGamma( const arma::umat& externalGamma , double external_d , double external_e, const arma::mat& externalMRFG )
+double HRR_Chain::logPGamma( const arma::umat& externalGamma , double d , double e )
 {
     if( gamma_type != Gamma_Type::mrf )
         throw Bad_Gamma_Type ( gamma_type );
     
+    arma::mat externalMRFG = mrfG->cols( arma::linspace<arma::uvec>(0,2,3) );
+    
     double logP = 0.;
-    // calculate the quadratic form in MRF by using all edges of G
+    // calculate the linear and quadratic parts in MRF by using all edges of G
     arma::vec gammaVec = arma::conv_to< arma::vec >::from(arma::vectorise(externalGamma));
-    double quad_mrf = 0;
+    double quad_mrf = 0.;
+    double linear_mrf = 0.;
+    int count_linear_mrf = 0;
     for( unsigned i=0; i < (externalMRFG).n_rows; ++i )
     {
-        quad_mrf += gammaVec( (externalMRFG)(i,0) ) * gammaVec( (externalMRFG)(i,1) );
+        if( (externalMRFG)(i,0) != (externalMRFG)(i,1) ){
+            quad_mrf += e * 2.0 * gammaVec( (externalMRFG)(i,0) ) * gammaVec( (externalMRFG)(i,1) ) * (externalMRFG)(i,2);
+        }else{
+                if( gammaVec( (externalMRFG)(i,0) ) == 1 ){
+                    linear_mrf += d * gammaVec( (externalMRFG)(i,0) ) * (externalMRFG)(i,2);
+                    count_linear_mrf ++;
+                }
+        }
     }
-    logP = arma::as_scalar( external_d * arma::accu( externalGamma ) + external_e * 2.0 * quad_mrf );
+    logP = arma::as_scalar( linear_mrf + d * (arma::accu( externalGamma ) - count_linear_mrf) + e * 2.0 * quad_mrf );
     
     return logP;
 }
@@ -916,7 +929,7 @@ double HRR_Chain::logPGamma( )
             
         case Gamma_Type::mrf :
         {
-            logP_gamma = logPGamma( gamma , mrf_d , mrf_e , mrf_G );
+            logP_gamma = logPGamma( gamma , mrf_d , mrf_e );
             break;
         }
         default:
@@ -941,7 +954,7 @@ double HRR_Chain::logPGamma( const arma::umat& externalGamma )
             
         case Gamma_Type::mrf :
         {
-            logP = logPGamma( externalGamma , mrf_d , mrf_e , mrf_G );
+            logP = logPGamma( externalGamma , mrf_d , mrf_e );
             break;
         }
         default:
@@ -1080,17 +1093,19 @@ double HRR_Chain::logLikelihood( )
         logP += std::lgamma(a_sigma_k) - std::lgamma(a_sigma);
         
         // posterior predictive - t distribution after shifting and scaling by some quantities; from the multivariate t distribution p(y_tilde |y)
-        for( unsigned int j=0; j<nObservations; ++j )
-        {
-            double mu_scale, W_scale, t1, t2;
-            
-            mu_scale = (data->col(k))(j) - arma::as_scalar(arma::conv_to<arma::vec>::from(data->row(j))((*predictorsIdx)(VS_IN_k)).t() *mu_k);
-            W_scale = b_sigma_k/a_sigma_k * ( 1. + arma::as_scalar(arma::conv_to<arma::vec>::from(data->row(j))((*predictorsIdx)(VS_IN_k)).t() * W_k * arma::conv_to<arma::vec>::from(data->row(j))((*predictorsIdx)(VS_IN_k))) );
-            
-            t1 = std::lgamma(a_sigma_k+0.5) - 0.5*std::log(2.*a_sigma_k*M_PI) - 0.5*std::log( W_scale ) - std::lgamma(a_sigma_k);
-            t2 = -(a_sigma_k+0.5) * std::log( 1. + mu_scale*mu_scale/W_scale/2./a_sigma_k );
-            
-            predLik(j,k) = std::exp( t1+t2 );
+        if( output_CPO ){
+            for( unsigned int j=0; j<nObservations; ++j )
+            {
+                double mu_scale, W_scale, t1, t2;
+                
+                mu_scale = (data->col(k))(j) - arma::as_scalar(arma::conv_to<arma::vec>::from(data->row(j))((*predictorsIdx)(VS_IN_k)).t() *mu_k);
+                W_scale = b_sigma_k/a_sigma_k * ( 1. + arma::as_scalar(arma::conv_to<arma::vec>::from(data->row(j))((*predictorsIdx)(VS_IN_k)).t() * W_k * arma::conv_to<arma::vec>::from(data->row(j))((*predictorsIdx)(VS_IN_k))) );
+                
+                t1 = std::lgamma(a_sigma_k+0.5) - 0.5*std::log(2.*a_sigma_k*M_PI) - 0.5*std::log( W_scale ) - std::lgamma(a_sigma_k);
+                t2 = -(a_sigma_k+0.5) * std::log( 1. + mu_scale*mu_scale/W_scale/2./a_sigma_k );
+                
+                predLik(j,k) = std::exp( t1+t2 );
+            }
         }
         
     }

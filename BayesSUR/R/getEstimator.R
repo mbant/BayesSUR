@@ -3,7 +3,7 @@
 #' Extract the posterior mean of the parameters of a "BayesSUR" class object.
 #' @name getEstimator
 #' @param object an object of class "BayesSUR"
-#' @param estimator the name of one estimator. Default is the latent indicator estimator "\code{gamma}". Other options "\code{beta}", "\code{Gy}" and "\code{CPO}" 
+#' @param estimator the name of one estimator. Default is the latent indicator estimator "\code{gamma}". Other options "\code{beta}", "\code{Gy}", "\code{CPO}" and "\code{logP}" 
 #' correspond the posterior means of coefficient matrix, response graph and conditional predictive ordinate (CPO) respectively 
 #' @param Pmax threshold that truncate the estimator. Default is 0. If the estimator is beta, then beta is truncated based on the latent indicator matrix shresholding at \code{Pmax} 
 #' 
@@ -14,6 +14,7 @@
 #' data("example_eQTL", package = "BayesSUR")
 #' hyperpar <- list( a_w = 2 , b_w = 5 )
 #' 
+#' set.seed(9173)
 #' fit <- BayesSUR(Y = example_eQTL[["blockList"]][[1]], 
 #'                 X = example_eQTL[["blockList"]][[2]],
 #'                 data = example_eQTL[["data"]], outFilePath = tempdir(),
@@ -28,26 +29,119 @@
 getEstimator <- function(object, estimator="gamma", Pmax=0){
   
   object$output[-1] <- paste(object$output$outFilePath,object$output[-1],sep="")
-  if( sum(estimator %in% c("gamma","beta","Gy","CPO"))<1 )
+  if( sum(estimator %in% c("gamma","beta","Gy","CPO","logP"))<1 )
     stop("Please specify a correct estimator!")
   
-  if( estimator == "gamma" ){
+  if( length(estimator) == 1 ){if( estimator == "gamma" ){
     Est <- as.matrix( read.table(object$output$gamma) )
     Est[Est<=Pmax] <- 0
+    rownames(Est) <- colnames(read.table(object$output$X,header=T))
+    
+    ## Create the return object
+    ret <-  Est
+    class(ret) <- "Manhattan"
+    class(plot) <- c(class(plot), "Manhattan")
+    return(ret)
+  } 
+    
+    if( estimator == "beta" ){
+      Est <- as.matrix( read.table(object$output$beta) )
+      Est[as.matrix( read.table(object$output$gamma) )<=Pmax] <- 0
+      
+      return(Est)
+    } 
+    
+    if( estimator == "Gy" ){
+      
+      covariancePrior <- object$input$covariancePrior
+      if(covariancePrior == "HIW"){
+        Est <- as.matrix( read.table(object$output$G) )
+      }else{
+        stop("Gy is only estimated with hyper-inverse Wishart prior for the covariance matrix of responses!")
+      }
+      Est[Est<=Pmax] <- 0
+      rownames(Est) <- colnames(Est) <- names(read.table(object$output$Y,header=T))
+      
+      ## Create the return object
+      ret <-  Est
+      class(ret) <- "ResponseGraph"
+      class(plot) <- c(class(plot), "ResponseGraph")
+      return(ret)
+    } 
+    
+    if( estimator == "CPO" ){
+      Est <- as.matrix( read.table(object$output$CPO) )
+      
+      if(is.null(object$output$CPO))
+        stop("Please specify argument output_CPO in BayesSUR()!")
+      rownames(Est) <- rownames(as.matrix( read.table(object$output$Y,header=T) ))
+      colnames(Est) <- colnames(as.matrix( read.table(object$output$Y,header=T) ))
+      
+      ## Create the return object
+      ret <-  Est
+      class(ret) <- "CPO"
+      class(plot) <- c(class(plot), "CPO")
+      return(ret)
+    } 
+    
+    if( estimator == "logP" ){
+      logP <- t( as.matrix( read.table(object$output$logP) ) )
+      model_size <- as.matrix( read.table(object$output$model_size) )
+      ncol_Y <- ncol(read.table(object$output$G))
+      nIter <- object$input$nIter
+      
+      covariancePrior <- object$input$covariancePrior
+      if(covariancePrior=="HIW" & file.exists(object$output$Gvisit)){
+        Gvisit <- as.matrix( read.table(object$output$Gvisit) )
+        ret <- list(logP=logP, model_size=model_size, Gvisit=Gvisit, 
+                    ncol_Y=ncol_Y, nIter=nIter, covariancePrior=covariancePrior)
+      }else{
+        ret <- list(logP=logP, model_size=model_size,
+                    ncol_Y=ncol_Y, nIter=nIter, covariancePrior=covariancePrior)
+      }
+      
+      ## Create the return class
+      class(ret) <- "MCMCdiag"
+      class(plot) <- c(class(plot), "MCMCdiag")
+      return(ret)
+    } 
+  }
+  
+  if( length(estimator)==2 & sum(estimator %in% c("gamma", "Gy"))==2 ){
+    covariancePrior <- object$input$covariancePrior
+    if(covariancePrior == "HIW"){
+      Gy <- as.matrix( read.table(object$output$G) )
+    }else{
+      stop("Gy is only estimated with hyper-inverse Wishart prior for the covariance matrix of responses!")
+    }
+    gamma <- as.matrix( read.table(object$output$gamma) )
+    colnames(gamma) <- names(read.table(object$output$Y,header=T))
+    rownames(gamma) <- names(read.table(object$output$X,header=T))
+    
+    ## Create the return object
+    ret <- list(gamma=gamma, Gy=Gy, covariancePrior=covariancePrior)
+    class(ret) <- "Network"
+    class(plot) <- c(class(plot), "Network")
+    return(ret)
   } 
   
-  if( estimator == "beta" ){
-    Est <- as.matrix( read.table(object$output$beta) )
-    Est[as.matrix( read.table(object$output$gamma) )<=Pmax] <- 0
+  if( length(estimator)==3 & sum(estimator %in% c("beta", "gamma", "Gy"))==3 ){
+    beta <- as.matrix( read.table(object$output$beta) )
+    gamma <- as.matrix( read.table(object$output$gamma) )
+    colnames(beta) <- colnames(gamma) <- colnames(Gy) <- rownames(Gy) <- names(read.table(object$output$Y,header=T))
+    rownames(beta) <- rownames(gamma) <- names(read.table(object$output$X,header=T))
+    covariancePrior <- object$input$covariancePrior
+    if(covariancePrior == "HIW"){
+      Gy <- as.matrix( read.table(object$output$G) )
+      ret <- list(beta=beta, gamma=gamma, Gy=Gy, covariancePrior=covariancePrior)
+    }else{
+      ret <- list(beta=beta, gamma=gamma, covariancePrior=covariancePrior)
+    }
+    
+    ## Create the return object
+    class(ret) <- "Estimator"
+    class(plot) <- c(class(plot), "Estimator")
+    return(ret)
   } 
-  
-  if( estimator == "Gy" ){
-    Est <- as.matrix( read.table(object$output$G) )
-    Est[Est<=Pmax] <- 0
-  } 
-  
-  if( estimator == "CPO" ) Est <- as.matrix( read.table(object$output$CPO) )
-  
-  return(Est)
   
 }

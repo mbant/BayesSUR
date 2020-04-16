@@ -11,6 +11,7 @@
 #' data("example_eQTL", package = "BayesSUR")
 #' hyperpar = list( a_w = 2 , b_w = 5 )
 #' 
+#' set.seed(9173)
 #' fit <- BayesSUR(Y = example_eQTL[["blockList"]][[1]], 
 #'                 X = example_eQTL[["blockList"]][[2]],
 #'                 data = example_eQTL[["data"]], outFilePath = tempdir(),
@@ -21,7 +22,7 @@
 #' # Show the interactive plots. Note that it needs at least 2000*(nbloc+1) iterations 
 #' # for the diagnosis plots where nbloc=3 by default 
 #' \donttest{
-#' plot(fit)
+#' plot.BayesSUR(fit)
 #' }
 #' 
 #' @export
@@ -42,30 +43,34 @@ plot.BayesSUR <- function(x, which = c(1L:4L), ...){
   
   if (show[1L]) {
     dev.hold()
-    plotEstimator(x, header="\nEstimators", ...)
+    estimators <- getEstimator(x, estimator = c("beta","gamma","Gy"))
+    plot(estimators, header="\nEstimators", ...)
     dev.flush()
   }
   if (show[2L]) {
     dev.hold()
-    plotResponseGraph(x, ...)
+    Gy <- getEstimator(x, estimator = "Gy")
+    plot(Gy, ...)
     dev.flush()
   }
   if (show[3L]) {
     dev.hold()
-    plotNetwork(x, header="\n\nNetwork respresentation", ...)
+    network <- getEstimator(x, estimator = c("gamma","Gy"))
+    plot(network, header="\n\nNetwork respresentation", ...)
     dev.flush()
   }
   if (show[4L]) {
     dev.hold()
-    plotManhattan(x, header="\n\nManhattan-like plots", ...)
+    gamma <- getEstimator(x, estimator = "gamma")
+    plot(gamma, header="\n\nManhattan-like plots", ...)
     dev.flush()
   }
   if (show[5L]) {
     dev.hold()
-    plotMCMCdiag(x, header="\nMCMC diagnostic plots", ...)
+    MCMCdiag <- getEstimator(x, estimator = "logP")
+    plot(MCMCdiag, header="\nMCMC diagnostic plots", ...)
     dev.flush()
   }
   
   devAskNewPage(options("device.ask.default")[[1]])
-
 }

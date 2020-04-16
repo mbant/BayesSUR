@@ -6,4 +6,5 @@
   //use with 
   // omp_set_lock(&RNGlock);
   // omp_unset_lock(&RNGlock);
-std::vector<std::mt19937_64> rng;
+//std::vector<std::mt19937_64> rng;
+Rcpp::RNGScope scope;

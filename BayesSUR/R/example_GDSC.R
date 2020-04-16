@@ -190,7 +190,7 @@
 #' targetGenes2 <- matrix(Idx_Pathway2,nrow=1)
 #' colnames(targetGenes2) <- colnames(example_GDSC$data)[seq_along(targetGene$group2)]
 #' 
-#' example_GDSC_targets <- list(group1=targetGenes1, group2=targetGenes2)
+#' targetGene <- list(group1=targetGenes1, group2=targetGenes2)
 #' 
 #' ## Write data file example_GDSC.rda to the user's directory by save()
 #' 

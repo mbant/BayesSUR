@@ -29,8 +29,8 @@
 #' @param standardize logical flag for X variable standardization. Default is standardize=TRUE. The coefficients are returned on the standardized scale.
 #' @param standardize.response Standardization for the response variables. Default is standardize.response=TRUE.
 #' @param hyperpar a list of named hypeparameters to use instead of the default values. Valid names are mrf_d, mrf_e, a_sigma, b_sigma, a_tau, b_tau, nu, a_eta, b_eta, a_o, b_o, a_pi, b_pi, a_w and b_w. 
-#' Their default values are a_w=2, b_w=5, a_o=2, b_o=p-2, a_pi=2 (hotspot) or 1 (hierarchical), b_pi=1 (hotspot) or s-1 (hierarchical), nu=s+2, a_tau=0.1, b_tau=10, a_eta=0.1, b_eta=1, a_sigma=1, b_sigma=1, mrf_d=-3 and mrf_e=0.03. See the vignette for more information.
-#' @param maxThreads maximum threshods used for parallelization. Default is 2.
+#' Their default values are a_w=2, b_w=5, a_omega=1, b_omega=1, a_o=2, b_o=p-2, a_pi=2, b_pi=1, nu=s+2, a_tau=0.1, b_tau=10, a_eta=0.1, b_eta=1, a_sigma=1, b_sigma=1, mrf_d=-3 and mrf_e=0.03. See the vignette for more information.
+#' @param maxThreads maximum threads used for parallelization. Default is 2.
 #' @param output_gamma allow ( \code{TRUE} ) or suppress ( \code{FALSE} ) the output for  gamma. See the return value below for more information.
 #' @param output_beta allow ( \code{TRUE} ) or suppress ( \code{FALSE} ) the output for beta. See the return value below for more information.
 #' @param output_G allow ( \code{TRUE} ) or suppress ( \code{FALSE} ) the output for G. See the return value below for more information.
@@ -85,12 +85,12 @@
 #' @examples
 #' data("example_eQTL", package = "BayesSUR")
 #' hyperpar <- list( a_w = 2 , b_w = 5 )
-#' 
+#' set.seed(9173)
 #' fit <- BayesSUR(Y = example_eQTL[["blockList"]][[1]], 
 #'                 X = example_eQTL[["blockList"]][[2]],
 #'                 data = example_eQTL[["data"]], outFilePath = tempdir(),
 #'                 nIter = 100, burnin = 50, nChains = 2, gammaPrior = "hotspot",
-#'                 hyperpar = hyperpar, tmpFolder = "tmp/" )
+#'                 hyperpar = hyperpar, tmpFolder = "tmp/", output_CPO=TRUE)
 #' 
 #' ## check output
 #' # show the summary information
@@ -98,9 +98,10 @@
 #' 
 #' # show the estimated beta, gamma and graph of responeses Gy
 #' \donttest{
-#' plotEstimator(fit)
+#' estimators <- getEstimator(fit, estimator=c("beta","gamma","Gy"))
+#' plot.Estimator(estimators)
 #' 
-#' plotEstimator(fit, fig.tex = TRUE)
+#' plot.Estimator(estimators, fig.tex = TRUE)
 #' system(paste(getOption("pdfviewer"), "ParamEstimator.pdf"))
 #' }
 #' 
@@ -112,7 +113,7 @@ BayesSUR <- function(Y, X, X_0 = NULL, data = NULL,
                      standardize = TRUE, standardize.response = TRUE, maxThreads = 2,
                      output_gamma = TRUE, output_beta = TRUE, output_G = TRUE, output_sigmaRho = TRUE,
                      output_pi = TRUE, output_tail = TRUE, output_model_size = TRUE, output_model_visit = FALSE, 
-                     output_CPO = TRUE, output_Y = TRUE, output_X = TRUE, hyperpar = list(), tmpFolder = "tmp/")
+                     output_CPO = FALSE, output_Y = TRUE, output_X = TRUE, hyperpar = list(), tmpFolder = "tmp/")
 {
   
   # Check the directory for the output files
@@ -302,8 +303,8 @@ BayesSUR <- function(Y, X, X_0 = NULL, data = NULL,
       hyperpar.all <- hyperpar.all[-c(12:15)]
   }
   if( toupper(gammaPrior) %in% c("HIERARCHICAL", "H")){
-    #hyperpar.all$a_pi <- 1
-    #hyperpar.all$b_pi <- sum(blockLabels==0) - 1
+    hyperpar.all$a_pi <- 1
+    hyperpar.all$b_pi <- sum(blockLabels==0) - 1
     
     if(toupper(covariancePrior) %in% c("INDEPENDENT", "INDEP", "IG"))
       hyperpar.all <- hyperpar.all[-c(3:6,7:11,14:15)]
@@ -330,6 +331,8 @@ BayesSUR <- function(Y, X, X_0 = NULL, data = NULL,
     for( i in 1:length(hyperpar)){
       if(names(hyperpar)[[i]] %in% names(hyperpar.all))
         hyperpar.all[[which(names(hyperpar.all)==names(hyperpar)[[i]])]] <- hyperpar[[i]]
+      if(!is.null(hyperpar$a_omega)) hyperpar.all$a_pi <- hyperpar$a_omega
+      if(!is.null(hyperpar$b_omega)) hyperpar.all$b_pi <- hyperpar$b_omega
     }
   
   # method to use
@@ -375,13 +378,15 @@ BayesSUR <- function(Y, X, X_0 = NULL, data = NULL,
     # if it's a matrix
     if( (is.numeric(mrfG)  | is.data.frame(mrfG)) & !is.null(dim(mrfG))  )
     {
-      write.table(mrfG,paste(sep="",tmpFolder,"mrfG.txt"), row.names = FALSE, col.names = FALSE)
-      mrfG = paste(sep="",tmpFolder,"mrfG.txt")
+      if(ncol(mrfG) == 2)
+        mrfG = cbind( mrfG, rep(1,nrow(mrfG)) )
+      write.table(mrfG,paste(sep="",outFilePath,"mrfG.txt"), row.names = FALSE, col.names = FALSE)
+      mrfG = paste(sep="",outFilePath,"mrfG.txt")
     }else if( is.null( mrfG )){
       # save a meaningless mrfG.txt file to pass the parameter to C++ 
-      mrfG = matrix(c(0,0),ncol=2)
-      write.table(mrfG, paste(sep="",tmpFolder,"mrfG.txt"), row.names = FALSE, col.names = FALSE)
-      mrfG = paste(sep="",tmpFolder,"mrfG.txt")
+      mrfG = matrix(c(0,0,0),ncol=3)
+      write.table(mrfG, paste(sep="",outFilePath,"mrfG.txt"), row.names = FALSE, col.names = FALSE)
+      mrfG = paste(sep="",outFilePath,"mrfG.txt")
     }else
       my_stop("Unknown mrfG argument: check the help function for possibile values",tmpFolder)
   }
@@ -408,6 +413,10 @@ BayesSUR <- function(Y, X, X_0 = NULL, data = NULL,
   ret$input["gammaInit"] = gammaInit
   ret$input["mrfG"] = mrfG
   
+  if( toupper(gammaPrior) %in% c("HIERARCHICAL", "H")){
+    names(hyperpar.all)[names(hyperpar.all)=="a_pi"] <- "a_omega"
+    names(hyperpar.all)[names(hyperpar.all)=="b_pi"] <- "b_omega"
+  }
   ret$input$hyperParameters = hyperpar.all
   
   methodString = 
@@ -458,6 +467,8 @@ BayesSUR <- function(Y, X, X_0 = NULL, data = NULL,
   if ( output_X )
     ret$output["X"] = paste(sep="", "data_X.txt")
   
+  #seed = as.integer(.GlobalEnv$.Random.seed[length(.GlobalEnv$.Random.seed)])
+  #set.seed(seed)
   #betaPrior="independent"
   ret$status = BayesSUR_internal(data, mrfG, blockList, structureGraph, hyperParFile, outFilePath, 
                                  nIter, burnin, nChains, 
