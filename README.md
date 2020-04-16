@@ -5,6 +5,19 @@ This repository contains a [new and improved](https://github.com/mbant/BayesSUR/
 ## R package instructions
 See `test.R` file for usage; see the package vignette `BayesSUR.pdf` (submitted to the Journal of Statistical Software) for more information.
 
+## Installation
+
+To install the current release, use
+``` r
+install.packages("BayesSUR")
+```
+
+To install the current development version, use
+``` r
+library("devtools")
+devtools::install_github("mbant/BayesSUR")
+```
+
 ## Update
 
 ### New in verion `BayesSUR_1.1-1.tar.gz` (16 April 2020):
