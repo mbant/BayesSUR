@@ -7,7 +7,12 @@ See `test.R` file for usage; see the package vignette `BayesSUR.pdf` (submitted 
 
 ## Update
 
-### New in version `BayesSUR_1.1-0.tar.gz` (02 April 2020):
+### New in verion `BayesSUR_1.1-1.tar.gz` (16 April 2020):
+
+1) Use of `Rcpp::RNGScope scope` for the reproducibility of results.
+2) Generic function for plotting of R objects.
+
+### Version `BayesSUR_1.1-0.tar.gz` (02 April 2020):
 
 Random effects have been included in the SUR mdoels.
 
