@@ -3,7 +3,7 @@
 #' Plot Manhattan-like plots for marginal posterior inclusion probabilities (mPIP) and numbers of responses of association for predictors of a "BayesSUR" class object.
 #' @importFrom graphics axis box text par plot.default segments
 #' @name plot.Manhattan
-#' @param object an object of class \code{getEstimator} with \code{estimator="gamma"}
+#' @param x an object of class \code{getEstimator} with \code{estimator="gamma"}
 #' @param which if it's value "1" showing the Manhattan-like plot of the marginal posterior inclusion probabilities (mPIP). If it's value "2" showing the Manhattan-like plot of the number of responses. The default is to show both figures.
 #' @param x.loc a vector of features distance
 #' @param axis.label a vector of predictor names which are shown in the Manhattan-like plot. The value "NULL" only showing the indices. The default "auto" show the predictor names from the orginal data.
@@ -38,15 +38,15 @@
 #' plot(gamma)
 #' 
 #' @export
-plot.Manhattan <- function(object, which=c(1,2), x.loc=FALSE, axis.label="auto", mark.responses=NULL, xlab1="Predictors", ylab1="mPIP", xlab2="Predictors", ylab2="No. of responses",
+plot.Manhattan <- function(x, which=c(1,2), x.loc=FALSE, axis.label="auto", mark.responses=NULL, xlab1="Predictors", ylab1="mPIP", xlab2="Predictors", ylab2="No. of responses",
                           threshold=0.5,las=0, cex.axis=1, mark.pos=c(0,0), mark.color=2, mark.cex=0.8, header="", ...){
   
-  gamma <- object
+  gamma <- x
   if(is.null(axis.label)){
     x.loc <- 1:nrow(gamma)
     names(x.loc) <- 1:nrow(gamma)
   }else{
-    #name.predictors <- colnames(read.table(object$output$X,header=T))
+    #name.predictors <- colnames(read.table(x$output$X,header=T))
     name.predictors <- rownames(gamma)
     if(axis.label[1] == "auto"){
       x.loc <- 1:nrow(gamma)
@@ -77,7 +77,7 @@ plot.Manhattan <- function(object, which=c(1,2), x.loc=FALSE, axis.label="auto",
   
   # mark the names of the specified response variables corresponding to the given predictors
   if(!is.null(mark.responses)){
-    name.responses <- colnames(read.table(object$output$Y,header=T))
+    name.responses <- colnames(read.table(x$output$Y,header=T))
     if(!is.na(match(mark.responses, name.responses)[1])){
       text(rep(x.loc,times=length(mark.responses))+mark.pos[1], as.vector(gamma[x.loc,name.responses %in% mark.responses])+mark.pos[2], labels=rep(mark.responses, each=length(x.loc)), col=mark.color, cex=mark.cex)
     }else{

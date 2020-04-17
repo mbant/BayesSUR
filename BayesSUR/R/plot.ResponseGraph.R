@@ -4,7 +4,7 @@
 #' @importFrom igraph V E plot.igraph graph_from_adjacency_matrix V<-
 #' @importFrom graphics par
 #' @name plot.ResponseGraph
-#' @param object an object of class \code{getEstimator} with \code{estimator="Gy"}
+#' @param x an object of class \code{getEstimator} with \code{estimator="Gy"}
 #' @param PmaxResponse cutpoint for thresholding the learning structure matrix of multiple response variables. Default is 0.5
 #' @param PtrueResponse true adjacency matrix for the structure of multiple response variables
 #' @param name.responses A vector for the node names. The default is "NA" only to show the locations. Value "auto" show the response names from the orginal data. 
@@ -31,9 +31,9 @@
 #' plot(Gy)
 #' 
 #' @export
-plot.ResponseGraph <- function(object, PmaxResponse=0.5, PtrueResponse=NULL, name.responses=NA, edge.weight=FALSE, label.color="black", node.size=30, node.color="dodgerblue", ...){
+plot.ResponseGraph <- function(x, PmaxResponse=0.5, PtrueResponse=NULL, name.responses=NA, edge.weight=FALSE, label.color="black", node.size=30, node.color="dodgerblue", ...){
   
-  Gy_hat <- object
+  Gy_hat <- x
   if(!is.na(name.responses)){
     rownames(Gy_hat) <- colnames(Gy_hat) <- name.responses
   }

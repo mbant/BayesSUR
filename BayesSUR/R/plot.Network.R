@@ -5,7 +5,7 @@
 #' @importFrom grDevices gray 
 #' @importFrom igraph V E gsize layout_in_circle plot.igraph degree layout.fruchterman.reingold delete.vertices graph.adjacency
 #' @name plot.Network
-#' @param object an object of class \code{getEstimator} with \code{estimator=c("gamma","Gy")}
+#' @param x an object of class \code{getEstimator} with \code{estimator=c("gamma","Gy")}
 #' @param includeResponse A vector of the response names which are shown in the network
 #' @param excludeResponse A vector of the response names which are not shown in the network
 #' @param includePredictor A vector of the predictor names which are shown in the network
@@ -49,13 +49,13 @@
 #' plot(network)
 #' 
 #' @export 
-plot.Network <- function(object, includeResponse=NULL, excludeResponse=NULL, includePredictor=NULL, excludePredictor=NULL, 
+plot.Network <- function(x, includeResponse=NULL, excludeResponse=NULL, includePredictor=NULL, excludePredictor=NULL, 
                         MatrixGamma=NULL, PmaxPredictor=0.5, PmaxResponse=0.5, nodesizePredictor=2, nodesizeResponse=15, no.isolates=FALSE,
                         lineup=1.2, gray.alpha=0.6, edgewith.response=5, edgewith.predictor=2, edge.weight=FALSE, label.predictor=NULL,
                         label.response=NULL, color.predictor=NULL,color.response=NULL, name.predictors=NULL,name.responses=NULL, 
                         vertex.frame.color=NA,layoutInCircle=FALSE, header="", ...){
   
-  gamma_hat <- object$gamma
+  gamma_hat <- x$gamma
   
   if(sum(colnames(gamma_hat)==paste("V",1:ncol(gamma_hat),sep="")) == ncol(gamma_hat))
     colnames(gamma_hat) <- paste("Y",1:ncol(gamma_hat),sep="")
@@ -76,7 +76,7 @@ plot.Network <- function(object, includeResponse=NULL, excludeResponse=NULL, inc
   
   gamma_hat <- gamma_hat[!excludePredictor.idx,!excludeResponse.idx]
   
-  Gy_hat <- object$Gy
+  Gy_hat <- x$Gy
   Gy_hat <- Gy_hat[!excludeResponse.idx,!excludeResponse.idx]
   
   if(edge.weight){

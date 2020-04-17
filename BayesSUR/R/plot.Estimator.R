@@ -5,7 +5,7 @@
 #' @importFrom grDevices colorRampPalette dev.off grey
 #' @importFrom tikzDevice tikz
 #' @name plot.Estimator
-#' @param object an object of class \code{getEstimator} with \code{estimator=c("beta","gamma","Gy")}
+#' @param x an object of class \code{getEstimator} with \code{estimator=c("beta","gamma","Gy")}
 #' @param estimator print the heatmap of estimators. The value "beta" is for the estimated coefficients matrix, "gamma" for the latent indicator matrix and "Gy" for the graph of responses
 #' @param colorScale.gamma value palette for gamma
 #' @param colorScale.beta a vector of three colors for diverging color schemes
@@ -48,19 +48,19 @@
 #' }
 #' 
 #' @export
-plot.Estimator <- function(object, estimator=NULL, colorScale.gamma=grey((100:0)/100), colorScale.beta=c("blue","white","red"), legend.cex.axis=1, name.responses=NA, 
+plot.Estimator <- function(x, estimator=NULL, colorScale.gamma=grey((100:0)/100), colorScale.beta=c("blue","white","red"), legend.cex.axis=1, name.responses=NA, 
                           name.predictors=NA, xlab="", ylab="", fig.tex=FALSE, output="ParamEstimator", header="", header.cex=2, tick=FALSE, mgp=c(2.5,1,0),
                           title.beta=paste("Estimator","$\\hat{\\bm{B}}$"), title.gamma=paste("Estimator","$\\hat{\\mathbf{\\Gamma}}$"),
                           title.Gy=paste("Estimator","$\\hat{\\mathcal{G}}$"), cex.main=1.5,...){
   
-  beta_hat <- object$beta
-  gamma_hat <- object$gamma
+  beta_hat <- x$beta
+  gamma_hat <- x$gamma
   nonpen <- nrow(beta_hat) - nrow(gamma_hat)
   
   if(is.null(estimator)){
-    estimator <- names(object)
+    estimator <- names(x)
   }else{
-    if(sum(! estimator %in% names(object))>0)
+    if(sum(! estimator %in% names(x))>0)
       stop("Please specify correct argument estimator!")
   }
   
@@ -117,7 +117,7 @@ plot.Estimator <- function(object, estimator=NULL, colorScale.gamma=grey((100:0)
     }
     
     if("Gy" %in% estimator){
-      Gy_hat <- object$Gy
+      Gy_hat <- x$Gy
       
       image(z=Gy_hat+diag(ncol(Gy_hat)), x=1:nrow(Gy_hat), y=1:nrow(Gy_hat), col=colorScale.gamma, mgp=mgp, 
             axes=ifelse(is.na(name.responses)[1],TRUE,FALSE), xlab=ylab, ylab=ylab,main="Estimated graph of responses",cex.main=cex.main,cex.lab=1.5,...);box()
@@ -168,7 +168,7 @@ plot.Estimator <- function(object, estimator=NULL, colorScale.gamma=grey((100:0)
     }
     
     if("Gy" %in% estimator){
-      Gy_hat <- object$Gy
+      Gy_hat <- x$Gy
       
       image(z=Gy_hat+diag(ncol(Gy_hat)), x=1:nrow(Gy_hat), y=1:nrow(Gy_hat), col=colorScale.gamma, axes=ifelse(is.na(name.responses)[1],TRUE,FALSE), mgp=mgp, 
             xlab=ylab, ylab=ylab, main=title.Gy,cex.main=cex.main,cex.lab=1.5,...);box()

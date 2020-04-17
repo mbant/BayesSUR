@@ -5,7 +5,7 @@
 #' @importFrom stats density
 #' @importFrom grDevices hcl.colors
 #' @name plot.MCMCdiag
-#' @param object an object of class \code{getEstimator} with \code{estimator="logP"}
+#' @param x an object of class \code{getEstimator} with \code{estimator="logP"}
 #' @param nbloc number of splits for the last half iterations after substracting burn-in length
 #' @param HIWg diagnostic plot of the response graph. Default is \code{NULL}. \code{HIW="degree"} prints the diagnostic of the degrees of response nodes. \code{HIW="edges"} prints the diagnostic 
 #' of every edge between two responses. \code{HIW="lik"} prints the diagnostic of the posterior likelihoods of the hyperparameters related to the response relationships
@@ -28,16 +28,16 @@
 #' plot(MCMCdiag)
 #' 
 #' @export
-plot.MCMCdiag <- function(object, nbloc=3, HIWg=NULL, header="", ...){
+plot.MCMCdiag <- function(x, nbloc=3, HIWg=NULL, header="", ...){
   
-  if(object$nIter <= 1)
+  if(x$nIter <= 1)
     stop("The diagosis only shows results from more than one MCMC iteration!")
-  if(object$nIter < 4000)
+  if(x$nIter < 4000)
     message("NOTE: The diagosis only shows results of two iteration points due to less than 4000 MCMC iterations!")
   
-  nIter <- object$nIter
-  logP <- object$logP
-  ncol_Y <- object$ncol_Y
+  nIter <- x$nIter
+  logP <- x$logP
+  ncol_Y <- x$ncol_Y
   
   if(nIter >= 4000){
     logP <- logP[,ncol(logP)-floor(nIter/1000)-1+1:floor(nIter/1000)]
@@ -45,10 +45,10 @@ plot.MCMCdiag <- function(object, nbloc=3, HIWg=NULL, header="", ...){
     logP <- logP[,c(1,ncol(logP))]
   }
   if(is.null(HIWg)){
-    Ptau.indx <- ifelse(object$covariancePrior!="IG", 7, 3)
-    Plik.indx <- ifelse(object$covariancePrior!="IG", 10, 5)
-    #nChain <- object$input$nChains
-    model_size <-object$model_size
+    Ptau.indx <- ifelse(x$covariancePrior!="IG", 7, 3)
+    Plik.indx <- ifelse(x$covariancePrior!="IG", 10, 5)
+    #nChain <- x$input$nChains
+    model_size <-x$model_size
     if(nIter >= 4000){
       model_size <- rowSums(  model_size[nrow(model_size)-floor(nIter/1000)-1+1:floor(nIter/1000),] ) 
     }else{
@@ -122,11 +122,11 @@ plot.MCMCdiag <- function(object, nbloc=3, HIWg=NULL, header="", ...){
     if(nbloc>1) 
       legend("topleft",title="moving window",legend=paste("set ",1:nbloc," = [",(floor((ncol(logP))/2)+mid*(nbloc:1-1))*1000+1,":",(ncol(logP))*1000,"]",sep=""),col=1:nbloc,lty=1,text.col=1:nbloc, cex=0.8)
   }else{
-    if(object$covariancePrior != "HIW")
+    if(x$covariancePrior != "HIW")
       stop("The argument HIWg only works for the model with hyper-inverse Wishart prior on the covariance!")
     
     if(HIWg == "degree"){
-      Gvisit <- object$Gvisit
+      Gvisit <- x$Gvisit
       
       m <- ncol_Y
       node1 <- node2 <- NULL
@@ -144,7 +144,7 @@ plot.MCMCdiag <- function(object, nbloc=3, HIWg=NULL, header="", ...){
     }
     
     if(substr(HIWg, 1, 4) == "edge"){
-      Gvisit <- object$Gvisit
+      Gvisit <- x$Gvisit
       
       m <- ncol_Y
       node1 <- node2 <- NULL

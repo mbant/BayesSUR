@@ -4,10 +4,10 @@
 \alias{plot.MCMCdiag}
 \title{show trace plots and diagnostic density plots}
 \usage{
-\method{plot}{MCMCdiag}(object, nbloc = 3, HIWg = NULL, header = "", ...)
+\method{plot}{MCMCdiag}(x, nbloc = 3, HIWg = NULL, header = "", ...)
 }
 \arguments{
-\item{object}{an object of class \code{getEstimator} with \code{estimator="logP"}}
+\item{x}{an object of class \code{getEstimator} with \code{estimator="logP"}}
 
 \item{nbloc}{number of splits for the last half iterations after substracting burn-in length}
 

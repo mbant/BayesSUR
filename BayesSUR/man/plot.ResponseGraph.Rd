@@ -5,7 +5,7 @@
 \title{plot the estimated graph for multiple response variables}
 \usage{
 \method{plot}{ResponseGraph}(
-  object,
+  x,
   PmaxResponse = 0.5,
   PtrueResponse = NULL,
   name.responses = NA,
@@ -17,7 +17,7 @@
 )
 }
 \arguments{
-\item{object}{an object of class \code{getEstimator} with \code{estimator="Gy"}}
+\item{x}{an object of class \code{getEstimator} with \code{estimator="Gy"}}
 
 \item{PmaxResponse}{cutpoint for thresholding the learning structure matrix of multiple response variables. Default is 0.5}
 

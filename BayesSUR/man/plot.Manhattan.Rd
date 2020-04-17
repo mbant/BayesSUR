@@ -5,7 +5,7 @@
 \title{plot Manhattan-like plots for marginal posterior inclusion probabilities (mPIP) and numbers of responses of association for predictors}
 \usage{
 \method{plot}{Manhattan}(
-  object,
+  x,
   which = c(1, 2),
   x.loc = FALSE,
   axis.label = "auto",
@@ -25,7 +25,7 @@
 )
 }
 \arguments{
-\item{object}{an object of class \code{getEstimator} with \code{estimator="gamma"}}
+\item{x}{an object of class \code{getEstimator} with \code{estimator="gamma"}}
 
 \item{which}{if it's value "1" showing the Manhattan-like plot of the marginal posterior inclusion probabilities (mPIP). If it's value "2" showing the Manhattan-like plot of the number of responses. The default is to show both figures.}
 

@@ -5,7 +5,7 @@
 \title{plot the network representation of the associations between responses and predictors}
 \usage{
 \method{plot}{Network}(
-  object,
+  x,
   includeResponse = NULL,
   excludeResponse = NULL,
   includePredictor = NULL,
@@ -34,7 +34,7 @@
 )
 }
 \arguments{
-\item{object}{an object of class \code{getEstimator} with \code{estimator=c("gamma","Gy")}}
+\item{x}{an object of class \code{getEstimator} with \code{estimator=c("gamma","Gy")}}
 
 \item{includeResponse}{A vector of the response names which are shown in the network}
 

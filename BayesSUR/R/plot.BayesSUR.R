@@ -44,31 +44,31 @@ plot.BayesSUR <- function(x, which = c(1L:4L), ...){
   if (show[1L]) {
     dev.hold()
     estimators <- getEstimator(x, estimator = c("beta","gamma","Gy"))
-    plot(estimators, header="\nEstimators", ...)
+    plot.Estimator(estimators, header="\nEstimators", ...)
     dev.flush()
   }
   if (show[2L]) {
     dev.hold()
     Gy <- getEstimator(x, estimator = "Gy")
-    plot(Gy, ...)
+    plot.ResponseGraph(Gy, ...)
     dev.flush()
   }
   if (show[3L]) {
     dev.hold()
     network <- getEstimator(x, estimator = c("gamma","Gy"))
-    plot(network, header="\n\nNetwork respresentation", ...)
+    plot.Network(network, header="\n\nNetwork respresentation", ...)
     dev.flush()
   }
   if (show[4L]) {
     dev.hold()
     gamma <- getEstimator(x, estimator = "gamma")
-    plot(gamma, header="\n\nManhattan-like plots", ...)
+    plot.Manhattan(gamma, header="\n\nManhattan-like plots", ...)
     dev.flush()
   }
   if (show[5L]) {
     dev.hold()
     MCMCdiag <- getEstimator(x, estimator = "logP")
-    plot(MCMCdiag, header="\nMCMC diagnostic plots", ...)
+    plot.MCMCdiag(MCMCdiag, header="\nMCMC diagnostic plots", ...)
     dev.flush()
   }
   
