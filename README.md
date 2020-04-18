@@ -20,6 +20,10 @@ devtools::install_github("mbant/BayesSUR")
 
 ## Update
 
+### New in verion `BayesSUR_1.1-2.tar.gz` (18 April 2020):
+
+Fixed the issue of the hyperparameter w_j initialization in the HRR model.
+
 ### New in verion `BayesSUR_1.1-1.tar.gz` (16 April 2020):
 
 1) Use of `Rcpp::RNGScope scope` for the reproducibility of results.
