@@ -99,9 +99,9 @@
 #' # show the estimated beta, gamma and graph of responeses Gy
 #' \donttest{
 #' estimators <- getEstimator(fit, estimator=c("beta","gamma","Gy"))
-#' plot.Estimator(estimators)
+#' plot(estimators)
 #' 
-#' plot.Estimator(estimators, fig.tex = TRUE)
+#' plot(estimators, fig.tex = TRUE)
 #' system(paste(getOption("pdfviewer"), "ParamEstimator.pdf"))
 #' }
 #' 

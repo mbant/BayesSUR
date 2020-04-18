@@ -639,7 +639,7 @@ void HRR_Chain::piInit( arma::vec& pi_init , double a_pi_ , double b_pi_ )
 // this is either hotspot or hierarchical
 void HRR_Chain::piInit()
 {
-    arma::vec init = arma::ones<arma::vec>(nVSPredictors) ;
+    arma::vec init = arma::ones<arma::vec>(nVSPredictors) * 0.5 ;
     switch ( gamma_type )
     {
         case Gamma_Type::hotspot :
@@ -1076,10 +1076,17 @@ double HRR_Chain::logLikelihood( )
             }
         }
         
-        arma::vec mu_k = W_k * ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->col( (*outcomesIdx)(k) ) ); // we divide by temp later
-        
+        // yMean is needed if y is not standardized
+        arma::mat yMean = data->cols( *outcomesIdx );
+        for( unsigned i=0; i<nOutcomes; i++)
+        {
+            yMean.col(i) = arma::mean(yMean.col(i)) * arma::ones(nObservations);
+        }
+               
+        arma::vec mu_k = W_k * ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * (data->col( (*outcomesIdx)(k) ) - yMean.col(k)) ); // we divide by temp later
+               
         double a_sigma_k = a_sigma + 0.5*(double)nObservations/temperature;
-        double b_sigma_k = b_sigma + 0.5* arma::as_scalar( (data->col( (*outcomesIdx)(k) ).t() * data->col( (*outcomesIdx)(k) )) - ( mu_k.t() * data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->col( (*outcomesIdx)(k) ) ) )/temperature;
+        double b_sigma_k = b_sigma + 0.5* arma::as_scalar( (( data->col((*outcomesIdx)(k)) - yMean.col(k) ).t() * (data->col((*outcomesIdx)(k)) - yMean.col(k) )) - ( mu_k.t() * data->cols( (*predictorsIdx)(VS_IN_k) ).t() * ( data->col((*outcomesIdx)(k)) - yMean.col(k) ) ) )/temperature;
         
         double sign, tmp;
         arma::log_det(tmp, sign, W_k );
@@ -1185,10 +1192,17 @@ double HRR_Chain::logLikelihood( const arma::umat&  externalGammaMask )
             }
         }
         
-        arma::vec mu_k = W_k * ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->col( (*outcomesIdx)(k) ) ); // we divide by temp later
-        
+        // yMean is needed if y is not standardized
+        arma::mat yMean = data->cols( *outcomesIdx );
+        for( unsigned i=0; i<nOutcomes; i++)
+        {
+            yMean.col(i) = arma::mean(yMean.col(i)) * arma::ones(nObservations);
+        }
+               
+        arma::vec mu_k = W_k * ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * (data->col( (*outcomesIdx)(k) ) - yMean.col(k)) ); // we divide by temp later
+               
         double a_sigma_k = a_sigma + 0.5*(double)nObservations/temperature;
-        double b_sigma_k = b_sigma + 0.5* arma::as_scalar( (data->col( (*outcomesIdx)(k) ).t() * data->col( (*outcomesIdx)(k) )) - ( mu_k.t() * data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->col( (*outcomesIdx)(k) ) ) )/temperature;
+        double b_sigma_k = b_sigma + 0.5* arma::as_scalar( (( data->col((*outcomesIdx)(k)) - yMean.col(k) ).t() * (data->col((*outcomesIdx)(k)) - yMean.col(k) )) - ( mu_k.t() * data->cols( (*predictorsIdx)(VS_IN_k) ).t() * ( data->col((*outcomesIdx)(k)) - yMean.col(k) ) ) )/temperature;
         
         double sign, tmp; //sign is needed for the implementation, but we 'assume' that all the matrices are (semi-)positive-definite (-> det>=0)
         arma::log_det(tmp, sign, W_k );
@@ -1279,10 +1293,17 @@ double HRR_Chain::logLikelihood( arma::umat& externalGammaMask , const arma::uma
             }
         }
         
-        arma::vec mu_k = W_k * ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->col( (*outcomesIdx)(k) ) ); // we divide by temp later
-        
+        // yMean is needed if y is not standardized
+        arma::mat yMean = data->cols( *outcomesIdx );
+        for( unsigned i=0; i<nOutcomes; i++)
+        {
+            yMean.col(i) = arma::mean(yMean.col(i)) * arma::ones(nObservations);
+        }
+               
+        arma::vec mu_k = W_k * ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * (data->col( (*outcomesIdx)(k) ) - yMean.col(k)) ); // we divide by temp later
+               
         double a_sigma_k = a_sigma + 0.5*(double)nObservations/temperature;
-        double b_sigma_k = b_sigma + 0.5* arma::as_scalar( (data->col( (*outcomesIdx)(k) ).t() * data->col( (*outcomesIdx)(k) )) - ( mu_k.t() * data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->col( (*outcomesIdx)(k) ) ) )/temperature;
+        double b_sigma_k = b_sigma + 0.5* arma::as_scalar( (( data->col((*outcomesIdx)(k)) - yMean.col(k) ).t() * (data->col((*outcomesIdx)(k)) - yMean.col(k) )) - ( mu_k.t() * data->cols( (*predictorsIdx)(VS_IN_k) ).t() * ( data->col((*outcomesIdx)(k)) - yMean.col(k) ) ) )/temperature;
         
         double sign, tmp; //sign is needed for the implementation, but we 'assume' that all the matrices are (semi-)positive-definite (-> det>=0)
         arma::log_det(tmp, sign, W_k );
@@ -1371,11 +1392,17 @@ double HRR_Chain::logLikelihood( const arma::umat& externalGammaMask , const dou
             }
         }
         
-        
-        arma::vec mu_k = W_k * ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->col( (*outcomesIdx)(k) ) );
-        
+        // yMean is needed if y is not standardized
+        arma::mat yMean = data->cols( *outcomesIdx );
+        for( unsigned i=0; i<nOutcomes; i++)
+        {
+            yMean.col(i) = arma::mean(yMean.col(i)) * arma::ones(nObservations);
+        }
+               
+        arma::vec mu_k = W_k * ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * (data->col( (*outcomesIdx)(k) ) - yMean.col(k)) ); // we divide by temp later
+               
         double a_sigma_k = externalA_sigma + 0.5*(double)nObservations/temperature;
-        double b_sigma_k = externalB_sigma + 0.5* arma::as_scalar( data->col( (*outcomesIdx)(k) ).t() * data->col( (*outcomesIdx)(k) ) - ( mu_k.t() * ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->col( (*outcomesIdx)(k) ) ) ) )/temperature;
+        double b_sigma_k = externalB_sigma + 0.5* arma::as_scalar( (( data->col((*outcomesIdx)(k)) - yMean.col(k) ).t() * (data->col((*outcomesIdx)(k)) - yMean.col(k) )) - ( mu_k.t() * data->cols( (*predictorsIdx)(VS_IN_k) ).t() * ( data->col((*outcomesIdx)(k)) - yMean.col(k) ) ) )/temperature;
         
         double sign, tmp; //sign is needed for the implementation, but we 'assume' that all the matrices are (semi-)positive-definite (-> det>=0)
         arma::log_det(tmp, sign, W_k );

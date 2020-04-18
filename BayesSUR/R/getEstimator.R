@@ -87,11 +87,11 @@ getEstimator <- function(object, estimator="gamma", Pmax=0){
     if( estimator == "logP" ){
       logP <- t( as.matrix( read.table(object$output$logP) ) )
       model_size <- as.matrix( read.table(object$output$model_size) )
-      ncol_Y <- ncol(read.table(object$output$G))
+      ncol_Y <- ncol(read.table(object$output$gamma))
       nIter <- object$input$nIter
       
       covariancePrior <- object$input$covariancePrior
-      if(covariancePrior=="HIW" & file.exists(object$output$Gvisit)){
+      if(covariancePrior=="HIW" & is.null(object$output$Gvisit)){
         Gvisit <- as.matrix( read.table(object$output$Gvisit) )
         ret <- list(logP=logP, model_size=model_size, Gvisit=Gvisit, 
                     ncol_Y=ncol_Y, nIter=nIter, covariancePrior=covariancePrior)
