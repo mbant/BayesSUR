@@ -20,7 +20,7 @@ devtools::install_github("mbant/BayesSUR")
 
 ## Update
 
-### New in verion `BayesSUR_1.1-2.tar.gz` (22 April 2020):
+### New in verion `BayesSUR_1.1-2.tar.gz` (27 April 2020):
 
 1) Fixed the issue of the hyperparameter w_j initialization in the HRR model.
 2) Fixed issues of the example in \donttest.
