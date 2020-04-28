@@ -1,5 +1,6 @@
-[![Travis-CI Build Status](https://travis-ci.org/SafetyGraphics/safetyGraphics.svg?branch=master)](https://travis-ci.org/SafetyGraphics/safetyGraphics) 
-[![CRAN_Status_Badge](http://www.r-pkg.org/badges/version/safetyGraphics)](https://cran.r-project.org/package=safetyGraphics)
+[![CRAN\_Status\_Badge](http://www.r-pkg.org/badges/version/BayesSUR)](https://cran.r-project.org/package=BayesSUR)
+[![Build
+Status](https://travis-ci.org/ocbe-uio/BayesSUR.svg?branch=master)](https://travis-ci.org/ocbe-uio/BayesSUR)
 
 # BayesSUR
 
