@@ -1,3 +1,6 @@
+[![Travis-CI Build Status](https://travis-ci.org/SafetyGraphics/safetyGraphics.svg?branch=master)](https://travis-ci.org/SafetyGraphics/safetyGraphics) 
+[![CRAN_Status_Badge](http://www.r-pkg.org/badges/version/safetyGraphics)](https://cran.r-project.org/package=safetyGraphics)
+
 # BayesSUR
 
 This repository contains a [new and improved](https://github.com/mbant/BayesSUR/blob/master/BayesSUR/vignettes/vignettes.pdf) [R]() package for high-dimensional multivariate Bayesian variable and covariance selection in linear regression, started as an interface to the [Bayesian SSUR](https://github.com/mbant/Bayesian_SSUR) C++-only, UNIX-specific, code.
