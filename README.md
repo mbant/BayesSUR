@@ -1,6 +1,5 @@
 [![CRAN\_Status\_Badge](http://www.r-pkg.org/badges/version/BayesSUR)](https://cran.r-project.org/package=BayesSUR)
-[![Build
-Status](https://travis-ci.org/ocbe-uio/BayesSUR.svg?branch=master)](https://travis-ci.org/ocbe-uio/BayesSUR)
+[![Build Status](https://travis-ci.org/mbant/BayesSUR.svg?branch=master)](https://travis-ci.org/mbant/BayesSUR)
 
 # BayesSUR
 
