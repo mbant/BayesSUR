@@ -1876,11 +1876,11 @@ void HRR_Chain::updateProposalVariances()
             var_pi_proposal_init = var_pi_proposal;
         }
         
-        wEmpiricalMean = w;
+        wEmpiricalMean = std::log(w);
         wEmpiricalM2 = 0.;
         var_w_proposal_init = var_w_proposal;
         
-        w0EmpiricalMean = w0;
+        w0EmpiricalMean = std::log(w0);
         w0EmpiricalM2 = 0.;
         var_w0_proposal_init = var_w0_proposal;
         
@@ -1903,15 +1903,15 @@ void HRR_Chain::updateProposalVariances()
         }
         
         // w
-        delta = w - wEmpiricalMean;
+        delta = std::log(w) - wEmpiricalMean;
         wEmpiricalMean = wEmpiricalMean + ( delta / internalIterationCounter );
-        delta2 = w - wEmpiricalMean;
+        delta2 = std::log(w) - wEmpiricalMean;
         wEmpiricalM2 = wEmpiricalM2 + delta * delta2;
         
         // w0
-               delta = w0 - w0EmpiricalMean;
+               delta = std::log(w0) - w0EmpiricalMean;
                w0EmpiricalMean = w0EmpiricalMean + ( delta / internalIterationCounter );
-               delta2 = w0 - w0EmpiricalMean;
+               delta2 = std::log(w0) - w0EmpiricalMean;
                w0EmpiricalM2 = w0EmpiricalM2 + delta * delta2;
     }
     

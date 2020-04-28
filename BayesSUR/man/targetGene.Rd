@@ -152,7 +152,7 @@ X1 <- log2(X1)
 # summary the data information
 example_GDSC <- list( data=cbind( YX0, X1, X23 ) )
 example_GDSC$blockList <- list(1:length(name_drugs), length(name_drugs)+1:GDSC$num.nonpen, 
-                               ncol(YX0)+1:sum(p))
+                               ncol(YX0)+1:(ncol(X1)+ncol(X23)))
 
 #========================
 # construct the G matrix: edge potentials in the MRF prior

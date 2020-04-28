@@ -129,13 +129,13 @@ getEstimator <- function(object, estimator="gamma", Pmax=0){
       | (length(estimator)==2 & sum(estimator %in% c("beta", "gamma"))==2)){
     beta <- as.matrix( read.table(object$output$beta) )
     gamma <- as.matrix( read.table(object$output$gamma) )
-    colnames(beta) <- colnames(gamma) <- names(read.table(object$output$Y,header=T))
-    rownames(gamma) <- names(read.table(object$output$X,header=T))
+    #colnames(beta) <- colnames(gamma) <- names(read.table(object$output$Y,header=T))
+    #rownames(gamma) <- names(read.table(object$output$X,header=T))
     nonpen <- nrow(beta) - nrow(gamma)
     if(nonpen > 0){
       rownames(beta) <- c(names(read.table(object$output$X0,header=T)), names(read.table(object$output$X,header=T)))
     }else{
-      rownames(beta) <- names(read.table(object$output$X,header=T))
+      #rownames(beta) <- names(read.table(object$output$X,header=T))
     }
     covariancePrior <- object$input$covariancePrior
     if( (covariancePrior == "HIW") & ("Gy" %in% estimator) ){

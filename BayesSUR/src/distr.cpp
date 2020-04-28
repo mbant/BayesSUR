@@ -546,7 +546,8 @@ namespace Distributions{
 	{
 		unsigned int p = X.n_rows;
 		double ret = -0.5*(double)p*nu*log(2.) - lMvGamma(p,nu) - 0.5*arma::trace( Sigma * arma::inv_sympd(X) );
-		double sign, tmp;
+        double tmp;
+        double sign;
 		arma::log_det(tmp, sign, X );
 		ret += -0.5*( (double)p + nu + 1. )*tmp;
 
@@ -564,7 +565,8 @@ namespace Distributions{
 
 		double ret = -0.5*arma::trace( arma::inv_sympd(colCov) * X.t() * arma::inv_sympd(rowCov) * X ) -
 					(double)n*(double)m*0.5*log(2.*M_PI);
-		double sign, tmp;
+		double tmp;
+        double sign;
 		arma::log_det(tmp, sign, colCov );
 		ret += -0.5*(double)n*tmp;
 

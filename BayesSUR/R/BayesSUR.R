@@ -97,12 +97,19 @@
 #' summary(fit)
 #' 
 #' # show the estimated beta, gamma and graph of responeses Gy
-#' \donttest{
+#' \dontrun{
 #' estimators <- getEstimator(fit, estimator=c("beta","gamma","Gy"))
 #' plot(estimators)
 #' 
+#' #Set up temporary work directory for saving a pdf figure
+#' td <- tempdir()
+#' oldwd <- getwd()
+#' setwd(td)
+#' 
+#' # Produce authentic math formulas in the graph
 #' plot(estimators, fig.tex = TRUE)
 #' system(paste(getOption("pdfviewer"), "ParamEstimator.pdf"))
+#' setwd(oldwd)
 #' }
 #' 
 #' @export
