@@ -142,7 +142,7 @@ Remaining issues:
 
 1) The runSUR() doesn’t print the running iterations information in the RGui of WinOS, but it works in the RStudio of WinOS, RStudio of MacOS and R Console of MacOS.
 
-### Version `BayesSUR_0.1.13.tar.gz` (30 June 2019)# BayesSUR
+### Version `BayesSUR_0.1.13.tar.gz` (30 June 2019)
 
 ### Libraries
 
