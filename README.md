@@ -17,7 +17,7 @@ install.packages("BayesSUR")
 To install the current development version, use
 ``` r
 library("devtools")
-devtools::install_github("mbant/BayesSUR")
+devtools::install_github("mbant/BayesSUR/BayesSUR")
 ```
 
 ## Update
