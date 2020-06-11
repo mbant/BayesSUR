@@ -1,0 +1,40 @@
+Package: BayesSUR
+Type: Package
+Title: Bayesian Seemingly Unrelated Regression
+Version: 1.1-3
+Date: 2020-06-11
+Authors@R: c(person("Marco", "Banterle", email = "marco.banterle@gmail.com", role = c("aut")),
+             person("Zhi", "Zhao", email = "zhi.zhao@medisin.uio.no", role = c("aut", "cre")),
+             person("Leonardo", "Bottolo", email = "lb664@cam.ac.uk", role = c("ctb")),
+             person("Sylvia", "Richardson", email = "sylvia.richardson@mrc-bsu.cam.ac.uk", role = c("ctb")),
+             person("Waldir", "Leoncio", email = "w.l.netto@medisin.uio.no", role = c("ctb")),
+             person("Alex", "Lewin", email = "alex.lewin@lshtm.ac.uk", role = c("aut")),
+             person("Manuela", "Zucknick", email = "manuela.zucknick@medisin.uio.no", role = c("ctb")))
+Description: Bayesian seemingly unrelated regression with general variable selection and dense/sparse covariance matrix. The sparse seemingly unrelated regression is described in Banterle et al. (2018) <doi:10.1101/467019>.
+License: MIT + file LICENSE
+Copyright: The C++ files pugixml.cpp, pugixml.hpp and pugiconfig.hpp
+        are Copyright (C) 2006-2018 by Arseny Kapoulkine
+        (arseny.kapoulkine@gmail.com) and Copyright (C) 2003 by Kristen
+        Wegner (kristen@tima.net). The R function
+        vertical.image.legend() has Copyright (C) 2013 by Jenise Swall
+        (jswall@vcu.edu).
+VignetteBuilder: R.rsp
+RoxygenNote: 7.1.0
+Depends: R (>= 3.5.0)
+Encoding: UTF-8
+LinkingTo: Rcpp, RcppArmadillo (>= 0.9.000)
+Imports: Rcpp, xml2, igraph, Matrix, tikzDevice, stats, utils,
+        grDevices, graphics
+Suggests: R.rsp, BDgraph, data.table, plyr, scrime
+LazyData: true
+NeedsCompilation: yes
+SystemRequirements: C++11
+Packaged: 2020-06-11 09:08:18 UTC; zhiz
+Author: Marco Banterle [aut],
+  Zhi Zhao [aut, cre],
+  Leonardo Bottolo [ctb],
+  Sylvia Richardson [ctb],
+  Waldir Leoncio [ctb],
+  Alex Lewin [aut],
+  Manuela Zucknick [ctb]
+Maintainer: Zhi Zhao <zhi.zhao@medisin.uio.no>

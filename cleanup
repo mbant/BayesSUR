@@ -1,0 +1,8 @@
+#!/bin/sh
+rm -rf config.* src/Makevars src/config.h confdefs.h \
+	src/*.o src/*.so src/*.a src/*.d src/*.dll src/*.rc \
+	autom4te.cache inst/lib/ inst/doc/man/ inst/doc/html/ inst/doc/latex/ \
+   	inst/doc/auto inst/bib/auto #vignettes/auto
+
+find . -name \*~ -exec rm {} \;
+find . -name \*.flc -exec rm {} \;
