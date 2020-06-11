@@ -25,7 +25,7 @@ devtools::install_github("mbant/BayesSUR")
 ### New in verion `BayesSUR_1.1-3.tar.gz` (11 June 2020):
 
 1) Fixed the issue of the HRR code, especially for updating the log-likelihood and log-posterior of gamma.
-2) Temperature adaption is only allowed for the burn-in period.
+2) Temperature adaptation is only allowed for the burn-in period.
 3) Minor changes of some R funciton names.
 
 ### Verion `BayesSUR_1.1-2.tar.gz` (27 April 2020):
