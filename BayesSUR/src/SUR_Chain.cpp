@@ -74,7 +74,7 @@ covariance_type(covariance_type_), gamma_type(gamma_type_),beta_type(beta_type_)
     
     // init for sigma rho and beta to reasonable values -- one step of gibbs
     stepSigmaRhoAndBeta();
-    if( output_CPO && (temperature == 1.) ){
+    if( output_CPO && (temperature = 1.) ){
         predLikelihood();
     }
     

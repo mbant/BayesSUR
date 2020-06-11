@@ -87,6 +87,7 @@ private:
     
     unsigned int updateCounter; // how often do we update the temperatures?
     unsigned int global_proposal_count, global_acc_count, global_count;
+    double tmpRand;
     
 };
 
@@ -203,7 +204,6 @@ void ESS_Sampler<T>::globalStep()
     ++global_proposal_count;
     ++global_count;
     std::pair<unsigned int , unsigned int> chainIdx = {0,1};
-    double tmpRand;
     
     if( nChains > 1 )
     {

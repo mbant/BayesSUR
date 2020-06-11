@@ -74,7 +74,7 @@ covariance_type(covariance_type_),gamma_type(gamma_type_),beta_type(beta_type_),
     sigmaABInit();
     
     logLikelihood();
-    if( output_CPO && (temperature == 1.) ){
+    if( output_CPO && (temperature = 1.) ){
         predLikelihood();
     }
     
@@ -1106,7 +1106,7 @@ double HRR_Chain::logLikelihood( )
         logP += std::lgamma(a_sigma_k) - std::lgamma(a_sigma);
         
         // posterior predictive - t distribution after shifting and scaling by some quantities; from the multivariate t distribution p(y_tilde |y)
-        if( output_CPO && (temperature == 1.) ){
+        if( output_CPO && (temperature = 1.) ){
             for( unsigned int j=0; j<nObservations; ++j )
             {
                 double mu_scale, W_scale, t1, t2;
