@@ -234,7 +234,7 @@ class HRR_Chain : public ESS_Atom<HRR_Chain>
         // no setter for this, dedicated setter below
     
         // get Beta, here we get a sample from the posterior for output reasons
-        arma::mat& getBeta() const;
+        arma::mat& getBeta();// const;
     
         // PREDICTIV LIKELIHOOD FOR THE SUR MODEL
         arma::mat getPredLikelihood();

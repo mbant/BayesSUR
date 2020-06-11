@@ -5,7 +5,7 @@
 #' @importFrom stats density
 #' @importFrom grDevices hcl.colors
 #' @name plot.MCMCdiag
-#' @param x an object of class \code{getEstimator} with \code{estimator="logP"}
+#' @param x an object of class \code{get.estimator} with \code{estimator="logP"}
 #' @param nbloc number of splits for the last half iterations after substracting burn-in length
 #' @param HIWg diagnostic plot of the response graph. Default is \code{NULL}. \code{HIW="degree"} prints the diagnostic of the degrees of response nodes. \code{HIW="edges"} prints the diagnostic 
 #' of every edge between two responses. \code{HIW="lik"} prints the diagnostic of the posterior likelihoods of the hyperparameters related to the response relationships
@@ -24,7 +24,7 @@
 #'                 hyperpar = hyperpar, tmpFolder = "tmp/" )
 #' 
 #' ## check output
-#' MCMCdiag <- getEstimator(fit, estimator = "logP")
+#' MCMCdiag <- get.estimator(fit, estimator = "logP")
 #' plot(MCMCdiag)
 #' 
 #' @export

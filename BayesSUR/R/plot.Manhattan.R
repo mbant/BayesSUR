@@ -3,7 +3,7 @@
 #' Plot Manhattan-like plots for marginal posterior inclusion probabilities (mPIP) and numbers of responses of association for predictors of a "BayesSUR" class object.
 #' @importFrom graphics axis box text par plot.default segments
 #' @name plot.Manhattan
-#' @param x an object of class \code{getEstimator} with \code{estimator="gamma"}
+#' @param x an object of class \code{get.estimator} with \code{estimator="gamma"}
 #' @param which if it's value "1" showing the Manhattan-like plot of the marginal posterior inclusion probabilities (mPIP). If it's value "2" showing the Manhattan-like plot of the number of responses. The default is to show both figures.
 #' @param x.loc a vector of features distance
 #' @param axis.label a vector of predictor names which are shown in the Manhattan-like plot. The value "NULL" only showing the indices. The default "auto" show the predictor names from the orginal data.
@@ -34,7 +34,7 @@
 #' 
 #' ## check output
 #' # show the Manhattan-like plots
-#' gamma <- getEstimator(fit, estimator="gamma")
+#' gamma <- get.estimator(fit, estimator="gamma")
 #' plot(gamma)
 #' 
 #' @export

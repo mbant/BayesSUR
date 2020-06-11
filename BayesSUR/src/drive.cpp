@@ -29,7 +29,7 @@ int drive_SUR( Chain_Data& chainData )
     Rcout << "Initialising the (SUR) MCMC Chain";
     
     ESS_Sampler<SUR_Chain> sampler( chainData.surData , chainData.nChains , 1.2 ,
-                                   chainData.gamma_sampler_type, chainData.gamma_type, chainData.beta_type, chainData.covariance_type, chainData.output_CPO );
+                                   chainData.gamma_sampler_type, chainData.gamma_type, chainData.beta_type, chainData.covariance_type, chainData.output_CPO, chainData.burnin );
     
     Rcout << " ... ";
     
@@ -245,13 +245,16 @@ int drive_SUR( Chain_Data& chainData )
     
     if ( chainData.output_model_visit )
     {
-        g_visit.clear();
-        for(unsigned int k=0; k < tmpG.n_cols-1; ++k)
+        if ( chainData.covariance_type == Covariance_Type::HIW && chainData.output_G )
         {
-            g_visit = join_rows( g_visit, tmpG.submat(k,k+1, k,tmpG.n_cols-1) );
+            g_visit.clear();
+            for(unsigned int k=0; k < tmpG.n_cols-1; ++k)
+            {
+                g_visit = join_rows( g_visit, tmpG.submat(k,k+1, k,tmpG.n_cols-1) );
+            }
+            GVisitOutFile << g_visit << " ";
+            GVisitOutFile << '\n';
         }
-        GVisitOutFile << g_visit << " ";
-        GVisitOutFile << '\n';
         
         ModelVisitGammaOutFile << arma::find((sampler[0] -> getGamma()) == 1).t() << " ";
         ModelVisitGammaOutFile << '\n';
@@ -417,14 +420,17 @@ int drive_SUR( Chain_Data& chainData )
                 
                 if ( chainData.output_model_size )
                 {
-                    //g_visit = arma::conv_to<arma::urowvec>::from( arma::trimatu(tmpG, 1) );
-                    g_visit.clear();
-                    for(unsigned int k=0; k < tmpG.n_cols-1; ++k)
+                    if ( chainData.covariance_type == Covariance_Type::HIW && chainData.output_G )
                     {
-                        g_visit = join_rows( g_visit, tmpG.submat(k,k+1, k,tmpG.n_cols-1) );
+                        //g_visit = arma::conv_to<arma::urowvec>::from( arma::trimatu(tmpG, 1) );
+                        g_visit.clear();
+                        for(unsigned int k=0; k < tmpG.n_cols-1; ++k)
+                        {
+                            g_visit = join_rows( g_visit, tmpG.submat(k,k+1, k,tmpG.n_cols-1) );
+                        }
+                        GVisitOutFile << g_visit << " ";
+                        GVisitOutFile << '\n';
                     }
-                    GVisitOutFile << g_visit << " ";
-                    GVisitOutFile << '\n';
                     
                     ModelSizeOutFile << sampler[0]->getModelSize() << " ";
                     ModelSizeOutFile << '\n';
@@ -547,7 +553,7 @@ int drive_HRR( Chain_Data& chainData )
     Rcout << "Initialising the (HRR) MCMC Chain ";
     
     ESS_Sampler<HRR_Chain> sampler( chainData.surData , chainData.nChains , 1.2 ,
-                                   chainData.gamma_sampler_type, chainData.gamma_type, chainData.beta_type, chainData.covariance_type, chainData.output_CPO );
+                                   chainData.gamma_sampler_type, chainData.gamma_type, chainData.beta_type, chainData.covariance_type, chainData.output_CPO, chainData.burnin );
     
     Rcout << " ... ";
     // *****************************

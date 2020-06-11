@@ -7,7 +7,7 @@
 \method{plot}{MCMCdiag}(x, nbloc = 3, HIWg = NULL, header = "", ...)
 }
 \arguments{
-\item{x}{an object of class \code{getEstimator} with \code{estimator="logP"}}
+\item{x}{an object of class \code{get.estimator} with \code{estimator="logP"}}
 
 \item{nbloc}{number of splits for the last half iterations after substracting burn-in length}
 
@@ -33,7 +33,7 @@ fit <- BayesSUR(Y = example_eQTL[["blockList"]][[1]],
                 hyperpar = hyperpar, tmpFolder = "tmp/" )
 
 ## check output
-MCMCdiag <- getEstimator(fit, estimator = "logP")
+MCMCdiag <- get.estimator(fit, estimator = "logP")
 plot(MCMCdiag)
 
 }

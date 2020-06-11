@@ -34,7 +34,7 @@ public:
     
     // Constructor - nChains and type of MCMC
     ESS_Sampler( Utils::SUR_Data& surData , unsigned int nChains_ , double temperatureRatio ,
-                Gamma_Sampler_Type gamma_sampler_type, Gamma_Type gamma_type, Beta_Type beta_type, Covariance_Type covariance_type, bool output_CPO);
+                Gamma_Sampler_Type gamma_sampler_type, Gamma_Type gamma_type, Beta_Type beta_type, Covariance_Type covariance_type, bool output_CPO , unsigned int burnin_ );
     
     ESS_Sampler( Utils::SUR_Data& surData , unsigned int nChains_ , double temperatureRatio ) :
     ESS_Sampler( surData , nChains_ , temperatureRatio ,
@@ -79,13 +79,14 @@ public:
 private:
     
     unsigned int nChains;
+    unsigned int burnin;
     
     // Pointer to chains -
     // we use pointers so that the client can ask for the original object and manipulate them as he wish
     std::vector<std::shared_ptr<T>> chain;
     
     unsigned int updateCounter; // how often do we update the temperatures?
-    unsigned int global_proposal_count, global_acc_count;
+    unsigned int global_proposal_count, global_acc_count, global_count;
     
 };
 
@@ -96,12 +97,14 @@ private:
 
 template<typename T>
 ESS_Sampler<T>::ESS_Sampler( Utils::SUR_Data& surData , unsigned int nChains_ , double temperatureRatio ,
-                            Gamma_Sampler_Type gamma_sampler_type, Gamma_Type gamma_type, Beta_Type beta_type, Covariance_Type covariance_type, bool output_CPO):
+                            Gamma_Sampler_Type gamma_sampler_type, Gamma_Type gamma_type, Beta_Type beta_type, Covariance_Type covariance_type, bool output_CPO , unsigned int burnin_ ):
 nChains(nChains_),
+burnin(burnin_),
 chain(std::vector<std::shared_ptr<T>>(nChains)),
-updateCounter(500), // how often do we update the temperatures?
+updateCounter(100), // how often do we update the temperatures?
 global_proposal_count(0),
-global_acc_count(0)
+global_acc_count(0),
+global_count(0)
 {
     
     
@@ -198,13 +201,16 @@ template<typename T>
 void ESS_Sampler<T>::globalStep()
 {
     ++global_proposal_count;
+    ++global_count;
     std::pair<unsigned int , unsigned int> chainIdx = {0,1};
+    double tmpRand;
     
     if( nChains > 1 )
     {
-        if( Distributions::randU01() < 0.9 )
+        tmpRand = Distributions::randU01();
+        if( tmpRand < 0.9 )
         {
-            if( Distributions::randU01() < 0.5 )
+            if( tmpRand < 0.5 )
                 chainIdx = randomChainSelect();
             else
                 chainIdx = nearChainSelect();
@@ -214,7 +220,7 @@ void ESS_Sampler<T>::globalStep()
         }else
             global_acc_count += allExchangeAll_step();
         
-        if ( (global_proposal_count % updateCounter) == 0 )
+        if ( ((global_proposal_count % updateCounter) == 0) && (global_count <= burnin) )
             updateTemperatures();
     }
 }

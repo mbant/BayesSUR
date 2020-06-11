@@ -43,31 +43,31 @@ plot.BayesSUR <- function(x, which = c(1L:4L), ...){
   
   if (show[1L]) {
     dev.hold()
-    estimators <- getEstimator(x, estimator = c("beta","gamma","Gy"))
-    plot.Estimator(estimators, header="\nEstimators", ...)
+    estimators <- get.estimator(x, estimator = c("beta","gamma","Gy"))
+    plot.estimator(estimators, header="\nEstimators", ...)
     dev.flush()
   }
   if (show[2L]) {
     dev.hold()
-    Gy <- getEstimator(x, estimator = "Gy")
-    plot.ResponseGraph(Gy, ...)
+    Gy <- get.estimator(x, estimator = "Gy")
+    plot.response.graph(Gy, ...)
     dev.flush()
   }
   if (show[3L]) {
     dev.hold()
-    network <- getEstimator(x, estimator = c("gamma","Gy"))
-    plot.Network(network, header="\n\nNetwork respresentation", ...)
+    network <- get.estimator(x, estimator = c("gamma","Gy"))
+    plot.network(network, header="\n\nNetwork respresentation", ...)
     dev.flush()
   }
   if (show[4L]) {
     dev.hold()
-    gamma <- getEstimator(x, estimator = "gamma")
+    gamma <- get.estimator(x, estimator = "gamma")
     plot.Manhattan(gamma, header="\n\nManhattan-like plots", ...)
     dev.flush()
   }
   if (show[5L]) {
     dev.hold()
-    MCMCdiag <- getEstimator(x, estimator = "logP")
+    MCMCdiag <- get.estimator(x, estimator = "logP")
     plot.MCMCdiag(MCMCdiag, header="\nMCMC diagnostic plots", ...)
     dev.flush()
   }

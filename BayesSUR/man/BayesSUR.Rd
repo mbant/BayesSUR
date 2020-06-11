@@ -94,7 +94,7 @@ if the 'data' argument is not provided, these needs to be matrices containing th
 \item{output_X}{allow ( \code{TRUE} ) or suppress ( \code{FALSE} ) the output for predictors dataset X.}
 
 \item{hyperpar}{a list of named hypeparameters to use instead of the default values. Valid names are mrf_d, mrf_e, a_sigma, b_sigma, a_tau, b_tau, nu, a_eta, b_eta, a_o, b_o, a_pi, b_pi, a_w and b_w. 
-Their default values are a_w=2, b_w=5, a_omega=1, b_omega=1, a_o=2, b_o=p-2, a_pi=2, b_pi=1, nu=s+2, a_tau=0.1, b_tau=10, a_eta=0.1, b_eta=1, a_sigma=1, b_sigma=1, mrf_d=-3 and mrf_e=0.03. See the vignette for more information.}
+Their default values are a_w=2, b_w=5, a_omega=2, b_omega=1, a_o=2, b_o=p-2, a_pi=2, b_pi=1, nu=s+2, a_tau=0.1, b_tau=10, a_eta=0.1, b_eta=1, a_sigma=1, b_sigma=1, mrf_d=-3 and mrf_e=0.03. See the vignette for more information.}
 
 \item{tmpFolder}{the path to a temporary folder where intermediate data files are stored (will be erased at the end of the chain) default to local tmpFolder}
 }
@@ -157,7 +157,7 @@ summary(fit)
 
 # show the estimated beta, gamma and graph of responeses Gy
 \dontrun{
-estimators <- getEstimator(fit, estimator=c("beta","gamma","Gy"))
+estimators <- get.estimator(fit, estimator=c("beta","gamma","Gy"))
 plot(estimators)
 
 #Set up temporary work directory for saving a pdf figure

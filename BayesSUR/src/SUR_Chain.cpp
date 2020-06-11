@@ -74,7 +74,7 @@ covariance_type(covariance_type_), gamma_type(gamma_type_),beta_type(beta_type_)
     
     // init for sigma rho and beta to reasonable values -- one step of gibbs
     stepSigmaRhoAndBeta();
-    if( output_CPO ){
+    if( output_CPO && (temperature == 1.) ){
         predLikelihood();
     }
     
@@ -104,7 +104,7 @@ void SUR_Chain::setXtX()
 {
     
     // Compute XtX
-    if( (nFixedPredictors+nVSPredictors) < 3000 )  // kinda arbitrary value, how can we assess a more sensible one?
+    if( (nFixedPredictors+nVSPredictors) < 5000 )  // kinda arbitrary value, how can we assess a more sensible one?
     {
         preComputedXtX = true;
         XtX = data->cols( *predictorsIdx ).t() * data->cols( *predictorsIdx );

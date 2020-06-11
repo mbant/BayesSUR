@@ -25,7 +25,7 @@
 )
 }
 \arguments{
-\item{x}{an object of class \code{getEstimator} with \code{estimator="gamma"}}
+\item{x}{an object of class \code{get.estimator} with \code{estimator="gamma"}}
 
 \item{which}{if it's value "1" showing the Manhattan-like plot of the marginal posterior inclusion probabilities (mPIP). If it's value "2" showing the Manhattan-like plot of the number of responses. The default is to show both figures.}
 
@@ -75,7 +75,7 @@ fit <- BayesSUR(Y = example_eQTL[["blockList"]][[1]],
 
 ## check output
 # show the Manhattan-like plots
-gamma <- getEstimator(fit, estimator="gamma")
+gamma <- get.estimator(fit, estimator="gamma")
 plot(gamma)
 
 }

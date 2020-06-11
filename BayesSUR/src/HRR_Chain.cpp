@@ -74,7 +74,7 @@ covariance_type(covariance_type_),gamma_type(gamma_type_),beta_type(beta_type_),
     sigmaABInit();
     
     logLikelihood();
-    if( output_CPO ){
+    if( output_CPO && (temperature == 1.) ){
         predLikelihood();
     }
     
@@ -104,7 +104,7 @@ void HRR_Chain::setXtX()
 {
     
     // Compute XtX
-    if( (nFixedPredictors+nVSPredictors) < 3000 )  // kinda arbitrary value, how can we assess a more sensible one?
+    if( (nFixedPredictors+nVSPredictors) < 5000 )  // kinda arbitrary value, how can we assess a more sensible one?
     {
         preComputedXtX = true;
         XtX = data->cols( *predictorsIdx ).t() * data->cols( *predictorsIdx );
@@ -477,10 +477,12 @@ double HRR_Chain::getW0AccRate() const{ return w0_acc_count/(double)internalIter
 double HRR_Chain::getLogPW0() const{ return logP_w0; }
 // no setter for this, dedicated setter below
 
-arma::mat& HRR_Chain::getBeta() const
+arma::mat& HRR_Chain::getBeta() //const
 {
     // Init to zero
     static arma::mat beta = arma::zeros<arma::mat>(nFixedPredictors+nVSPredictors,nOutcomes); // note the static here
+    beta.fill(0.);
+    updateGammaMask();
     
     for( unsigned int k=0; k<nOutcomes; ++k)
     {
@@ -639,7 +641,7 @@ void HRR_Chain::piInit( arma::vec& pi_init , double a_pi_ , double b_pi_ )
 // this is either hotspot or hierarchical
 void HRR_Chain::piInit()
 {
-    arma::vec init = arma::ones<arma::vec>(nVSPredictors) * 0.5 ;
+    arma::vec init = arma::ones<arma::vec>(nVSPredictors);
     switch ( gamma_type )
     {
         case Gamma_Type::hotspot :
@@ -647,6 +649,10 @@ void HRR_Chain::piInit()
             break;
             
         case Gamma_Type::hierarchical :
+            for(unsigned i=0; i<nOutcomes; i++)
+            {
+                init(i) = Distributions::randBeta(1., (double)nOutcomes-1.);
+            }
             piInit( init , 1. , (double)nOutcomes-1. );
             break;
             
@@ -1011,6 +1017,13 @@ double HRR_Chain::logLikelihood( )
     double logP {0};
     predLik.set_size(nObservations, nOutcomes);
     
+    // yMean is needed if y is not standardized
+    arma::mat yMean = data->cols( *outcomesIdx );
+    for( unsigned k=0; k<nOutcomes; k++)
+    {
+        yMean.col(k) = arma::mean(yMean.col(k)) * arma::ones(nObservations);
+    }
+         
 #ifdef _OPENMP
 #pragma omp parallel for default(shared) reduction(+:logP)
 #endif
@@ -1076,13 +1089,6 @@ double HRR_Chain::logLikelihood( )
             }
         }
         
-        // yMean is needed if y is not standardized
-        arma::mat yMean = data->cols( *outcomesIdx );
-        for( unsigned i=0; i<nOutcomes; i++)
-        {
-            yMean.col(i) = arma::mean(yMean.col(i)) * arma::ones(nObservations);
-        }
-               
         arma::vec mu_k = W_k * ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * (data->col( (*outcomesIdx)(k) ) - yMean.col(k)) ); // we divide by temp later
                
         double a_sigma_k = a_sigma + 0.5*(double)nObservations/temperature;
@@ -1100,7 +1106,7 @@ double HRR_Chain::logLikelihood( )
         logP += std::lgamma(a_sigma_k) - std::lgamma(a_sigma);
         
         // posterior predictive - t distribution after shifting and scaling by some quantities; from the multivariate t distribution p(y_tilde |y)
-        if( output_CPO ){
+        if( output_CPO && (temperature == 1.) ){
             for( unsigned int j=0; j<nObservations; ++j )
             {
                 double mu_scale, W_scale, t1, t2;
@@ -1126,6 +1132,13 @@ double HRR_Chain::logLikelihood( )
 double HRR_Chain::logLikelihood( const arma::umat&  externalGammaMask )
 {
     double logP {0};
+    
+    // yMean is needed if y is not standardized
+    arma::mat yMean = data->cols( *outcomesIdx );
+    for( unsigned k=0; k<nOutcomes; k++)
+    {
+        yMean.col(k) = arma::mean(yMean.col(k)) * arma::ones(nObservations);
+    }
     
 #ifdef _OPENMP
 #pragma omp parallel for default(shared) reduction(+:logP)
@@ -1191,13 +1204,6 @@ double HRR_Chain::logLikelihood( const arma::umat&  externalGammaMask )
                     throw Bad_Beta_Type ( beta_type );
             }
         }
-        
-        // yMean is needed if y is not standardized
-        arma::mat yMean = data->cols( *outcomesIdx );
-        for( unsigned i=0; i<nOutcomes; i++)
-        {
-            yMean.col(i) = arma::mean(yMean.col(i)) * arma::ones(nObservations);
-        }
                
         arma::vec mu_k = W_k * ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * (data->col( (*outcomesIdx)(k) ) - yMean.col(k)) ); // we divide by temp later
                
@@ -1226,6 +1232,13 @@ double HRR_Chain::logLikelihood( arma::umat& externalGammaMask , const arma::uma
     
     double logP{0};
     externalGammaMask = createGammaMask(externalGamma);
+    
+    // yMean is needed if y is not standardized
+    arma::mat yMean = data->cols( *outcomesIdx );
+    for( unsigned k=0; k<nOutcomes; k++)
+    {
+        yMean.col(k) = arma::mean(yMean.col(k)) * arma::ones(nObservations);
+    }
     
     
 #ifdef _OPENMP
@@ -1292,13 +1305,6 @@ double HRR_Chain::logLikelihood( arma::umat& externalGammaMask , const arma::uma
                     throw Bad_Beta_Type ( beta_type );
             }
         }
-        
-        // yMean is needed if y is not standardized
-        arma::mat yMean = data->cols( *outcomesIdx );
-        for( unsigned i=0; i<nOutcomes; i++)
-        {
-            yMean.col(i) = arma::mean(yMean.col(i)) * arma::ones(nObservations);
-        }
                
         arma::vec mu_k = W_k * ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * (data->col( (*outcomesIdx)(k) ) - yMean.col(k)) ); // we divide by temp later
                
@@ -1326,6 +1332,13 @@ double HRR_Chain::logLikelihood( const arma::umat& externalGammaMask , const dou
 {
     
     double logP{0};
+    
+    // yMean is needed if y is not standardized
+    arma::mat yMean = data->cols( *outcomesIdx );
+    for( unsigned k=0; k<nOutcomes; k++)
+    {
+        yMean.col(k) = arma::mean(yMean.col(k)) * arma::ones(nObservations);
+    }
     
 #ifdef _OPENMP
 #pragma omp parallel for default(shared) reduction(+:logP)
@@ -1390,13 +1403,6 @@ double HRR_Chain::logLikelihood( const arma::umat& externalGammaMask , const dou
                 default:
                     throw Bad_Beta_Type ( beta_type );
             }
-        }
-        
-        // yMean is needed if y is not standardized
-        arma::mat yMean = data->cols( *outcomesIdx );
-        for( unsigned i=0; i<nOutcomes; i++)
-        {
-            yMean.col(i) = arma::mean(yMean.col(i)) * arma::ones(nObservations);
         }
                
         arma::vec mu_k = W_k * ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * (data->col( (*outcomesIdx)(k) ) - yMean.col(k)) ); // we divide by temp later
@@ -1786,6 +1792,8 @@ void HRR_Chain::stepGamma()
         gamma_acc_count += 1.; // / updatedOutcomesIdx.n_elem;
     }
     
+    updateGammaMask();
+    
     // after A/R, update bandit Related variables
     if( gamma_sampler_type == Gamma_Sampler_Type::bandit )
     {
@@ -1845,6 +1853,10 @@ void HRR_Chain::step()
     
     // update gamma
     stepGamma();
+    
+    // update log_likelihood and logP_gamma
+    logLikelihood();
+    logPGamma();
     
     // increase iteration counter
     ++ internalIterationCounter;
@@ -1983,7 +1995,7 @@ void HRR_Chain::swapW0( std::shared_ptr<HRR_Chain>& that )
 int HRR_Chain::exchangeGamma_step( std::shared_ptr<HRR_Chain>& that )
 {
     // I'm exchanging the gammas AND the betas. So gammaMask, XB and U will follow and we will have to re-compute rhoU for both chains
-    arma::umat swapGammaMask;
+    //arma::umat swapGammaMask;
     arma::mat swapXB , swapU;
     
     double logLik_1 = this->logLikelihood( that->getGammaMask() );   // note that this and that lik are
@@ -1998,9 +2010,10 @@ int HRR_Chain::exchangeGamma_step( std::shared_ptr<HRR_Chain>& that )
         this->swapGamma( that );
         
         // loglikelihood and related quantities
-        swapGammaMask = this->getGammaMask() ;
+        /*swapGammaMask = this->getGammaMask() ;
         this->setGammaMask( that->getGammaMask() );
-        that->setGammaMask( swapGammaMask );
+        that->setGammaMask( swapGammaMask );*/
+        this->gammaMask.swap(that->gammaMask);
         
         this->setLogLikelihood( logLik_1 );
         that->setLogLikelihood( logLik_2 );
@@ -2235,12 +2248,13 @@ void HRR_Chain::swapAll( std::shared_ptr<HRR_Chain>& thatChain )
     
     // HARD SWAP cause swapping "this" is not an option
     // swap quantities
-    arma::umat swapGammaMask;
+    //arma::umat swapGammaMask;
     arma::mat swapMat;
     
-    swapGammaMask = this->getGammaMask() ;
+    /*swapGammaMask = this->getGammaMask() ;
     this->setGammaMask( thatChain->getGammaMask() );
-    thatChain->setGammaMask( swapGammaMask );
+    thatChain->setGammaMask( swapGammaMask );*/
+    this->gammaMask.swap(thatChain->gammaMask);
     
     // parameters and priors
     if ( gamma_type == Gamma_Type::hotspot )

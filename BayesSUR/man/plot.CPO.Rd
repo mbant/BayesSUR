@@ -22,7 +22,7 @@
 )
 }
 \arguments{
-\item{x}{an object of class \code{getEstimator} with \code{estimator="CPO"}}
+\item{x}{an object of class \code{get.estimator} with \code{estimator="CPO"}}
 
 \item{outlier.mark}{mark the outliers with the response names. The default is \code{FALSE}}
 
@@ -69,7 +69,7 @@ fit <- BayesSUR(Y = example_eQTL[["blockList"]][[1]],
 
 ## check output
 # plot the conditional predictive ordinate (CPO)
-CPO <- getEstimator(fit, estimator="CPO")
+CPO <- get.estimator(fit, estimator="CPO")
 plot(CPO)
 
 }
