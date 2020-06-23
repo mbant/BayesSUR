@@ -1851,12 +1851,12 @@ void HRR_Chain::step()
             throw Bad_Gamma_Type ( gamma_type );
     }
     
-    // update gamma
-    stepGamma();
-    
     // update log_likelihood and logP_gamma
     logLikelihood();
     logPGamma();
+    
+    // update gamma
+    stepGamma();
     
     // increase iteration counter
     ++ internalIterationCounter;

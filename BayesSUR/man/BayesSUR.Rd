@@ -175,5 +175,5 @@ setwd(oldwd)
 \references{
 Banterle M, Bottolo L, Richardson S, Ala-Korpela M, Jarvelin MR, Lewin A (2018). \emph{Sparse variable and covariance selection for high-dimensional seemingly unrelated Bayesian regression.} bioRxiv: 467019.
 
-Banterle M#, Zhao Z#, Bottolo L, Richardson S, Lewin A\*, Zucknick M\* (2019). \emph{BayesSUR: An R package for high-dimensional multivariate Bayesian variable and covariance selection in linear regression.} URL: https://github.com/mbant/BayesSUR/tree/master/BayesSUR/vignettes/vignettes.pdf
+Banterle M#, Zhao Z#, Bottolo L, Richardson S, Lewin A, Zucknick M (2019). \emph{BayesSUR: An R package for high-dimensional multivariate Bayesian variable and covariance selection in linear regression.} URL: https://github.com/mbant/BayesSUR/blob/master/BayesSUR/vignettes/BayesSUR.pdf
 }
