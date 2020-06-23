@@ -2939,6 +2939,7 @@ void SUR_Chain::stepSigmaRhoAndBeta()
 // this updates all the internal states
 void SUR_Chain::step()
 {
+    
     // Update HyperParameters
     stepTau();
     stepW();
@@ -2965,6 +2966,8 @@ void SUR_Chain::step()
             throw Bad_Gamma_Type ( gamma_type );
     }
     
+    logPGamma();
+    
     if ( covariance_type == Covariance_Type::HIW )
     {
         stepEta();
@@ -2973,11 +2976,11 @@ void SUR_Chain::step()
             stepJT();
     }
      
-    // update gamma
-    stepGamma();
-     
     // Update Sigmas, Rhos and Betas given all rest
     stepSigmaRhoAndBeta();
+     
+    // update gamma
+    stepGamma();
      
     // increase iteration counter
     ++ internalIterationCounter;
