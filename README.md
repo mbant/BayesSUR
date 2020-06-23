@@ -9,12 +9,12 @@ See `test.R` file for usage; see the package vignette `BayesSUR.pdf` for more in
 
 ## Installation
 
-To install the current release, use
+Install the current release with
 ``` r
 install.packages("BayesSUR")
 ```
 
-To install the current development version, use
+Install the current development version with
 ``` r
 library("devtools")
 devtools::install_github("mbant/BayesSUR/BayesSUR")
@@ -24,7 +24,7 @@ devtools::install_github("mbant/BayesSUR/BayesSUR")
 
 ### New in verion `BayesSUR_1.1-3.tar.gz` (23 June 2020):
 
-1) Fixed the issue of the HRR code, especially for updating the log-likelihood and log-posterior of gamma.
+1) Fixed the issue of the HRR and SUR code, especially for updating the log-likelihood and log-posterior of gamma.
 2) Temperature adaptation is only allowed for the burn-in period.
 3) Minor changes of some R funciton names.
 
