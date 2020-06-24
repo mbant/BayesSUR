@@ -2939,6 +2939,7 @@ void SUR_Chain::stepSigmaRhoAndBeta()
 // this updates all the internal states
 void SUR_Chain::step()
 {
+    updateGammaMask();
     
     // Update HyperParameters
     stepTau();
