@@ -684,14 +684,10 @@ int drive_HRR( Chain_Data& chainData )
             }
         }
         
-        if ( chainData.output_beta )
-            beta_out = sampler[0] -> getBeta();
-        
     }else{
         if ( chainData.output_gamma )
             gamma_out = sampler[0] -> getGamma();
-        if ( chainData.output_beta )
-            beta_out = sampler[0] -> getBeta();
+        
         if ( ( chainData.gamma_type == Gamma_Type::hotspot || chainData.gamma_type == Gamma_Type::hierarchical ) &&
             ( chainData.output_pi || chainData.output_tail ) )
         {
@@ -705,6 +701,9 @@ int drive_HRR( Chain_Data& chainData )
             }
         }
     }
+    
+    if ( chainData.output_beta )
+        beta_out = sampler[0] -> getBeta();
     
     if ( chainData.output_CPO )
     {
