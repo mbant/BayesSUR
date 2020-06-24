@@ -2967,7 +2967,9 @@ void SUR_Chain::step()
             throw Bad_Gamma_Type ( gamma_type );
     }
     
+    // update logP_gamma and log_likelihood
     logPGamma();
+    logLikelihood();
     
     if ( covariance_type == Covariance_Type::HIW )
     {
