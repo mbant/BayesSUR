@@ -32,7 +32,8 @@ str(targetGene)
 requireNamespace("plyr", quietly = TRUE)
 requireNamespace("data.table", quietly = TRUE)
 
-features <- data.frame(read.csv("gdsc_en_input_w5.csv", head=T))
+
+features <- data.frame(read.csv("/gdsc_en_input_w5.csv", head=T))
 names.fea <- strsplit(rownames(features), "")
 features <- t(features)
 p <- c(13321, 13747-13321, 13818-13747)
@@ -123,36 +124,29 @@ name_drugs <- c("Methotrexate","RDEA119","PD-0325901","CI-1040","AZD6244","Nilot
                 "Axitinib")
 
 # extract the drugs' pharmacological profiling and tissue dummy
-# delete the cell line with extreme log(IC50)=-36.49 for drug "AP-24534"
-col_filter <- colnames(GDSC$y) \%in\% paste("IC50.", name_drugs,sep="")
-YX0 <- cbind(
-    GDSC$y[, col_filter][, c(1, 3, 6, 4, 7, 2, 5)],
-    GDSC$x[, 1:GDSC$num.nonpen]
-)
-
+YX0 <- cbind(GDSC$y[,colnames(GDSC$y) \%in\% paste("IC50.",name_drugs,sep="")]
+             [,c(1,3,6,4,7,2,5)], GDSC$x[,1:GDSC$num.nonpen])
 colnames(YX0) <- c(name_drugs, colnames(GDSC$x)[1:GDSC$num.nonpen])
 # extract the genetic information of CNV & MUT
 X23 <- GDSC$x[, GDSC$num.nonpen+GDSC$p[1]+1:(p[2]+p[3])]
 colnames(X23)[1:p[2]] <- paste(substr(colnames(X23)[1:p[2]], 1, 
-                               nchar(colnames(X23)[1:p[2]] )-3), ".CNV", sep="")
+                                      nchar(colnames(X23)[1:p[2]] )-3), ".CNV", sep="")
 
 # locate all genes with CNV or MUT information
 name_genes_duplicate <- c( substr(colnames(X23)[1:p[2]], 1, nchar(colnames(X23)[1:p[2]])-4),
-                   substr(colnames(X23)[p[2]+1:p[3]], 1, nchar(colnames(X23)[p[2]+1:p[3]])-4) )
+                 substr(colnames(X23)[p[2]+1:p[3]], 1, nchar(colnames(X23)[p[2]+1:p[3]])-4) )
 name_genes <- name_genes_duplicate[!duplicated(name_genes_duplicate)]
 
 # select the GEX which have the common genes with CNV or MUT
-col_filter <- GDSC$num.nonpen + which(
-    colnames(GDSC$x)[GDSC$num.nonpen+1:p[1]] \%in\% name_genes
-)
-X1 <- GDSC$x[, col_filter]
+X1 <- GDSC$x[,GDSC$num.nonpen+which(colnames(GDSC$x)[GDSC$num.nonpen+1:p[1]] \%in\% name_genes)]
+
 p[1] <- ncol(X1)
-X1 <- log2(X1)
+X1 <- log(X1)
 
 # summary the data information
 example_GDSC <- list( data=cbind( YX0, X1, X23 ) )
 example_GDSC$blockList <- list(1:length(name_drugs), length(name_drugs)+1:GDSC$num.nonpen, 
-                               ncol(YX0)+1:(ncol(X1)+ncol(X23)))
+                               ncol(YX0)+1:sum(p))
 
 #========================
 # construct the G matrix: edge potentials in the MRF prior
@@ -160,28 +154,25 @@ example_GDSC$blockList <- list(1:length(name_drugs), length(name_drugs)+1:GDSC$n
 
 # edges between drugs: Group1 ("RDEA119","17-AAG","PD-0325901","CI-1040" and "AZD6244") 
 # indexed as (2:5)
-# The MAPK_pathway.txt file is originally from KEGG or GSEA database at
 # http://software.broadinstitute.org/gsea/msigdb/cards/KEGG_MAPK_SIGNALING_PATHWAY
 pathway_genes <- read.table("MAPK_pathway.txt")[[1]]
-X1_names_dup <- c(colnames(X1), name_genes_duplicate)
-Idx_Pathway1 <- which(X1_names_dup \%in\% pathway_genes)
-rep1 <- rep(Idx_Pathway1, each=length(2:5))
-rep2 <- rep((2:5-1) * sum(p), times=length(Idx_Pathway1))
-rep3 <- rep1 + rep2
-Gmrf_Group1Pathway1 <- t(combn(rep3, 2))
+Idx_Pathway1 <- which(c(colnames(X1),name_genes_duplicate) \%in\% pathway_genes)
+Gmrf_Group1Pathway1 <- t(combn(rep(Idx_Pathway1,each=length(2:5)) + 
+                                 rep((2:5-1)*sum(p),times=length(Idx_Pathway1)), 2))
 
 # edges between drugs: Group2 ("Nilotinib","Axitinib") indexed as (6:7)
 # delete gene ABL2
-Idx_Pathway2 <- which(X1_names_dup \%like\% "BCR" | X1_names_dup \%like\% "ABL")[-c(3,5)]
+Idx_Pathway2 <- which( c(colnames(X1),name_genes_duplicate) \%like\% "BCR" | 
+                         c(colnames(X1),name_genes_duplicate) \%like\% "ABL" )[-c(3,5)] 
 Gmrf_Group2Pathway2 <- t(combn(rep(Idx_Pathway2,each=length(6:7)) + 
-                               rep((6:7-1)*sum(p),times=length(Idx_Pathway2)), 2))
+                                 rep((6:7-1)*sum(p),times=length(Idx_Pathway2)), 2))
 
 # edges between the common gene in different data sources
 Gmrf_CommonGene <- NULL
 list_CommonGene <- list(0)
 k <- 1
 for(i in 1:length(name_genes)){
-  Idx_CommonGene <- which(c(colnames(X1),name_genes_duplicate) == name_genes[i])
+  Idx_CommonGene <- which(  c(colnames(X1),name_genes_duplicate) == name_genes[i] )
   if(length(Idx_CommonGene) > 1){
     Gmrf_CommonGene <- rbind(Gmrf_CommonGene,t(combn(rep(Idx_CommonGene,each=length(name_drugs))
                        + rep((1:length(name_drugs)-1)*sum(p),times=length(Idx_CommonGene)), 2)))
