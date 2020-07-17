@@ -8,14 +8,15 @@ using Rcpp::Rcerr;
 #define Rcerr std::cerr
 #endif
 
-#ifdef _OPENMP
-extern omp_lock_t RNGlock; //defined in global.h
-#endif
-//extern std::vector<std::mt19937_64> rng;
+//#ifdef _OPENMP
+//'extern omp_lock_t RNGlock; /*defined in global.h*/
+//'#endif
+/*extern std::vector<std::mt19937_64> rng;*/
 
-#include <Rcpp.h>
-// [[Rcpp::plugins(openmp)]]
+/* #include <Rcpp.h> */
+/* // [[Rcpp::plugins(openmp)]] */
 
+using namespace Rcpp;
 
 
 using Utils::Chain_Data;
@@ -299,6 +300,7 @@ int drive_SUR( Chain_Data& chainData )
         {
             if ( chainData.output_gamma )
                 gamma_out += sampler[0] -> getGamma(); // the result of the whole procedure is now my new mcmc point, so add that up
+            Rcout << "i=" << i << "; sum(gamma_out)=" << arma::accu(gamma_out) << "; gamma_out=\n" << gamma_out.submat(0,0,4,6) << '\n';
             
             if ( chainData.covariance_type == Covariance_Type::HIW && chainData.output_G )
             {
@@ -941,11 +943,11 @@ int drive_HRR( Chain_Data& chainData )
 }
 
 
-// *******************************************************************************
-// *******************************************************************************
-// *******************************************************************************
+//' *******************************************************************************
+//' *******************************************************************************
+//' *******************************************************************************
 
-
+// [[Rcpp::export]]
 int drive( const std::string& dataFile, const std::string& mrfGFile, const std::string& blockFile, const std::string& structureGraphFile, const std::string& hyperParFile, const std::string& outFilePath,
           unsigned int nIter, unsigned int burnin, unsigned int nChains,
           const std::string& covariancePrior,
@@ -955,12 +957,12 @@ int drive( const std::string& dataFile, const std::string& mrfGFile, const std::
 {
     
     Rcout << "BayesSUR -- Bayesian Seemingly Unrelated Regression Modelling" << '\n';
-    
+/*
 #ifdef _OPENMP
     Rcout << "Using OpenMP" << '\n';
     omp_init_lock(&RNGlock);  // init RNG lock for the parallel part
 #endif
-    
+    */
     // ###########################################################
     // ###########################################################
     // ## Read Arguments and Data
@@ -1142,10 +1144,10 @@ int drive( const std::string& dataFile, const std::string& mrfGFile, const std::
     //std::random_device r;
     //unsigned int nThreads{1};
     //Rcpp::RNGScope scope;
-#ifdef _OPENMP
+//#ifdef _OPENMP
     // ENABLING NESTED PARALLELISM SEEMS TO SLOW DOWN CODE MORE THAN ANYTHING,
     // I SUSPECT THE THREAD MANAGING OVERHEAD IS GREATER THAN EXPECTED
-    omp_set_nested(1); // 1=enable, 0=disable nested parallelism (run chains in parallel + compute likelihoods in parallel at least wrt to outcomes + wrt to individuals)
+//    omp_set_nested(1); // 1=enable, 0=disable nested parallelism (run chains in parallel + compute likelihoods in parallel at least wrt to outcomes + wrt to individuals)
     // MOST OF THE PARALLELISATION IMPROVEMENTS COME FROM OPENBLAS ANYWAY .. I WONDER IF ACCELERATING LA THOURGH GPU WOULD CHANGE THAT ..
     
     /*if ( omp_get_max_threads() == 1 )
@@ -1159,8 +1161,8 @@ int drive( const std::string& dataFile, const std::string& mrfGFile, const std::
     }*/
     
     //nThreads = std::min( omp_get_max_threads()-1, maxThreads );
-    omp_set_num_threads(  std::min( omp_get_max_threads()-1, maxThreads ) );
-#endif
+//    omp_set_num_threads(  std::min( omp_get_max_threads()-1, maxThreads ) );
+//#endif
     /*
     // rng.reserve(nThreads);  // reserve the correct space for the vector of rng engines
     rng = std::vector<std::mt19937_64>(nThreads);
@@ -1187,7 +1189,7 @@ int drive( const std::string& dataFile, const std::string& mrfGFile, const std::
         chainData.gammaInit = arma::umat(chainData.surData.nVSPredictors,chainData.surData.nOutcomes); // init empty
         for(unsigned int j=0; j<chainData.surData.nVSPredictors; ++j)
             for(unsigned int l=0; l< chainData.surData.nOutcomes; ++l)
-                chainData.gammaInit(j,l) = Distributions::randBernoulli( 0.5 );
+                chainData.gammaInit(j,l) = randBernoulli( 0.5 );
                 //chainData.gammaInit(j,l) = Rcpp::rbinom( 1, 1, 0.5 )[0];
         
     }else if( gammaInit == "1" ){

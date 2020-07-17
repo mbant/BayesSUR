@@ -486,14 +486,14 @@ std::pair<bool,double> JunctionTree::propose_single_edge_update( arma::uvec& upd
 
     double logP = 0;
 
-    if( Distributions::randU01() < 0.5 )
+    if( randU01() < 0.5 )
     {
         // propose addition
         // if there's one component only, return false and no update happened
         if( numComponents > 1 )
         {
             // get a Random separator
-            randomSep = Distributions::randIntUniform(1,numComponents-1);
+            randomSep = randIntUniform(1,numComponents-1);
 
             // populate Cx and Cy
             Cx = perfectCliqueSequence[randomSep]->getParent();
@@ -511,8 +511,8 @@ std::pair<bool,double> JunctionTree::propose_single_edge_update( arma::uvec& upd
                             std::inserter(setCylS, setCylS.begin()));
 
             // now choose x and y from Cx\S and Cy\S
-            x = setCxlS[ Distributions::randIntUniform(0,setCxlS.size()-1) ];
-            y = setCylS[ Distributions::randIntUniform(0,setCylS.size()-1) ];
+            x = setCxlS[ randIntUniform(0,setCxlS.size()-1) ];
+            y = setCylS[ randIntUniform(0,setCylS.size()-1) ];
 
             // check whether or not Cx and Cy are superset of x U S and y U S and act accordingly
             // note there's no way for it to be the other way around by construction
@@ -649,7 +649,7 @@ std::pair<bool,double> JunctionTree::propose_single_edge_update( arma::uvec& upd
     }else         // propose deletion
     {
         // get a random component
-        randomComp = Distributions::randIntUniform(0,numComponents-1);
+        randomComp = randIntUniform(0,numComponents-1);
         C = perfectCliqueSequence[randomComp];
 
         setC = C->getNodes();
@@ -660,7 +660,7 @@ std::pair<bool,double> JunctionTree::propose_single_edge_update( arma::uvec& upd
             logP += log((double)numComponents) - log(2.) + ( log( (double)(setC.size()) ) + log( (double)(setC.size()-1.) ) ); // forward probability
 
             // partition C into 3 sets, x y and S (S might be empty)"
-            randomIndexes = Distributions::randWeightedIndexSampleWithoutReplacement(setC.size(),2);
+            randomIndexes = randIndexSampleWithoutReplacement(setC.size(),2);
 
             x = setC[randomIndexes(0)];
             y = setC[randomIndexes(1)];
@@ -716,7 +716,7 @@ std::pair<bool,double> JunctionTree::propose_single_edge_update( arma::uvec& upd
             }
             if( possibleComponents.size() > 0 )
             {
-                Cx = possibleComponents[ Distributions::randIntUniform(0,possibleComponents.size()-1) ];
+                Cx = possibleComponents[ randIntUniform(0,possibleComponents.size()-1) ];
                 definedCx = true;
             }
 
@@ -737,7 +737,7 @@ std::pair<bool,double> JunctionTree::propose_single_edge_update( arma::uvec& upd
             
             if( possibleComponents.size() > 0 )
             {
-                Cy = possibleComponents[ Distributions::randIntUniform(0,possibleComponents.size()-1) ];
+                Cy = possibleComponents[ randIntUniform(0,possibleComponents.size()-1) ];
                 definedCy = true;
             }
 
@@ -767,7 +767,7 @@ std::pair<bool,double> JunctionTree::propose_single_edge_update( arma::uvec& upd
 
                 }else{ // either C was the root or the parent is in N, so I can choose randomly
 
-                    if( Distributions::randU01() < 0.5 )
+                    if( randU01() < 0.5 )
                     {
                         cLeft = ClY;  
                         cRight = ClX;
@@ -821,7 +821,7 @@ std::pair<bool,double> JunctionTree::propose_single_edge_update( arma::uvec& upd
                 {
                     if( i != C->getParent() )
                     {
-                        if( Distributions::randU01() < 0.5 )
+                        if( randU01() < 0.5 )
                         {
                             ClX->add1Children( i );
                             i->setParent( ClX );
@@ -943,7 +943,7 @@ std::pair<bool,double> JunctionTree::propose_single_edge_update( arma::uvec& upd
 
                         }else if( !( C->getParent()) ) // C was their parent, so choose randomly
                         {                               // note as well that in this case (becase N is empty), C was the root of JT
-                            if( Distributions::randU01() < 0.5 )
+                            if( randU01() < 0.5 )
                             {
                                 cLeft = Cx;
                                 cRight = Cy;
@@ -1057,14 +1057,14 @@ std::pair<bool,double> JunctionTree::propose_single_edge_update( )
 
     double logP = 0;
 
-    if( Distributions::randU01() < 0.5 )
+    if( randU01() < 0.5 )
     {
         // propose addition
         // if there's one component only, return false and no update happened
         if( numComponents > 1 )
         {
             // get a Random separator
-            randomSep = Distributions::randIntUniform(1,numComponents-1);
+            randomSep = randIntUniform(1,numComponents-1);
 
             // populate Cx and Cy
             Cx = perfectCliqueSequence[randomSep]->getParent();
@@ -1082,8 +1082,8 @@ std::pair<bool,double> JunctionTree::propose_single_edge_update( )
                             std::inserter(setCylS, setCylS.begin()));
 
             // now choose x and y from Cx\S and Cy\S
-            x = setCxlS[ Distributions::randIntUniform(0,setCxlS.size()-1) ];
-            y = setCylS[ Distributions::randIntUniform(0,setCylS.size()-1) ];
+            x = setCxlS[ randIntUniform(0,setCxlS.size()-1) ];
+            y = setCylS[ randIntUniform(0,setCylS.size()-1) ];
 
             // check whether or not Cx and Cy are superset of x U S and y U S and act accordingly
             // note there's no way for it to be the other way around by construction
@@ -1218,7 +1218,7 @@ std::pair<bool,double> JunctionTree::propose_single_edge_update( )
     }else         // propose deletion
     {
         // get a random component
-        randomComp = Distributions::randIntUniform(0,numComponents-1);
+        randomComp = randIntUniform(0,numComponents-1);
         C = perfectCliqueSequence[randomComp];
 
         setC = C->getNodes();
@@ -1229,7 +1229,7 @@ std::pair<bool,double> JunctionTree::propose_single_edge_update( )
             logP += log((double)numComponents) - log(2.) + ( log( (double)(setC.size()) ) + log( (double)(setC.size()-1.) ) ); // forward probability
 
             // partition C into 3 sets, x y and S (S might be empty)"
-            randomIndexes = Distributions::randWeightedIndexSampleWithoutReplacement(setC.size(),2);
+            randomIndexes = randIndexSampleWithoutReplacement(setC.size(),2);
 
             x = setC[randomIndexes(0)];
             y = setC[randomIndexes(1)];
@@ -1285,7 +1285,7 @@ std::pair<bool,double> JunctionTree::propose_single_edge_update( )
             }
             if( possibleComponents.size() > 0 )
             {
-                Cx = possibleComponents[ Distributions::randIntUniform(0,possibleComponents.size()-1) ];
+                Cx = possibleComponents[ randIntUniform(0,possibleComponents.size()-1) ];
                 definedCx = true;
             }
 
@@ -1306,7 +1306,7 @@ std::pair<bool,double> JunctionTree::propose_single_edge_update( )
             
             if( possibleComponents.size() > 0 )
             {
-                Cy = possibleComponents[ Distributions::randIntUniform(0,possibleComponents.size()-1) ];
+                Cy = possibleComponents[ randIntUniform(0,possibleComponents.size()-1) ];
                 definedCy = true;
             }
 
@@ -1336,7 +1336,7 @@ std::pair<bool,double> JunctionTree::propose_single_edge_update( )
 
                 }else{ // either C was the root or the parent is in N, so I can choose randomly
 
-                    if( Distributions::randU01() < 0.5 )
+                    if( randU01() < 0.5 )
                     {
                         cLeft = ClY;  
                         cRight = ClX;
@@ -1390,7 +1390,7 @@ std::pair<bool,double> JunctionTree::propose_single_edge_update( )
                 {
                     if( i != C->getParent() )
                     {
-                        if( Distributions::randU01() < 0.5 )
+                        if( randU01() < 0.5 )
                         {
                             ClX->add1Children( i );
                             i->setParent( ClX );
@@ -1512,7 +1512,7 @@ std::pair<bool,double> JunctionTree::propose_single_edge_update( )
 
                         }else if( !( C->getParent()) ) // C was their parent, so choose randomly
                         {                               // note as well that in this case (becase N is empty), C was the root of JT
-                            if( Distributions::randU01() < 0.5 )
+                            if( randU01() < 0.5 )
                             {
                                 cLeft = Cx;
                                 cRight = Cy;
@@ -1630,14 +1630,14 @@ std::pair<bool,double> JunctionTree::propose_multiple_edge_update( )
 
     double logP = 0;
 
-    if( Distributions::randU01() < 0.5 )
+    if( randU01() < 0.5 )
     {
         // propose addition
         // if there's one component only, return false and no update happened
         if( numComponents > 1 )
         {
             // get a Random separator
-            randomSep = Distributions::randIntUniform(1,numComponents-1);
+            randomSep = randIntUniform(1,numComponents-1);
 
             // populate Cx and Cy
             Cx = perfectCliqueSequence[randomSep]->getParent();
@@ -1655,11 +1655,11 @@ std::pair<bool,double> JunctionTree::propose_multiple_edge_update( )
                             std::inserter(setCylS, setCylS.begin()));
 
             // now choose x and y from Cx\S and Cy\S
-            dimX = Distributions::randIntUniform(1,setCxlS.size());
-            dimY = Distributions::randIntUniform(1,setCylS.size());
+            dimX = randIntUniform(1,setCxlS.size());
+            dimY = randIntUniform(1,setCylS.size());
 
-            X = Distributions::randSampleWithoutReplacement( setCxlS.size() , setCxlS , dimX ); 
-            Y = Distributions::randSampleWithoutReplacement( setCylS.size() , setCylS , dimY ); 
+            X = randSampleWithoutReplacement( setCxlS.size() , setCxlS , dimX );
+            Y = randSampleWithoutReplacement( setCylS.size() , setCylS , dimY );
                 // this is uncorrect, we should sample
                 // randomly from all possible subsets of CxlS
 
@@ -1842,7 +1842,7 @@ std::pair<bool,double> JunctionTree::propose_multiple_edge_update( )
     }else         // propose deletion
     {
         // get a random component
-        randomComp = Distributions::randIntUniform(0,numComponents-1);
+        randomComp = randIntUniform(0,numComponents-1);
         C = perfectCliqueSequence[randomComp];
 
         setC = C->getNodes();
@@ -1850,15 +1850,15 @@ std::pair<bool,double> JunctionTree::propose_multiple_edge_update( )
         if( setC.size() > 1 )
         {
             // partition C into 3 sets, x y and S (S might be empty)"
-            dimY = Distributions::randIntUniform(2,setC.size());
-            dimX = Distributions::randIntUniform(1,dimY-1);
+            dimY = randIntUniform(2,setC.size());
+            dimX = randIntUniform(1,dimY-1);
             dimY -= dimX;
 
             // Set S = Set C
             std::copy(setC.begin(), setC.end(),
                 std::back_inserter(setS));
             // Select X
-            X = Distributions::randSampleWithoutReplacement( setS.size() , setS , dimX ); 
+            X = randSampleWithoutReplacement( setS.size() , setS , dimX );
 
             //remove X from setS
             tmpVec.clear();
@@ -1869,7 +1869,7 @@ std::pair<bool,double> JunctionTree::propose_multiple_edge_update( )
             setS.swap(tmpVec);
 
             // Select Y
-            Y = Distributions::randSampleWithoutReplacement( setS.size() , setS , dimY ); 
+            Y = randSampleWithoutReplacement( setS.size() , setS , dimY );
 
             //remove Y from setS
             tmpVec.clear();
@@ -1953,13 +1953,13 @@ std::pair<bool,double> JunctionTree::propose_multiple_edge_update( )
             // If we have candidates, select one at random as Cx and/or Cy
             if( possibleCxComponents.size() > 0 )
             {
-                Cx = possibleCxComponents[ Distributions::randIntUniform(0,possibleCxComponents.size()-1) ];
+                Cx = possibleCxComponents[ randIntUniform(0,possibleCxComponents.size()-1) ];
                 definedCx = true;
             }
 
             if( possibleCyComponents.size() > 0 )
             {
-                Cy = possibleCyComponents[ Distributions::randIntUniform(0,possibleCyComponents.size()-1) ];
+                Cy = possibleCyComponents[ randIntUniform(0,possibleCyComponents.size()-1) ];
                 definedCy = true;
             }
 
@@ -1990,7 +1990,7 @@ std::pair<bool,double> JunctionTree::propose_multiple_edge_update( )
 
                 }else{ // either C was the root or the parent is in N, so I can choose randomly
 
-                    if( Distributions::randU01() < 0.5 )
+                    if( randU01() < 0.5 )
                     {
                         cLeft = ClY;  
                         cRight = ClX;
@@ -2044,7 +2044,7 @@ std::pair<bool,double> JunctionTree::propose_multiple_edge_update( )
                 {
                     if( i != C->getParent() )
                     {
-                        if( Distributions::randU01() < 0.5 )
+                        if( randU01() < 0.5 )
                         {
                             ClX->add1Children( i );
                             i->setParent( ClX );
@@ -2223,7 +2223,7 @@ std::pair<bool,double> JunctionTree::propose_multiple_edge_update( )
 
                         }else if( !( C->getParent()) ) // C was their parent, so choose randomly
                         {                               // note as well that in this case (becase N is empty), C was the root of JT
-                            if( Distributions::randU01() < 0.5 )
+                            if( randU01() < 0.5 )
                             {
                                 cLeft = Cx;
                                 cRight = Cy;
@@ -2359,7 +2359,7 @@ void JunctionTree::reRoot()
     std::shared_ptr<JTComponent> parent;
 
     // select at random one component as the NEW root ( sampling from 1 excludes current root )
-    newPCS.insert( newPCS.end() , perfectCliqueSequence[ Distributions::randIntUniform( 1 , perfectCliqueSequence.size() -1 ) ] );
+    newPCS.insert( newPCS.end() , perfectCliqueSequence[ randIntUniform( 1 , perfectCliqueSequence.size() -1 ) ] );
 
     // get its parent
     parent = newPCS[pos]->getParent();
@@ -2417,7 +2417,7 @@ void JunctionTree::randomJTPermutation()
     if( numComponents > 2 ) // otherwise is at best the reverse of thea bove reRoot move
     {
         // Select at random one component (not the root)
-        std::shared_ptr<JTComponent> thisComponent = perfectCliqueSequence[ Distributions::randIntUniform( 1 , numComponents -1 ) ];
+        std::shared_ptr<JTComponent> thisComponent = perfectCliqueSequence[ randIntUniform( 1 , numComponents -1 ) ];
         std::shared_ptr<JTComponent> itsParent = thisComponent -> getParent();
         std::vector<std::shared_ptr<JTComponent>> itsChildrens = thisComponent -> getChildrens();
         std::vector<unsigned int> setI;
@@ -2462,7 +2462,7 @@ void JunctionTree::randomJTPermutation()
         // now select a new parent
         if( possibleNewParent.size() > 0 )
         {
-            idx = Distributions::randIntUniform(0,possibleNewParent.size()-1);
+            idx = randIntUniform(0,possibleNewParent.size()-1);
 
             //swap its parent with this new one, break and rebuild PCS
             thisComponent->setParent( possibleNewParent[idx] );

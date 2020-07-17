@@ -140,9 +140,9 @@ void ESS_Sampler<T>::step()
 template<typename T>
 void ESS_Sampler<T>::localStep()
 {
-#ifdef _OPENMP
+/*#ifdef _OPENMP
 #pragma omp parallel for schedule(static,1)
-#endif
+#endif*/
     for( unsigned int i=0; i<nChains; ++i )
         chain[i] -> step();
     
@@ -165,7 +165,7 @@ std::pair<unsigned int , unsigned int>  ESS_Sampler<T>::randomChainSelect()
     unsigned int chainIdx = 1, firstChain = 0, secondChain = 1;
     
     // Select the chains to swap
-    chainIdx = (nChains>2) ? Distributions::randIntUniform(1, (nChains)*(nChains-1)/2 ) : 1;   // (nChains-1)*(nChains-2)/2 is the number of possible chain combinations with nChains
+    chainIdx = (nChains>2) ? randIntUniform(1, (nChains)*(nChains-1)/2 ) : 1;   // (nChains-1)*(nChains-2)/2 is the number of possible chain combinations with nChains
     
     for(unsigned int c=1; c<nChains; ++c)
     {
@@ -190,8 +190,8 @@ std::pair<unsigned int , unsigned int>  ESS_Sampler<T>::nearChainSelect()
     
     if( nChains>2 )
     {
-        firstChain = Distributions::randIntUniform(1, nChains-2 );  // so not the first (0) or last (nChains-1) indexes
-        secondChain = ( Distributions::randU01() < 0.5 ) ? firstChain-1 : firstChain+1 ; // then select a neighbour
+        firstChain = randIntUniform(1, nChains-2 );  // so not the first (0) or last (nChains-1) indexes
+        secondChain = ( randU01() < 0.5 ) ? firstChain-1 : firstChain+1 ; // then select a neighbour
     }
     
     return std::pair<unsigned int , unsigned int>( firstChain , secondChain );
@@ -207,7 +207,7 @@ void ESS_Sampler<T>::globalStep()
     
     if( nChains > 1 )
     {
-        tmpRand = Distributions::randU01();
+        tmpRand = randU01();
         if( tmpRand < 0.9 )
         {
             if( tmpRand < 0.5 )
@@ -294,10 +294,10 @@ int ESS_Sampler<T>::allExchangeAll_step()
     
     // Compute the swap probabilities
     pExchange(0) = 0.; // these are log probabilities, remember!
-    
+/*
 #ifdef _OPENMP
 #pragma omp parallel for
-#endif
+#endif*/
     for(unsigned int tabIndex = 1; tabIndex <= nChainCombinations; ++tabIndex)
     {
         
@@ -316,7 +316,7 @@ int ESS_Sampler<T>::allExchangeAll_step()
     arma::vec cumulPExchange = arma::cumsum( arma::exp( pExchange - logSumWeights ) ); // this should sum to one
     
     // Now select which swap happens
-    double val = Distributions::randU01();
+    double val = randU01();
     
     unsigned int swapIdx = 0;
     while( val > cumulPExchange(swapIdx) )

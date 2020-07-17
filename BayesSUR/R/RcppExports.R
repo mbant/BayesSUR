@@ -15,3 +15,128 @@ BayesSUR_internal <- function(dataFile, mrfGFile, blockFile, structureGraphFile,
     .Call('_BayesSUR_BayesSUR_internal', PACKAGE = 'BayesSUR', dataFile, mrfGFile, blockFile, structureGraphFile, hyperParFile, outFilePath, nIter, burnin, nChains, covariancePrior, gammaPrior, gammaSampler, gammaInit, betaPrior, maxThreads, output_gamma, output_beta, output_G, output_sigmaRho, output_pi, output_tail, output_model_size, output_CPO, output_model_visit)
 }
 
+randBeta <- function(a, b) {
+    .Call('_BayesSUR_randBeta', PACKAGE = 'BayesSUR', a, b)
+}
+
+randU01 <- function() {
+    .Call('_BayesSUR_randU01', PACKAGE = 'BayesSUR')
+}
+
+randLogU01 <- function() {
+    .Call('_BayesSUR_randLogU01', PACKAGE = 'BayesSUR')
+}
+
+randIntUniform <- function(a, b) {
+    .Call('_BayesSUR_randIntUniform', PACKAGE = 'BayesSUR', a, b)
+}
+
+randExponential <- function(lambda) {
+    .Call('_BayesSUR_randExponential', PACKAGE = 'BayesSUR', lambda)
+}
+
+randBinomial <- function(n, p) {
+    .Call('_BayesSUR_randBinomial', PACKAGE = 'BayesSUR', n, p)
+}
+
+randMultinomial <- function(n, prob) {
+    .Call('_BayesSUR_randMultinomial', PACKAGE = 'BayesSUR', n, prob)
+}
+
+randNormal <- function(m = 0., sigmaSquare = 1.) {
+    .Call('_BayesSUR_randNormal', PACKAGE = 'BayesSUR', m, sigmaSquare)
+}
+
+randT <- function(nu) {
+    .Call('_BayesSUR_randT', PACKAGE = 'BayesSUR', nu)
+}
+
+randGamma <- function(shape, scale) {
+    .Call('_BayesSUR_randGamma', PACKAGE = 'BayesSUR', shape, scale)
+}
+
+randIGamma <- function(shape, scale) {
+    .Call('_BayesSUR_randIGamma', PACKAGE = 'BayesSUR', shape, scale)
+}
+
+randWishart <- function(df, S) {
+    .Call('_BayesSUR_randWishart', PACKAGE = 'BayesSUR', df, S)
+}
+
+randBernoulli <- function(pi) {
+    .Call('_BayesSUR_randBernoulli', PACKAGE = 'BayesSUR', pi)
+}
+
+randVecExponential <- function(n, lambda) {
+    .Call('_BayesSUR_randVecExponential', PACKAGE = 'BayesSUR', n, lambda)
+}
+
+randVecNormal <- function(n, m = 0., sigmaSquare = 1.) {
+    .Call('_BayesSUR_randVecNormal', PACKAGE = 'BayesSUR', n, m, sigmaSquare)
+}
+
+randVecT <- function(n, nu) {
+    .Call('_BayesSUR_randVecT', PACKAGE = 'BayesSUR', n, nu)
+}
+
+randMvNormal <- function(m, Sigma) {
+    .Call('_BayesSUR_randMvNormal', PACKAGE = 'BayesSUR', m, Sigma)
+}
+
+randMvT <- function(nu, m, Sigma) {
+    .Call('_BayesSUR_randMvT', PACKAGE = 'BayesSUR', nu, m, Sigma)
+}
+
+randIWishart <- function(df, S) {
+    .Call('_BayesSUR_randIWishart', PACKAGE = 'BayesSUR', df, S)
+}
+
+randMN <- function(M, rowCov, colCov) {
+    .Call('_BayesSUR_randMN', PACKAGE = 'BayesSUR', M, rowCov, colCov)
+}
+
+randTruncNorm <- function(m, sd, lower, upper) {
+    .Call('_BayesSUR_randTruncNorm', PACKAGE = 'BayesSUR', m, sd, lower, upper)
+}
+
+randVecSampleWithoutReplacement <- function(populationSize, population, sampleSize) {
+    .Call('_BayesSUR_randVecSampleWithoutReplacement', PACKAGE = 'BayesSUR', populationSize, population, sampleSize)
+}
+
+randSampleWithoutReplacement <- function(populationSize, population, sampleSize) {
+    .Call('_BayesSUR_randSampleWithoutReplacement', PACKAGE = 'BayesSUR', populationSize, population, sampleSize)
+}
+
+randVecWeightedSampleWithoutReplacement <- function(populationSize, weights, sampleSize, population) {
+    .Call('_BayesSUR_randVecWeightedSampleWithoutReplacement', PACKAGE = 'BayesSUR', populationSize, weights, sampleSize, population)
+}
+
+randWeightedSampleWithoutReplacement <- function(populationSize, weights, population) {
+    .Call('_BayesSUR_randWeightedSampleWithoutReplacement', PACKAGE = 'BayesSUR', populationSize, weights, population)
+}
+
+randWeightedIndexSampleWithoutReplacement <- function(populationSize, weights, sampleSize) {
+    .Call('_BayesSUR_randWeightedIndexSampleWithoutReplacement', PACKAGE = 'BayesSUR', populationSize, weights, sampleSize)
+}
+
+randIndexSampleWithoutReplacement <- function(populationSize, sampleSize) {
+    .Call('_BayesSUR_randIndexSampleWithoutReplacement', PACKAGE = 'BayesSUR', populationSize, sampleSize)
+}
+
+randWeiIndexSampleWithoutReplacement <- function(populationSize, weights) {
+    .Call('_BayesSUR_randWeiIndexSampleWithoutReplacement', PACKAGE = 'BayesSUR', populationSize, weights)
+}
+
+#'extern omp_lock_t RNGlock; /*defined in global.h*/
+#'#endif
+NULL
+
+#' *******************************************************************************
+#' *******************************************************************************
+#' *******************************************************************************
+NULL
+
+drive <- function(dataFile, mrfGFile, blockFile, structureGraphFile, hyperParFile, outFilePath, nIter, burnin, nChains, covariancePrior, gammaPrior, gammaSampler, gammaInit, betaPrior, maxThreads, output_gamma, output_beta, output_G, output_sigmaRho, output_pi, output_tail, output_model_size, output_CPO, output_model_visit) {
+    .Call('_BayesSUR_drive', PACKAGE = 'BayesSUR', dataFile, mrfGFile, blockFile, structureGraphFile, hyperParFile, outFilePath, nIter, burnin, nChains, covariancePrior, gammaPrior, gammaSampler, gammaInit, betaPrior, maxThreads, output_gamma, output_beta, output_G, output_sigmaRho, output_pi, output_tail, output_model_size, output_CPO, output_model_visit)
+}
+

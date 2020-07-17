@@ -18,11 +18,22 @@
    #define omp_get_thread_num() 0
 #endif
 
-//defined in global.h
-//extern std::vector<std::mt19937_64> rng;
+/* defined in global.h */
+/* extern std::vector<std::mt19937_64> rng; */
 
-namespace Distributions{
+using namespace Rcpp;
 
+    // [[Rcpp::export]]
+    double randBeta(double a, double b)
+    {
+        //double num = randGamma(a,1.);
+        //double den = randGamma(b,1.) + num;
+
+        //return num/den;
+        return R::rbeta( a, b );
+    }
+
+    // [[Rcpp::export]]
 	double randU01()
 	{
 		//std::uniform_real_distribution<> distr(0, std::nextafter(1, std::numeric_limits<double>::max())); // init U(0,1)
@@ -30,6 +41,7 @@ namespace Distributions{
         return R::runif( 0., 1. );
 	}
 
+    // [[Rcpp::export]]
 	double randLogU01()
 	{
 		//std::uniform_real_distribution<> distr(0, std::nextafter(1, std::numeric_limits<double>::max())); // init U(0,1)
@@ -37,45 +49,14 @@ namespace Distributions{
         return log( R::runif( 0., 1. ) );
 	}
 
+    // [[Rcpp::export]]
 	int randIntUniform(const int a,const int b)
 	{
-		//std::uniform_int_distribution<> distr(a, b); // init the discrete uniform
-		//return distr(rng[omp_get_thread_num()]);
-        /*Rcpp::IntegerVector pool = Rcpp::seq(a, b);
-        std::random_shuffle(pool.begin(), pool.end());
-        return pool[0];*/
-        /*arma::vec probs = arma::ones<arma::vec>( b-a+1 )/(double)(b-a+1);
-        arma::ivec idTmp( probs.n_elem );
-        R::rmultinom( 1, probs.begin(), b-a+1, idTmp.begin() );
-        return a-1+arma::conv_to<int>::from(arma::find(idTmp == 1));*/
         arma::vec res = Rcpp::RcppArmadillo::sample(arma::linspace(a, b, b-a+1), 1, true, arma::ones( b-a+1 )/(double)(b-a+1));
         return arma::conv_to<int>::from(res);
 	}
 
-	arma::ivec randIntUniform(const unsigned int n, const int a,const int b)
-	{
-		arma::ivec res(n);
-		/*std::uniform_int_distribution<> distr(a, b); // init the discrete uniform
-		for(unsigned int i=0; i<n; ++i)
-		{
-			res(i) = distr(rng[omp_get_thread_num()]);
-		}
-        */
-        /*arma::vec probs = arma::ones<arma::vec>( b-a+1 )/(double)(b-a+1);
-        arma::ivec idTmp( probs.n_elem );
-        for(unsigned i=0; i<n; i++){
-          R::rmultinom( 1, probs.begin(), b-a+1, idTmp.begin() );
-          res(i) = a-1+arma::conv_to<int>::from(arma::find(idTmp == 1));
-        }*/
-        //Rcpp::IntegerVector pool = Rcpp::seq(a, b);
-        for(unsigned i=0; i<n; i++){
-          res(i) = arma::conv_to<int>::from( Rcpp::RcppArmadillo::sample(arma::linspace(a, b, b-a+1), 1, true, arma::ones( b-a+1 )/(double)(b-a+1)) );
-            //std::random_shuffle(pool.begin(), pool.end());
-            //res(i) = pool[0];
-        }
-        return res;
-	}
-
+    // [[Rcpp::export]]
 	double randExponential(const double lambda)
 	{
 		//std::exponential_distribution<> distr(lambda);
@@ -83,18 +64,7 @@ namespace Distributions{
         return R::rexp( lambda );
 	}
 
-	arma::vec randExponential(const unsigned int n, const double lambda)
-	{
-		arma::vec res(n);
-		//std::exponential_distribution<> distr(lambda);
-		for(unsigned int i=0; i<n; ++i)
-		{
-			//res(i) = distr(rng[omp_get_thread_num()]);
-            res(i) = R::rexp( lambda );
-		}
-		return res;
-	}
-
+    // [[Rcpp::export]]
 	unsigned int randBinomial(const unsigned int n, const double p) // slow but safe (CARE, n here is the binomial parameters, return value is always ONE integer)
 	{
 		//std::binomial_distribution<> distr(n, p);
@@ -103,6 +73,7 @@ namespace Distributions{
         
 	}
 
+    // [[Rcpp::export]]
 	arma::uvec randMultinomial(unsigned int n, const arma::vec prob)
 	{
 
@@ -122,74 +93,27 @@ namespace Distributions{
 	    }
 
 
-	    if(n <= 0) /* we have all*/ return rN;
-	    p_tot -= prob(k); /* i.e. = sum(prob[(k+1):K]) */
+	    if(n <= 0) // we have all
+            return rN;
+	    p_tot -= prob(k); // i.e. = sum(prob[(k+1):K])
 	  }
 	  rN(K-1) = n - sum(rN);
 	  return rN;
 
 	}
 
-
+    // [[Rcpp::export]]
 	double randNormal(const double m=0., const double sigmaSquare=1.) // random normal interface, parameters mean and variance
 	{
 		if( sigmaSquare< 0 )
-			throw negativeParameters();
+			throw Distributions::negativeParameters();
 
     	//std::normal_distribution<> distr(m,sqrt(sigmaSquare));
 		//return distr(rng[omp_get_thread_num()]);
         return R::rnorm( m, sigmaSquare );
 	}
 
-	arma::vec randNormal(const unsigned int n, const double m=0., const double sigmaSquare=1.) // n-sample normal, parameters mean and variance
-	{
-
-		if( sigmaSquare< 0 )
-			throw negativeParameters();
-        
-    	arma::vec res(n);
-    	//std::normal_distribution<> distr(m,sqrt(sigmaSquare));
-    	for(unsigned int i=0; i<n; ++i)
-		{
-			//res(i) = distr(rng[omp_get_thread_num()]);
-            res(i) = R::rnorm( m, sigmaSquare );
-		}
-		return res;
-	}
-
-	arma::vec randMvNormal(const arma::vec &m, const arma::mat &Sigma) // random normal interface to arma::randn
-	{
-		unsigned int d = m.n_elem;
-		//check
-		if(Sigma.n_rows != d || Sigma.n_cols != d )
-		{
-			Rcout << " Dimension not matching in the multivariate normal sampler";
-			throw dimensionsNotMatching();
-		}
-
-			arma::mat A;
-			arma::vec eigval;
-			arma::mat eigvec;
-			arma::rowvec res;
-
-			if( arma::chol(A,Sigma) )
-			{
-				res = randNormal(d).t() * A ;
-			}
-			else
-			{
-				if( eig_sym(eigval, eigvec, Sigma) )
-				{
-					res = (eigvec * arma::diagmat(arma::sqrt(eigval)) * randNormal(d)).t();
-				}else{
-					Rcout << "randMvNorm failing because of singular Sigma matrix" << '\n';
-					throw negativeDefiniteParameters();
-				}
-			}
-
-		return res.t() + m;
-	}
-
+    // [[Rcpp::export]]
 	double randT(const double nu)
 	{
     	//std::student_t_distribution<double> distr(nu);
@@ -197,34 +121,13 @@ namespace Distributions{
         return R::rt( nu );
 	}
 
-	arma::vec randT(const unsigned int n, const double nu)
-	{
-    	arma::vec res(n);
-    	//std::student_t_distribution<double> distr(nu);
-    	for(unsigned int i=0; i<n; ++i)
-		{
-			//res(i) = distr(rng[omp_get_thread_num()]);
-            res(i) = R::rt( nu );
-		}
-		return res;
-	}
-
-	arma::vec randMvT(const double &nu, const arma::vec &m, const arma::mat &Sigma)
-	{
-		unsigned int d = m.n_elem;
-		arma::rowvec res = randT(d,nu).t() * arma::chol(Sigma);
-
-		return res.t() + m;
-	}
-
-
-
+    // [[Rcpp::export]]
 	double randGamma(double shape, double scale)   // shape scale parametrisation
 	{
 		//check
 		if(shape <= 0 || scale <= 0 )
 		{
-			throw negativeParameters(); // THROW EXCPTION
+			throw Distributions::negativeParameters(); // THROW EXCPTION
 		}
 
 		//std::gamma_distribution<> distr(shape,scale);
@@ -232,14 +135,14 @@ namespace Distributions{
         return R::rgamma( shape, scale );
 	}
 
-
+    // [[Rcpp::export]]
 	double randIGamma(double shape, double scale)
 	{
 		//check
 		if(shape <= 0 || scale <= 0 )
 		{
 			Rcout << " Negative parameter in the gamma sampler " << '\n';
-			throw negativeParameters(); // THROW EXCPTION
+			throw Distributions::negativeParameters(); // THROW EXCPTION
 		}
 
 		//std::gamma_distribution<> distr(shape,1./scale);
@@ -248,8 +151,7 @@ namespace Distributions{
         //return 1./Rcpp::rgamma(1, shape, 1./scale)[0];
 	}
 
-
-
+    // [[Rcpp::export]]
 	arma::mat randWishart(double df, const arma::mat& S)   // unsigned int df is obsolete, I see no reason to keep it
 	{
 		// Dimension of returned wishart
@@ -284,33 +186,7 @@ namespace Distributions{
 		return C.t()*C;
 	}
 
-
-	arma::mat randIWishart(double df, const arma::mat& S)
-	{
-
-  		return arma::inv_sympd( randWishart(df,S.i()) );   // return the inverse of the correspondent Wishart variate ... is this even fast enough?
-	}
-
-
-	arma::mat randMN(const arma::mat &M, const arma::mat &rowCov, const arma::mat &colCov)
-	{
-		arma::mat C = arma::chol( arma::kron(colCov,rowCov) );
-		arma::mat z = randNormal( (unsigned int)(M.n_cols * M.n_rows) ).t() * C;
-		z.reshape( arma::size(M) );
-		return (z + M);
-	}
-
-
-	double randBeta(double a, double b)
-	{
-		//double num = randGamma(a,1.);
-		//double den = randGamma(b,1.) + num;
-
-		//return num/den;
-        return R::rbeta( a, b );
-	}
-
-
+    // [[Rcpp::export]]
 	unsigned int randBernoulli(double pi)
 	{
 		//std::bernoulli_distribution distr(pi);
@@ -318,32 +194,149 @@ namespace Distributions{
         return R::rbinom( 1, pi );
 	}
 
-	double randTruncNorm(double m, double sd,double lower, double upper) // Naive, but it'll do for now -- notice now parameters are mean and standard deviation!
-	{
-		double ret = randNormal(m,sd);
+    /*
+     arma::ivec randVecUniform(const unsigned int n, const int a,const int b)
+    {
+        arma::ivec res(n);
+        for(unsigned i=0; i<n; i++){
+            res(i) = randIntUniform( a, b);
+        }
+        return res;
+    }*/
 
-		while( ret < lower || ret > upper)
-			ret = randNormal(m,sd);
+    // [[Rcpp::export]]
+    arma::vec randVecExponential(const unsigned int n, const double lambda)
+    {
+        arma::vec res(n);
+        //std::exponential_distribution<> distr(lambda);
+        for(unsigned int i=0; i<n; ++i)
+        {
+            //res(i) = distr(rng[omp_get_thread_num()]);
+            //res(i) = R::rexp( lambda );
+            res(i) = randExponential( lambda );
+        }
+        return res;
+    }
 
-		return ret;
-	}
+    // [[Rcpp::export]]
+    arma::vec randVecNormal(const unsigned int n, const double m=0., const double sigmaSquare=1.) // n-sample normal, parameters mean and variance
+    {
 
-	arma::uvec randSampleWithoutReplacement
+        if( sigmaSquare< 0 )
+            throw Distributions::negativeParameters();
+        
+        arma::vec res(n);
+        //std::normal_distribution<> distr(m,sqrt(sigmaSquare));
+        for(unsigned int i=0; i<n; ++i)
+        {
+            //res(i) = distr(rng[omp_get_thread_num()]);
+            //res(i) = R::rnorm( m, sigmaSquare );
+            res(i) = randNormal( m, sigmaSquare );
+        }
+        return res;
+    }
+
+    // [[Rcpp::export]]
+    arma::vec randVecT(const unsigned int n, const double nu)
+    {
+        arma::vec res(n);
+        //std::student_t_distribution<double> distr(nu);
+        for(unsigned int i=0; i<n; ++i)
+        {
+            //res(i) = distr(rng[omp_get_thread_num()]);
+            //res(i) = R::rt( nu );
+            res(i) = randT( nu );
+        }
+        return res;
+    }
+    
+    // [[Rcpp::export]]
+    arma::vec randMvNormal(const arma::vec &m, const arma::mat &Sigma) // random normal interface to arma::randn
+    {
+        unsigned int d = m.n_elem;
+        //check
+        if(Sigma.n_rows != d || Sigma.n_cols != d )
+        {
+            Rcout << " Dimension not matching in the multivariate normal sampler";
+            throw Distributions::dimensionsNotMatching();
+        }
+
+            arma::mat A;
+            arma::vec eigval;
+            arma::mat eigvec;
+            arma::rowvec res;
+
+            if( arma::chol(A,Sigma) )
+            {
+                res = randVecNormal(d).t() * A ;
+            }
+            else
+            {
+                if( eig_sym(eigval, eigvec, Sigma) )
+                {
+                    res = (eigvec * arma::diagmat(arma::sqrt(eigval)) * randVecNormal(d)).t();
+                }else{
+                    Rcout << "randMvNorm failing because of singular Sigma matrix" << '\n';
+                    throw Distributions::negativeDefiniteParameters();
+                }
+            }
+
+        return res.t() + m;
+    }
+
+    // [[Rcpp::export]]
+    arma::vec randMvT(const double &nu, const arma::vec &m, const arma::mat &Sigma)
+    {
+        unsigned int d = m.n_elem;
+        arma::rowvec res = randVecT(d,nu).t() * arma::chol(Sigma);
+
+        return res.t() + m;
+    }
+    
+    // [[Rcpp::export]]
+    arma::mat randIWishart(double df, const arma::mat& S)
+    {
+
+          return arma::inv_sympd( randWishart(df,S.i()) );   // return the inverse of the correspondent Wishart variate ... is this even fast enough?
+    }
+
+    // [[Rcpp::export]]
+    arma::mat randMN(const arma::mat &M, const arma::mat &rowCov, const arma::mat &colCov)
+    {
+        arma::mat C = arma::chol( arma::kron(colCov,rowCov) );
+        arma::mat z = randVecNormal( (unsigned int)(M.n_cols * M.n_rows) ).t() * C;
+        z.reshape( arma::size(M) );
+        return (z + M);
+    }
+    
+    // [[Rcpp::export]]
+    double randTruncNorm(double m, double sd,double lower, double upper) // Naive, but it'll do for now -- notice now parameters are mean and standard deviation!
+    {
+        double ret = randNormal(m,sd);
+
+        while( ret < lower || ret > upper)
+            ret = randNormal(m,sd);
+
+        return ret;
+    }
+
+    // [[Rcpp::export]]
+	arma::uvec randVecSampleWithoutReplacement
 	(
-	    unsigned int populationSize,    // size of set sampling from
-	    const arma::uvec& population, // population to draw from
-	    unsigned int sampleSize        // size of each sample
-	) // output, sample is a zero-offset indices to selected items, output is the subsampled populaiton.
+	    unsigned int populationSize,    //' size of set sampling from
+	    const arma::uvec& population, //' population to draw from
+	    unsigned int sampleSize        //' size of each sample
+	) /* output, sample is a zero-offset indices to selected items, output is the subsampled populaiton.*/
 	{
 		arma::uvec samples(sampleSize);
 
-	    int t = 0; // total input records dealt with
-	    unsigned int m = 0; // number of items selected so far
+	    int t = 0; //' total input records dealt with
+	    unsigned int m = 0; //' number of items selected so far
 	    double u;
 
 	    while (m < sampleSize)
 	    {
-	        u = randU01(); // call a uniform(0,1) random number generator
+	        u = randU01(); //' call a uniform(0,1) random number generator
 
 	        if ( (populationSize - t)*u >= sampleSize - m )
 	        {
@@ -359,22 +352,23 @@ namespace Distributions{
 	    return population(samples);
 	}
 
+    // [[Rcpp::export]]
 	std::vector<unsigned int> randSampleWithoutReplacement
 	(
-	    unsigned int populationSize,    // size of set sampling from
+	    unsigned int populationSize,    //' size of set sampling from
 	    const std::vector<unsigned int>& population, // population to draw from
-	    unsigned int sampleSize        // size of each sample
-	) // output, sample is a zero-offset indices to selected items, output is the subsampled populaiton.
+	    unsigned int sampleSize        //' size of each sample
+	) //' output, sample is a zero-offset indices to selected items, output is the subsampled populaiton.
 	{
 		std::vector<unsigned int> samplesIndexes(sampleSize);
 
-	    int t = 0; // total input records dealt with
-	    unsigned int m = 0; // number of items selected so far
+	    int t = 0; //' total input records dealt with
+	    unsigned int m = 0; //' number of items selected so far
 	    double u;
 
 	    while (m < sampleSize)
 	    {
-	        u = randU01(); // call a uniform(0,1) random number generator
+	        u = randU01(); //' call a uniform(0,1) random number generator
 
 	        if ( (populationSize - t)*u >= sampleSize - m )
 	        {
@@ -397,30 +391,32 @@ namespace Distributions{
 	    return res;
 	}
 
-	// IMPLEMENTATION FROM Efraimidistr and Spirakis 2006
-	// (probably efficient when n is close to N rather than in our case, but is there a better alternative?)
-	//  even for n=1, we'd still need to compute the cumulative sum of all the weights if we want to use bisection, or what I use below which is O(N) anyway...
-	arma::uvec randWeightedSampleWithoutReplacement
+	//' IMPLEMENTATION FROM Efraimidistr and Spirakis 2006
+	//' (probably efficient when n is close to N rather than in our case, but is there a better alternative?)
+	//'  even for n=1, we'd still need to compute the cumulative sum of all the weights if we want to use bisection, or what I use below which is O(N) anyway...
+    // [[Rcpp::export]]
+	arma::uvec randVecWeightedSampleWithoutReplacement
 	(
-	    unsigned int populationSize,    // size of set sampling from
-	    const arma::vec& weights,	   // probability for each element
-	    unsigned int sampleSize,        // size of each sample
+	    unsigned int populationSize,    //' size of set sampling from
+	    const arma::vec& weights,	   //' probability for each element
+	    unsigned int sampleSize,        //' size of each sample
 	    const arma::uvec& population // population to draw from
-	) // sample is a zero-offset indices to selected items, output is the subsampled population.
+	) //' sample is a zero-offset indices to selected items, output is the subsampled population.
 	{
-	    arma::vec score = randExponential(populationSize,1.)/weights;
+	    arma::vec score = randVecExponential(populationSize,1.)/weights;
 	    arma::uvec result = population( (arma::sort_index(weights,"ascend")) );
 
 	    return result.subvec(0,sampleSize-1);
 	}
 
-	// overload with sampleSize equal to one
+	//' overload with sampleSize equal to one
+    // [[Rcpp::export]]
 	arma::uword randWeightedSampleWithoutReplacement
 	(
-	    unsigned int populationSize,    // size of set sampling from
-	    const arma::vec& weights,	   // probability for each element
-	    const arma::uvec& population // population to draw from
-	) // sample is a zero-offset indices to selected items, output is the subsampled population.
+	    unsigned int populationSize,    //' size of set sampling from
+	    const arma::vec& weights,	   //' probability for each element
+	    const arma::uvec& population //' population to draw from
+	) //' sample is a zero-offset indices to selected items, output is the subsampled population.
 	{
 	    double u = randU01();
 	    double tmp = weights(0);
@@ -435,43 +431,46 @@ namespace Distributions{
 	}
 
 
-	// Versions that return indexes only
+	//' Versions that return indexes only
+    // [[Rcpp::export]]
 	arma::uvec randWeightedIndexSampleWithoutReplacement
 	(
-	    unsigned int populationSize,    // size of set sampling from
-	    const arma::vec& weights,	   // (log) probability for each element
-	    unsigned int sampleSize         // size of each sample
-	) // sample is a zero-offset indices to selected items, output is the subsampled population.
+	    unsigned int populationSize,    //' size of set sampling from
+	    const arma::vec& weights,	   //' (log) probability for each element
+	    unsigned int sampleSize         //' size of each sample
+	) //' sample is a zero-offset indices to selected items, output is the subsampled population.
 	{
-		// note I can do everything in the log scale as the ordering won't change!
-	    arma::vec score = randExponential(populationSize,1.) - weights;
+		//' note I can do everything in the log scale as the ordering won't change!
+	    arma::vec score = randVecExponential(populationSize,1.) - weights;
 	    arma::uvec result = arma::sort_index(score,"ascend");
 
 	    return result.subvec(0,sampleSize-1);
 	}
 
-	// Overload with equal weights
-	arma::uvec randWeightedIndexSampleWithoutReplacement
+	//' Overload with equal weights
+    // [[Rcpp::export]]
+	arma::uvec randIndexSampleWithoutReplacement
 	(
-	    unsigned int populationSize,    // size of set sampling from
-	    unsigned int sampleSize         // size of each sample
-	) // sample is a zero-offset indices to selected items, output is the subsampled population.
+	    unsigned int populationSize,    //' size of set sampling from
+	    unsigned int sampleSize         //' size of each sample
+	) //' sample is a zero-offset indices to selected items, output is the subsampled population.
 	{
-		// note I can do everything in the log scale as the ordering won't change!
-	    arma::vec score = randExponential(populationSize,1.);
+		//' note I can do everything in the log scale as the ordering won't change!
+	    arma::vec score = randVecExponential(populationSize,1.);
 	    arma::uvec result = arma::sort_index(score,"ascend");
         
 	    return result.subvec(0,sampleSize-1);
 	}
 
-	// overload with sampleSize equal to one
-	arma::uword randWeightedIndexSampleWithoutReplacement
+	//' overload with sampleSize equal to one
+    // [[Rcpp::export]]
+	arma::uword randWeiIndexSampleWithoutReplacement
 	(
-	    unsigned int populationSize,    // size of set sampling from
-	    const arma::vec& weights     // probability for each element
-	) // sample is a zero-offset indices to selected items, output is the subsampled population.
+	    unsigned int populationSize,    //' size of set sampling from
+	    const arma::vec& weights     //' probability for each element
+	) //' sample is a zero-offset indices to selected items, output is the subsampled population.
 	{
-		// note I can do everything in the log scale as the ordering won't change!
+		//' note I can do everything in the log scale as the ordering won't change!
 
 	    double u = randU01();
 	    double tmp = weights(0);
@@ -479,7 +478,7 @@ namespace Distributions{
 
 	    while(u > tmp)
 	    {
-	    	// tmp = Utils::logspace_add(tmp,logWeights(++t));
+	    	//' tmp = Utils::logspace_add(tmp,logWeights(++t));
 	    	tmp += weights(++t);
 	    }
 
@@ -489,6 +488,8 @@ namespace Distributions{
 
 
 	/// ################### NOW LOG PDFs
+
+namespace Distributions{
 
 
 	// logPDF rand Weighted Indexes (need to implement the one for the original starting vector?)

@@ -12,9 +12,9 @@
 	#include <iostream>
 #endif
 
-#ifdef _OPENMP
-	#include <omp.h>
-#endif
+//#ifdef _OPENMP
+//	#include <omp.h>
+//#endif
 
 #include "global.h"
 #include "utils.h"

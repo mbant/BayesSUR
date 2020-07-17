@@ -20,7 +20,7 @@
 using Rcpp::Rcerr;
 
 
-// [[Rcpp::export(rng=false)]]
+// [[Rcpp::export]]
 int BayesSUR_internal(const std::string& dataFile, const std::string& mrfGFile, const std::string& blockFile, const std::string& structureGraphFile, const std::string& hyperParFile, const std::string& outFilePath,
                     unsigned int nIter=10, unsigned int burnin=0, unsigned int nChains=1,
                     const std::string& covariancePrior="HIW", 
