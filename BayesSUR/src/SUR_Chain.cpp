@@ -10,7 +10,7 @@ SUR_Chain::SUR_Chain( std::shared_ptr<arma::mat> data_, std::shared_ptr<arma::ma
                      std::shared_ptr<arma::uvec> outcomesIdx_, std::shared_ptr<arma::uvec> VSPredictorsIdx_,
                      std::shared_ptr<arma::uvec> fixedPredictorsIdx_, std::shared_ptr<arma::umat> missingDataArrayIdx_, std::shared_ptr<arma::uvec> completeCases_,
                      Gamma_Sampler_Type gamma_sampler_type_ , Gamma_Type gamma_type_ ,
-                     Beta_Type beta_type_ , Covariance_Type covariance_type_ , bool output_CPO ,
+                     Beta_Type beta_type_ , Covariance_Type covariance_type_ , bool output_CPO , int maxThreads ,
                      double externalTemperature ):
 data(data_), mrfG(mrfG_), outcomesIdx(outcomesIdx_), VSPredictorsIdx(VSPredictorsIdx_), fixedPredictorsIdx(fixedPredictorsIdx_),
 missingDataArrayIdx(missingDataArrayIdx_), completeCases(completeCases_),
@@ -83,11 +83,11 @@ covariance_type(covariance_type_), gamma_type(gamma_type_),beta_type(beta_type_)
 
 SUR_Chain::SUR_Chain( Utils::SUR_Data& surData,
                      Gamma_Sampler_Type gamma_sampler_type_ , Gamma_Type gamma_type_ ,
-                     Beta_Type beta_type_ , Covariance_Type covariance_type_  , bool output_CPO ,
+                     Beta_Type beta_type_ , Covariance_Type covariance_type_  , bool output_CPO , int maxThreads ,
                      double externalTemperature ):
 SUR_Chain(surData.data,surData.mrfG,surData.nObservations,surData.nOutcomes,surData.nVSPredictors,surData.nFixedPredictors,
 surData.outcomesIdx,surData.VSPredictorsIdx,surData.fixedPredictorsIdx,surData.missingDataArrayIdx,surData.completeCases,
-          gamma_sampler_type_,gamma_type_,beta_type_,covariance_type_,output_CPO,externalTemperature){ }
+          gamma_sampler_type_,gamma_type_,beta_type_,covariance_type_,output_CPO,maxThreads,externalTemperature){ }
 
 SUR_Chain::SUR_Chain( Utils::SUR_Data& surData, double externalTemperature ):
 SUR_Chain(surData.data,surData.mrfG,surData.nObservations,surData.nOutcomes,surData.nVSPredictors,surData.nFixedPredictors,
@@ -1451,9 +1451,11 @@ arma::mat SUR_Chain::predLikelihood( )
 double SUR_Chain::logLikelihood( )
 {
     double logP = 0.;
-/*#ifdef _OPENMP
-#pragma omp parallel for default(shared) reduction(+:logP)
-#endif*/
+
+    #ifdef _OPENMP
+    #pragma omp parallel for default(shared) reduction(+:logP)
+    #endif
+    
     for( unsigned int k=0; k<nOutcomes; ++k)
     {
         logP += Distributions::logPDFNormal( data->col( (*outcomesIdx)(k) ) , (XB.col(k)+rhoU.col(k)) , sigmaRho(k,k));
@@ -1470,9 +1472,11 @@ double SUR_Chain::logLikelihood( const arma::umat&  externalGammaMask , const ar
                                 const arma::mat& externalU , const arma::mat& externalRhoU , const arma::mat&  externalSigmaRho )
 {
     double logP = 0.;
-/*#ifdef _OPENMP
-#pragma omp parallel for default(shared) reduction(+:logP)
-#endif*/
+
+    #ifdef _OPENMP
+    #pragma omp parallel for default(shared) reduction(+:logP)
+    #endif
+    
     for( unsigned int k=0; k<nOutcomes; ++k)
     {
         logP += Distributions::logPDFNormal( data->col( (*outcomesIdx)(k) ) , (externalXB.col(k) + externalRhoU.col(k)) ,  externalSigmaRho(k,k));
@@ -1492,9 +1496,11 @@ double SUR_Chain::logLikelihood( arma::umat&  externalGammaMask , arma::mat& ext
                      externalGamma ,  externalBeta ,  externalSigmaRho , externalJT );
     
     double logP = 0.;
-/*#ifdef _OPENMP
-#pragma omp parallel for default(shared) reduction(+:logP)
-#endif*/
+
+    #ifdef _OPENMP
+    #pragma omp parallel for default(shared) reduction(+:logP)
+    #endif
+    
     for( unsigned int k=0; k<nOutcomes; ++k)
     {
         logP += Distributions::logPDFNormal( data->col( (*outcomesIdx)(k) ) , ( externalXB.col(k) + externalRhoU.col(k)) ,  externalSigmaRho(k,k));
@@ -1587,7 +1593,7 @@ double SUR_Chain::sampleSigmaRhoGivenBeta( const arma::mat&  externalBeta , arma
                     {
                         
                         mutantSigmaRho( conditioninIndexes , singleIdx_l ) =
-                        randMvNormal( rhoMean.t() , mutantSigmaRho(l,l) * rhoVar );
+                        Distributions::randMvNormal( rhoMean.t() , mutantSigmaRho(l,l) * rhoVar );
                         
                         mutantSigmaRho( singleIdx_l , conditioninIndexes ) =
                         mutantSigmaRho( conditioninIndexes , singleIdx_l ).t();
@@ -1641,7 +1647,7 @@ double SUR_Chain::sampleSigmaRhoGivenBeta( const arma::mat&  externalBeta , arma
                 {
                     
                     mutantSigmaRho( conditioninIndexes , singleIdx_k ) =
-                    randMvNormal( rhoMean.t() , mutantSigmaRho(k,k) * rhoVar );
+                    Distributions::randMvNormal( rhoMean.t() , mutantSigmaRho(k,k) * rhoVar );
                     
                     mutantSigmaRho( singleIdx_k , conditioninIndexes ) =
                     mutantSigmaRho( conditioninIndexes , singleIdx_k ).t();
@@ -1745,7 +1751,7 @@ double SUR_Chain::sampleBetaGivenSigmaRho( arma::mat& mutantBeta , const arma::m
                         mu_k = ( (w*temperature)/(w + temperature) / varianceFactor ) * iXtX *
                         ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * y_tilde.col(k) / temperature );
                         
-                        tmpVec = randMvNormal( mu_k , ( (w*temperature)/(w + temperature) / varianceFactor ) * iXtX );
+                        tmpVec = Distributions::randMvNormal( mu_k , ( (w*temperature)/(w + temperature) / varianceFactor ) * iXtX );
                         logP += Distributions::logPDFNormal( tmpVec , mu_k , ( (w*temperature)/(w + temperature) / varianceFactor ) * iXtX );
                         
                         // logPrior += logPBetaMaskgPriorK( tmpVec , w , iXtX , varianceFactor );
@@ -1763,7 +1769,7 @@ double SUR_Chain::sampleBetaGivenSigmaRho( arma::mat& mutantBeta , const arma::m
                         
                         mu_k = W_k * ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * y_tilde.col(k) / temperature ) ;
                         
-                        tmpVec = randMvNormal( mu_k , W_k );
+                        tmpVec = Distributions::randMvNormal( mu_k , W_k );
                         logP += Distributions::logPDFNormal( tmpVec , mu_k , W_k );
                         
                         break;
@@ -1790,7 +1796,7 @@ double SUR_Chain::sampleBetaGivenSigmaRho( arma::mat& mutantBeta , const arma::m
 
                         }
                         */
-                        tmpVec = randMvNormal( mu_k , W_k );
+                        tmpVec = Distributions::randMvNormal( mu_k , W_k );
                         logP += Distributions::logPDFNormal( tmpVec , mu_k , W_k );
                         
                         break;
@@ -1918,7 +1924,7 @@ double SUR_Chain::sampleBetaKGivenSigmaRho( const unsigned int k , arma::mat& mu
             
             mu_k = W_k * ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * y_tilde / temperature ) ;
             
-            tmpVec = randMvNormal( mu_k , W_k );
+            tmpVec = Distributions::randMvNormal( mu_k , W_k );
             logP = Distributions::logPDFNormal( tmpVec , mu_k , W_k );
             mutantBeta(VS_IN_k,singleIdx_k) = tmpVec;
             
@@ -2332,7 +2338,7 @@ double SUR_Chain::gammaBanditProposal( arma::umat& mutantGamma , arma::uvec& upd
     {
         // Decide which to update
         updateIdx = arma::zeros<arma::uvec>(1);
-        updateIdx(0) = randWeiIndexSampleWithoutReplacement(nVSPredictors,normalised_mismatch); // sample the one
+        updateIdx(0) = Distributions::randWeightedIndexSampleWithoutReplacement(nVSPredictors,normalised_mismatch); // sample the one
         
         // Update
         mutantGamma(updateIdx(0),outcomeUpdateIdx) = 1 - gamma(updateIdx(0),outcomeUpdateIdx); // deterministic, just switch
@@ -2357,7 +2363,7 @@ double SUR_Chain::gammaBanditProposal( arma::umat& mutantGamma , arma::uvec& upd
         logProposalRatio = 0.;
         // Decide which to update
         updateIdx = arma::zeros<arma::uvec>(n_updates_bandit);
-        updateIdx = randWeightedIndexSampleWithoutReplacement(nVSPredictors,normalised_mismatch,n_updates_bandit); // sample n_updates_bandit indexes
+        updateIdx = Distributions::randWeightedIndexSampleWithoutReplacement(nVSPredictors,normalised_mismatch,n_updates_bandit); // sample n_updates_bandit indexes
         
         normalised_mismatch_backwards = mismatch; // copy for backward proposal
         
@@ -2589,7 +2595,7 @@ void SUR_Chain::stepOneO()
     
     double proposedOPrior, proposedGammaPrior, logAccProb;
     
-    proposedO(k) = std::exp( std::log( o(k) ) + randTruncNorm(0.0, var_o_proposal , -std::numeric_limits<double>::infinity() , -std::log( o(k) ) ) );
+    proposedO(k) = std::exp( std::log( o(k) ) + Distributions::randTruncNorm(0.0, var_o_proposal , -std::numeric_limits<double>::infinity() , -std::log( o(k) ) ) );
     
     if( arma::all( ( pi * proposedO(k) ) <= 1 ) )
     {
@@ -2622,7 +2628,7 @@ void SUR_Chain::stepO()
     
     for( unsigned int k=0; k < nOutcomes ; ++k )
     {
-        proposedO(k) = std::exp( std::log( o(k) ) + randTruncNorm(0.0, var_o_proposal , -std::numeric_limits<double>::infinity() , -std::log( o(k) ) ) );
+        proposedO(k) = std::exp( std::log( o(k) ) + Distributions::randTruncNorm(0.0, var_o_proposal , -std::numeric_limits<double>::infinity() , -std::log( o(k) ) ) );
         
         if( arma::all( ( pi * proposedO(k) ) <= 1 ) )
         {
@@ -2940,6 +2946,8 @@ void SUR_Chain::stepSigmaRhoAndBeta()
 void SUR_Chain::step()
 {
     updateGammaMask();
+    // update logP_gamma
+    logPGamma();
     
     // Update HyperParameters
     stepTau();
@@ -2967,8 +2975,7 @@ void SUR_Chain::step()
             throw Bad_Gamma_Type ( gamma_type );
     }
     
-    // update logP_gamma and log_likelihood
-    logPGamma();
+    // update log_likelihood
     logLikelihood();
     
     if ( covariance_type == Covariance_Type::HIW )
@@ -3108,6 +3115,7 @@ void SUR_Chain::swapJT( std::shared_ptr<SUR_Chain>& that )
     JunctionTree par = this->getJT();
     
     this->setJT( that->getJT() );
+    that->setJT( par );
 }
 
 void SUR_Chain::swapSigmaRho( std::shared_ptr<SUR_Chain>& that )

@@ -40,18 +40,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// randBeta
-double randBeta(double a, double b);
-RcppExport SEXP _BayesSUR_randBeta(SEXP aSEXP, SEXP bSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< double >::type a(aSEXP);
-    Rcpp::traits::input_parameter< double >::type b(bSEXP);
-    rcpp_result_gen = Rcpp::wrap(randBeta(a, b));
-    return rcpp_result_gen;
-END_RCPP
-}
 // randU01
 double randU01();
 RcppExport SEXP _BayesSUR_randU01() {
@@ -95,6 +83,18 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// randVecExponential
+arma::vec randVecExponential(const unsigned int n, const double lambda);
+RcppExport SEXP _BayesSUR_randVecExponential(SEXP nSEXP, SEXP lambdaSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const unsigned int >::type n(nSEXP);
+    Rcpp::traits::input_parameter< const double >::type lambda(lambdaSEXP);
+    rcpp_result_gen = Rcpp::wrap(randVecExponential(n, lambda));
+    return rcpp_result_gen;
+END_RCPP
+}
 // randBinomial
 unsigned int randBinomial(const unsigned int n, const double p);
 RcppExport SEXP _BayesSUR_randBinomial(SEXP nSEXP, SEXP pSEXP) {
@@ -131,6 +131,19 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// randVecNormal
+arma::vec randVecNormal(const unsigned int n, const double m, const double sigmaSquare);
+RcppExport SEXP _BayesSUR_randVecNormal(SEXP nSEXP, SEXP mSEXP, SEXP sigmaSquareSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const unsigned int >::type n(nSEXP);
+    Rcpp::traits::input_parameter< const double >::type m(mSEXP);
+    Rcpp::traits::input_parameter< const double >::type sigmaSquare(sigmaSquareSEXP);
+    rcpp_result_gen = Rcpp::wrap(randVecNormal(n, m, sigmaSquare));
+    return rcpp_result_gen;
+END_RCPP
+}
 // randT
 double randT(const double nu);
 RcppExport SEXP _BayesSUR_randT(SEXP nuSEXP) {
@@ -139,6 +152,31 @@ BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const double >::type nu(nuSEXP);
     rcpp_result_gen = Rcpp::wrap(randT(nu));
+    return rcpp_result_gen;
+END_RCPP
+}
+// randVecT
+arma::vec randVecT(const unsigned int n, const double nu);
+RcppExport SEXP _BayesSUR_randVecT(SEXP nSEXP, SEXP nuSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const unsigned int >::type n(nSEXP);
+    Rcpp::traits::input_parameter< const double >::type nu(nuSEXP);
+    rcpp_result_gen = Rcpp::wrap(randVecT(n, nu));
+    return rcpp_result_gen;
+END_RCPP
+}
+// randMvT
+arma::vec randMvT(const double& nu, const arma::vec& m, const arma::mat& Sigma);
+RcppExport SEXP _BayesSUR_randMvT(SEXP nuSEXP, SEXP mSEXP, SEXP SigmaSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const double& >::type nu(nuSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type m(mSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type Sigma(SigmaSEXP);
+    rcpp_result_gen = Rcpp::wrap(randMvT(nu, m, Sigma));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -178,6 +216,18 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// randBeta
+double randBeta(double a, double b);
+RcppExport SEXP _BayesSUR_randBeta(SEXP aSEXP, SEXP bSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< double >::type a(aSEXP);
+    Rcpp::traits::input_parameter< double >::type b(bSEXP);
+    rcpp_result_gen = Rcpp::wrap(randBeta(a, b));
+    return rcpp_result_gen;
+END_RCPP
+}
 // randBernoulli
 unsigned int randBernoulli(double pi);
 RcppExport SEXP _BayesSUR_randBernoulli(SEXP piSEXP) {
@@ -189,263 +239,26 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// randVecExponential
-arma::vec randVecExponential(const unsigned int n, const double lambda);
-RcppExport SEXP _BayesSUR_randVecExponential(SEXP nSEXP, SEXP lambdaSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const unsigned int >::type n(nSEXP);
-    Rcpp::traits::input_parameter< const double >::type lambda(lambdaSEXP);
-    rcpp_result_gen = Rcpp::wrap(randVecExponential(n, lambda));
-    return rcpp_result_gen;
-END_RCPP
-}
-// randVecNormal
-arma::vec randVecNormal(const unsigned int n, const double m, const double sigmaSquare);
-RcppExport SEXP _BayesSUR_randVecNormal(SEXP nSEXP, SEXP mSEXP, SEXP sigmaSquareSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const unsigned int >::type n(nSEXP);
-    Rcpp::traits::input_parameter< const double >::type m(mSEXP);
-    Rcpp::traits::input_parameter< const double >::type sigmaSquare(sigmaSquareSEXP);
-    rcpp_result_gen = Rcpp::wrap(randVecNormal(n, m, sigmaSquare));
-    return rcpp_result_gen;
-END_RCPP
-}
-// randVecT
-arma::vec randVecT(const unsigned int n, const double nu);
-RcppExport SEXP _BayesSUR_randVecT(SEXP nSEXP, SEXP nuSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const unsigned int >::type n(nSEXP);
-    Rcpp::traits::input_parameter< const double >::type nu(nuSEXP);
-    rcpp_result_gen = Rcpp::wrap(randVecT(n, nu));
-    return rcpp_result_gen;
-END_RCPP
-}
-// randMvNormal
-arma::vec randMvNormal(const arma::vec& m, const arma::mat& Sigma);
-RcppExport SEXP _BayesSUR_randMvNormal(SEXP mSEXP, SEXP SigmaSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::vec& >::type m(mSEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type Sigma(SigmaSEXP);
-    rcpp_result_gen = Rcpp::wrap(randMvNormal(m, Sigma));
-    return rcpp_result_gen;
-END_RCPP
-}
-// randMvT
-arma::vec randMvT(const double& nu, const arma::vec& m, const arma::mat& Sigma);
-RcppExport SEXP _BayesSUR_randMvT(SEXP nuSEXP, SEXP mSEXP, SEXP SigmaSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const double& >::type nu(nuSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type m(mSEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type Sigma(SigmaSEXP);
-    rcpp_result_gen = Rcpp::wrap(randMvT(nu, m, Sigma));
-    return rcpp_result_gen;
-END_RCPP
-}
-// randIWishart
-arma::mat randIWishart(double df, const arma::mat& S);
-RcppExport SEXP _BayesSUR_randIWishart(SEXP dfSEXP, SEXP SSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< double >::type df(dfSEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type S(SSEXP);
-    rcpp_result_gen = Rcpp::wrap(randIWishart(df, S));
-    return rcpp_result_gen;
-END_RCPP
-}
-// randMN
-arma::mat randMN(const arma::mat& M, const arma::mat& rowCov, const arma::mat& colCov);
-RcppExport SEXP _BayesSUR_randMN(SEXP MSEXP, SEXP rowCovSEXP, SEXP colCovSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::mat& >::type M(MSEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type rowCov(rowCovSEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type colCov(colCovSEXP);
-    rcpp_result_gen = Rcpp::wrap(randMN(M, rowCov, colCov));
-    return rcpp_result_gen;
-END_RCPP
-}
-// randTruncNorm
-double randTruncNorm(double m, double sd, double lower, double upper);
-RcppExport SEXP _BayesSUR_randTruncNorm(SEXP mSEXP, SEXP sdSEXP, SEXP lowerSEXP, SEXP upperSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< double >::type m(mSEXP);
-    Rcpp::traits::input_parameter< double >::type sd(sdSEXP);
-    Rcpp::traits::input_parameter< double >::type lower(lowerSEXP);
-    Rcpp::traits::input_parameter< double >::type upper(upperSEXP);
-    rcpp_result_gen = Rcpp::wrap(randTruncNorm(m, sd, lower, upper));
-    return rcpp_result_gen;
-END_RCPP
-}
-// randVecSampleWithoutReplacement
-arma::uvec randVecSampleWithoutReplacement(unsigned int populationSize, const arma::uvec& population, unsigned int sampleSize);
-RcppExport SEXP _BayesSUR_randVecSampleWithoutReplacement(SEXP populationSizeSEXP, SEXP populationSEXP, SEXP sampleSizeSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< unsigned int >::type populationSize(populationSizeSEXP);
-    Rcpp::traits::input_parameter< const arma::uvec& >::type population(populationSEXP);
-    Rcpp::traits::input_parameter< unsigned int >::type sampleSize(sampleSizeSEXP);
-    rcpp_result_gen = Rcpp::wrap(randVecSampleWithoutReplacement(populationSize, population, sampleSize));
-    return rcpp_result_gen;
-END_RCPP
-}
-// randSampleWithoutReplacement
-std::vector<unsigned int> randSampleWithoutReplacement(unsigned int populationSize, const std::vector<unsigned int>& population, unsigned int sampleSize);
-RcppExport SEXP _BayesSUR_randSampleWithoutReplacement(SEXP populationSizeSEXP, SEXP populationSEXP, SEXP sampleSizeSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< unsigned int >::type populationSize(populationSizeSEXP);
-    Rcpp::traits::input_parameter< const std::vector<unsigned int>& >::type population(populationSEXP);
-    Rcpp::traits::input_parameter< unsigned int >::type sampleSize(sampleSizeSEXP);
-    rcpp_result_gen = Rcpp::wrap(randSampleWithoutReplacement(populationSize, population, sampleSize));
-    return rcpp_result_gen;
-END_RCPP
-}
-// randVecWeightedSampleWithoutReplacement
-arma::uvec randVecWeightedSampleWithoutReplacement(unsigned int populationSize, const arma::vec& weights, unsigned int sampleSize, const arma::uvec& population);
-RcppExport SEXP _BayesSUR_randVecWeightedSampleWithoutReplacement(SEXP populationSizeSEXP, SEXP weightsSEXP, SEXP sampleSizeSEXP, SEXP populationSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< unsigned int >::type populationSize(populationSizeSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type weights(weightsSEXP);
-    Rcpp::traits::input_parameter< unsigned int >::type sampleSize(sampleSizeSEXP);
-    Rcpp::traits::input_parameter< const arma::uvec& >::type population(populationSEXP);
-    rcpp_result_gen = Rcpp::wrap(randVecWeightedSampleWithoutReplacement(populationSize, weights, sampleSize, population));
-    return rcpp_result_gen;
-END_RCPP
-}
-// randWeightedSampleWithoutReplacement
-arma::uword randWeightedSampleWithoutReplacement(unsigned int populationSize, const arma::vec& weights, const arma::uvec& population);
-RcppExport SEXP _BayesSUR_randWeightedSampleWithoutReplacement(SEXP populationSizeSEXP, SEXP weightsSEXP, SEXP populationSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< unsigned int >::type populationSize(populationSizeSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type weights(weightsSEXP);
-    Rcpp::traits::input_parameter< const arma::uvec& >::type population(populationSEXP);
-    rcpp_result_gen = Rcpp::wrap(randWeightedSampleWithoutReplacement(populationSize, weights, population));
-    return rcpp_result_gen;
-END_RCPP
-}
-// randWeightedIndexSampleWithoutReplacement
-arma::uvec randWeightedIndexSampleWithoutReplacement(unsigned int populationSize, const arma::vec& weights, unsigned int sampleSize);
-RcppExport SEXP _BayesSUR_randWeightedIndexSampleWithoutReplacement(SEXP populationSizeSEXP, SEXP weightsSEXP, SEXP sampleSizeSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< unsigned int >::type populationSize(populationSizeSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type weights(weightsSEXP);
-    Rcpp::traits::input_parameter< unsigned int >::type sampleSize(sampleSizeSEXP);
-    rcpp_result_gen = Rcpp::wrap(randWeightedIndexSampleWithoutReplacement(populationSize, weights, sampleSize));
-    return rcpp_result_gen;
-END_RCPP
-}
-// randIndexSampleWithoutReplacement
-arma::uvec randIndexSampleWithoutReplacement(unsigned int populationSize, unsigned int sampleSize);
-RcppExport SEXP _BayesSUR_randIndexSampleWithoutReplacement(SEXP populationSizeSEXP, SEXP sampleSizeSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< unsigned int >::type populationSize(populationSizeSEXP);
-    Rcpp::traits::input_parameter< unsigned int >::type sampleSize(sampleSizeSEXP);
-    rcpp_result_gen = Rcpp::wrap(randIndexSampleWithoutReplacement(populationSize, sampleSize));
-    return rcpp_result_gen;
-END_RCPP
-}
-// randWeiIndexSampleWithoutReplacement
-arma::uword randWeiIndexSampleWithoutReplacement(unsigned int populationSize, const arma::vec& weights);
-RcppExport SEXP _BayesSUR_randWeiIndexSampleWithoutReplacement(SEXP populationSizeSEXP, SEXP weightsSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< unsigned int >::type populationSize(populationSizeSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type weights(weightsSEXP);
-    rcpp_result_gen = Rcpp::wrap(randWeiIndexSampleWithoutReplacement(populationSize, weights));
-    return rcpp_result_gen;
-END_RCPP
-}
-// drive
-int drive(const std::string& dataFile, const std::string& mrfGFile, const std::string& blockFile, const std::string& structureGraphFile, const std::string& hyperParFile, const std::string& outFilePath, unsigned int nIter, unsigned int burnin, unsigned int nChains, const std::string& covariancePrior, const std::string& gammaPrior, const std::string& gammaSampler, const std::string& gammaInit, const std::string& betaPrior, const int maxThreads, bool output_gamma, bool output_beta, bool output_G, bool output_sigmaRho, bool output_pi, bool output_tail, bool output_model_size, bool output_CPO, bool output_model_visit);
-RcppExport SEXP _BayesSUR_drive(SEXP dataFileSEXP, SEXP mrfGFileSEXP, SEXP blockFileSEXP, SEXP structureGraphFileSEXP, SEXP hyperParFileSEXP, SEXP outFilePathSEXP, SEXP nIterSEXP, SEXP burninSEXP, SEXP nChainsSEXP, SEXP covariancePriorSEXP, SEXP gammaPriorSEXP, SEXP gammaSamplerSEXP, SEXP gammaInitSEXP, SEXP betaPriorSEXP, SEXP maxThreadsSEXP, SEXP output_gammaSEXP, SEXP output_betaSEXP, SEXP output_GSEXP, SEXP output_sigmaRhoSEXP, SEXP output_piSEXP, SEXP output_tailSEXP, SEXP output_model_sizeSEXP, SEXP output_CPOSEXP, SEXP output_model_visitSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const std::string& >::type dataFile(dataFileSEXP);
-    Rcpp::traits::input_parameter< const std::string& >::type mrfGFile(mrfGFileSEXP);
-    Rcpp::traits::input_parameter< const std::string& >::type blockFile(blockFileSEXP);
-    Rcpp::traits::input_parameter< const std::string& >::type structureGraphFile(structureGraphFileSEXP);
-    Rcpp::traits::input_parameter< const std::string& >::type hyperParFile(hyperParFileSEXP);
-    Rcpp::traits::input_parameter< const std::string& >::type outFilePath(outFilePathSEXP);
-    Rcpp::traits::input_parameter< unsigned int >::type nIter(nIterSEXP);
-    Rcpp::traits::input_parameter< unsigned int >::type burnin(burninSEXP);
-    Rcpp::traits::input_parameter< unsigned int >::type nChains(nChainsSEXP);
-    Rcpp::traits::input_parameter< const std::string& >::type covariancePrior(covariancePriorSEXP);
-    Rcpp::traits::input_parameter< const std::string& >::type gammaPrior(gammaPriorSEXP);
-    Rcpp::traits::input_parameter< const std::string& >::type gammaSampler(gammaSamplerSEXP);
-    Rcpp::traits::input_parameter< const std::string& >::type gammaInit(gammaInitSEXP);
-    Rcpp::traits::input_parameter< const std::string& >::type betaPrior(betaPriorSEXP);
-    Rcpp::traits::input_parameter< const int >::type maxThreads(maxThreadsSEXP);
-    Rcpp::traits::input_parameter< bool >::type output_gamma(output_gammaSEXP);
-    Rcpp::traits::input_parameter< bool >::type output_beta(output_betaSEXP);
-    Rcpp::traits::input_parameter< bool >::type output_G(output_GSEXP);
-    Rcpp::traits::input_parameter< bool >::type output_sigmaRho(output_sigmaRhoSEXP);
-    Rcpp::traits::input_parameter< bool >::type output_pi(output_piSEXP);
-    Rcpp::traits::input_parameter< bool >::type output_tail(output_tailSEXP);
-    Rcpp::traits::input_parameter< bool >::type output_model_size(output_model_sizeSEXP);
-    Rcpp::traits::input_parameter< bool >::type output_CPO(output_CPOSEXP);
-    Rcpp::traits::input_parameter< bool >::type output_model_visit(output_model_visitSEXP);
-    rcpp_result_gen = Rcpp::wrap(drive(dataFile, mrfGFile, blockFile, structureGraphFile, hyperParFile, outFilePath, nIter, burnin, nChains, covariancePrior, gammaPrior, gammaSampler, gammaInit, betaPrior, maxThreads, output_gamma, output_beta, output_G, output_sigmaRho, output_pi, output_tail, output_model_size, output_CPO, output_model_visit));
-    return rcpp_result_gen;
-END_RCPP
-}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_BayesSUR_BayesSUR_internal", (DL_FUNC) &_BayesSUR_BayesSUR_internal, 24},
-    {"_BayesSUR_randBeta", (DL_FUNC) &_BayesSUR_randBeta, 2},
     {"_BayesSUR_randU01", (DL_FUNC) &_BayesSUR_randU01, 0},
     {"_BayesSUR_randLogU01", (DL_FUNC) &_BayesSUR_randLogU01, 0},
     {"_BayesSUR_randIntUniform", (DL_FUNC) &_BayesSUR_randIntUniform, 2},
     {"_BayesSUR_randExponential", (DL_FUNC) &_BayesSUR_randExponential, 1},
+    {"_BayesSUR_randVecExponential", (DL_FUNC) &_BayesSUR_randVecExponential, 2},
     {"_BayesSUR_randBinomial", (DL_FUNC) &_BayesSUR_randBinomial, 2},
     {"_BayesSUR_randMultinomial", (DL_FUNC) &_BayesSUR_randMultinomial, 2},
     {"_BayesSUR_randNormal", (DL_FUNC) &_BayesSUR_randNormal, 2},
+    {"_BayesSUR_randVecNormal", (DL_FUNC) &_BayesSUR_randVecNormal, 3},
     {"_BayesSUR_randT", (DL_FUNC) &_BayesSUR_randT, 1},
+    {"_BayesSUR_randVecT", (DL_FUNC) &_BayesSUR_randVecT, 2},
+    {"_BayesSUR_randMvT", (DL_FUNC) &_BayesSUR_randMvT, 3},
     {"_BayesSUR_randGamma", (DL_FUNC) &_BayesSUR_randGamma, 2},
     {"_BayesSUR_randIGamma", (DL_FUNC) &_BayesSUR_randIGamma, 2},
     {"_BayesSUR_randWishart", (DL_FUNC) &_BayesSUR_randWishart, 2},
+    {"_BayesSUR_randBeta", (DL_FUNC) &_BayesSUR_randBeta, 2},
     {"_BayesSUR_randBernoulli", (DL_FUNC) &_BayesSUR_randBernoulli, 1},
-    {"_BayesSUR_randVecExponential", (DL_FUNC) &_BayesSUR_randVecExponential, 2},
-    {"_BayesSUR_randVecNormal", (DL_FUNC) &_BayesSUR_randVecNormal, 3},
-    {"_BayesSUR_randVecT", (DL_FUNC) &_BayesSUR_randVecT, 2},
-    {"_BayesSUR_randMvNormal", (DL_FUNC) &_BayesSUR_randMvNormal, 2},
-    {"_BayesSUR_randMvT", (DL_FUNC) &_BayesSUR_randMvT, 3},
-    {"_BayesSUR_randIWishart", (DL_FUNC) &_BayesSUR_randIWishart, 2},
-    {"_BayesSUR_randMN", (DL_FUNC) &_BayesSUR_randMN, 3},
-    {"_BayesSUR_randTruncNorm", (DL_FUNC) &_BayesSUR_randTruncNorm, 4},
-    {"_BayesSUR_randVecSampleWithoutReplacement", (DL_FUNC) &_BayesSUR_randVecSampleWithoutReplacement, 3},
-    {"_BayesSUR_randSampleWithoutReplacement", (DL_FUNC) &_BayesSUR_randSampleWithoutReplacement, 3},
-    {"_BayesSUR_randVecWeightedSampleWithoutReplacement", (DL_FUNC) &_BayesSUR_randVecWeightedSampleWithoutReplacement, 4},
-    {"_BayesSUR_randWeightedSampleWithoutReplacement", (DL_FUNC) &_BayesSUR_randWeightedSampleWithoutReplacement, 3},
-    {"_BayesSUR_randWeightedIndexSampleWithoutReplacement", (DL_FUNC) &_BayesSUR_randWeightedIndexSampleWithoutReplacement, 3},
-    {"_BayesSUR_randIndexSampleWithoutReplacement", (DL_FUNC) &_BayesSUR_randIndexSampleWithoutReplacement, 2},
-    {"_BayesSUR_randWeiIndexSampleWithoutReplacement", (DL_FUNC) &_BayesSUR_randWeiIndexSampleWithoutReplacement, 2},
-    {"_BayesSUR_drive", (DL_FUNC) &_BayesSUR_drive, 24},
     {NULL, NULL, 0}
 };
 

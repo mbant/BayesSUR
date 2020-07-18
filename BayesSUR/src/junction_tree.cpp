@@ -660,7 +660,7 @@ std::pair<bool,double> JunctionTree::propose_single_edge_update( arma::uvec& upd
             logP += log((double)numComponents) - log(2.) + ( log( (double)(setC.size()) ) + log( (double)(setC.size()-1.) ) ); // forward probability
 
             // partition C into 3 sets, x y and S (S might be empty)"
-            randomIndexes = randIndexSampleWithoutReplacement(setC.size(),2);
+            randomIndexes = Distributions::randWeightedIndexSampleWithoutReplacement(setC.size(),2);
 
             x = setC[randomIndexes(0)];
             y = setC[randomIndexes(1)];
@@ -1229,7 +1229,7 @@ std::pair<bool,double> JunctionTree::propose_single_edge_update( )
             logP += log((double)numComponents) - log(2.) + ( log( (double)(setC.size()) ) + log( (double)(setC.size()-1.) ) ); // forward probability
 
             // partition C into 3 sets, x y and S (S might be empty)"
-            randomIndexes = randIndexSampleWithoutReplacement(setC.size(),2);
+            randomIndexes = Distributions::randWeightedIndexSampleWithoutReplacement(setC.size(),2);
 
             x = setC[randomIndexes(0)];
             y = setC[randomIndexes(1)];
@@ -1658,8 +1658,8 @@ std::pair<bool,double> JunctionTree::propose_multiple_edge_update( )
             dimX = randIntUniform(1,setCxlS.size());
             dimY = randIntUniform(1,setCylS.size());
 
-            X = randSampleWithoutReplacement( setCxlS.size() , setCxlS , dimX );
-            Y = randSampleWithoutReplacement( setCylS.size() , setCylS , dimY );
+            X = Distributions::randSampleWithoutReplacement( setCxlS.size() , setCxlS , dimX ); 
+            Y = Distributions::randSampleWithoutReplacement( setCylS.size() , setCylS , dimY ); 
                 // this is uncorrect, we should sample
                 // randomly from all possible subsets of CxlS
 
@@ -1858,7 +1858,7 @@ std::pair<bool,double> JunctionTree::propose_multiple_edge_update( )
             std::copy(setC.begin(), setC.end(),
                 std::back_inserter(setS));
             // Select X
-            X = randSampleWithoutReplacement( setS.size() , setS , dimX );
+            X = Distributions::randSampleWithoutReplacement( setS.size() , setS , dimX ); 
 
             //remove X from setS
             tmpVec.clear();
@@ -1869,7 +1869,7 @@ std::pair<bool,double> JunctionTree::propose_multiple_edge_update( )
             setS.swap(tmpVec);
 
             // Select Y
-            Y = randSampleWithoutReplacement( setS.size() , setS , dimY );
+            Y = Distributions::randSampleWithoutReplacement( setS.size() , setS , dimY ); 
 
             //remove Y from setS
             tmpVec.clear();

@@ -11,8 +11,8 @@
 //' @param outFilePath path to where the output is to be written
 //' @param nIter number of iterations
 //' @param nChains number of parallel chains to run
-//
-// NOTE THAT THIS IS BASICALLY JUST A WRAPPER
+//'
+//' NOTE THAT THIS IS BASICALLY JUST A WRAPPER
 
 #include "drive.h"
 #include <RcppArmadillo.h>

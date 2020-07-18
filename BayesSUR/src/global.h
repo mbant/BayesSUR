@@ -8,9 +8,9 @@
   #define __STDCPP_WANT_MATH_SPEC_FUNCS__ 1
 
 
-//  #ifdef _OPENMP
-//    #include <omp.h>
-//  #endif
+  #ifdef _OPENMP
+    #include <omp.h>
+  #endif
 
   #ifndef CCODE
     #include <RcppArmadillo.h>

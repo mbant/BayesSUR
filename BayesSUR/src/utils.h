@@ -52,6 +52,8 @@ namespace Utils{
 
 		// Misc MCMC quantities
 		unsigned int nChains = 1 , nIter = 10 , burnin = 0;
+        
+        int maxThreads = 1 ;
 		
 		// Parameter and sampler types
 		Covariance_Type covariance_type;
@@ -82,6 +84,7 @@ namespace Utils{
 		// outputs
 		bool output_gamma, output_beta, output_sigmaRho,
 			output_G, output_pi, output_tail, output_model_size, output_CPO, output_model_visit;
+        
 	};
 
 	class badFile : public std::exception

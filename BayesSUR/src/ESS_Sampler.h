@@ -1,10 +1,6 @@
 #ifndef ESS_SAMPLER_H
 #define ESS_SAMPLER_H
 
-//#ifdef _OPENMP
-//#include <omp.h>
-//#endif
-
 #ifndef CCODE
 #include <RcppArmadillo.h>
 using Rcpp::Rcout;
@@ -34,7 +30,7 @@ public:
     
     // Constructor - nChains and type of MCMC
     ESS_Sampler( Utils::SUR_Data& surData , unsigned int nChains_ , double temperatureRatio ,
-                Gamma_Sampler_Type gamma_sampler_type, Gamma_Type gamma_type, Beta_Type beta_type, Covariance_Type covariance_type, bool output_CPO , unsigned int burnin_ );
+                Gamma_Sampler_Type gamma_sampler_type, Gamma_Type gamma_type, Beta_Type beta_type, Covariance_Type covariance_type, bool output_CPO , int maxThreads , unsigned int burnin_ );
     
     ESS_Sampler( Utils::SUR_Data& surData , unsigned int nChains_ , double temperatureRatio ) :
     ESS_Sampler( surData , nChains_ , temperatureRatio ,
@@ -80,6 +76,7 @@ private:
     
     unsigned int nChains;
     unsigned int burnin;
+    int maxThreads;
     
     // Pointer to chains -
     // we use pointers so that the client can ask for the original object and manipulate them as he wish
@@ -98,7 +95,7 @@ private:
 
 template<typename T>
 ESS_Sampler<T>::ESS_Sampler( Utils::SUR_Data& surData , unsigned int nChains_ , double temperatureRatio ,
-                            Gamma_Sampler_Type gamma_sampler_type, Gamma_Type gamma_type, Beta_Type beta_type, Covariance_Type covariance_type, bool output_CPO , unsigned int burnin_ ):
+                            Gamma_Sampler_Type gamma_sampler_type, Gamma_Type gamma_type, Beta_Type beta_type, Covariance_Type covariance_type, bool output_CPO , int maxThreads, unsigned int burnin_ ):
 nChains(nChains_),
 burnin(burnin_),
 chain(std::vector<std::shared_ptr<T>>(nChains)),
@@ -114,7 +111,7 @@ global_count(0)
     
     for( unsigned int i=0; i<nChains; ++i )
         chain[i] = std::make_shared<T>( surData ,
-                                       gamma_sampler_type, gamma_type, beta_type, covariance_type, output_CPO,
+                                       gamma_sampler_type, gamma_type, beta_type, covariance_type, output_CPO, maxThreads ,
                                        std::pow( temperatureRatio , (double)i ) );  // default init for now
 }
 
@@ -140,9 +137,10 @@ void ESS_Sampler<T>::step()
 template<typename T>
 void ESS_Sampler<T>::localStep()
 {
-/*#ifdef _OPENMP
+#ifdef _OPENMP
 #pragma omp parallel for schedule(static,1)
-#endif*/
+#endif
+    
     for( unsigned int i=0; i<nChains; ++i )
         chain[i] -> step();
     
@@ -294,10 +292,11 @@ int ESS_Sampler<T>::allExchangeAll_step()
     
     // Compute the swap probabilities
     pExchange(0) = 0.; // these are log probabilities, remember!
-/*
+   
 #ifdef _OPENMP
 #pragma omp parallel for
-#endif*/
+#endif
+    
     for(unsigned int tabIndex = 1; tabIndex <= nChainCombinations; ++tabIndex)
     {
         
