@@ -18,11 +18,11 @@ BayesSUR(
   gammaPrior = "",
   betaPrior = "independent",
   gammaSampler = "bandit",
-  gammaInit = "MLE",
+  gammaInit = "R",
   mrfG = NULL,
   standardize = TRUE,
   standardize.response = TRUE,
-  maxThreads = 2,
+  maxThreads = 1,
   output_gamma = TRUE,
   output_beta = TRUE,
   output_G = TRUE,
@@ -61,7 +61,7 @@ if the 'data' argument is not provided, these needs to be matrices containing th
 
 \item{gammaSampler}{string indicating the type of sampler for gamma, either "bandit" for the Thompson sampling inspired samper or "MC3" for the usual $MC^3$ sampler}
 
-\item{gammaInit}{gamma initialisation to either all-zeros ("0"), all ones ("1"), randomly ("R") or (default) MLE-informed ("MLE").}
+\item{gammaInit}{gamma initialisation to either all-zeros ("0"), all ones ("1"), MLE-informed ("MLE") or (default) randomly ("R").}
 
 \item{mrfG}{either a matrix or a path to the file containing the G matrix for the MRF prior on gamma (if necessary)}
 
@@ -69,7 +69,7 @@ if the 'data' argument is not provided, these needs to be matrices containing th
 
 \item{standardize.response}{Standardization for the response variables. Default is standardize.response=TRUE.}
 
-\item{maxThreads}{maximum threads used for parallelization. Default is 2.}
+\item{maxThreads}{maximum threads used for parallelization. Default is 1.}
 
 \item{output_gamma}{allow ( \code{TRUE} ) or suppress ( \code{FALSE} ) the output for  gamma. See the return value below for more information.}
 
@@ -175,5 +175,5 @@ setwd(oldwd)
 \references{
 Banterle M, Bottolo L, Richardson S, Ala-Korpela M, Jarvelin MR, Lewin A (2018). \emph{Sparse variable and covariance selection for high-dimensional seemingly unrelated Bayesian regression.} bioRxiv: 467019.
 
-Banterle M#, Zhao Z#, Bottolo L, Richardson S, Lewin A, Zucknick M (2019). \emph{BayesSUR: An R package for high-dimensional multivariate Bayesian variable and covariance selection in linear regression.} URL: https://github.com/mbant/BayesSUR/blob/master/BayesSUR/vignettes/BayesSUR.pdf
+Banterle M#, Zhao Z#, Bottolo L, Richardson S, Lewin A, Zucknick M (2019). \emph{BayesSUR: An R package for high-dimensional multivariate Bayesian variable and covariance selection in linear regression.} URL: https://cran.r-project.org/web/packages/BayesSUR/vignettes/BayesSUR.pdf
 }

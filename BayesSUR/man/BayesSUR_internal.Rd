@@ -10,7 +10,9 @@
 
 \item{nIter}{number of iterations}
 
-\item{nChains}{number of parallel chains to run}
+\item{nChains}{number of parallel chains to run
+
+NOTE THAT THIS IS BASICALLY JUST A WRAPPER}
 }
 \description{
 Run a SUR Bayesian sampler -- internal function

@@ -24,13 +24,13 @@
 #' @param gammaPrior string indicating the gamma prior to use, either "hotspot" for the Hotspot prior of Bottolo (2011), "MRF" for the Markov Random Field prior or "hierarchical" for a simpler hierarchical prior. See the details for the model specification
 #' @param betaPrior string indicating the beta prior to use, either "independent" for the independent spike-and-slab prior or "reGroup" for the random effects for \code{X_0} and independent spike-and-slab priors for other predictors
 #' @param gammaSampler string indicating the type of sampler for gamma, either "bandit" for the Thompson sampling inspired samper or "MC3" for the usual $MC^3$ sampler
-#' @param gammaInit gamma initialisation to either all-zeros ("0"), all ones ("1"), randomly ("R") or (default) MLE-informed ("MLE").
+#' @param gammaInit gamma initialisation to either all-zeros ("0"), all ones ("1"), MLE-informed ("MLE") or (default) randomly ("R").
 #' @param mrfG either a matrix or a path to the file containing the G matrix for the MRF prior on gamma (if necessary)
 #' @param standardize logical flag for X variable standardization. Default is standardize=TRUE. The coefficients are returned on the standardized scale.
 #' @param standardize.response Standardization for the response variables. Default is standardize.response=TRUE.
 #' @param hyperpar a list of named hypeparameters to use instead of the default values. Valid names are mrf_d, mrf_e, a_sigma, b_sigma, a_tau, b_tau, nu, a_eta, b_eta, a_o, b_o, a_pi, b_pi, a_w and b_w. 
 #' Their default values are a_w=2, b_w=5, a_omega=2, b_omega=1, a_o=2, b_o=p-2, a_pi=2, b_pi=1, nu=s+2, a_tau=0.1, b_tau=10, a_eta=0.1, b_eta=1, a_sigma=1, b_sigma=1, mrf_d=-3 and mrf_e=0.03. See the vignette for more information.
-#' @param maxThreads maximum threads used for parallelization. Default is 2.
+#' @param maxThreads maximum threads used for parallelization. Default is 1.
 #' @param output_gamma allow ( \code{TRUE} ) or suppress ( \code{FALSE} ) the output for  gamma. See the return value below for more information.
 #' @param output_beta allow ( \code{TRUE} ) or suppress ( \code{FALSE} ) the output for beta. See the return value below for more information.
 #' @param output_G allow ( \code{TRUE} ) or suppress ( \code{FALSE} ) the output for G. See the return value below for more information.
@@ -80,7 +80,7 @@
 #' }
 #' 
 #' @references Banterle M, Bottolo L, Richardson S, Ala-Korpela M, Jarvelin MR, Lewin A (2018). \emph{Sparse variable and covariance selection for high-dimensional seemingly unrelated Bayesian regression.} bioRxiv: 467019.
-#' @references Banterle M#, Zhao Z#, Bottolo L, Richardson S, Lewin A, Zucknick M (2019). \emph{BayesSUR: An R package for high-dimensional multivariate Bayesian variable and covariance selection in linear regression.} URL: https://github.com/mbant/BayesSUR/blob/master/BayesSUR/vignettes/BayesSUR.pdf
+#' @references Banterle M#, Zhao Z#, Bottolo L, Richardson S, Lewin A, Zucknick M (2019). \emph{BayesSUR: An R package for high-dimensional multivariate Bayesian variable and covariance selection in linear regression.} URL: https://cran.r-project.org/web/packages/BayesSUR/vignettes/BayesSUR.pdf
 #' 
 #' @examples
 #' data("example_eQTL", package = "BayesSUR")
@@ -116,8 +116,8 @@
 BayesSUR <- function(Y, X, X_0 = NULL, data = NULL, 
                      outFilePath = "", nIter = 10000, burnin = 5000, nChains = 2, 
                      covariancePrior = "HIW", gammaPrior = "", betaPrior = "independent",
-                     gammaSampler = "bandit", gammaInit = "MLE", mrfG = NULL,
-                     standardize = TRUE, standardize.response = TRUE, maxThreads = 2,
+                     gammaSampler = "bandit", gammaInit = "R", mrfG = NULL,
+                     standardize = TRUE, standardize.response = TRUE, maxThreads = 1,
                      output_gamma = TRUE, output_beta = TRUE, output_G = TRUE, output_sigmaRho = TRUE,
                      output_pi = TRUE, output_tail = TRUE, output_model_size = TRUE, output_model_visit = FALSE, 
                      output_CPO = FALSE, output_Y = TRUE, output_X = TRUE, hyperpar = list(), tmpFolder = "tmp/")
