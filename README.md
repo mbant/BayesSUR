@@ -24,7 +24,7 @@ devtools::install_github("mbant/BayesSUR/BayesSUR")
 
 ### New in verion `BayesSUR_1.2-1.tar.gz` (19 July 2020):
 
-Enable RNGScope for reproducible results.
+Enabled RNGScope for reproducible results.
 
 ### verion `BayesSUR_1.2-0.tar.gz` (08 July 2020):
 
