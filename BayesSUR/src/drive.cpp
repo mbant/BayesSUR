@@ -94,9 +94,9 @@ int drive_SUR( Chain_Data& chainData )
     }
     
     std::ofstream gOutFile;
-    if ( chainData.covariance_type == Covariance_Type::HIW && chainData.output_G )
+    if ( chainData.covariance_type == Covariance_Type::HIW && chainData.output_Gy )
     {
-        gOutFile.open( outFilePrefix+"G_out.txt" , std::ios_base::trunc);
+        gOutFile.open( outFilePrefix+"Gy_out.txt" , std::ios_base::trunc);
         gOutFile.close();
     }
     
@@ -126,14 +126,14 @@ int drive_SUR( Chain_Data& chainData )
     std::ofstream ModelVisitGOutFile;
     if( chainData.output_model_visit )
     {
-        GVisitOutFile.open( outFilePrefix+"G_visit.txt", std::ios::out | std::ios::trunc); GVisitOutFile.close();
-        GVisitOutFile.open( outFilePrefix+"G_visit.txt" , std::ios_base::app); // note we don't close!
+        GVisitOutFile.open( outFilePrefix+"Gy_visit.txt", std::ios::out | std::ios::trunc); GVisitOutFile.close();
+        GVisitOutFile.open( outFilePrefix+"Gy_visit.txt" , std::ios_base::app); // note we don't close!
         
         ModelVisitGammaOutFile.open( outFilePrefix+"model_visit_gamma_out.txt", std::ios::out | std::ios::trunc); ModelVisitGammaOutFile.close();
         ModelVisitGammaOutFile.open( outFilePrefix+"model_visit_gamma_out.txt" , std::ios_base::app); // note we don't close!
         
-        ModelVisitGOutFile.open( outFilePrefix+"model_visit_g_out.txt", std::ios::out | std::ios::trunc); ModelVisitGOutFile.close();
-        ModelVisitGOutFile.open( outFilePrefix+"model_visit_g_out.txt" , std::ios_base::app); // note we don't close!
+        ModelVisitGOutFile.open( outFilePrefix+"model_visit_gy_out.txt", std::ios::out | std::ios::trunc); ModelVisitGOutFile.close();
+        ModelVisitGOutFile.open( outFilePrefix+"model_visit_gy_out.txt" , std::ios_base::app); // note we don't close!
     }
     
     // Output to file the initial state (if burnin=0)
@@ -159,11 +159,11 @@ int drive_SUR( Chain_Data& chainData )
             gammaOutFile.close();
         }
         
-        if ( chainData.covariance_type == Covariance_Type::HIW && chainData.output_G )
+        if ( chainData.covariance_type == Covariance_Type::HIW && chainData.output_Gy )
         {
             tmpG = arma::umat( sampler[0] -> getGAdjMat() );
             g_out = tmpG;
-            gOutFile.open( outFilePrefix+"G_out.txt" , std::ios_base::trunc);
+            gOutFile.open( outFilePrefix+"Gy_out.txt" , std::ios_base::trunc);
             gOutFile << ( arma::conv_to<arma::mat>::from(g_out) );   // this might be quite long...
             gOutFile.close();
         }
@@ -200,7 +200,7 @@ int drive_SUR( Chain_Data& chainData )
     }else{
         if ( chainData.output_gamma )
             gamma_out = sampler[0] -> getGamma();
-        if ( chainData.covariance_type == Covariance_Type::HIW && chainData.output_G )
+        if ( chainData.covariance_type == Covariance_Type::HIW && chainData.output_Gy )
         {
             tmpG = arma::umat( sampler[0] -> getGAdjMat() );
             g_out = tmpG;
@@ -244,7 +244,7 @@ int drive_SUR( Chain_Data& chainData )
     
     if ( chainData.output_model_visit )
     {
-        if ( chainData.covariance_type == Covariance_Type::HIW && chainData.output_G )
+        if ( chainData.covariance_type == Covariance_Type::HIW && chainData.output_Gy )
         {
             g_visit.clear();
             for(unsigned int k=0; k < tmpG.n_cols-1; ++k)
@@ -299,7 +299,7 @@ int drive_SUR( Chain_Data& chainData )
             if ( chainData.output_gamma )
                 gamma_out += sampler[0] -> getGamma(); // the result of the whole procedure is now my new mcmc point, so add that up
             
-            if ( chainData.covariance_type == Covariance_Type::HIW && chainData.output_G )
+            if ( chainData.covariance_type == Covariance_Type::HIW && chainData.output_Gy )
             {
                 tmpG = arma::umat( sampler[0] -> getGAdjMat() );
                 g_out += tmpG;
@@ -338,7 +338,7 @@ int drive_SUR( Chain_Data& chainData )
             
             // Nothing to update for model size
         }else{
-            if ( chainData.covariance_type == Covariance_Type::HIW && chainData.output_G )
+            if ( chainData.covariance_type == Covariance_Type::HIW && chainData.output_Gy )
                 tmpG = arma::umat( sampler[0] -> getGAdjMat() );
         }
         
@@ -379,9 +379,9 @@ int drive_SUR( Chain_Data& chainData )
                     gammaOutFile.close();
                 }
                 
-                if ( chainData.covariance_type == Covariance_Type::HIW && chainData.output_G )
+                if ( chainData.covariance_type == Covariance_Type::HIW && chainData.output_Gy )
                 {
-                    gOutFile.open( outFilePrefix+"G_out.txt" , std::ios_base::trunc);
+                    gOutFile.open( outFilePrefix+"Gy_out.txt" , std::ios_base::trunc);
                     gOutFile << ( arma::conv_to<arma::mat>::from(g_out) )/((double)(i-std::max(jtStartIteration,chainData.burnin))+1.0);   // this might be quite long...
                     gOutFile.close();
                 }
@@ -419,7 +419,7 @@ int drive_SUR( Chain_Data& chainData )
                 
                 if ( chainData.output_model_size )
                 {
-                    if ( chainData.covariance_type == Covariance_Type::HIW && chainData.output_G )
+                    if ( chainData.covariance_type == Covariance_Type::HIW && chainData.output_Gy )
                     {
                         //g_visit = arma::conv_to<arma::urowvec>::from( arma::trimatu(tmpG, 1) );
                         g_visit.clear();
@@ -450,9 +450,9 @@ int drive_SUR( Chain_Data& chainData )
         gammaOutFile.close();
     }
     
-    if ( chainData.covariance_type == Covariance_Type::HIW && chainData.output_G )
+    if ( chainData.covariance_type == Covariance_Type::HIW && chainData.output_Gy )
     {
-        gOutFile.open( outFilePrefix+"G_out.txt" , std::ios_base::trunc);
+        gOutFile.open( outFilePrefix+"Gy_out.txt" , std::ios_base::trunc);
         gOutFile << ( arma::conv_to<arma::mat>::from(g_out) )/(double)(chainData.nIter-std::max(jtStartIteration,chainData.burnin)+1.);   // this might be quite long...
         gOutFile.close();
     }
@@ -950,7 +950,7 @@ int drive( const std::string& dataFile, const std::string& mrfGFile, const std::
           const std::string& covariancePrior,
           const std::string& gammaPrior, const std::string& gammaSampler, const std::string& gammaInit,
           const std::string& betaPrior, const int maxThreads,
-          bool output_gamma, bool output_beta, bool output_G, bool output_sigmaRho, bool output_pi, bool output_tail, bool output_model_size, bool output_CPO, bool output_model_visit )
+          bool output_gamma, bool output_beta, bool output_Gy, bool output_sigmaRho, bool output_pi, bool output_tail, bool output_model_size, bool output_CPO, bool output_model_visit )
 {
     
     Rcout << "BayesSUR -- Bayesian Seemingly Unrelated Regression Modelling" << '\n';
@@ -1053,7 +1053,7 @@ int drive( const std::string& dataFile, const std::string& mrfGFile, const std::
     // *****************************************************
     chainData.output_gamma = output_gamma;
     chainData.output_beta = output_beta;
-    chainData.output_G = output_G;
+    chainData.output_Gy = output_Gy;
     chainData.output_sigmaRho = output_sigmaRho;
     chainData.output_pi = output_pi;
     chainData.output_tail = output_tail;

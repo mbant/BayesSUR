@@ -4,22 +4,23 @@
 \alias{get.estimator}
 \title{extract the posterior mean of the parameters}
 \usage{
-get.estimator(object, estimator = "gamma", Pmax = 0)
+get.estimator(object, estimator = "gamma", Pmax = 0, beta.type = "marginal")
 }
 \arguments{
-\item{object}{an object of class "BayesSUR"}
+\item{object}{an object of class \code{BayesSUR}}
 
 \item{estimator}{the name of one estimator. Default is the latent indicator estimator "\code{gamma}". Other options "\code{beta}", "\code{Gy}", "\code{CPO}" and "\code{logP}" 
-correspond the posterior means of coefficient matrix, response graph and conditional predictive ordinate (CPO) respectively}
+correspond the marginal (conditional) coefficient matrix if \code{beta.type="marginal"}(\code{"conditional"}), response graph and conditional predictive ordinate (CPO) respectively}
 
-\item{Pmax}{threshold that truncate the estimator. Default is 0. If the estimator is beta, then beta is truncated based on the latent indicator matrix shresholding at \code{Pmax}}
+\item{Pmax}{threshold that truncate the estimator "\code{gamma}" or "\code{Gy}". Default is \code{0}}
+
+\item{beta.type}{the type of output beta. Default is \code{marginal}, giving marginal beta estimation. If \code{beta.type="conditional"}, it gives conditional beta estimation}
 }
 \value{
-Return the one estimator from an object of class "BayesSUR". It is the posterior mean of the latent indicator variable if \code{estimator="gamma"}, posterior mean of the regression coefficients
-if \code{estimator="beta"}, posterior mean of the response graph if \code{estimator="Gy"} and the CPO if \code{estimator="CPO"},
+Return the estimator from an object of class \code{BayesSUR}. It is a matrix if the length of argument \code{marginal} is greater than 1. Otherwise, it is a list
 }
 \description{
-Extract the posterior mean of the parameters of a "BayesSUR" class object.
+Extract the posterior mean of the parameters of a \code{BayesSUR} class object.
 }
 \examples{
 data("example_eQTL", package = "BayesSUR")

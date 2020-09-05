@@ -48,11 +48,11 @@ x = cbind(rep(1,n),x)
 
 ####################################################################
 
-graph_pattern = 2 # in 2,3,4
+graph_pattern = 2
 
-snr = 25  # in 5,15,25
+snr = 25
 
-corr_param = 0.9 # in 0.3 , 0.6 , 0.9
+corr_param = 0.9
 
 ### Create the underlying graph
 if(graph_pattern==1){

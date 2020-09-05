@@ -2,19 +2,32 @@
 % Please edit documentation in R/plot.BayesSUR.R
 \name{plot.BayesSUR}
 \alias{plot.BayesSUR}
-\title{create a selection of plots for a "BayesSUR" class object}
+\title{create a selection of plots for a \code{BayesSUR} class object}
 \usage{
-\method{plot}{BayesSUR}(x, which = c(1L:4L), ...)
+\method{plot}{BayesSUR}(x, estimator = NA, type = NA, ...)
 }
 \arguments{
-\item{x}{an object of class "BayesSUR".}
+\item{x}{an object of class \code{BayesSUR}}
 
-\item{which}{if a subset of the plots is required, specify a subset of the numbers 1:5 which are plots of estimators, response graph, network, manhattan and MCMC diagnosis, respectively. Default is \code{c(1L:4L)} Only \code{c(1,4,5)} is valid for the HRR models.}
+\item{estimator}{It is in \code{c(NA, 'beta', 'gamma', 'Gy', 'logP', 'CPO')} and works by combining with argument \code{type}.
+\itemize{
+  \item If \code{estimator} is in \code{c("beta", "gamma", "Gy")} and argument \code{type="heatmap"}, it prints heatmaps of the specified estimator in \code{estimator}, and refers to function \code{plotEstimator()} for more other arguments.
+  \item If \code{estimator="Gy"} and argument \code{type="graph"}, it prints a structure graph of \code{"Gy"}, and refers to function \code{plotGraph()} for more other arguments.
+  \item If \code{estimator=c("gamma", "Gy")} and argument \code{type="network"}, it prints the estimated network between the response variables and predictors with nonzero coefficients, and refers to function \code{plotMCMCdiag()} for more other arguments.
+  \item If \code{estimator=NA} (default) and \code{type="NA"} (default), it interactively prints the plots of estimators (i.e., beta, gamma and (or) Gy), response graph Gy, network, Manhattan and MCMC diagnostics.
+}}
 
-\item{...}{other arguments}
+\item{type}{It is one of \code{"NA"}, \code{"heatmap"}, \code{"graph"}, \code{"network"}, \code{"Manhattan"} and \code{"diagnostics"}, and works by combining with argument \code{estimator}.
+\itemize{
+  \item If \code{type="Manhattan"} and argument \code{estimator="gamma"}, it prints Manhattan-like plots for marginal posterior inclusion probabilities (mPIP) and numbers of associated response variables for individual predictors, and refers to function \code{plotManhattan()} for more other arguments.
+  \item If \code{type="diagnostics"} and argument \code{estimator="logP"} it shows trace plots and diagnostic density plots of a fitted model, and refers to function \code{plotMCMCdiag()} for more other arguments.
+  \item If \code{type="diagnostics"} and argument \code{estimator="CPO"}, it shows the conditional predictive ordinate (CPO) for each individual of a fitted model, and refers to function \code{plotCPO()} for more other arguments.
+}}
+
+\item{...}{other arguments, see functions \code{plotEstimator()}, \code{plotGraph()}, \code{plotNetwork()}, \code{plotManhattan()}, \code{plotMCMCdiag()} or \code{plotCPO()}}
 }
 \description{
-Convenience function to create a selection of plots for a "BayesSUR" class object. They are plots of estimators, response graph, network, manhattan and MCMC diagnosis indexed by numbers 1:5.
+Convenience function to create a selection of plots for a \code{BayesSUR} class object. They are plots of estimators, estimated graph Gy, network, Manhattan, MCMC diagnostics and conditional predictive ordinates.
 }
 \examples{
 data("example_eQTL", package = "BayesSUR")
@@ -28,10 +41,25 @@ fit <- BayesSUR(Y = example_eQTL[["blockList"]][[1]],
                 hyperpar = hyperpar, tmpFolder = "tmp/" )
 
 ## check output
-# Show the interactive plots. Note that it needs at least 2000*(nbloc+1) iterations 
-# for the diagnosis plots where nbloc=3 by default 
 \donttest{
+# Show the interactive plots. Note that it needs at least 2000*(nbloc+1) iterations 
+# for the diagnostic plots where nbloc=3 by default 
 plot(fit)
 }
+
+## plot heatmaps of the estimated beta, gamma and Gy
+plot(fit, estimator=c("beta", "gamma", "Gy"), type="heatmap")
+
+## plot estimated graph of responses Gy
+plot(fit, estimator="Gy", type="graph")
+
+## plot network between response variables and associated predictors
+plot(fit, estimator=c("gamma", "Gy"), type="network")
+
+## print Manhattan-like plots
+plot(fit, estimator="gamma", type="Manhattan")
+
+## print MCMC diagnostic plots
+plot(fit, estimator="logP", type="diagnostics")
 
 }

@@ -1,14 +1,14 @@
 #' @title extract the posterior mean of the parameters
 #' @description
-#' Extract the posterior mean of the parameters of a "BayesSUR" class object.
+#' Extract the posterior mean of the parameters of a \code{BayesSUR} class object.
 #' @name get.estimator
-#' @param object an object of class "BayesSUR"
+#' @param object an object of class \code{BayesSUR}
 #' @param estimator the name of one estimator. Default is the latent indicator estimator "\code{gamma}". Other options "\code{beta}", "\code{Gy}", "\code{CPO}" and "\code{logP}" 
-#' correspond the posterior means of coefficient matrix, response graph and conditional predictive ordinate (CPO) respectively 
-#' @param Pmax threshold that truncate the estimator. Default is 0. If the estimator is beta, then beta is truncated based on the latent indicator matrix shresholding at \code{Pmax} 
+#' correspond the marginal (conditional) coefficient matrix if \code{beta.type="marginal"}(\code{"conditional"}), response graph and conditional predictive ordinate (CPO) respectively 
+#' @param Pmax threshold that truncate the estimator "\code{gamma}" or "\code{Gy}". Default is \code{0}
+#' @param beta.type the type of output beta. Default is \code{marginal}, giving marginal beta estimation. If \code{beta.type="conditional"}, it gives conditional beta estimation
 #' 
-#' @return Return the one estimator from an object of class "BayesSUR". It is the posterior mean of the latent indicator variable if \code{estimator="gamma"}, posterior mean of the regression coefficients
-#' if \code{estimator="beta"}, posterior mean of the response graph if \code{estimator="Gy"} and the CPO if \code{estimator="CPO"},
+#' @return Return the estimator from an object of class \code{BayesSUR}. It is a matrix if the length of argument \code{marginal} is greater than 1. Otherwise, it is a list
 #' 
 #' @examples
 #' data("example_eQTL", package = "BayesSUR")
@@ -26,130 +26,77 @@
 #' beta_hat <- get.estimator(fit, estimator="beta")
 #' 
 #' @export
-get.estimator <- function(object, estimator="gamma", Pmax=0){
+get.estimator <- function(object, estimator = "gamma", Pmax = 0, beta.type = "marginal"){
   
   object$output[-1] <- paste(object$output$outFilePath,object$output[-1],sep="")
-  if( sum(estimator %in% c("gamma","beta","Gy","CPO","logP"))<1 )
-    stop("Please specify a correct estimator!")
+  if( sum(!estimator %in% c("gamma","beta","Gy","CPO","logP"))>0 ){
+    stop("Please specify correct estimator!")
+  }else{
+    ret <- rep(list(NULL), length(estimator))
+    names(ret) <- estimator
+  }
   
-  if( length(estimator) == 1 ){if( estimator == "gamma" ){
-    Est <- as.matrix( read.table(object$output$gamma) )
-    Est[Est<=Pmax] <- 0
-    rownames(Est) <- colnames(read.table(object$output$X,header=T))
-    
-    ## Create the return object
-    ret <-  Est
-    class(ret) <- "Manhattan"
-    class(plot) <- c(class(plot), "Manhattan")
-    return(ret)
+  if( "gamma" %in% estimator ){
+    ret$gamma <- as.matrix( read.table(object$output$gamma) )
+    if(Pmax > 0)
+      ret$gamma[ret$gamma<=Pmax] <- 0
+    rownames(ret$gamma) <- colnames(read.table(object$output$X,header=T))
+    colnames(ret$gamma) <- colnames(read.table(object$output$Y,header=T))
   } 
     
-    if( estimator == "beta" ){
-      Est <- as.matrix( read.table(object$output$beta) )
-      Est[as.matrix( read.table(object$output$gamma) )<=Pmax] <- 0
+    if( "beta" %in% estimator ){
+      ret$beta <- as.matrix( read.table(object$output$beta) )
       
-      return(Est)
+      if( sum(beta.type %in% c("marginal", "conditional"))>0 ){
+        if( beta.type == "conditional" ){
+          gammas <- as.matrix( read.table(object$output$gamma) )
+          ret$beta <- (gammas>=Pmax)*ret$beta/gammas
+          ret$beta[is.na(ret$beta)] <- 0
+        }
+      }else{
+        stop("Please specify correct beta.type!")
+      }
+      
+      colnames(ret$beta) <- colnames(read.table(object$output$Y,header=T))
+      if("X_0" %in% names(object$output)){
+        rownames(ret$beta) <- c(colnames(read.table(object$output$X_0,header=T)), colnames(read.table(object$output$X,header=T)))
+      }else{
+        rownames(ret$beta) <- colnames(read.table(object$output$X,header=T))
+      }
     } 
     
-    if( estimator == "Gy" ){
+    if( "Gy" %in% estimator ){
       
       covariancePrior <- object$input$covariancePrior
       if(covariancePrior == "HIW"){
-        Est <- as.matrix( read.table(object$output$G) )
+        ret$Gy <- as.matrix( read.table(object$output$G) )
       }else{
         stop("Gy is only estimated with hyper-inverse Wishart prior for the covariance matrix of responses!")
       }
-      Est[Est<=Pmax] <- 0
-      rownames(Est) <- colnames(Est) <- names(read.table(object$output$Y,header=T))
+      if( Pmax > 0)
+        ret$Gy[ret$Gy<=Pmax] <- 0
+      rownames(ret$Gy) <- colnames(ret$Gy) <- names(read.table(object$output$Y,header=T))
       
-      ## Create the return object
-      ret <-  Est
-      class(ret) <- "response.graph"
-      class(plot) <- c(class(plot), "response.graph")
-      return(ret)
     } 
     
-    if( estimator == "CPO" ){
-      Est <- as.matrix( read.table(object$output$CPO) )
-      
+    if( "CPO" %in% estimator ){
       if(is.null(object$output$CPO))
         stop("Please specify argument output_CPO in BayesSUR()!")
-      rownames(Est) <- rownames(as.matrix( read.table(object$output$Y,header=T) ))
-      colnames(Est) <- colnames(as.matrix( read.table(object$output$Y,header=T) ))
       
-      ## Create the return object
-      ret <-  Est
-      class(ret) <- "CPO"
-      class(plot) <- c(class(plot), "CPO")
-      return(ret)
+      ret$CPO <- as.matrix( read.table(object$output$CPO) )
+      
+      rownames(ret$CPO) <- rownames(as.matrix( read.table(object$output$Y,header=T) ))
+      colnames(ret$CPO) <- colnames(as.matrix( read.table(object$output$Y,header=T) ))
+      
     } 
     
-    if( estimator == "logP" ){
-      logP <- t( as.matrix( read.table(object$output$logP) ) )
-      model_size <- as.matrix( read.table(object$output$model_size) )
-      ncol_Y <- ncol(read.table(object$output$gamma))
-      nIter <- object$input$nIter
-      
-      covariancePrior <- object$input$covariancePrior
-      if(covariancePrior=="HIW" & is.null(object$output$Gvisit)){
-        Gvisit <- as.matrix( read.table(object$output$Gvisit) )
-        ret <- list(logP=logP, model_size=model_size, Gvisit=Gvisit, 
-                    ncol_Y=ncol_Y, nIter=nIter, covariancePrior=covariancePrior)
-      }else{
-        ret <- list(logP=logP, model_size=model_size,
-                    ncol_Y=ncol_Y, nIter=nIter, covariancePrior=covariancePrior)
-      }
-      
-      ## Create the return class
-      class(ret) <- "MCMCdiag"
-      class(plot) <- c(class(plot), "MCMCdiag")
-      return(ret)
+    if( "logP" %in% estimator ){
+      ret$logP <- t( as.matrix( read.table(object$output$logP) ) )
     } 
+  
+  if(length(estimator)>1){
+    return(ret)
+  }else{
+    return(ret[[1]])
   }
-  
-  if( length(estimator)==2 & sum(estimator %in% c("gamma", "Gy"))==2 ){
-    covariancePrior <- object$input$covariancePrior
-    if(covariancePrior == "HIW"){
-      Gy <- as.matrix( read.table(object$output$G) )
-    }else{
-      stop("Gy is only estimated with hyper-inverse Wishart prior for the covariance matrix of responses!")
-    }
-    gamma <- as.matrix( read.table(object$output$gamma) )
-    colnames(gamma) <- names(read.table(object$output$Y,header=T))
-    rownames(gamma) <- names(read.table(object$output$X,header=T))
-    
-    ## Create the return object
-    ret <- list(gamma=gamma, Gy=Gy, covariancePrior=covariancePrior)
-    class(ret) <- "network"
-    class(plot) <- c(class(plot), "network")
-    return(ret)
-  } 
-  
-  if( (length(estimator)==3 & sum(estimator %in% c("beta", "gamma", "Gy"))==3)
-      | (length(estimator)==2 & sum(estimator %in% c("beta", "gamma"))==2)){
-    beta <- as.matrix( read.table(object$output$beta) )
-    gamma <- as.matrix( read.table(object$output$gamma) )
-    #colnames(beta) <- colnames(gamma) <- names(read.table(object$output$Y,header=T))
-    #rownames(gamma) <- names(read.table(object$output$X,header=T))
-    nonpen <- nrow(beta) - nrow(gamma)
-    if(nonpen > 0){
-      rownames(beta) <- c(names(read.table(object$output$X0,header=T)), names(read.table(object$output$X,header=T)))
-    }else{
-      #rownames(beta) <- names(read.table(object$output$X,header=T))
-    }
-    covariancePrior <- object$input$covariancePrior
-    if( (covariancePrior == "HIW") & ("Gy" %in% estimator) ){
-      Gy <- as.matrix( read.table(object$output$G) )
-      colnames(Gy) <- rownames(Gy) <- names(read.table(object$output$Y,header=T))
-      ret <- list(beta=beta, gamma=gamma, Gy=Gy, covariancePrior=covariancePrior)
-    }else{
-      ret <- list(beta=beta, gamma=gamma, covariancePrior=covariancePrior)
-    }
-    
-    ## Create the return object
-    class(ret) <- "estimator"
-    class(plot) <- c(class(plot), "estimator")
-    return(ret)
-  } 
-  
 }

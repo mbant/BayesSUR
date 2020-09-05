@@ -12,19 +12,20 @@
 #' @importFrom xml2 as_xml_document write_xml
 #' 
 #' @name BayesSUR
-#' @param data a data frame if using \code{formula}. If not using \code{formula}, it is either a matrix/dataframe or the path to (a plain text) data file with variables on the columns and observations on the rows 
-#' @param Y,X,X_0 vectors of indexes (with respect to the data matrix) for the outcomes, the covariates to select and the fixed covariates respectively if data is either a path to a file or a matrix;
-#' if the 'data' argument is not provided, these needs to be matrices containing the data instead.
+#' @param data a matrix with variables on the columns and observations on the rows if arguments Y and X are vectors. Can be \code{NULL} if arguments Y and X are matrices.
+#' @param Y,X vectors of indexes (with respect to the \code{data} matrix) for the outcomes and the covariates to select respectively;
+#' if the \code{data} argument is not provided, these needs to be matrices containing the data instead.
+#' @param X_0 vectors of indexes (with respect to the data matrix) for the fixed covariates; if the \code{data} argument is not provided, this needs to be a matrix containing the data instead.
 #' @param outFilePath path to where the output files are to be written. The default path is the currect working directory.
 #' @param nIter number of iterations for the MCMC procedure.
 #' @param burnin number of iterations (or fraction of iterations) to discard at the start of the chain. Default is 0.
 #' @param nChains number of parallel chains to run.
-#' @param covariancePrior string indicating the prior for the covariance $C$; it has to be either "HIW" for the hyper-inverse-Wishar (which will result in a sparse covariance matrix),
-#' "IW" for the inverse-Wishart prior ( dense covariance ) or "IG" for independent inverse-Gamma on all the diagonal elements and 0 otherwise. See the details for the model specification
-#' @param gammaPrior string indicating the gamma prior to use, either "hotspot" for the Hotspot prior of Bottolo (2011), "MRF" for the Markov Random Field prior or "hierarchical" for a simpler hierarchical prior. See the details for the model specification
-#' @param betaPrior string indicating the beta prior to use, either "independent" for the independent spike-and-slab prior or "reGroup" for the random effects for \code{X_0} and independent spike-and-slab priors for other predictors
-#' @param gammaSampler string indicating the type of sampler for gamma, either "bandit" for the Thompson sampling inspired samper or "MC3" for the usual $MC^3$ sampler
-#' @param gammaInit gamma initialisation to either all-zeros ("0"), all ones ("1"), MLE-informed ("MLE") or (default) randomly ("R").
+#' @param covariancePrior string indicating the prior for the covariance $C$; it has to be either \code{HIW} for the hyper-inverse-Wishar (which will result in a sparse covariance matrix),
+#' \code{IW} for the inverse-Wishart prior ( dense covariance ) or \code{IG} for independent inverse-Gamma on all the diagonal elements and 0 otherwise. See the details for the model specification
+#' @param gammaPrior string indicating the gamma prior to use, either \code{hotspot} (default) for the Hotspot prior of Bottolo (2011), \code{MRF} for the Markov Random Field prior or \code{hierarchical} for a simpler hierarchical prior. See the details for the model specification
+#' @param betaPrior string indicating the beta prior to use, either \code{independent} for the independent spike-and-slab prior or \code{reGroup} for the random effects for \code{X_0} and independent spike-and-slab priors for other predictors
+#' @param gammaSampler string indicating the type of sampler for gamma, either \code{bandit} for the Thompson sampling inspired samper or \code{MC3} for the usual $MC^3$ sampler
+#' @param gammaInit gamma initialisation to either all-zeros (\code{0}), all ones (\code{1}), MLE-informed (\code{MLE}) or (default) randomly (\code{R}).
 #' @param mrfG either a matrix or a path to the file containing the G matrix for the MRF prior on gamma (if necessary)
 #' @param standardize logical flag for X variable standardization. Default is standardize=TRUE. The coefficients are returned on the standardized scale.
 #' @param standardize.response Standardization for the response variables. Default is standardize.response=TRUE.
@@ -33,13 +34,14 @@
 #' @param maxThreads maximum threads used for parallelization. Default is 1.
 #' @param output_gamma allow ( \code{TRUE} ) or suppress ( \code{FALSE} ) the output for  gamma. See the return value below for more information.
 #' @param output_beta allow ( \code{TRUE} ) or suppress ( \code{FALSE} ) the output for beta. See the return value below for more information.
-#' @param output_G allow ( \code{TRUE} ) or suppress ( \code{FALSE} ) the output for G. See the return value below for more information.
+#' @param output_Gy allow ( \code{TRUE} ) or suppress ( \code{FALSE} ) the output for Gy. See the return value below for more information.
 #' @param output_sigmaRho allow ( \code{TRUE} ) or suppress ( \code{FALSE} ) the output for sigmaRho. See the return value below for more information.
 #' @param output_pi allow ( \code{TRUE} ) or suppress ( \code{FALSE} ) the output for pi. See the return value below for more information.
 #' @param output_tail allow ( \code{TRUE} ) or suppress ( \code{FALSE} ) the output for tail (hotspot tail probability). See the return value below for more information.
 #' @param output_model_size allow ( \code{TRUE} ) or suppress ( \code{FALSE} ) the output for model_size. See the return value below for more information.
 #' @param output_model_visit allow ( \code{TRUE} ) or suppress ( \code{FALSE} ) the output for all visited models over the MCMC iterations. Default is \code{FALSE}. See the return value below for more information.
-#' @param output_CPO allow ( \code{TRUE} ) or suppress ( \code{FALSE} ) the output for *; possible outputs are gamma, G, beta, sigmaRho, pi, tail (hotspot tail probability), model_size, CPO. See the return value below for more information.
+#' @param output_CPO allow ( \code{TRUE} ) or suppress ( \code{FALSE} ) the output for (scaled) conditional predictive ordinates (\code{*_CPO_out.txt}), 
+#' CPO with joint posterior predictive of the response variables (\code{*_CPOsumy_out.txt}) and widely applicable information criterion (\code{*_WAIC_out.txt}). See the return value below for more information.
 #' @param output_Y allow ( \code{TRUE} ) or suppress ( \code{FALSE} ) the output for responses dataset Y.
 #' @param output_X allow ( \code{TRUE} ) or suppress ( \code{FALSE} ) the output for predictors dataset X.
 #' @param tmpFolder the path to a temporary folder where intermediate data files are stored (will be erased at the end of the chain) default to local tmpFolder
@@ -53,7 +55,7 @@
 #'   \eqn{C}~HIW   \tab SSUR-B                      \tab SSUR-H                    \tab SSUR-M           
 #' }
 #'
-#' @return An object of class "BayesSUR":
+#' @return An object of class \code{BayesSUR} is saved as \code{obj_BayesSUR.RData} in the output file, including the following components:
 #' \itemize{
 #' \item status - the running status
 #' \item input - a list of all input parameters by the user
@@ -64,10 +66,10 @@
 #' \item "\code{*_pi_out.txt}" - posterior mean of the predictor effects (prospensity) by decomposing the probability of the latent indicator.
 #' \item "\code{*_hotspot_tail_p_out.txt}" - posterior mean of the hotspot tail probability. Only available for the hotspot prior on the gamma.
 #' \item "\code{*_beta_out.txt}" - posterior mean of the coefficients matrix.
-#' \item "\code{*_G_out.txt}" - posterior mean of the response graph. Only available for the HIW prior on the covariance. 
+#' \item "\code{*_Gy_out.txt}" - posterior mean of the response graph. Only available for the HIW prior on the covariance. 
 #' \item "\code{*_sigmaRho_out.txt}" - posterior mean of the transformed parameters. Not available for the IG prior on the covariance.
 #' \item "\code{*_model_size_out.txt}" - contains each row for the\eqn{1000t}-th iteration's model sizes of the multiple response variables.
-#' \item "\code{*_model_visit_g_out.txt}" - contains each row for the nonzero indices of the vectorized estimated graph matrix for each iteration.
+#' \item "\code{*_model_visit_gy_out.txt}" - contains each row for the nonzero indices of the vectorized estimated graph matrix for each iteration.
 #' \item "\code{*_model_visit_gamma_out.txt}" - contains each row for the nonzero indices of the vectorized estimated gamma matrix for each iteration.
 #' \item "\code{*_CPO_out.txt}" - the (scaled) conditional predictive ordinates (CPO). 
 #' \item "\code{*_CPOsumy_out.txt}" - the (scaled) conditional predictive ordinates (CPO) with joint posterior predictive of the response variables.
@@ -96,36 +98,36 @@
 #' # show the summary information
 #' summary(fit)
 #' 
-#' # show the estimated beta, gamma and graph of responeses Gy
-#' \dontrun{
-#' estimators <- get.estimator(fit, estimator=c("beta","gamma","Gy"))
-#' plot(estimators)
+#' # show the estimated beta, gamma and graph of responses Gy
+#' plot(fit, estimator=c("beta","gamma","Gy"), type="heatmap")
 #' 
+#' \dontrun{
 #' #Set up temporary work directory for saving a pdf figure
 #' td <- tempdir()
 #' oldwd <- getwd()
 #' setwd(td)
 #' 
 #' # Produce authentic math formulas in the graph
-#' plot(estimators, fig.tex = TRUE)
+#' plot(fit, estimator=c("beta","gamma","Gy"), type="heatmap", fig.tex = TRUE)
 #' system(paste(getOption("pdfviewer"), "ParamEstimator.pdf"))
 #' setwd(oldwd)
 #' }
 #' 
 #' @export
-BayesSUR <- function(Y, X, X_0 = NULL, data = NULL, 
-                     outFilePath = "", nIter = 10000, burnin = 5000, nChains = 2, 
-                     covariancePrior = "HIW", gammaPrior = "", betaPrior = "independent",
+BayesSUR <- function(data = NULL, Y, X, X_0 = NULL, 
+                     covariancePrior = "HIW", gammaPrior = "hotspot",
+                     nIter = 10000, burnin = 5000, nChains = 2, 
+                     outFilePath = "", betaPrior = "independent",
                      gammaSampler = "bandit", gammaInit = "R", mrfG = NULL,
                      standardize = TRUE, standardize.response = TRUE, maxThreads = 1,
-                     output_gamma = TRUE, output_beta = TRUE, output_G = TRUE, output_sigmaRho = TRUE,
+                     output_gamma = TRUE, output_beta = TRUE, output_Gy = TRUE, output_sigmaRho = TRUE,
                      output_pi = TRUE, output_tail = TRUE, output_model_size = TRUE, output_model_visit = FALSE, 
                      output_CPO = FALSE, output_Y = TRUE, output_X = TRUE, hyperpar = list(), tmpFolder = "tmp/")
 {
   
   # Check the directory for the output files
   if(outFilePath == "")
-    stop("Warning: Please specify a directory to save all output files!")
+    stop("Please specify a directory to save all output files!")
   
   outFilePathLength = nchar(outFilePath)
   if( substr(outFilePath,outFilePathLength,outFilePathLength) != "/" )
@@ -157,29 +159,28 @@ BayesSUR <- function(Y, X, X_0 = NULL, data = NULL,
     
     # Y,X (and if there X_0) need to be valid numeric matrices then
     # check Y and X have comfortable number of observations
-    if( !is.numeric(Y) | is.null(dim(Y)) & !is.data.frame(Y) )
-      my_stop("Y needs to be a valid matrix or data.frame with > 1 column", tmpFolder)
+    npY = dim(Y)
+    if ( (!is.numeric(Y)) | is.null(npY) ) 
+      my_stop("If 'data' is NULL, Y should be a numeric matrix",tmpFolder)
     
-    nObservations = nrow(Y)
-    if( !is.numeric(X) | is.null(dim(X)) | nrow(X) != nObservations & !is.data.frame(X) )
-      my_stop("X needs to be a valid matrix or data.frame with >= 1 column and the same number of rows of Y", tmpFolder)
+    npX = dim(X)
+    if ( (!is.numeric(X)) | is.null(npX) | (npX[1]!=npY[1]) ) 
+      my_stop("If 'data' is NULL, X should be a numeric matrix and the same number of rows of Y",tmpFolder)
     
     if ( is.null ( X_0 ) ){
-      X_0 = matrix(NA,nrow=nObservations,ncol=0)
+      X_0 = matrix(NA,nrow=npY[1],ncol=0)
     }else{
-      if( !is.numeric(X_0) | is.null(dim(X_0)) | nrow(X_0) != nObservations & !is.data.frame(X_0) )
-        my_stop("if provided, X_0 needs to be a valid matrix or data.frame with >= 1 column and the same number of rows of Y", tmpFolder)
+      npX0 = dim(X_0)
+      if ( (!is.numeric(X_0)) | is.null(npX0) | (npX0[1]!=npY[1]) ) 
+        my_stop("If 'data' is NULL and X_0 is provided, X_0 should be a numeric matrix and the same number of rows of Y",tmpFolder)
     }
-    
-    #if( !is.numeric(X_0) | is.null(dim(X_0)) | nrow(X_0) != nObservations )
-    #  my_stop("if provided, X_0 needs to be a valid matrix or data.frame with >= 1 column and the same number of rows of Y")
-    
+  
     # Standarize the data
     if( standardize ){
-      X = scale(X)[,]
-      X_0 = scale(X_0)[,]
+      X = scale(X)
+      X_0 = scale(X_0)
     } 
-    if( standardize.response ) Y = scale(Y)[,]
+    if( standardize.response ) Y = scale(Y)
     
     # Write the three down in a single data file
     write.table(cbind(Y,X,X_0),paste(sep="",tmpFolder,"data.txt"), row.names = FALSE, col.names = FALSE)
@@ -196,14 +197,16 @@ BayesSUR <- function(Y, X, X_0 = NULL, data = NULL,
     
     # is the data given as matrix?
     ## If it's valid matrix, simply write it and re-assign the variable data to hold its path
-    if( (is.numeric(data) | is.data.frame(data)) & !is.null(dim(data))  )
+    
+    npData = dim(data)
+    if( is.numeric(data) | (!is.null(npData)) | (npData[2]>=2) )
     {
       # Standarize the data
       if( standardize ){
-        data[,X]= scale(data[,X])[,]
-        data[,X_0] = scale(data[,X_0])[,]
+        data[,X]= scale(data[,X])
+        data[,X_0] = scale(data[,X_0])
       } 
-      if( standardize.response ) data[,Y] = scale(data[,Y])[,]
+      if( standardize.response ) data[,Y] = scale(data[,Y])
       
       # Write the Y and X data in a output file
       write.table(data[,Y],paste(sep="",outFilePath,"data_Y.txt"), row.names = FALSE, col.names = TRUE)
@@ -212,17 +215,15 @@ BayesSUR <- function(Y, X, X_0 = NULL, data = NULL,
       
       write.table(data,paste(sep="",tmpFolder,"data.txt"), row.names = FALSE, col.names = FALSE)
       data = paste(sep="",tmpFolder,"data.txt")
+    }else{
+      my_stop("Y should be NULL or a numeric matrix with 2 or more columns!")
     }
     
+    
     # is the data given as a string?
-    if( is.character(data) & length(data) == 1 )
-    {    
+    if( is.character(data) & length(data) == 1 ){    
       if( substr(data,1,1) == "~" )
         data = path.expand(data)
-      
-      # now try and read from given data file
-      if( !file.exists( data ) )
-        my_stop("Input file doesn't exists!",tmpFolder)
     }
     
     ## at this point data contains the path to a file that exists
@@ -232,24 +233,19 @@ BayesSUR <- function(Y, X, X_0 = NULL, data = NULL,
     
     ## Y, X (and X_0) should be some fixed variables that needs to be included in the model
     if ( is.null(X_0) )
-      X_0 = c()
+      X_0 = as.numeric(c())
     
-    # be sure they can be converted to numeric
-    Y = as.numeric(Y)
-    X = as.numeric(X)
-    X_0 = as.numeric(X_0)
-    
-    # be sure that they are vectors
+   # be sure that they are vectors
     if ( !( is.vector(Y,"numeric") & is.vector(X,"numeric") & is.vector(X_0,"numeric") ) )
-      my_stop("When the `data` argument is set, Y,X and X_0 need to be corresponding index vectors", tmpFolder)
+      my_stop("When the 'data' argument is set, Y,X and X_0 need to be corresponding index vectors!",tmpFolder)
     
     # check thay do not overlap
     if ( length( c( intersect(Y,X) , intersect(Y,X_0) , intersect(X_0,X) ) ) != 0 )
-      my_stop("Y,X and X_0 need to be distinct index vectors", tmpFolder)
+      my_stop("Y, X and X_0 need to be distinct index vectors!",tmpFolder)
     
     # check if dimensions correspond -- higher dimensions gets an error
     if( length( c(Y,X,X_0) ) > nVariables )
-      my_stop("When the `data` argument is set, Y,X and X_0 need to be corresponding index vectors", tmpFolder)
+      my_stop("When the 'data' argument is set, Y,X and X_0 need to be corresponding index vectors!",tmpFolder)
     # equal dimensions are ok, but lower dimensions means some columns of the data will be disregarded ( set to -1  )
     
     # We can now init the blockList
@@ -263,6 +259,14 @@ BayesSUR <- function(Y, X, X_0 = NULL, data = NULL,
     
   }
   
+  # cleanup file PATHS
+  dataLength = nchar(data)
+  if( dataLength == 0 )
+    my_stop("Please provide a correct path to a plain-text (.txt) file", tmpFolder)
+  
+  # magicly strip '/' from the start and '.txt' from the end of the data file name
+  dataString = head( strsplit( tail( strsplit(data,split = c("/"))[[1]] , 1 ) , ".txt" )[[1]] , 1 ) 
+  
   ## Then init the structure graph
   # Consider that the indexes are written so that Y is 0 , X is 1 and (if there) X_0 is 2
   if ( length ( X_0 ) > 0 ){
@@ -275,16 +279,6 @@ BayesSUR <- function(Y, X, X_0 = NULL, data = NULL,
   write.table(structureGraph, paste(sep="",tmpFolder,"structureGraph.txt"), row.names = FALSE, col.names = FALSE)
   structureGraph = paste(sep="",tmpFolder,"structureGraph.txt")
   
-  
-  # cleanup file PATHS
-  dataLength = nchar(data)
-  if( dataLength == 0 )
-    my_stop("Please provide a correct path to a plain-text (.txt) file", tmpFolder)
-  
-  # magicly strip '/' from the start and '.txt' from the end of the data file name
-  dataString = head( strsplit( tail( strsplit(data,split = c("/"))[[1]] , 1 ) , ".txt" )[[1]] , 1 ) 
-  
-  
   # check how burnin was given
   if ( burnin < 0 ){
     my_stop("Burnin must be positive or 0",tmpFolder)
@@ -295,7 +289,14 @@ BayesSUR <- function(Y, X, X_0 = NULL, data = NULL,
   }}} # else assume is given as an absolute number
   
   ###############################
-  # prepare the print of hyperparameters corresponding the specified model
+  ## prepare the print of hyperparameters corresponding the specified model
+  # if( length(hyperpar) > 0 ){
+  #   match.hyperpar <- names(hyperpar) %in% c("a_w", "b_w", "a_o", "b_o", "a_pi", "b_pi", "nu", "a_tau", "b_tau", "a_eta", "b_eta", "a_sigma", "b_sigma", "mrf_d", "mrf_e")
+  #   if( sum(match.hyperpar)!=length(hyperpar) ){
+  #     warning(paste("Not valid hyperparameter:", names(hyperpar)[!match.hyperpar], "!"))
+  #   }
+  # }
+  
   hyperpar.all <- list(a_w=2, b_w=5, a_o=2, b_o=sum(blockLabels==1)-2, a_pi=NA, b_pi=NA, nu=sum(blockLabels==0)+2, a_tau=0.1, b_tau=10, a_eta=0.1, b_eta=1, a_sigma=1, b_sigma=1, mrf_d=-3, mrf_e=0.03)
   if(toupper(gammaPrior) %in% c("HOTSPOT", "HOTSPOTS", "HS")){
     hyperpar.all$a_pi <- 2
@@ -320,6 +321,8 @@ BayesSUR <- function(Y, X, X_0 = NULL, data = NULL,
       hyperpar.all <- hyperpar.all[-c(3:6,12:15)]
   }
   if( toupper(gammaPrior) %in% c("MRF", "MARKOV RANDOM FIELD")){
+    if ( is.null(mrfG) ) 
+      my_stop("Argument 'mrfG' was specified!",tmpFolder)
     
     if(toupper(covariancePrior) %in% c("INDEPENDENT", "INDEP", "IG"))
       hyperpar.all <- hyperpar.all[-c(3:6,7:13)]
@@ -356,13 +359,11 @@ BayesSUR <- function(Y, X, X_0 = NULL, data = NULL,
   {
     if ( is.null(mrfG) )
     {
-      cat( "Using default prior for Gamma - hotspot prior\n")
+      message( "Using default prior for Gamma - hotspot prior\n")
       #mrfG=""
       gammaPrior = "hotspot"
-    }
-    else
-    {
-      cat( "No value for gammaPrior was specified, but mrfG was given - choosing MRF prior\n")
+    }else{
+      message( "No value for gammaPrior was specified, but mrfG was given - choosing MRF prior\n")
       gammaPrior = "MRF"
     }
     
@@ -450,9 +451,9 @@ BayesSUR <- function(Y, X, X_0 = NULL, data = NULL,
   if ( output_beta )
     ret$output["beta"] = paste(sep="", dataString , "_",  methodString , "_beta_out.txt")
   
-  if ( covariancePrior == "HIW" & output_G ){
-    ret$output["G"] = paste(sep="", dataString , "_",  methodString , "_G_out.txt")
-    ret$output["Gvisit"] = paste(sep="", dataString , "_",  methodString , "_G_visit.txt")
+  if ( covariancePrior == "HIW" & output_Gy ){
+    ret$output["Gy"] = paste(sep="", dataString , "_",  methodString , "_Gy_out.txt")
+    ret$output["Gvisit"] = paste(sep="", dataString , "_",  methodString , "_Gy_visit.txt")
   }
   
   if ( covariancePrior %in% c("HIW","IW") & output_sigmaRho )
@@ -482,17 +483,21 @@ BayesSUR <- function(Y, X, X_0 = NULL, data = NULL,
   ret$status = BayesSUR_internal(data, mrfG, blockList, structureGraph, hyperParFile, outFilePath, 
                                  nIter, burnin, nChains, 
                                  covariancePrior, gammaPrior, gammaSampler, gammaInit, betaPrior, maxThreads,
-                                 output_gamma, output_beta, output_G, output_sigmaRho, output_pi, output_tail, output_model_size, output_CPO, output_model_visit)
+                                 output_gamma, output_beta, output_Gy, output_sigmaRho, output_pi, output_tail, output_model_size, output_CPO, output_model_visit)
+  
+  ## save fitted object
+  obj_BayesSUR = list(status=ret$status, input=ret$input, output=ret$output, call=ret$call)
+  save(obj_BayesSUR, file=paste(sep="",outFilePath,"obj_BayesSUR.RData"))
   
   if(outFilePath != tmpFolder)
     unlink(tmpFolder,recursive = TRUE)
   
   class(print) <- c(class(print), "BayesSUR")
   class(summary) <- c(class(summary), "BayesSUR")
-  class(plot) <- c(class(plot), "BayesSUR")
   class(fitted) <- c(class(fitted), "BayesSUR")
   class(predict) <- c(class(predict), "BayesSUR")
   class(coef) <- c(class(coef), "BayesSUR")
+  class(plot) <- c(class(plot), "BayesSUR")
   return(ret)
 }
 

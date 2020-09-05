@@ -27,7 +27,7 @@ int BayesSUR_internal(const std::string& dataFile, const std::string& mrfGFile, 
                     const std::string& gammaPrior="hotspot", const std::string& gammaSampler="bandit", 
                     const std::string& gammaInit = "MLE",
                     const std::string& betaPrior="independent", const int maxThreads=2,
-                    bool output_gamma = true, bool output_beta = true, bool output_G = true, bool output_sigmaRho = true, 
+                    bool output_gamma = true, bool output_beta = true, bool output_Gy = true, bool output_sigmaRho = true, 
                     bool output_pi = true, bool output_tail = true, bool output_model_size = true, bool output_CPO = true, bool output_model_visit = false )
 {
   int status {1};
@@ -36,7 +36,7 @@ int BayesSUR_internal(const std::string& dataFile, const std::string& mrfGFile, 
   {
     status =  drive(dataFile,mrfGFile,blockFile,structureGraphFile,hyperParFile,outFilePath,nIter,burnin,nChains,
                     covariancePrior,gammaPrior,gammaSampler,gammaInit,betaPrior,maxThreads,output_gamma, output_beta,
-                    output_G, output_sigmaRho, output_pi, output_tail, output_model_size, output_CPO, output_model_visit);
+                    output_Gy, output_sigmaRho, output_pi, output_tail, output_model_size, output_CPO, output_model_visit);
   }
   catch(const std::exception& e)
   {

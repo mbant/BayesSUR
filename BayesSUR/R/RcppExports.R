@@ -13,8 +13,8 @@
 #' NOTE THAT THIS IS BASICALLY JUST A WRAPPER
 NULL
 
-BayesSUR_internal <- function(dataFile, mrfGFile, blockFile, structureGraphFile, hyperParFile, outFilePath, nIter = 10L, burnin = 0L, nChains = 1L, covariancePrior = "HIW", gammaPrior = "hotspot", gammaSampler = "bandit", gammaInit = "MLE", betaPrior = "independent", maxThreads = 2L, output_gamma = TRUE, output_beta = TRUE, output_G = TRUE, output_sigmaRho = TRUE, output_pi = TRUE, output_tail = TRUE, output_model_size = TRUE, output_CPO = TRUE, output_model_visit = FALSE) {
-    .Call('_BayesSUR_BayesSUR_internal', PACKAGE = 'BayesSUR', dataFile, mrfGFile, blockFile, structureGraphFile, hyperParFile, outFilePath, nIter, burnin, nChains, covariancePrior, gammaPrior, gammaSampler, gammaInit, betaPrior, maxThreads, output_gamma, output_beta, output_G, output_sigmaRho, output_pi, output_tail, output_model_size, output_CPO, output_model_visit)
+BayesSUR_internal <- function(dataFile, mrfGFile, blockFile, structureGraphFile, hyperParFile, outFilePath, nIter = 10L, burnin = 0L, nChains = 1L, covariancePrior = "HIW", gammaPrior = "hotspot", gammaSampler = "bandit", gammaInit = "MLE", betaPrior = "independent", maxThreads = 2L, output_gamma = TRUE, output_beta = TRUE, output_Gy = TRUE, output_sigmaRho = TRUE, output_pi = TRUE, output_tail = TRUE, output_model_size = TRUE, output_CPO = TRUE, output_model_visit = FALSE) {
+    .Call('_BayesSUR_BayesSUR_internal', PACKAGE = 'BayesSUR', dataFile, mrfGFile, blockFile, structureGraphFile, hyperParFile, outFilePath, nIter, burnin, nChains, covariancePrior, gammaPrior, gammaSampler, gammaInit, betaPrior, maxThreads, output_gamma, output_beta, output_Gy, output_sigmaRho, output_pi, output_tail, output_model_size, output_CPO, output_model_visit)
 }
 
 randU01 <- function() {

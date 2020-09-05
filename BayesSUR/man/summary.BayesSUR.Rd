@@ -7,18 +7,18 @@
 \method{summary}{BayesSUR}(object, Pmax = 0.5, ...)
 }
 \arguments{
-\item{object}{an object of class "BayesSUR"}
+\item{object}{an object of class \code{BayesSUR}}
 
 \item{Pmax}{threshold that truncates the estimated coefficients based on thresholding the estimated latent indicator variable. Default is 0.5}
 
 \item{...}{other arguments}
 }
 \value{
-Return a result summary from an object of class "BayesSUR", including the CPOs, number of selected predictors with mPIP>\code{Pmax}, top 10 predictors on average mPIP across all responses,
+Return a result summary from an object of class \code{BayesSUR}, including the CPOs, number of selected predictors with mPIP>\code{Pmax}, top 10 predictors on average mPIP across all responses,
 top 10 responses on average mPIP across all predictors, Expected log pointwise predictive density (elpd) estimates, MCMC specification, model specification (i.e., covariance prior and gamma prior) and hyper-parameters.
 }
 \description{
-Summary method for class "BayesSUR". It includes the argument matching information, Top predictors/responses on average mPIP across all responses/predictors, 
+Summary method for class \code{BayesSUR}. It includes the argument matching information, Top predictors/responses on average mPIP across all responses/predictors, 
 elpd estimates, MCMC specification, model specification and hyper-parameters. The summarized number of the selected variable corresponds to the posterior 
 mean of the latent indicator variable thresholding at 0.5 by default.
 }
