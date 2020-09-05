@@ -25,7 +25,7 @@ devtools::install_github("mbant/BayesSUR/BayesSUR")
 ### New in version `BayesSUR_1.2-2.tar.gz` (05 September 2020):
 
 1) Changed to the S3 method `plot()` function for all plots with two arguments `estimator` and `type`.
-2) Corresponding to the change of ``plot()` function`, there were changes of `get.estimator()`, `plotEstimator()`, `plotGraph()`, `plotNetwork()`, `plotManhattan()`, `plotMCMC()` and `plotCPO()`.
+2) Corresponding to the change of `plot()` function, there were changes of `get.estimator()`, `plotEstimator()`, `plotGraph()`, `plotNetwork()`, `plotManhattan()`, `plotMCMC()` and `plotCPO()`.
 3) Minor changes of C++ code.
 
 ### verion `BayesSUR_1.2-1.tar.gz` (19 July 2020):
