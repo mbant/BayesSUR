@@ -2,7 +2,7 @@
 % Please edit documentation in R/fitted.BayesSUR.R
 \name{fitted.BayesSUR}
 \alias{fitted.BayesSUR}
-\title{getting fitted responses from a \code{BayesSUR} object}
+\title{get fitted responses from a \code{BayesSUR} object}
 \usage{
 \method{fitted}{BayesSUR}(object, Pmax = 0, beta.type = "marginal", ...)
 }
