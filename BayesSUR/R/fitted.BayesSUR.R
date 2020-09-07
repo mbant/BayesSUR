@@ -1,4 +1,4 @@
-#' @title getting fitted responses from a \code{BayesSUR} object
+#' @title get fitted responses from a \code{BayesSUR} object
 #' @description
 #' Return the fitted response values that correspond to the posterior mean estimates from a \code{BayesSUR} class object.
 #' @name fitted.BayesSUR
