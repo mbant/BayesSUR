@@ -58,13 +58,13 @@ because it may be used to identify outliers, influential observations, and for h
 The default threshold for the CPOs to detect the outliers is 0.01 by Congdon (2005). It can be tuned by the argument \code{outlier.thresh}.
 }
 \examples{
-data("example_eQTL", package = "BayesSUR")
+data("exampleEQTL", package = "BayesSUR")
 hyperpar <- list( a_w = 2 , b_w = 5 )
 
 set.seed(9173)
-fit <- BayesSUR(Y = example_eQTL[["blockList"]][[1]], 
-                X = example_eQTL[["blockList"]][[2]],
-                data = example_eQTL[["data"]], outFilePath = tempdir(),
+fit <- BayesSUR(Y = exampleEQTL[["blockList"]][[1]], 
+                X = exampleEQTL[["blockList"]][[2]],
+                data = exampleEQTL[["data"]], outFilePath = tempdir(),
                 nIter = 100, burnin = 50, nChains = 2, gammaPrior = "hotspot",
                 hyperpar = hyperpar, tmpFolder = "tmp/", output_CPO=TRUE)
 

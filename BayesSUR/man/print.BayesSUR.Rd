@@ -2,7 +2,7 @@
 % Please edit documentation in R/print.BayesSUR.R
 \name{print.BayesSUR}
 \alias{print.BayesSUR}
-\title{print a short summary of the Bayesian Seemingly Unrelated Regressions Fits}
+\title{print method for class \code{BayesSUR}}
 \usage{
 \method{print}{BayesSUR}(x, Pmax = 0.5, ...)
 }
@@ -21,13 +21,13 @@ Print a short summary of a "BayesSUR" class object. It includes the argument mat
 number of selected predictors based on thresholding the posterior mean of the latent indicator variable at 0.5 by default.
 }
 \examples{
-data("example_eQTL", package = "BayesSUR")
+data("exampleEQTL", package = "BayesSUR")
 hyperpar = list( a_w = 2 , b_w = 5 )
 
 set.seed(9173)
-fit <- BayesSUR(Y = example_eQTL[["blockList"]][[1]], 
-                X = example_eQTL[["blockList"]][[2]],
-                data = example_eQTL[["data"]], outFilePath = tempdir(),
+fit <- BayesSUR(Y = exampleEQTL[["blockList"]][[1]], 
+                X = exampleEQTL[["blockList"]][[2]],
+                data = exampleEQTL[["data"]], outFilePath = tempdir(),
                 nIter = 100, burnin = 50, nChains = 2, gammaPrior = "hotspot",
                 hyperpar = hyperpar, tmpFolder = "tmp/", output_CPO=TRUE)
 

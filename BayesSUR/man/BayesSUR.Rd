@@ -3,7 +3,7 @@
 \docType{package}
 \name{BayesSUR}
 \alias{BayesSUR}
-\title{main function of the package}
+\title{Fitting BayesSUR models}
 \usage{
 BayesSUR(
   data = NULL,
@@ -16,7 +16,6 @@ BayesSUR(
   burnin = 5000,
   nChains = 2,
   outFilePath = "",
-  betaPrior = "independent",
   gammaSampler = "bandit",
   gammaInit = "R",
   mrfG = NULL,
@@ -39,29 +38,26 @@ BayesSUR(
 )
 }
 \arguments{
-\item{data}{a matrix with variables on the columns and observations on the rows if arguments Y and X are vectors. Can be \code{NULL} if arguments Y and X are matrices.}
+\item{data}{a numeric matrix with variables on the columns and observations on the rows, if arguments \code{Y} and \code{X} (and possibly \code{X_0}) are vectors. Can be \code{NULL} if arguments \code{Y} and \code{X} (and possibly \code{X_0}) are numeric matrices.}
 
-\item{Y, X}{vectors of indexes (with respect to the \code{data} matrix) for the outcomes and the covariates to select respectively;
-if the \code{data} argument is not provided, these needs to be matrices containing the data instead.}
+\item{Y, X}{vectors of indices (with respect to the data matrix) for the outcomes (\code{Y}) and the predictors to select (\code{X}) respectively; if the data argument is not provided, these needs to be numeric matrices containing the data instead, with variables on the columns and observations on the rows.}
 
-\item{X_0}{vectors of indexes (with respect to the data matrix) for the fixed covariates; if the \code{data} argument is not provided, this needs to be a matrix containing the data instead.}
+\item{X_0}{vectors of indices (with respect to the data matrix) for the fixed predictors that are not selected, i.e. always included in the model; if the data argument is not provided, this needs to be a numeric matrix containing the data instead, with variables on the columns and observations on the rows.}
 
 \item{covariancePrior}{string indicating the prior for the covariance $C$; it has to be either \code{HIW} for the hyper-inverse-Wishar (which will result in a sparse covariance matrix),
 \code{IW} for the inverse-Wishart prior ( dense covariance ) or \code{IG} for independent inverse-Gamma on all the diagonal elements and 0 otherwise. See the details for the model specification}
 
 \item{gammaPrior}{string indicating the gamma prior to use, either \code{hotspot} (default) for the Hotspot prior of Bottolo (2011), \code{MRF} for the Markov Random Field prior or \code{hierarchical} for a simpler hierarchical prior. See the details for the model specification}
 
-\item{nIter}{number of iterations for the MCMC procedure.}
+\item{nIter}{number of iterations for the MCMC procedure. Default 10000.}
 
-\item{burnin}{number of iterations (or fraction of iterations) to discard at the start of the chain. Default is 0.}
+\item{burnin}{number of iterations to discard at the start of the chain. Default is 5000.}
 
-\item{nChains}{number of parallel chains to run.}
+\item{nChains}{number of parallel tempered chains to run (default 2). The temperature is adapted during the burnin phase.}
 
 \item{outFilePath}{path to where the output files are to be written. The default path is the currect working directory.}
 
-\item{betaPrior}{string indicating the beta prior to use, either \code{independent} for the independent spike-and-slab prior or \code{reGroup} for the random effects for \code{X_0} and independent spike-and-slab priors for other predictors}
-
-\item{gammaSampler}{string indicating the type of sampler for gamma, either \code{bandit} for the Thompson sampling inspired samper or \code{MC3} for the usual $MC^3$ sampler}
+\item{gammaSampler}{string indicating the type of sampler for gamma, either \code{bandit} for the Thompson sampling inspired samper or \code{MC3} for the usual MC^3 sampler.  See Russo et al.(2018) or Madigan and York (1995) for details.}
 
 \item{gammaInit}{gamma initialisation to either all-zeros (\code{0}), all ones (\code{1}), MLE-informed (\code{MLE}) or (default) randomly (\code{R}).}
 
@@ -71,7 +67,7 @@ if the \code{data} argument is not provided, these needs to be matrices containi
 
 \item{standardize.response}{Standardization for the response variables. Default is standardize.response=TRUE.}
 
-\item{maxThreads}{maximum threads used for parallelization. Default is 1.}
+\item{maxThreads}{maximum threads used for parallelization. Default is 1. Reproducibility of results with \code{set.seed()} is only guaranteed if \code{maxThreads=1}.}
 
 \item{output_gamma}{allow ( \code{TRUE} ) or suppress ( \code{FALSE} ) the output for  gamma. See the return value below for more information.}
 
@@ -145,12 +141,12 @@ The nine models specified through the arguments \code{covariancePrior} and \code
 }
 }
 \examples{
-data("example_eQTL", package = "BayesSUR")
+data("exampleEQTL", package = "BayesSUR")
 hyperpar <- list( a_w = 2 , b_w = 5 )
 set.seed(9173)
-fit <- BayesSUR(Y = example_eQTL[["blockList"]][[1]], 
-                X = example_eQTL[["blockList"]][[2]],
-                data = example_eQTL[["data"]], outFilePath = tempdir(),
+fit <- BayesSUR(Y = exampleEQTL[["blockList"]][[1]], 
+                X = exampleEQTL[["blockList"]][[2]],
+                data = exampleEQTL[["data"]], outFilePath = tempdir(),
                 nIter = 100, burnin = 50, nChains = 2, gammaPrior = "hotspot",
                 hyperpar = hyperpar, tmpFolder = "tmp/", output_CPO=TRUE)
 
@@ -175,6 +171,10 @@ setwd(oldwd)
 
 }
 \references{
+Russo D, Van Roy B, Kazerouni A, Osband I, Wen Z (2018). \emph{A tutorial on Thompson sampling.} Foundations and Trends in Machine Learning, 11: 1-96.
+
+Madigan D, York J (1995). \emph{Bayesian graphical models for discrete data.} International Statistical Review, 63: 215–232.
+
 Banterle M, Bottolo L, Richardson S, Ala-Korpela M, Jarvelin MR, Lewin A (2018). \emph{Sparse variable and covariance selection for high-dimensional seemingly unrelated Bayesian regression.} bioRxiv: 467019.
 
 Banterle M#, Zhao Z#, Bottolo L, Richardson S, Lewin A, Zucknick M (2019). \emph{BayesSUR: An R package for high-dimensional multivariate Bayesian variable and covariance selection in linear regression.} URL: https://cran.r-project.org/web/packages/BayesSUR/vignettes/BayesSUR.pdf

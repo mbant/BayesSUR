@@ -33,13 +33,13 @@
 #' @param ... other arguments
 #' 
 #' @examples
-#' data("example_eQTL", package = "BayesSUR")
+#' data("exampleEQTL", package = "BayesSUR")
 #' hyperpar <- list( a_w = 2 , b_w = 5 )
 #' 
 #' set.seed(9173)
-#' fit <- BayesSUR(Y = example_eQTL[["blockList"]][[1]], 
-#'                 X = example_eQTL[["blockList"]][[2]],
-#'                 data = example_eQTL[["data"]], outFilePath = tempdir(),
+#' fit <- BayesSUR(Y = exampleEQTL[["blockList"]][[1]], 
+#'                 X = exampleEQTL[["blockList"]][[2]],
+#'                 data = exampleEQTL[["data"]], outFilePath = tempdir(),
 #'                 nIter = 100, burnin = 50, nChains = 2, gammaPrior = "hotspot",
 #'                 hyperpar = hyperpar, tmpFolder = "tmp/" )
 #' 
@@ -98,6 +98,10 @@ plotNetwork <- function(x, includeResponse=NULL, excludeResponse=NULL, includePr
   }else{
     Gy_thresh <- as.matrix( Gy_hat > PmaxResponse )
     gamma_thresh <- as.matrix(gamma_hat>PmaxPredictor)
+  }
+  
+  if( sum(rowSums(gamma_thresh)!=0) == 0 ){
+    stop(paste("There were no predictors with mPIP gamma > ", PmaxPredictor, ". Not able to draw a network!", sep=""))
   }
   
   gamma_thresh <- matrix(gamma_thresh[rowSums(gamma_thresh)!=0,], ncol=ncol(gamma_hat))

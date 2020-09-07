@@ -1,16 +1,22 @@
-#' @title indices list of target genes in the GDSC data set
+#' @title Preprocessed data set to mimic a small pharmacogenetic example
+#'
 #' @description 
-#' Indices list of target genes corresponding the \code{example_GDSC} data set. It has two components representing the gene indices of the MAPK/ERK pathway and BCR-ABL gene fusion in the \code{example_GDSC} data set. 
+#' Preprocessed data set to mimic a small pharmacogenetic example from the Genomics of Drug Sensitivity in Cancer (GDSC) database, with p=850 gene features as explanatory variables, 
+#' s=7 drugs sensitivity data as response variables and data for n=498 cell lines. Gene features include p1=343 gene expression features (GEX), p2=426 by copy number variations (CNV) and p3=68 mutated genes (MUT).
+#' Loading the data will load the associated blockList (and mrfG) objects needed to fit the model with BayesSUR(). The R code for generating the simulated data is given in the Examples paragraph.
+#' 
+#' #importFrom plyr mapvalues
+#' #importFrom data.table like
 #' 
 #' @examples
-#' # Load the indices of gene targets from the GDSC sample dataset
-#' data("targetGene", package = "BayesSUR")
-#' str(targetGene)
+#' # Load the GDSC sample dataset
+#' data("exampleGDSC", package = "BayesSUR")
+#' str(exampleGDSC)
 #' 
 #' \dontrun{
 #' #===============
 #' # This code below is to do preprocessing of GDSC data and obtain the complete dataset
-#' # "targetGene.rda" above. The user needs load the datasets from 
+#' # "exampleGDSC.rda" above. The user needs load the datasets from 
 #' # ftp://ftp.sanger.ac.uk/pub4/cancerrxgene/releases/release-5.0/. 
 #' # But downloading and transforming the three used datasets below to *.csv files first.
 #' #===============
@@ -130,8 +136,8 @@
 #' X1 <- log(X1)
 #' 
 #' # summary the data information
-#' example_GDSC <- list( data=cbind( YX0, X1, X23 ) )
-#' example_GDSC$blockList <- list(1:length(name_drugs), length(name_drugs)+1:GDSC$num.nonpen, 
+#' exampleGDSC <- list( data=cbind( YX0, X1, X23 ) )
+#' exampleGDSC$blockList <- list(1:length(name_drugs), length(name_drugs)+1:GDSC$num.nonpen, 
 #'                                ncol(YX0)+1:sum(p))
 #' 
 #' #========================
@@ -167,18 +173,18 @@
 #' }
 #' Gmrf_duplicate <- rbind(  Gmrf_Group1Pathway1, Gmrf_Group2Pathway2, Gmrf_CommonGene )
 #' Gmrf <- Gmrf_duplicate[!duplicated(Gmrf_duplicate),]
-#' example_GDSC$mrfG <- Gmrf
+#' exampleGDSC$mrfG <- Gmrf
 #' 
 #' # create the target gene names of the two groups of drugs
 #' targetGenes1 <- matrix(Idx_Pathway1,nrow=1)
-#' colnames(targetGenes1) <- colnames(example_GDSC$data)[seq_along(targetGene$group1)]
+#' colnames(targetGenes1) <- colnames(exampleGDSC$data)[seq_along(targetGene$group1)]
 #' targetGenes2 <- matrix(Idx_Pathway2,nrow=1)
-#' colnames(targetGenes2) <- colnames(example_GDSC$data)[seq_along(targetGene$group2)]
+#' colnames(targetGenes2) <- colnames(exampleGDSC$data)[seq_along(targetGene$group2)]
 #' 
 #' targetGene <- list(group1=targetGenes1, group2=targetGenes2)
 #' 
-#' ## Write data file targetGene.rda to the user's directory by save()
+#' ## Write data file exampleGDSC.rda to the user's directory by save()
 #' 
 #' }
 #'
-"targetGene"
+"exampleGDSC"

@@ -1,4 +1,4 @@
-#' @title main function of the package
+#' @title Fitting BayesSUR models
 #' @description
 #' Main function of the package. Fits a range of models introduced in the package vignette \code{BayesSUR.pdf}. Returns an object of S3 class BayesSUR. 
 #' There are three options for the prior on the residual covariance matrix (i.e., independent inverse-Gamma, inverse-Wishart and hyper-inverse Wishart) 
@@ -12,26 +12,24 @@
 #' @importFrom xml2 as_xml_document write_xml
 #' 
 #' @name BayesSUR
-#' @param data a matrix with variables on the columns and observations on the rows if arguments Y and X are vectors. Can be \code{NULL} if arguments Y and X are matrices.
-#' @param Y,X vectors of indexes (with respect to the \code{data} matrix) for the outcomes and the covariates to select respectively;
-#' if the \code{data} argument is not provided, these needs to be matrices containing the data instead.
-#' @param X_0 vectors of indexes (with respect to the data matrix) for the fixed covariates; if the \code{data} argument is not provided, this needs to be a matrix containing the data instead.
-#' @param outFilePath path to where the output files are to be written. The default path is the currect working directory.
-#' @param nIter number of iterations for the MCMC procedure.
-#' @param burnin number of iterations (or fraction of iterations) to discard at the start of the chain. Default is 0.
-#' @param nChains number of parallel chains to run.
+#' @param data a numeric matrix with variables on the columns and observations on the rows, if arguments \code{Y} and \code{X} (and possibly \code{X_0}) are vectors. Can be \code{NULL} if arguments \code{Y} and \code{X} (and possibly \code{X_0}) are numeric matrices.
+#' @param Y,X vectors of indices (with respect to the data matrix) for the outcomes (\code{Y}) and the predictors to select (\code{X}) respectively; if the data argument is not provided, these needs to be numeric matrices containing the data instead, with variables on the columns and observations on the rows.
+#' @param X_0 vectors of indices (with respect to the data matrix) for the fixed predictors that are not selected, i.e. always included in the model; if the data argument is not provided, this needs to be a numeric matrix containing the data instead, with variables on the columns and observations on the rows.
 #' @param covariancePrior string indicating the prior for the covariance $C$; it has to be either \code{HIW} for the hyper-inverse-Wishar (which will result in a sparse covariance matrix),
 #' \code{IW} for the inverse-Wishart prior ( dense covariance ) or \code{IG} for independent inverse-Gamma on all the diagonal elements and 0 otherwise. See the details for the model specification
 #' @param gammaPrior string indicating the gamma prior to use, either \code{hotspot} (default) for the Hotspot prior of Bottolo (2011), \code{MRF} for the Markov Random Field prior or \code{hierarchical} for a simpler hierarchical prior. See the details for the model specification
-#' @param betaPrior string indicating the beta prior to use, either \code{independent} for the independent spike-and-slab prior or \code{reGroup} for the random effects for \code{X_0} and independent spike-and-slab priors for other predictors
-#' @param gammaSampler string indicating the type of sampler for gamma, either \code{bandit} for the Thompson sampling inspired samper or \code{MC3} for the usual $MC^3$ sampler
+#' @param nIter number of iterations for the MCMC procedure. Default 10000.
+#' @param burnin number of iterations to discard at the start of the chain. Default is 5000.
+#' @param nChains number of parallel tempered chains to run (default 2). The temperature is adapted during the burnin phase.
+#' @param outFilePath path to where the output files are to be written. The default path is the currect working directory.
+#' @param gammaSampler string indicating the type of sampler for gamma, either \code{bandit} for the Thompson sampling inspired samper or \code{MC3} for the usual MC^3 sampler.  See Russo et al.(2018) or Madigan and York (1995) for details.
 #' @param gammaInit gamma initialisation to either all-zeros (\code{0}), all ones (\code{1}), MLE-informed (\code{MLE}) or (default) randomly (\code{R}).
 #' @param mrfG either a matrix or a path to the file containing the G matrix for the MRF prior on gamma (if necessary)
 #' @param standardize logical flag for X variable standardization. Default is standardize=TRUE. The coefficients are returned on the standardized scale.
 #' @param standardize.response Standardization for the response variables. Default is standardize.response=TRUE.
 #' @param hyperpar a list of named hypeparameters to use instead of the default values. Valid names are mrf_d, mrf_e, a_sigma, b_sigma, a_tau, b_tau, nu, a_eta, b_eta, a_o, b_o, a_pi, b_pi, a_w and b_w. 
 #' Their default values are a_w=2, b_w=5, a_omega=2, b_omega=1, a_o=2, b_o=p-2, a_pi=2, b_pi=1, nu=s+2, a_tau=0.1, b_tau=10, a_eta=0.1, b_eta=1, a_sigma=1, b_sigma=1, mrf_d=-3 and mrf_e=0.03. See the vignette for more information.
-#' @param maxThreads maximum threads used for parallelization. Default is 1.
+#' @param maxThreads maximum threads used for parallelization. Default is 1. Reproducibility of results with \code{set.seed()} is only guaranteed if \code{maxThreads=1}.
 #' @param output_gamma allow ( \code{TRUE} ) or suppress ( \code{FALSE} ) the output for  gamma. See the return value below for more information.
 #' @param output_beta allow ( \code{TRUE} ) or suppress ( \code{FALSE} ) the output for beta. See the return value below for more information.
 #' @param output_Gy allow ( \code{TRUE} ) or suppress ( \code{FALSE} ) the output for Gy. See the return value below for more information.
@@ -81,16 +79,18 @@
 #' \item call - the matched call.
 #' }
 #' 
+#' @references Russo D, Van Roy B, Kazerouni A, Osband I, Wen Z (2018). \emph{A tutorial on Thompson sampling.} Foundations and Trends in Machine Learning, 11: 1-96.
+#' @references Madigan D, York J (1995). \emph{Bayesian graphical models for discrete data.} International Statistical Review, 63: 215–232.
 #' @references Banterle M, Bottolo L, Richardson S, Ala-Korpela M, Jarvelin MR, Lewin A (2018). \emph{Sparse variable and covariance selection for high-dimensional seemingly unrelated Bayesian regression.} bioRxiv: 467019.
 #' @references Banterle M#, Zhao Z#, Bottolo L, Richardson S, Lewin A, Zucknick M (2019). \emph{BayesSUR: An R package for high-dimensional multivariate Bayesian variable and covariance selection in linear regression.} URL: https://cran.r-project.org/web/packages/BayesSUR/vignettes/BayesSUR.pdf
 #' 
 #' @examples
-#' data("example_eQTL", package = "BayesSUR")
+#' data("exampleEQTL", package = "BayesSUR")
 #' hyperpar <- list( a_w = 2 , b_w = 5 )
 #' set.seed(9173)
-#' fit <- BayesSUR(Y = example_eQTL[["blockList"]][[1]], 
-#'                 X = example_eQTL[["blockList"]][[2]],
-#'                 data = example_eQTL[["data"]], outFilePath = tempdir(),
+#' fit <- BayesSUR(Y = exampleEQTL[["blockList"]][[1]], 
+#'                 X = exampleEQTL[["blockList"]][[2]],
+#'                 data = exampleEQTL[["data"]], outFilePath = tempdir(),
 #'                 nIter = 100, burnin = 50, nChains = 2, gammaPrior = "hotspot",
 #'                 hyperpar = hyperpar, tmpFolder = "tmp/", output_CPO=TRUE)
 #' 
@@ -117,8 +117,7 @@
 BayesSUR <- function(data = NULL, Y, X, X_0 = NULL, 
                      covariancePrior = "HIW", gammaPrior = "hotspot",
                      nIter = 10000, burnin = 5000, nChains = 2, 
-                     outFilePath = "", betaPrior = "independent",
-                     gammaSampler = "bandit", gammaInit = "R", mrfG = NULL,
+                     outFilePath = "", gammaSampler = "bandit", gammaInit = "R", mrfG = NULL,
                      standardize = TRUE, standardize.response = TRUE, maxThreads = 1,
                      output_gamma = TRUE, output_beta = TRUE, output_Gy = TRUE, output_sigmaRho = TRUE,
                      output_pi = TRUE, output_tail = TRUE, output_model_size = TRUE, output_model_visit = FALSE, 
@@ -143,7 +142,7 @@ BayesSUR <- function(data = NULL, Y, X, X_0 = NULL,
   if(!file.exists(tmpFolder))
     dir.create(tmpFolder)
   
-  
+  betaPrior = "independent"
   ## Check the input: reasoning is that the user provides either
   # a data matrix or a data path-to-file
   #     - in this case Y, X (and X_0) need to be provided as vectors of indexes 

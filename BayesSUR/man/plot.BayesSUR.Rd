@@ -4,20 +4,20 @@
 \alias{plot.BayesSUR}
 \title{create a selection of plots for a \code{BayesSUR} class object}
 \usage{
-\method{plot}{BayesSUR}(x, estimator = NA, type = NA, ...)
+\method{plot}{BayesSUR}(x, estimator = NULL, type = NULL, ...)
 }
 \arguments{
 \item{x}{an object of class \code{BayesSUR}}
 
-\item{estimator}{It is in \code{c(NA, 'beta', 'gamma', 'Gy', 'logP', 'CPO')} and works by combining with argument \code{type}.
+\item{estimator}{It is in \code{c(NULL, 'beta', 'gamma', 'Gy', 'logP', 'CPO')} and works by combining with argument \code{type}.
 \itemize{
   \item If \code{estimator} is in \code{c("beta", "gamma", "Gy")} and argument \code{type="heatmap"}, it prints heatmaps of the specified estimator in \code{estimator}, and refers to function \code{plotEstimator()} for more other arguments.
   \item If \code{estimator="Gy"} and argument \code{type="graph"}, it prints a structure graph of \code{"Gy"}, and refers to function \code{plotGraph()} for more other arguments.
   \item If \code{estimator=c("gamma", "Gy")} and argument \code{type="network"}, it prints the estimated network between the response variables and predictors with nonzero coefficients, and refers to function \code{plotMCMCdiag()} for more other arguments.
-  \item If \code{estimator=NA} (default) and \code{type="NA"} (default), it interactively prints the plots of estimators (i.e., beta, gamma and (or) Gy), response graph Gy, network, Manhattan and MCMC diagnostics.
+  \item If \code{estimator=NULL} (default) and \code{type=NULL} (default), it interactively prints the plots of estimators (i.e., beta, gamma and (or) Gy), response graph Gy, network, Manhattan and MCMC diagnostics.
 }}
 
-\item{type}{It is one of \code{"NA"}, \code{"heatmap"}, \code{"graph"}, \code{"network"}, \code{"Manhattan"} and \code{"diagnostics"}, and works by combining with argument \code{estimator}.
+\item{type}{It is one of \code{NULL}, \code{"heatmap"}, \code{"graph"}, \code{"network"}, \code{"Manhattan"} and \code{"diagnostics"}, and works by combining with argument \code{estimator}.
 \itemize{
   \item If \code{type="Manhattan"} and argument \code{estimator="gamma"}, it prints Manhattan-like plots for marginal posterior inclusion probabilities (mPIP) and numbers of associated response variables for individual predictors, and refers to function \code{plotManhattan()} for more other arguments.
   \item If \code{type="diagnostics"} and argument \code{estimator="logP"} it shows trace plots and diagnostic density plots of a fitted model, and refers to function \code{plotMCMCdiag()} for more other arguments.
@@ -27,21 +27,22 @@
 \item{...}{other arguments, see functions \code{plotEstimator()}, \code{plotGraph()}, \code{plotNetwork()}, \code{plotManhattan()}, \code{plotMCMCdiag()} or \code{plotCPO()}}
 }
 \description{
-Convenience function to create a selection of plots for a \code{BayesSUR} class object. They are plots of estimators, estimated graph Gy, network, Manhattan, MCMC diagnostics and conditional predictive ordinates.
+plot method for class \code{BayesSUR}. This is the main plot function to be called by the user. This function calls one or several of the following functions: 
+\code{plotEstimator()}, \code{plotGraph()}, \code{plotMCMCdiag()}, \code{plotManhattan()}, \code{plotNetwork()}, \code{plotCPO()}.
 }
 \examples{
-data("example_eQTL", package = "BayesSUR")
+data("exampleEQTL", package = "BayesSUR")
 hyperpar = list( a_w = 2 , b_w = 5 )
 
 set.seed(9173)
-fit <- BayesSUR(Y = example_eQTL[["blockList"]][[1]], 
-                X = example_eQTL[["blockList"]][[2]],
-                data = example_eQTL[["data"]], outFilePath = tempdir(),
+fit <- BayesSUR(Y = exampleEQTL[["blockList"]][[1]], 
+                X = exampleEQTL[["blockList"]][[2]],
+                data = exampleEQTL[["data"]], outFilePath = tempdir(),
                 nIter = 100, burnin = 0, nChains = 2, gammaPrior = "hotspot",
                 hyperpar = hyperpar, tmpFolder = "tmp/" )
 
 ## check output
-\donttest{
+\dontrun{
 # Show the interactive plots. Note that it needs at least 2000*(nbloc+1) iterations 
 # for the diagnostic plots where nbloc=3 by default 
 plot(fit)

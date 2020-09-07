@@ -2,7 +2,7 @@
 % Please edit documentation in R/summary.BayesSUR.R
 \name{summary.BayesSUR}
 \alias{summary.BayesSUR}
-\title{summarizing Bayesian Seemingly Unrelated Regressions Fits}
+\title{summary method for class \code{BayesSUR}}
 \usage{
 \method{summary}{BayesSUR}(object, Pmax = 0.5, ...)
 }
@@ -23,13 +23,13 @@ elpd estimates, MCMC specification, model specification and hyper-parameters. Th
 mean of the latent indicator variable thresholding at 0.5 by default.
 }
 \examples{
-data(example_eQTL, package = "BayesSUR")
+data(exampleEQTL, package = "BayesSUR")
 hyperpar = list( a_w = 2 , b_w = 5 )
 
 set.seed(9173)
-fit <- BayesSUR(Y = example_eQTL[["blockList"]][[1]], 
-                X = example_eQTL[["blockList"]][[2]],
-                data = example_eQTL[["data"]], outFilePath = tempdir(),
+fit <- BayesSUR(Y = exampleEQTL[["blockList"]][[1]], 
+                X = exampleEQTL[["blockList"]][[2]],
+                data = exampleEQTL[["data"]], outFilePath = tempdir(),
                 nIter = 100, burnin = 50, nChains = 2, gammaPrior = "hotspot",
                 hyperpar = hyperpar, tmpFolder = "tmp/", output_CPO=TRUE)
 

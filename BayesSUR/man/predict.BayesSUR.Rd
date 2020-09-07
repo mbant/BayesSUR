@@ -9,19 +9,22 @@
   newx,
   type = c("response", "coefficients", "nonzero"),
   Pmax = 0,
+  beta.type = "marginal",
   ...
 )
 }
 \arguments{
-\item{object}{an object of class "BayesSUR"}
+\item{object}{an object of class \code{BayesSUR}}
 
 \item{newx}{Matrix of new values for x at which predictions are to be made. Must be a matrix}
 
-\item{type}{Type of prediction required. Type "response" gives the fitted responses. Type "coefficients" computes the coefficients 
-truncated the estimated coefficients based on thresholding the estimated latent indicator variable at \code{Pmax}. 
-Type "nonzero" returns a list of the indices of the nonzero coefficients corresponding to the estimated latent indicator variable thresholding at \code{Pmax}}
+\item{type}{Type of prediction required. \code{type="response"} gives the fitted responses; \code{type="coefficients"} computes the coefficients 
+truncated the estimated coefficients based on thresholding the estimated latent indicator variable at \code{Pmax};
+\code{type="nonzero"} returns a list of the indices of the nonzero coefficients corresponding to the estimated latent indicator variable thresholding at \code{Pmax}}
 
 \item{Pmax}{threshold that truncates the estimated coefficients based on thresholding the estimated latent indicator variable. Default is 0.}
+
+\item{beta.type}{the type of estimated coefficients beta for prediction. Default is \code{marginal}, giving marginal beta estimation. If \code{beta.type="conditional"}, it gives conditional beta estimation}
 
 \item{...}{other arguments}
 }
@@ -32,17 +35,17 @@ Predicted values extracted from an object of class "BayesSUR". If the \code{Baye
 Predict responses corresponding to the posterior mean of the coefficients, return posterior mean of coefficients or indices of nonzero coefficients of a "BayesSUR" class object.
 }
 \examples{
-data("example_eQTL", package = "BayesSUR")
+data("exampleEQTL", package = "BayesSUR")
 hyperpar <- list( a_w = 2 , b_w = 5 )
 
 set.seed(9173)
-fit <- BayesSUR(Y = example_eQTL[["blockList"]][[1]], 
-                X = example_eQTL[["blockList"]][[2]],
-                data = example_eQTL[["data"]], outFilePath = tempdir(),
+fit <- BayesSUR(Y = exampleEQTL[["blockList"]][[1]], 
+                X = exampleEQTL[["blockList"]][[2]],
+                data = exampleEQTL[["data"]], outFilePath = tempdir(),
                 nIter = 100, burnin = 50, nChains = 2, gammaPrior = "hotspot",
                 hyperpar = hyperpar, tmpFolder = "tmp/" )
 
 ## check prediction
-predict.val <- predict(fit, newx=example_eQTL[["blockList"]][[2]])
+predict.val <- predict(fit, newx=exampleEQTL[["blockList"]][[2]])
 
 }

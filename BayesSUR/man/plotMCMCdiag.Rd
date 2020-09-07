@@ -2,7 +2,7 @@
 % Please edit documentation in R/plotMCMCdiag.R
 \name{plotMCMCdiag}
 \alias{plotMCMCdiag}
-\title{show trace plots and diagnostic density plots}
+\title{plot MCMC diagnostic plots}
 \usage{
 plotMCMCdiag(x, nbloc = 3, HIWg = NULL, header = "", ...)
 }
@@ -22,13 +22,13 @@ of every edge between two responses. \code{HIW="lik"} prints the diagnostic of t
 Show trace plots and diagnostic density plots of a fitted model object of class "BayesSUR".
 }
 \examples{
-data("example_eQTL", package = "BayesSUR")
+data("exampleEQTL", package = "BayesSUR")
 hyperpar <- list( a_w = 2 , b_w = 5 )
 
 set.seed(9173)
-fit <- BayesSUR(Y = example_eQTL[["blockList"]][[1]], 
-                X = example_eQTL[["blockList"]][[2]],
-                data = example_eQTL[["data"]], outFilePath = tempdir(),
+fit <- BayesSUR(Y = exampleEQTL[["blockList"]][[1]], 
+                X = exampleEQTL[["blockList"]][[2]],
+                data = exampleEQTL[["data"]], outFilePath = tempdir(),
                 nIter = 100, burnin = 50, nChains = 2, gammaPrior = "hotspot",
                 hyperpar = hyperpar, tmpFolder = "tmp/" )
 

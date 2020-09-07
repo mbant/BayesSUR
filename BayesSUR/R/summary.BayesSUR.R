@@ -1,4 +1,4 @@
-#' @title summarizing Bayesian Seemingly Unrelated Regressions Fits
+#' @title summary method for class \code{BayesSUR}
 #' @description
 #' Summary method for class \code{BayesSUR}. It includes the argument matching information, Top predictors/responses on average mPIP across all responses/predictors, 
 #' elpd estimates, MCMC specification, model specification and hyper-parameters. The summarized number of the selected variable corresponds to the posterior 
@@ -14,13 +14,13 @@
 #' top 10 responses on average mPIP across all predictors, Expected log pointwise predictive density (elpd) estimates, MCMC specification, model specification (i.e., covariance prior and gamma prior) and hyper-parameters. 
 #' 
 #' @examples
-#' data(example_eQTL, package = "BayesSUR")
+#' data(exampleEQTL, package = "BayesSUR")
 #' hyperpar = list( a_w = 2 , b_w = 5 )
 #' 
 #' set.seed(9173)
-#' fit <- BayesSUR(Y = example_eQTL[["blockList"]][[1]], 
-#'                 X = example_eQTL[["blockList"]][[2]],
-#'                 data = example_eQTL[["data"]], outFilePath = tempdir(),
+#' fit <- BayesSUR(Y = exampleEQTL[["blockList"]][[1]], 
+#'                 X = exampleEQTL[["blockList"]][[2]],
+#'                 data = exampleEQTL[["data"]], outFilePath = tempdir(),
 #'                 nIter = 100, burnin = 50, nChains = 2, gammaPrior = "hotspot",
 #'                 hyperpar = hyperpar, tmpFolder = "tmp/", output_CPO=TRUE)
 #' 

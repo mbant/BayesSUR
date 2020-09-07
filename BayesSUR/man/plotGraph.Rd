@@ -19,7 +19,8 @@ plotGraph(
 )
 }
 \arguments{
-\item{x}{an object of class \code{BayesSUR}}
+\item{x}{either an object of class \code{BayesSUR} (default) or a symmetric numeric matrix representing an adjacency matrix for a given graph structure. 
+If x is an adjacency matrix, argument \code{main="Given graph of responses"} by default.}
 
 \item{Pmax}{a value for thresholding the learning structure matrix of multiple response variables. Default is 0.5}
 
@@ -45,13 +46,13 @@ plotGraph(
 Plot the estimated graph for multiple response variables from a \code{BayesSUR} class object.
 }
 \examples{
-data("example_eQTL", package = "BayesSUR")
+data("exampleEQTL", package = "BayesSUR")
 hyperpar <- list( a_w = 2 , b_w = 5 )
 
 set.seed(9173)
-fit <- BayesSUR(Y = example_eQTL[["blockList"]][[1]], 
-                X = example_eQTL[["blockList"]][[2]],
-                data = example_eQTL[["data"]], outFilePath = tempdir(),
+fit <- BayesSUR(Y = exampleEQTL[["blockList"]][[1]], 
+                X = exampleEQTL[["blockList"]][[2]],
+                data = exampleEQTL[["data"]], outFilePath = tempdir(),
                 nIter = 100, burnin = 50, nChains = 2, gammaPrior = "hotspot",
                 hyperpar = hyperpar, tmpFolder = "tmp/" )
 

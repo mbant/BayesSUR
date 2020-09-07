@@ -4,7 +4,8 @@
 #' @importFrom igraph E plot.igraph graph_from_adjacency_matrix
 #' @importFrom graphics par
 #' @name plotGraph
-#' @param x an object of class \code{BayesSUR}
+#' @param x either an object of class \code{BayesSUR} (default) or a symmetric numeric matrix representing an adjacency matrix for a given graph structure. 
+#' If x is an adjacency matrix, argument \code{main="Given graph of responses"} by default.
 #' @param Pmax a value for thresholding the learning structure matrix of multiple response variables. Default is 0.5
 #' @param main an overall title for the plot
 #' @param edge.width edge width. Default is 2
@@ -17,13 +18,13 @@
 #' @param ... other arguments
 #' 
 #' @examples
-#' data("example_eQTL", package = "BayesSUR")
+#' data("exampleEQTL", package = "BayesSUR")
 #' hyperpar <- list( a_w = 2 , b_w = 5 )
 #' 
 #' set.seed(9173)
-#' fit <- BayesSUR(Y = example_eQTL[["blockList"]][[1]], 
-#'                 X = example_eQTL[["blockList"]][[2]],
-#'                 data = example_eQTL[["data"]], outFilePath = tempdir(),
+#' fit <- BayesSUR(Y = exampleEQTL[["blockList"]][[1]], 
+#'                 X = exampleEQTL[["blockList"]][[2]],
+#'                 data = exampleEQTL[["data"]], outFilePath = tempdir(),
 #'                 nIter = 100, burnin = 50, nChains = 2, gammaPrior = "hotspot",
 #'                 hyperpar = hyperpar, tmpFolder = "tmp/" )
 #' 
@@ -41,7 +42,8 @@ plotGraph <- function(x, Pmax=0.5, main = "Estimated graph of responses", edge.w
       Gy_hat <- x
       if(!is.null(vertex.label))
         rownames(Gy_hat) <- colnames(Gy_hat) <- vertex.label
-      main <- "Given graph of responses"
+      if( main=="Estimated graph of responses" )
+        main <- "Given graph of responses"
     }else{
       stop("Use only with a \"BayesSUR\" object or numeric square matrix")
     }

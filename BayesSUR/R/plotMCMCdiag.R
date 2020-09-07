@@ -1,4 +1,4 @@
-#' @title show trace plots and diagnostic density plots
+#' @title plot MCMC diagnostic plots
 #' @description
 #' Show trace plots and diagnostic density plots of a fitted model object of class "BayesSUR".
 #' @importFrom graphics par plot.default legend title matplot
@@ -13,13 +13,13 @@
 #' @param ... other arguments for the plots of the log-likelihood and model size
 #' 
 #' @examples
-#' data("example_eQTL", package = "BayesSUR")
+#' data("exampleEQTL", package = "BayesSUR")
 #' hyperpar <- list( a_w = 2 , b_w = 5 )
 #' 
 #' set.seed(9173)
-#' fit <- BayesSUR(Y = example_eQTL[["blockList"]][[1]], 
-#'                 X = example_eQTL[["blockList"]][[2]],
-#'                 data = example_eQTL[["data"]], outFilePath = tempdir(),
+#' fit <- BayesSUR(Y = exampleEQTL[["blockList"]][[1]], 
+#'                 X = exampleEQTL[["blockList"]][[2]],
+#'                 data = exampleEQTL[["data"]], outFilePath = tempdir(),
 #'                 nIter = 100, burnin = 50, nChains = 2, gammaPrior = "hotspot",
 #'                 hyperpar = hyperpar, tmpFolder = "tmp/" )
 #' 
