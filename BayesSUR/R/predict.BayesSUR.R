@@ -1,6 +1,6 @@
 #' @title predict responses corresponding to the posterior mean of the coefficients, return posterior mean of coefficients or indices of nonzero coefficients
 #' @description
-#' Predict responses corresponding to the posterior mean of the coefficients, return posterior mean of coefficients or indices of nonzero coefficients of a "BayesSUR" class object.
+#' Predict responses corresponding to the posterior mean of the coefficients, return posterior mean of coefficients or indices of nonzero coefficients of a \code{BayesSUR} class object.
 #' @name predict.BayesSUR
 #' 
 #' @param object an object of class \code{BayesSUR}
@@ -12,7 +12,7 @@
 #' @param beta.type the type of estimated coefficients beta for prediction. Default is \code{marginal}, giving marginal beta estimation. If \code{beta.type="conditional"}, it gives conditional beta estimation
 #' @param ... other arguments
 #' 
-#' @return Predicted values extracted from an object of class "BayesSUR". If the \code{BayesSUR} specified data standardization, the fitted values are base based on standardized data.
+#' @return Predicted values extracted from an object of class \code{BayesSUR}. If the \code{BayesSUR} specified data standardization, the fitted values are base based on standardized data.
 #' 
 #' @examples
 #' data("exampleEQTL", package = "BayesSUR")
@@ -29,12 +29,25 @@
 #' predict.val <- predict(fit, newx=exampleEQTL[["blockList"]][[2]])
 #' 
 #' @export
-predict.BayesSUR <- function(object, newx, type=c("response", "coefficients", "nonzero"), Pmax=0, beta.type="marginal", ...){
+predict.BayesSUR <- function(object, newx, type="response", Pmax=0, beta.type="marginal", ...){
   
-  type = match.arg(type)
-  if (missing(newx) & type=="response"){
-      stop("You need to supply a value for 'newx'!")
+  # type <- match.arg(type)
+  # if (missing(newx) & type=="response"){
+  #     stop("You need to supply a value for 'newx'!")
+  # }
+  if( length(type) > 1 ){
+    warning("'type' has length > 1 and only the first element will be used")
+    type <- type[1]
   }
+  if( !(type %in% c("response", "coefficients", "nonzero")) )
+    stop("Please specify correct 'type'!")
+  if( Pmax<0 | Pmax>1 )
+    stop("Please specify correct argument 'Pmax' in [0,1]!")
+  if( !(beta.type %in% c("marginal", "conditional")) )
+    stop("Please specify acorrect 'beta.type'!")
+  
+  if( (type %in% c("response", "coefficients")) & (Pmax>0) & (beta.type=="marginal"))
+    stop("Pmax > 0 is valid only if the arguments type='coefficients' and beta.type='conditional'!")
   
   gamma_hat <- getEstimator( object, estimator="gamma", Pmax = Pmax, ...)
   beta_hat <- getEstimator( object, estimator="beta", Pmax = Pmax, beta.type=beta.type, ...)

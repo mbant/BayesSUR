@@ -31,6 +31,9 @@
 #' @export
 summary.BayesSUR <- function(object, Pmax=0.5, ...){
   
+  if( Pmax<0 | Pmax>1 )
+    stop("Please specify correct argument 'Pmax' in (0,1)!")
+  
   ans <- list(status=object$status)
   if(is.null(object$output$CPO)){
     ans$elpd <- NA

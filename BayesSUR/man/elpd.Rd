@@ -7,13 +7,13 @@
 elpd(object, method = "LOO")
 }
 \arguments{
-\item{object}{an object of class "BayesSUR"}
+\item{object}{an object of class \code{BayesSUR}}
 
-\item{method}{the name of the prediction accuracy index. Default is the "\code{LOO}" (Bayesian LOO estimate of out-of-sample predictive fit). The other index is the "\code{WAIC}" (widely applicable information criterion).
+\item{method}{the name of the prediction accuracy index. Default is the \code{"LOO"} (Bayesian LOO estimate of out-of-sample predictive fit). The other index is the \code{"WAIC"} (widely applicable information criterion).
 For the HRR models, both "\code{LOO}" and "\code{WAIC}" are computed based on the multivate t-distribution of the posterior predictive rather than approximation of importance sampling.}
 }
 \value{
-Return the predictiion accuracy measure from an object of class "BayesSUR". It is elpd.loo if the argumnet \code{method="LOO"} and elpd.WAIC if \code{method="WAIC"}.
+Return the predictiion accuracy measure from an object of class \code{BayesSUR}. It is elpd.loo if the argumnet \code{method="LOO"} and elpd.WAIC if \code{method="WAIC"}.
 }
 \description{
 Measure the prediction accuracy by the elpd (expected log pointwise predictive density). The out-of-sample predictive fit can either be estimated by Bayesian leave-one-out cross-validation (LOO) or by widely applicable information criterion (WAIC) (Vehtari et al. 2017).

@@ -1,13 +1,13 @@
 #' @title print method for class \code{BayesSUR}
 #' @description
-#' Print a short summary of a "BayesSUR" class object. It includes the argument matching information, 
+#' Print a short summary of a \code{BayesSUR} class object. It includes the argument matching information, 
 #' number of selected predictors based on thresholding the posterior mean of the latent indicator variable at 0.5 by default.
 #' @name print.BayesSUR
-#' @param x an object of class "BayesSUR"
+#' @param x an object of class \code{BayesSUR}
 #' @param Pmax threshold that truncates the estimated coefficients based on thresholding the estimated latent indicator variable. Default is 0.5
 #' @param ... other arguments
 #' 
-#' @return Return a short summary from an object of class "BayesSUR", including the number of selected predictors with mPIP>\code{Pmax} and the expected log pointwise predictive density estimates (i.e., elpd.LOO and elpd.WAIC).
+#' @return Return a short summary from an object of class \code{BayesSUR}, including the number of selected predictors with mPIP>\code{Pmax} and the expected log pointwise predictive density estimates (i.e., elpd.LOO and elpd.WAIC).
 #' 
 #' @examples
 #' data("exampleEQTL", package = "BayesSUR")

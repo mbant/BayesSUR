@@ -26,6 +26,11 @@
 #' @export
 fitted.BayesSUR <- function(object, Pmax=0, beta.type="marginal", ...){
   
+  if( Pmax<0 | Pmax>1 )
+    stop("Please specify correct argument 'Pmax' in [0,1]!")
+  if( (Pmax>0) & (beta.type=="marginal"))
+    stop("Pmax > 0 is valid only if the argument beta.type = 'conditional'!")
+  
   gamma_hat <- getEstimator( object, estimator="gamma", Pmax = Pmax, ...)
   beta_hat <- getEstimator( object, estimator="beta", Pmax = Pmax, beta.type=beta.type, ...)
   

@@ -43,6 +43,9 @@ plotManhattan <- function(x, which=c(1,2), x.loc=FALSE, axis.label="auto", mark.
   if (!inherits(x, "BayesSUR")) 
     stop("Use only with a \"BayesSUR\" object")
   
+  if( threshold<0 | threshold>1 )
+    stop("Please specify orrect argument 'threshold' in [0,1]!")
+  
   x$output[-1] <- paste(x$output$outFilePath,x$output[-1],sep="")
   gamma <- as.matrix( read.table(x$output$gamma) )
   rownames(gamma) <- colnames(read.table(x$output$X,header=T))

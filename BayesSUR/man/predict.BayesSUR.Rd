@@ -4,14 +4,7 @@
 \alias{predict.BayesSUR}
 \title{predict responses corresponding to the posterior mean of the coefficients, return posterior mean of coefficients or indices of nonzero coefficients}
 \usage{
-\method{predict}{BayesSUR}(
-  object,
-  newx,
-  type = c("response", "coefficients", "nonzero"),
-  Pmax = 0,
-  beta.type = "marginal",
-  ...
-)
+\method{predict}{BayesSUR}(object, newx, type = "response", Pmax = 0, beta.type = "marginal", ...)
 }
 \arguments{
 \item{object}{an object of class \code{BayesSUR}}
@@ -29,10 +22,10 @@ truncated the estimated coefficients based on thresholding the estimated latent 
 \item{...}{other arguments}
 }
 \value{
-Predicted values extracted from an object of class "BayesSUR". If the \code{BayesSUR} specified data standardization, the fitted values are base based on standardized data.
+Predicted values extracted from an object of class \code{BayesSUR}. If the \code{BayesSUR} specified data standardization, the fitted values are base based on standardized data.
 }
 \description{
-Predict responses corresponding to the posterior mean of the coefficients, return posterior mean of coefficients or indices of nonzero coefficients of a "BayesSUR" class object.
+Predict responses corresponding to the posterior mean of the coefficients, return posterior mean of coefficients or indices of nonzero coefficients of a \code{BayesSUR} class object.
 }
 \examples{
 data("exampleEQTL", package = "BayesSUR")

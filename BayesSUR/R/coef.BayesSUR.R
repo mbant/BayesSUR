@@ -27,6 +27,12 @@
 #' @export
 coef.BayesSUR <- function(object, beta.type="marginal", Pmax=0, ...){
   
+  if( !(beta.type %in% c("marginal", "conditional")) )
+    stop("Please specify correct 'beta.type'!")
+  if( Pmax<0 | Pmax>1 )
+    stop("Please specify a correct argument 'Pmax' in [0,1]!")
+  if( (Pmax>0) & (beta.type=="marginal"))
+    stop("Pmax > 0 is valid only if the argument beta.type = 'conditional'!")
   getEstimator(object, estimator="beta", Pmax=Pmax, beta.type=beta.type, ...)
     
 }

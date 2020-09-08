@@ -57,6 +57,11 @@ plotNetwork <- function(x, includeResponse=NULL, excludeResponse=NULL, includePr
   if (!inherits(x, "BayesSUR")) 
     stop("Use only with a \"BayesSUR\" object")
   
+  if( PmaxPredictor<0 | PmaxPredictor>1 )
+    stop("Please specify correct argument 'PmaxPredictor' in [0,1]!")
+  if( PmaxResponse<0 | PmaxResponse>1 )
+    stop("Please specify correct argument 'PmaxResponse' in [0,1]!")
+  
   x$output[-1] <- paste(x$output$outFilePath,x$output[-1],sep="")
   covariancePrior <- x$input$covariancePrior
   if(covariancePrior == "HIW"){

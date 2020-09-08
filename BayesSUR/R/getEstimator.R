@@ -30,11 +30,14 @@ getEstimator <- function(object, estimator = "gamma", Pmax = 0, beta.type = "mar
   
   object$output[-1] <- paste(object$output$outFilePath,object$output[-1],sep="")
   if( sum(!estimator %in% c("gamma","beta","Gy","CPO","logP"))>0 ){
-    stop("Please specify correct estimator!")
+    stop("Please specify correct 'estimator'!")
   }else{
     ret <- rep(list(NULL), length(estimator))
     names(ret) <- estimator
   }
+  
+  if( Pmax<0 | Pmax>1 )
+    stop("Please specify correct argument 'Pmax' in [0,1]!")
   
   if( "gamma" %in% estimator ){
     ret$gamma <- as.matrix( read.table(object$output$gamma) )

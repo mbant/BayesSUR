@@ -61,7 +61,10 @@ plotGraph <- function(x, Pmax=0.5, main = "Estimated graph of responses", edge.w
     }else{
       rownames(Gy_hat) <- colnames(Gy_hat) <- names(read.table(x$output$Y,header=T))
     }
-  } 
+  }
+  
+  if( Pmax<0 | Pmax>1 )
+    stop("Please specify correct argument 'Pmax' in [0,1]!")
   
   if(edge.weight){
     Gy_thresh <- Gy_hat
