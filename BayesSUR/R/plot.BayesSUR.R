@@ -58,12 +58,18 @@ plot.BayesSUR <- function(x, estimator = NULL, type = NULL, ...){
   
   if(!inherits(x, "BayesSUR")) 
     stop("Use only with \"BayesSUR\" objects")
-  if( sum(!(estimator %in% c('beta', 'gamma', 'Gy', 'logP', 'CPO')) + is.null(estimator)) ) 
-    stop("'estimator' should be in c(NULL, 'beta', 'gamma', 'Gy', 'logP', 'CPO')!")
-  if(!sum(type %in% c("heatmap", "graph", "Manhattan", "network", "diagnostics") + is.null(estimator)))
-    stop("Please specify correct type!")
+  
+  if( !is.null(estimator) ){
+    if( sum(!(estimator %in% c('beta', 'gamma', 'Gy', 'logP', 'CPO'))) )
+      stop("'estimator' should be in c(NULL, 'beta', 'gamma', 'Gy', 'logP', 'CPO')!")
+  }else{
+    if( !is.null(type) )
+      stop("If 'estimator = NULL', 'type' has to be 'NULL'!")
+  }
   
   if(!is.null(type)){
+    if( !(type %in% c("heatmap", "graph", "Manhattan", "network", "diagnostics")) )
+      stop("Please specify correct type!")
     
     if(!( ((sum(estimator %in% c("beta", "gamma", "Gy")) > 0) & (type=="heatmap")) |
           ((length(estimator)==1) & (estimator[1] == "Gy") & (type=="graph")) |
@@ -99,6 +105,10 @@ plot.BayesSUR <- function(x, estimator = NULL, type = NULL, ...){
       plotCPO(x, ...)
     
   }else{
+    
+    if( !is.null(estimator) )
+      stop("If 'type = NULL', 'estimator' has to be 'NULL'!")
+    
     ## print plots interactively
     if( is.null(estimator[1]) ){
       show <- rep(FALSE, 5)
