@@ -24,7 +24,8 @@ devtools::install_github("mbant/BayesSUR/BayesSUR")
 
 ### New in `BayesSUR_1.2-3.tar.gz` (08 September 2020):
 
-Fixed bugs in function plot.BayesSUR() if the argument `estimator` or `type` is `NULL`.
+1) Improved help files
+2) Improved vignette
 
 ### version `BayesSUR_1.2-2.tar.gz` (08 September 2020):
 
