@@ -40,7 +40,7 @@ BayesSUR(
 \arguments{
 \item{data}{a numeric matrix with variables on the columns and observations on the rows, if arguments \code{Y} and \code{X} (and possibly \code{X_0}) are vectors. Can be \code{NULL} if arguments \code{Y} and \code{X} (and possibly \code{X_0}) are numeric matrices.}
 
-\item{Y, X}{vectors of indices (with respect to the data matrix) for the outcomes (\code{Y}) and the predictors to select (\code{X}) respectively; if the data argument is not provided, these needs to be numeric matrices containing the data instead, with variables on the columns and observations on the rows.}
+\item{Y, X}{vectors of indices (with respect to the data matrix) for the outcomes (\code{Y}) and the predictors to select (\code{X}) respectively; if the \code{data} argument is \code{NULL}, these needs to be numeric matrices containing the data instead, with variables on the columns and observations on the rows.}
 
 \item{X_0}{vectors of indices (with respect to the data matrix) for the fixed predictors that are not selected, i.e. always included in the model; if the data argument is not provided, this needs to be a numeric matrix containing the data instead, with variables on the columns and observations on the rows.}
 
@@ -63,9 +63,9 @@ BayesSUR(
 
 \item{mrfG}{either a matrix or a path to the file containing the G matrix for the MRF prior on gamma (if necessary)}
 
-\item{standardize}{logical flag for X variable standardization. Default is standardize=TRUE. The coefficients are returned on the standardized scale.}
+\item{standardize}{logical flag for X variable standardization. Default is \code{standardize=TRUE}. The coefficients are returned on the standardized scale.}
 
-\item{standardize.response}{Standardization for the response variables. Default is standardize.response=TRUE.}
+\item{standardize.response}{logical flag for Y standardization. Default is \code{standardize.response=TRUE}.}
 
 \item{maxThreads}{maximum threads used for parallelization. Default is 1. Reproducibility of results with \code{set.seed()} is only guaranteed if \code{maxThreads=1}.}
 

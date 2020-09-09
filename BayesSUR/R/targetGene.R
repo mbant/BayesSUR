@@ -1,4 +1,5 @@
 #' @title indices list of target genes in the GDSC data set
+#' 
 #' @description 
 #' Indices list of target genes corresponding the \code{example_GDSC} data set. It has two components representing the gene indices of the MAPK/ERK pathway and BCR-ABL gene fusion in the \code{example_GDSC} data set. 
 #' 

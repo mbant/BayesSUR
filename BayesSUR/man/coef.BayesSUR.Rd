@@ -9,9 +9,9 @@
 \arguments{
 \item{object}{an object of class \code{BayesSUR}}
 
-\item{beta.type}{type of output beta. Default is \code{marginal}, giving marginal beta estimation. If \code{beta.type="conditional"}, it gives conditional beta estimation}
+\item{beta.type}{type of output beta. Default is \code{marginal}, giving marginal beta estimation. If \code{beta.type="conditional"}, it gives beta estimation conditional on gamma=1.}
 
-\item{Pmax}{valid if \code{beta.type="conditional"}, giving estimated beta conditioning on gammas>=\code{Pmax}. If \code{beta.type="conditional"} and \code{Pmax=0.5}, it gives median probability model betas. Default is 0.}
+\item{Pmax}{If \code{Pmax=0.5} and \code{beta.type="conditional"}, it gives median probability model betas. Default is 0.}
 
 \item{...}{other arguments}
 }

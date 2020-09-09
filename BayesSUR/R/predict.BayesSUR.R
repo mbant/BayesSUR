@@ -1,15 +1,14 @@
-#' @title predict responses corresponding to the posterior mean of the coefficients, return posterior mean of coefficients or indices of nonzero coefficients
+#' @title predict method for class \code{BayesSUR}
 #' @description
 #' Predict responses corresponding to the posterior mean of the coefficients, return posterior mean of coefficients or indices of nonzero coefficients of a \code{BayesSUR} class object.
 #' @name predict.BayesSUR
 #' 
 #' @param object an object of class \code{BayesSUR}
 #' @param newx Matrix of new values for x at which predictions are to be made. Must be a matrix
-#' @param type Type of prediction required. \code{type="response"} gives the fitted responses; \code{type="coefficients"} computes the coefficients 
-#' truncated the estimated coefficients based on thresholding the estimated latent indicator variable at \code{Pmax};
+#' @param type Type of prediction required. \code{type="response"} gives the fitted responses; \code{type="coefficients"} returns the estimated coefficients depending on the arguments \code{beta.type} and \code{Pmax}.
 #' \code{type="nonzero"} returns a list of the indices of the nonzero coefficients corresponding to the estimated latent indicator variable thresholding at \code{Pmax}
-#' @param Pmax threshold that truncates the estimated coefficients based on thresholding the estimated latent indicator variable. Default is 0.
 #' @param beta.type the type of estimated coefficients beta for prediction. Default is \code{marginal}, giving marginal beta estimation. If \code{beta.type="conditional"}, it gives conditional beta estimation
+#' @param Pmax If \code{type="nonzero"}, it is a threshold for the estimated latent indicator variable. If \code{type="coefficients"}, \code{beta.type="conditional"} and \code{Pmax=0.5}, it gives median probability model betas. Default is 0
 #' @param ... other arguments
 #' 
 #' @return Predicted values extracted from an object of class \code{BayesSUR}. If the \code{BayesSUR} specified data standardization, the fitted values are base based on standardized data.
@@ -29,7 +28,7 @@
 #' predict.val <- predict(fit, newx=exampleEQTL[["blockList"]][[2]])
 #' 
 #' @export
-predict.BayesSUR <- function(object, newx, type="response", Pmax=0, beta.type="marginal", ...){
+predict.BayesSUR <- function(object, newx, type="response", beta.type="marginal", Pmax=0, ...){
   
   # type <- match.arg(type)
   # if (missing(newx) & type=="response"){

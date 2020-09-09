@@ -2,22 +2,21 @@
 % Please edit documentation in R/predict.BayesSUR.R
 \name{predict.BayesSUR}
 \alias{predict.BayesSUR}
-\title{predict responses corresponding to the posterior mean of the coefficients, return posterior mean of coefficients or indices of nonzero coefficients}
+\title{predict method for class \code{BayesSUR}}
 \usage{
-\method{predict}{BayesSUR}(object, newx, type = "response", Pmax = 0, beta.type = "marginal", ...)
+\method{predict}{BayesSUR}(object, newx, type = "response", beta.type = "marginal", Pmax = 0, ...)
 }
 \arguments{
 \item{object}{an object of class \code{BayesSUR}}
 
 \item{newx}{Matrix of new values for x at which predictions are to be made. Must be a matrix}
 
-\item{type}{Type of prediction required. \code{type="response"} gives the fitted responses; \code{type="coefficients"} computes the coefficients 
-truncated the estimated coefficients based on thresholding the estimated latent indicator variable at \code{Pmax};
+\item{type}{Type of prediction required. \code{type="response"} gives the fitted responses; \code{type="coefficients"} returns the estimated coefficients depending on the arguments \code{beta.type} and \code{Pmax}.
 \code{type="nonzero"} returns a list of the indices of the nonzero coefficients corresponding to the estimated latent indicator variable thresholding at \code{Pmax}}
 
-\item{Pmax}{threshold that truncates the estimated coefficients based on thresholding the estimated latent indicator variable. Default is 0.}
-
 \item{beta.type}{the type of estimated coefficients beta for prediction. Default is \code{marginal}, giving marginal beta estimation. If \code{beta.type="conditional"}, it gives conditional beta estimation}
+
+\item{Pmax}{If \code{type="nonzero"}, it is a threshold for the estimated latent indicator variable. If \code{type="coefficients"}, \code{beta.type="conditional"} and \code{Pmax=0.5}, it gives median probability model betas. Default is 0}
 
 \item{...}{other arguments}
 }

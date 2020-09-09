@@ -11,17 +11,17 @@
 
 \item{estimator}{It is in \code{c(NULL, 'beta', 'gamma', 'Gy', 'logP', 'CPO')} and works by combining with argument \code{type}.
 \itemize{
-  \item If \code{estimator} is in \code{c("beta", "gamma", "Gy")} and argument \code{type="heatmap"}, it prints heatmaps of the specified estimator in \code{estimator}, and refers to function \code{plotEstimator()} for more other arguments.
-  \item If \code{estimator="Gy"} and argument \code{type="graph"}, it prints a structure graph of \code{"Gy"}, and refers to function \code{plotGraph()} for more other arguments.
-  \item If \code{estimator=c("gamma", "Gy")} and argument \code{type="network"}, it prints the estimated network between the response variables and predictors with nonzero coefficients, and refers to function \code{plotMCMCdiag()} for more other arguments.
+  \item If \code{estimator} is in \code{c("beta", "gamma", "Gy")} and argument \code{type="heatmap"}, it prints heatmaps of the specified estimator in \code{estimator} by a call to to function \code{plotEstimator()} for more other arguments.
+  \item If \code{estimator="Gy"} and argument \code{type="graph"}, it prints a structure graph of \code{"Gy"} by a call to function \code{plotGraph()} for more other arguments.
+  \item If \code{estimator=c("gamma", "Gy")} and argument \code{type="network"}, it prints the estimated network between the response variables and predictors with nonzero coefficients by a call to function \code{plotMCMCdiag()} for more other arguments.
   \item If \code{estimator=NULL} (default) and \code{type=NULL} (default), it interactively prints the plots of estimators (i.e., beta, gamma and (or) Gy), response graph Gy, network, Manhattan and MCMC diagnostics.
 }}
 
 \item{type}{It is one of \code{NULL}, \code{"heatmap"}, \code{"graph"}, \code{"network"}, \code{"Manhattan"} and \code{"diagnostics"}, and works by combining with argument \code{estimator}.
 \itemize{
-  \item If \code{type="Manhattan"} and argument \code{estimator="gamma"}, it prints Manhattan-like plots for marginal posterior inclusion probabilities (mPIP) and numbers of associated response variables for individual predictors, and refers to function \code{plotManhattan()} for more other arguments.
-  \item If \code{type="diagnostics"} and argument \code{estimator="logP"} it shows trace plots and diagnostic density plots of a fitted model, and refers to function \code{plotMCMCdiag()} for more other arguments.
-  \item If \code{type="diagnostics"} and argument \code{estimator="CPO"}, it shows the conditional predictive ordinate (CPO) for each individual of a fitted model, and refers to function \code{plotCPO()} for more other arguments.
+  \item If \code{type="Manhattan"} and argument \code{estimator="gamma"}, it prints Manhattan-like plots for marginal posterior inclusion probabilities (mPIP) and numbers of associated response variables for individual predictors by a call to function \code{plotManhattan()} for more other arguments.
+  \item If \code{type="diagnostics"} and argument \code{estimator="logP"} it shows trace plots and diagnostic density plots of a fitted model by a call to function \code{plotMCMCdiag()} for more other arguments.
+  \item If \code{type="diagnostics"} and argument \code{estimator="CPO"}, it shows the conditional predictive ordinate (CPO) for each individual of a fitted model by a call to function \code{plotCPO()} for more other arguments.
 }}
 
 \item{...}{other arguments, see functions \code{plotEstimator()}, \code{plotGraph()}, \code{plotNetwork()}, \code{plotManhattan()}, \code{plotMCMCdiag()} or \code{plotCPO()}}
