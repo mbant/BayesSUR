@@ -20,9 +20,9 @@ plotEstimator(
   header.cex = 2,
   tick = FALSE,
   mgp = c(2.5, 1, 0),
-  title.beta = paste("Estimator", "$\\\\hat{\\\\bm{B}}$"),
-  title.gamma = paste("Estimator", "$\\\\hat{\\\\mathbf{\\\\Gamma}}$"),
-  title.Gy = paste("Estimator", "$\\\\hat{\\\\mathcal{G}}$"),
+  title.beta = NA,
+  title.gamma = NA,
+  title.Gy = NA,
   cex.main = 1.5,
   ...
 )
@@ -58,18 +58,18 @@ plotEstimator(
 
 \item{mgp}{the margin line (in mex units) for the axis title, axis labels and axis line}
 
-\item{title.beta}{a title for the printed "beta" if \code{fig.tex=TRUE}}
+\item{title.beta}{a title for the printed "beta"}
 
-\item{title.gamma}{a title for the printed "gamma" if \code{fig.tex=TRUE}}
+\item{title.gamma}{a title for the printed "gamma"}
 
-\item{title.Gy}{a title for the printed "Gy" if \code{fig.tex=TRUE}}
+\item{title.Gy}{a title for the printed "Gy"}
 
 \item{cex.main}{size of the title for each estimator}
 
 \item{...}{other arguments}
 }
 \description{
-Plot the posterior mean estimators from a "BayesSUR" class object, including the coefficients beta, latent indicator variable gamma and graph of responses.
+Plot the posterior mean estimators from a \code{BayesSUR} class object, including the coefficients beta, latent indicator variable gamma and graph of responses.
 }
 \examples{
 data("exampleEQTL", package = "BayesSUR")
