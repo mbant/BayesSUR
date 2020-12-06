@@ -22,23 +22,27 @@ devtools::install_github("mbant/BayesSUR/BayesSUR")
 
 ## Update
 
-### New in `BayesSUR_1.2-3.tar.gz` (09 September 2020):
+### New in `BayesSUR_1.2-4.tar.gz` (06 December 2020):
+
+Moved the default title names with LaTeX code in plotEstimator() function arguments to the code with condition if fig.tex=FALSE. Machines without LaTeX installed can plot all figures with no error information.
+
+### Version `BayesSUR_1.2-3.tar.gz` (09 September 2020):
 
 1) Improved help files
 2) Improved vignette
 
-### version `BayesSUR_1.2-2.tar.gz` (08 September 2020):
+### Version `BayesSUR_1.2-2.tar.gz` (08 September 2020):
 
 1) Changed to the S3 method `plot()` function for all plots with two arguments `estimator` and `type`.
 2) Corresponding to the change of `plot()` function, there were changes of `get.estimator()`, `plotEstimator()`, `plotGraph()`, `plotNetwork()`, `plotManhattan()`, `plotMCMC()` and `plotCPO()`.
 3) Minor changes of other R functions and help files.
 4) Minor changes of C++ code.
 
-### verion `BayesSUR_1.2-1.tar.gz` (19 July 2020):
+### Verion `BayesSUR_1.2-1.tar.gz` (19 July 2020):
 
 Enabled RNGScope for reproducible results.
 
-### verion `BayesSUR_1.2-0.tar.gz` (08 July 2020):
+### Verion `BayesSUR_1.2-0.tar.gz` (08 July 2020):
 
 Updated the vignette.
 
