@@ -24,7 +24,7 @@ devtools::install_github("mbant/BayesSUR/BayesSUR")
 
 ### New in `BayesSUR_1.2-4.tar.gz` (06 December 2020):
 
-Removed the default title names with LaTeX code in the arguments of plotEstimator() function. Machines without LaTeX installed can plot all figures with no error information if `fig.tex=FALSE`.
+Removed the default title names with LaTeX code in the arguments of `plotEstimator()` function. Machines without LaTeX installed can plot all figures with no error information if `fig.tex=FALSE`.
 
 ### Version `BayesSUR_1.2-3.tar.gz` (09 September 2020):
 
