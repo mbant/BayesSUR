@@ -1,4 +1,4 @@
-## Update
+## Update information
 
 ### New in `BayesSUR_2.0-0.tar.gz` (01 May 2021):
 
