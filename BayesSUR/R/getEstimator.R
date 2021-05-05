@@ -67,8 +67,8 @@ getEstimator <- function(object, estimator = "gamma", Pmax = 0, beta.type = "mar
       }
       
       colnames(ret$beta) <- colnames(read.table(object$output$Y,header=T))
-      if("X_0" %in% names(object$output)){
-        rownames(ret$beta) <- c(colnames(read.table(object$output$X_0,header=T)), colnames(read.table(object$output$X,header=T)))
+      if("X0" %in% names(object$output)){
+        rownames(ret$beta) <- c(colnames(read.table(object$output$X0,header=T)), colnames(read.table(object$output$X,header=T)))
       }else{
         rownames(ret$beta) <- colnames(read.table(object$output$X,header=T))
       }
@@ -78,7 +78,7 @@ getEstimator <- function(object, estimator = "gamma", Pmax = 0, beta.type = "mar
       
       covariancePrior <- object$input$covariancePrior
       if(covariancePrior == "HIW"){
-        ret$Gy <- as.matrix( read.table(object$output$G) )
+        ret$Gy <- as.matrix( read.table(object$output$Gy) )
       }else{
         stop("Gy is only estimated with hyper-inverse Wishart prior for the covariance matrix of responses!")
       }

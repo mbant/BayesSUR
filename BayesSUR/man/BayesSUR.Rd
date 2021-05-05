@@ -12,6 +12,7 @@ BayesSUR(
   X_0 = NULL,
   covariancePrior = "HIW",
   gammaPrior = "hotspot",
+  betaPrior = "independent",
   nIter = 10000,
   burnin = 5000,
   nChains = 2,
@@ -48,6 +49,8 @@ BayesSUR(
 \code{IW} for the inverse-Wishart prior ( dense covariance ) or \code{IG} for independent inverse-Gamma on all the diagonal elements and 0 otherwise. See the details for the model specification}
 
 \item{gammaPrior}{string indicating the gamma prior to use, either \code{hotspot} (default) for the Hotspot prior of Bottolo (2011), \code{MRF} for the Markov Random Field prior or \code{hierarchical} for a simpler hierarchical prior. See the details for the model specification}
+
+\item{betaPrior}{string indicating the prior for regression coefficients; it has to be either \code{independent} for independent spike-and-slab priors (only slab part for \code{X_0} if specified), or \code{reGroup} for weakly normal priors for mandatory variables (random effects) and spike-and-slab priors for other variables}
 
 \item{nIter}{number of iterations for the MCMC procedure. Default 10000.}
 

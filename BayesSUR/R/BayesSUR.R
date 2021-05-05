@@ -15,6 +15,7 @@
 #' @param data a numeric matrix with variables on the columns and observations on the rows, if arguments \code{Y} and \code{X} (and possibly \code{X_0}) are vectors. Can be \code{NULL} if arguments \code{Y} and \code{X} (and possibly \code{X_0}) are numeric matrices.
 #' @param Y,X vectors of indices (with respect to the data matrix) for the outcomes (\code{Y}) and the predictors to select (\code{X}) respectively; if the \code{data} argument is \code{NULL}, these needs to be numeric matrices containing the data instead, with variables on the columns and observations on the rows.
 #' @param X_0 vectors of indices (with respect to the data matrix) for the fixed predictors that are not selected, i.e. always included in the model; if the data argument is not provided, this needs to be a numeric matrix containing the data instead, with variables on the columns and observations on the rows.
+#' @param betaPrior string indicating the prior for regression coefficients; it has to be either \code{independent} for independent spike-and-slab priors (only slab part for \code{X_0} if specified), or \code{reGroup} for weakly normal priors for mandatory variables (random effects) and spike-and-slab priors for other variables
 #' @param covariancePrior string indicating the prior for the covariance $C$; it has to be either \code{HIW} for the hyper-inverse-Wishar (which will result in a sparse covariance matrix),
 #' \code{IW} for the inverse-Wishart prior ( dense covariance ) or \code{IG} for independent inverse-Gamma on all the diagonal elements and 0 otherwise. See the details for the model specification
 #' @param gammaPrior string indicating the gamma prior to use, either \code{hotspot} (default) for the Hotspot prior of Bottolo (2011), \code{MRF} for the Markov Random Field prior or \code{hierarchical} for a simpler hierarchical prior. See the details for the model specification
@@ -115,7 +116,7 @@
 #' 
 #' @export
 BayesSUR <- function(data = NULL, Y, X, X_0 = NULL, 
-                     covariancePrior = "HIW", gammaPrior = "hotspot",
+                     covariancePrior = "HIW", gammaPrior = "hotspot", betaPrior = "independent",
                      nIter = 10000, burnin = 5000, nChains = 2, 
                      outFilePath = "", gammaSampler = "bandit", gammaInit = "R", mrfG = NULL,
                      standardize = TRUE, standardize.response = TRUE, maxThreads = 1,
@@ -142,7 +143,6 @@ BayesSUR <- function(data = NULL, Y, X, X_0 = NULL,
   if(!file.exists(tmpFolder))
     dir.create(tmpFolder)
   
-  betaPrior = "independent"
   ## Check the input: reasoning is that the user provides either
   # a data matrix or a data path-to-file
   #     - in this case Y, X (and X_0) need to be provided as vectors of indexes 

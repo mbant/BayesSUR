@@ -26,8 +26,8 @@ str(exampleGDSC)
 \dontrun{
 #===============
 # This code below is to do preprocessing of GDSC data and obtain the complete dataset
-# "exampleGDSC.rda" above. The user needs load the datasets from 
-# ftp://ftp.sanger.ac.uk/pub4/cancerrxgene/releases/release-5.0/. 
+# "exampleGDSC.rda" above. The user needs load the datasets from
+# https://www.cancerrxgene.org release 5. 
 # But downloading and transforming the three used datasets below to *.csv files first.
 #===============
 

@@ -140,7 +140,8 @@ int drive_SUR( Chain_Data& chainData )
     arma::umat gamma_out; // out var for the gammas
     arma::umat g_out, tmpG; // out var for G and tmpG
     arma::urowvec g_visit; // out var for visted G (vectorized upper triangle)
-    arma::mat beta_out; // out var for the betas
+    arma::mat beta_out, tmpB; // out var for the betas and standard deviation
+    arma::mat betaSD_out = arma::zeros<arma::mat>(chainData.surData.nFixedPredictors+chainData.surData.nVSPredictors,chainData.surData.nOutcomes); // out var for the betas SD
     arma::mat sigmaRho_out; // out var for the sigmas and rhos
     arma::vec tmpVec; // temporary to store the pi parameter vector
     arma::vec pi_out;
@@ -191,8 +192,11 @@ int drive_SUR( Chain_Data& chainData )
             }
         }
         
-        if ( chainData.output_beta )
-            beta_out = sampler[0] -> getBeta();
+        if ( chainData.output_beta ){
+            tmpB = sampler[0] -> getBeta();
+            beta_out = tmpB;
+            betaSD_out = arma::square( tmpB );
+        }
         
         if ( chainData.output_sigmaRho )
             sigmaRho_out = sampler[0] -> getSigmaRho();
@@ -206,8 +210,11 @@ int drive_SUR( Chain_Data& chainData )
             g_out = tmpG;
         }
             
-        if ( chainData.output_beta )
-            beta_out = sampler[0] -> getBeta();
+        if ( chainData.output_beta ){
+            tmpB = sampler[0] -> getBeta();
+            beta_out = tmpB;
+            betaSD_out = arma::square( tmpB );
+        }
         if ( chainData.output_sigmaRho )
             sigmaRho_out = sampler[0] -> getSigmaRho();
         if ( ( chainData.gamma_type == Gamma_Type::hotspot || chainData.gamma_type == Gamma_Type::hierarchical ) &&
@@ -305,8 +312,11 @@ int drive_SUR( Chain_Data& chainData )
                 g_out += tmpG;
             }
             
-            if ( chainData.output_beta )
-                beta_out += sampler[0] -> getBeta();
+            if ( chainData.output_beta ){
+                tmpB = sampler[0] -> getBeta();
+                beta_out += tmpB;
+                betaSD_out += arma::square( tmpB );
+            }
             
             if ( chainData.output_sigmaRho )
                 sigmaRho_out += sampler[0] -> getSigmaRho();
@@ -491,6 +501,9 @@ int drive_SUR( Chain_Data& chainData )
     {
         beta_out = beta_out/(double)(chainData.nIter-chainData.burnin+1);
         beta_out.save(outFilePrefix+"beta_out.txt",arma::raw_ascii);
+        
+        betaSD_out = arma::sqrt( betaSD_out/(double)(chainData.nIter-chainData.burnin+1) - arma::square(beta_out) );
+        betaSD_out.save(outFilePrefix+"betaSD_out.txt",arma::raw_ascii);
     }
     
     if ( chainData.output_sigmaRho )
@@ -507,7 +520,7 @@ int drive_SUR( Chain_Data& chainData )
         cposumy_out = 1./( cposumy_out/(double)(chainData.nIter-chainData.burnin+1) );
         cposumy_out.save(outFilePrefix+"CPOsumy_out.txt",arma::raw_ascii);
         
-        waic_out = arma::log( lpd/(double)(chainData.nIter-chainData.burnin+1) ) - ( waic_out - arma::square(waic_frac_sum)/(double)(chainData.nIter-chainData.burnin+1) )/(double)(chainData.nIter-chainData.burnin);
+        waic_out = arma::log( lpd/(double)(chainData.nIter-chainData.burnin+1) ) - ( waic_out/(double)(chainData.nIter-chainData.burnin+1) - arma::square(waic_frac_sum/(double)(chainData.nIter-chainData.burnin+1)) );
         waic_out.save(outFilePrefix+"WAIC_out.txt",arma::raw_ascii);
     }
     // -----
