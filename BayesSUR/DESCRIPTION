@@ -1,8 +1,8 @@
 Package: BayesSUR
 Type: Package
 Title: Bayesian Seemingly Unrelated Regression
-Version: 2.0-0
-Date: 2021-05-05
+Version: 2.0-1
+Date: 2021-11-18
 Authors@R: c(person("Marco", "Banterle", email = "marco.banterle@gmail.com", role = c("aut")),
              person("Zhi", "Zhao", email = "zhi.zhao@medisin.uio.no", role = c("aut", "cre")),
              person("Leonardo", "Bottolo", email = "lb664@cam.ac.uk", role = c("ctb")),
@@ -10,14 +10,13 @@ Authors@R: c(person("Marco", "Banterle", email = "marco.banterle@gmail.com", rol
              person("Waldir", "Leoncio", email = "w.l.netto@medisin.uio.no", role = c("ctb")),
              person("Alex", "Lewin", email = "alex.lewin@lshtm.ac.uk", role = c("aut")),
              person("Manuela", "Zucknick", email = "manuela.zucknick@medisin.uio.no", role = c("ctb")))
-Description: Bayesian seemingly unrelated regression with general variable selection and dense/sparse covariance matrix. The sparse seemingly unrelated regression is described in Bottolo et al. (2020) <doi:10.1101/467019>, and the software paper is in Zhao et al. (2021) <arXiv:2104.14008>.
+Description: Bayesian seemingly unrelated regression with general variable selection and dense/sparse covariance matrix. The sparse seemingly unrelated regression is described in Bottolo et al. (2021) <doi:10.1111/rssc.12490>, and the software paper is in Zhao et al. (2021) <arXiv:2104.14008>.
 License: MIT + file LICENSE
 Copyright: The C++ files pugixml.cpp, pugixml.hpp and pugiconfig.hpp
-        are Copyright (C) 2006-2018 by Arseny Kapoulkine
-        (arseny.kapoulkine@gmail.com) and Copyright (C) 2003 by Kristen
-        Wegner (kristen@tima.net). The R function
-        vertical.image.legend() has Copyright (C) 2013 by Jenise Swall
-        (jswall@vcu.edu).
+        are used with Copyright (C) 2006-2018 from Arseny Kapoulkine
+        and Copyright (C) 2003 from Kristen Wegner. The R function
+        vertical.image.legend() is used with Copyright (C) 2013 from
+        Jenise Swall.
 VignetteBuilder: R.rsp
 RoxygenNote: 7.1.1
 Depends: R (>= 3.5.0)
@@ -29,7 +28,7 @@ Suggests: R.rsp, BDgraph, data.table, plyr, scrime
 LazyData: true
 NeedsCompilation: yes
 SystemRequirements: C++11
-Packaged: 2021-05-05 07:01:09 UTC; zhiz
+Packaged: 2021-11-18 09:17:59 UTC; zhiz
 Author: Marco Banterle [aut],
   Zhi Zhao [aut, cre],
   Leonardo Bottolo [ctb],

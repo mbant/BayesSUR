@@ -43,7 +43,7 @@
 #' CPO with joint posterior predictive of the response variables (\code{*_CPOsumy_out.txt}) and widely applicable information criterion (\code{*_WAIC_out.txt}). See the return value below for more information.
 #' @param output_Y allow ( \code{TRUE} ) or suppress ( \code{FALSE} ) the output for responses dataset Y.
 #' @param output_X allow ( \code{TRUE} ) or suppress ( \code{FALSE} ) the output for predictors dataset X.
-#' @param tmpFolder the path to a temporary folder where intermediate data files are stored (will be erased at the end of the chain) default to local tmpFolder
+#' @param tmpFolder the path to a temporary folder where intermediate data files are stored (will be erased at the end of the chain). It is specified relative to \code{outFilePath}.
 #' 
 #' @details The arguments \code{covariancePrior} and \code{gammaPrior} specify the model HRR, dSUR or SSUR with different gamma prior. Let \eqn{\gamma_{jk}} be latent indicator variable of each coefficient and \eqn{C} be covariance matrix of response variables.
 #' The nine models specified through the arguments \code{covariancePrior} and \code{gammaPrior} are as follows.
