@@ -491,12 +491,6 @@ BayesSUR <- function(data = NULL, Y, X, X_0 = NULL,
   if(outFilePath != tmpFolder)
     unlink(tmpFolder,recursive = TRUE)
   
-  class(print) <- c(class(print), "BayesSUR")
-  class(summary) <- c(class(summary), "BayesSUR")
-  class(fitted) <- c(class(fitted), "BayesSUR")
-  class(predict) <- c(class(predict), "BayesSUR")
-  class(coef) <- c(class(coef), "BayesSUR")
-  class(plot) <- c(class(plot), "BayesSUR")
   return(ret)
 }
 

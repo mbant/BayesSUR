@@ -2,7 +2,7 @@ Package: BayesSUR
 Type: Package
 Title: Bayesian Seemingly Unrelated Regression
 Version: 2.0-1
-Date: 2021-11-18
+Date: 2021-11-26
 Authors@R: c(person("Marco", "Banterle", email = "marco.banterle@gmail.com", role = c("aut")),
              person("Zhi", "Zhao", email = "zhi.zhao@medisin.uio.no", role = c("aut", "cre")),
              person("Leonardo", "Bottolo", email = "lb664@cam.ac.uk", role = c("ctb")),
@@ -10,7 +10,7 @@ Authors@R: c(person("Marco", "Banterle", email = "marco.banterle@gmail.com", rol
              person("Waldir", "Leoncio", email = "w.l.netto@medisin.uio.no", role = c("ctb")),
              person("Alex", "Lewin", email = "alex.lewin@lshtm.ac.uk", role = c("aut")),
              person("Manuela", "Zucknick", email = "manuela.zucknick@medisin.uio.no", role = c("ctb")))
-Description: Bayesian seemingly unrelated regression with general variable selection and dense/sparse covariance matrix. The sparse seemingly unrelated regression is described in Bottolo et al. (2021) <doi:10.1111/rssc.12490>, and the software paper is in Zhao et al. (2021) <arXiv:2104.14008>.
+Description: Bayesian seemingly unrelated regression with general variable selection and dense/sparse covariance matrix. The sparse seemingly unrelated regression is described in Bottolo et al. (2021) <doi:10.1111/rssc.12490>, and the software paper is in Zhao et al. (2021) <doi:10.18637/jss.v100.i11>.
 License: MIT + file LICENSE
 Copyright: The C++ files pugixml.cpp, pugixml.hpp and pugiconfig.hpp
         are used with Copyright (C) 2006-2018 from Arseny Kapoulkine
@@ -28,7 +28,7 @@ Suggests: R.rsp, BDgraph, data.table, plyr, scrime
 LazyData: true
 NeedsCompilation: yes
 SystemRequirements: C++11
-Packaged: 2021-11-18 09:17:59 UTC; zhiz
+Packaged: 2021-11-26 18:49:26 UTC; zhiz
 Author: Marco Banterle [aut],
   Zhi Zhao [aut, cre],
   Leonardo Bottolo [ctb],
