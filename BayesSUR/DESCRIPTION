@@ -28,7 +28,7 @@ Suggests: R.rsp, BDgraph, data.table, plyr, scrime
 LazyData: true
 NeedsCompilation: yes
 SystemRequirements: C++11
-Packaged: 2021-11-26 18:49:26 UTC; zhiz
+Packaged: 2021-11-26 23:33:30 UTC; zhiz
 Author: Marco Banterle [aut],
   Zhi Zhao [aut, cre],
   Leonardo Bottolo [ctb],

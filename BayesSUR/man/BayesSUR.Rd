@@ -58,13 +58,13 @@ BayesSUR(
 
 \item{nChains}{number of parallel tempered chains to run (default 2). The temperature is adapted during the burnin phase.}
 
-\item{outFilePath}{path to where the output files are to be written. The default path is the currect working directory.}
+\item{outFilePath}{path to where the output files are to be written.}
 
 \item{gammaSampler}{string indicating the type of sampler for gamma, either \code{bandit} for the Thompson sampling inspired samper or \code{MC3} for the usual MC^3 sampler.  See Russo et al.(2018) or Madigan and York (1995) for details.}
 
 \item{gammaInit}{gamma initialisation to either all-zeros (\code{0}), all ones (\code{1}), MLE-informed (\code{MLE}) or (default) randomly (\code{R}).}
 
-\item{mrfG}{either a matrix or a path to the file containing the G matrix for the MRF prior on gamma (if necessary)}
+\item{mrfG}{either a matrix or a path to the file containing (the edge list of) the G matrix for the MRF prior on gamma (if necessary)}
 
 \item{standardize}{logical flag for X variable standardization. Default is \code{standardize=TRUE}. The coefficients are returned on the standardized scale.}
 

@@ -22,10 +22,10 @@
 #' @param nIter number of iterations for the MCMC procedure. Default 10000.
 #' @param burnin number of iterations to discard at the start of the chain. Default is 5000.
 #' @param nChains number of parallel tempered chains to run (default 2). The temperature is adapted during the burnin phase.
-#' @param outFilePath path to where the output files are to be written. The default path is the currect working directory.
+#' @param outFilePath path to where the output files are to be written. 
 #' @param gammaSampler string indicating the type of sampler for gamma, either \code{bandit} for the Thompson sampling inspired samper or \code{MC3} for the usual MC^3 sampler.  See Russo et al.(2018) or Madigan and York (1995) for details.
 #' @param gammaInit gamma initialisation to either all-zeros (\code{0}), all ones (\code{1}), MLE-informed (\code{MLE}) or (default) randomly (\code{R}).
-#' @param mrfG either a matrix or a path to the file containing the G matrix for the MRF prior on gamma (if necessary)
+#' @param mrfG either a matrix or a path to the file containing (the edge list of) the G matrix for the MRF prior on gamma (if necessary)
 #' @param standardize logical flag for X variable standardization. Default is \code{standardize=TRUE}. The coefficients are returned on the standardized scale.
 #' @param standardize.response logical flag for Y standardization. Default is \code{standardize.response=TRUE}.
 #' @param hyperpar a list of named hypeparameters to use instead of the default values. Valid names are mrf_d, mrf_e, a_sigma, b_sigma, a_tau, b_tau, nu, a_eta, b_eta, a_o, b_o, a_pi, b_pi, a_w and b_w. 
