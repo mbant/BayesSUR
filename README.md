@@ -22,4 +22,4 @@ devtools::install_github("mbant/BayesSUR/BayesSUR")
 
 ## Citation
 
-Zhi Zhao, Marco Banterle, Leonardo Bottolo, Sylvia Richardson, Alex Lewin, Manuela Zucknick (2021). BayesSUR: An R package for high-dimensional multivariate Bayesian variable and covariance selection in linear regression. **Journal of Statistical Software**, to appear. arXiv: [2104.14008](https://arxiv.org/abs/2104.14008).
+Zhi Zhao, Marco Banterle, Leonardo Bottolo, Sylvia Richardson, Alex Lewin, Manuela Zucknick (2021). BayesSUR: An R package for high-dimensional multivariate Bayesian variable and covariance selection in linear regression. **Journal of Statistical Software**, 100(11):1-32. DOI: [10.18637/jss.v100.i11](https://www.jstatsoft.org/article/view/v100i11).
