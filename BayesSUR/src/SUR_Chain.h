@@ -12,6 +12,9 @@
 #include "ESS_Atom.h"
 #include "Parameter_types.h"
 
+/*#define ARMA_DONT_PRINT_ERRORS
+#include <RcppArmadillo.h> */
+
 /************************************
  * SSUR class that works with the ESS_Sampler class
  * CRTP used for global exchanges

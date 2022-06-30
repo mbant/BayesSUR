@@ -2961,6 +2961,10 @@ void SUR_Chain::step()
                 stepOneO();
                 stepOnePi();
             }
+            /*for( auto i=0; i<10; ++i)
+            {
+                stepOnePi();
+            }*/
             break;
             
         case Gamma_Type::hierarchical :
@@ -3650,8 +3654,7 @@ void SUR_Chain::swapAll( std::shared_ptr<SUR_Chain>& thatChain )
     {
         this->swapO( thatChain );
         this->swapPi( thatChain );
-    }
-    else if ( gamma_type == Gamma_Type::hierarchical )
+    }else if ( gamma_type == Gamma_Type::hierarchical )
     {
         this->swapPi( thatChain );
     }

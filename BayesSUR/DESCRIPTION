@@ -1,8 +1,8 @@
 Package: BayesSUR
 Type: Package
 Title: Bayesian Seemingly Unrelated Regression
-Version: 2.0-1
-Date: 2021-11-29
+Version: 2.1-0
+Date: 2022-06-29
 Authors@R: c(person("Marco", "Banterle", email = "marco.banterle@gmail.com", role = c("aut")),
              person("Zhi", "Zhao", email = "zhi.zhao@medisin.uio.no", role = c("aut", "cre")),
              person("Leonardo", "Bottolo", email = "lb664@cam.ac.uk", role = c("ctb")),
@@ -10,7 +10,7 @@ Authors@R: c(person("Marco", "Banterle", email = "marco.banterle@gmail.com", rol
              person("Waldir", "Leoncio", email = "w.l.netto@medisin.uio.no", role = c("ctb")),
              person("Alex", "Lewin", email = "alex.lewin@lshtm.ac.uk", role = c("aut")),
              person("Manuela", "Zucknick", email = "manuela.zucknick@medisin.uio.no", role = c("ctb")))
-Description: Bayesian seemingly unrelated regression with general variable selection and dense/sparse covariance matrix. The sparse seemingly unrelated regression is described in Bottolo et al. (2021) <doi:10.1111/rssc.12490>, and the software paper is in Zhao et al. (2021) <arXiv:2104.14008>.
+Description: Bayesian seemingly unrelated regression with general variable selection and dense/sparse covariance matrix. The sparse seemingly unrelated regression is described in Bottolo et al. (2021) <doi:10.1111/rssc.12490>, the software paper is in Zhao et al. (2021) <doi:10.18637/jss.v100.i11>, and the model with random effects is described in Zhao et al. (2021) <arXiv:2101.05899>.
 License: MIT + file LICENSE
 Copyright: The C++ files pugixml.cpp, pugixml.hpp and pugiconfig.hpp
         are used with Copyright (C) 2006-2018 from Arseny Kapoulkine
@@ -18,7 +18,7 @@ Copyright: The C++ files pugixml.cpp, pugixml.hpp and pugiconfig.hpp
         vertical.image.legend() is used with Copyright (C) 2013 from
         Jenise Swall.
 VignetteBuilder: R.rsp
-RoxygenNote: 7.1.1
+RoxygenNote: 7.1.2
 Depends: R (>= 3.5.0)
 Encoding: UTF-8
 LinkingTo: Rcpp, RcppArmadillo (>= 0.9.000)
@@ -28,7 +28,7 @@ Suggests: R.rsp, BDgraph, data.table, plyr, scrime
 LazyData: true
 NeedsCompilation: yes
 SystemRequirements: C++11
-Packaged: 2021-11-29 09:05:13 UTC; zhiz
+Packaged: 2022-06-29 20:37:11 UTC; zhiz
 Author: Marco Banterle [aut],
   Zhi Zhao [aut, cre],
   Leonardo Bottolo [ctb],

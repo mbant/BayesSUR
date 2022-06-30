@@ -24,7 +24,7 @@
 #' @param nChains number of parallel tempered chains to run (default 2). The temperature is adapted during the burnin phase.
 #' @param outFilePath path to where the output files are to be written. 
 #' @param gammaSampler string indicating the type of sampler for gamma, either \code{bandit} for the Thompson sampling inspired samper or \code{MC3} for the usual MC^3 sampler.  See Russo et al.(2018) or Madigan and York (1995) for details.
-#' @param gammaInit gamma initialisation to either all-zeros (\code{0}), all ones (\code{1}), MLE-informed (\code{MLE}) or (default) randomly (\code{R}).
+#' @param gammaInit gamma initialisation to either all-zeros (\code{"0"}), all ones (\code{"1"}), MLE-informed (\code{"MLE"}) or (default) randomly (\code{"R"}).
 #' @param mrfG either a matrix or a path to the file containing (the edge list of) the G matrix for the MRF prior on gamma (if necessary)
 #' @param standardize logical flag for X variable standardization. Default is \code{standardize=TRUE}. The coefficients are returned on the standardized scale.
 #' @param standardize.response logical flag for Y standardization. Default is \code{standardize.response=TRUE}.

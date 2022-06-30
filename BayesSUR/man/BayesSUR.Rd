@@ -62,7 +62,7 @@ BayesSUR(
 
 \item{gammaSampler}{string indicating the type of sampler for gamma, either \code{bandit} for the Thompson sampling inspired samper or \code{MC3} for the usual MC^3 sampler.  See Russo et al.(2018) or Madigan and York (1995) for details.}
 
-\item{gammaInit}{gamma initialisation to either all-zeros (\code{0}), all ones (\code{1}), MLE-informed (\code{MLE}) or (default) randomly (\code{R}).}
+\item{gammaInit}{gamma initialisation to either all-zeros (\code{"0"}), all ones (\code{"1"}), MLE-informed (\code{"MLE"}) or (default) randomly (\code{"R"}).}
 
 \item{mrfG}{either a matrix or a path to the file containing (the edge list of) the G matrix for the MRF prior on gamma (if necessary)}
 

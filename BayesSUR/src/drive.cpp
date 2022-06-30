@@ -62,6 +62,9 @@ int drive_SUR( Chain_Data& chainData )
             sampler[i]->setJTStartIteration( jtStartIteration );
     }
     
+    //for(unsigned int m=0; m < chainData.nChains; ++m)
+    //   sampler[m] -> setGammaSamplerType(chainData.gamma_sampler_type);
+    
     // Init gamma and beta for the main chain
     // *****************************
     sampler[0] -> gammaInit( chainData.gammaInit );
@@ -140,8 +143,11 @@ int drive_SUR( Chain_Data& chainData )
     arma::umat gamma_out; // out var for the gammas
     arma::umat g_out, tmpG; // out var for G and tmpG
     arma::urowvec g_visit; // out var for visted G (vectorized upper triangle)
-    arma::mat beta_out, tmpB; // out var for the betas and standard deviation
+    arma::mat beta_out, tmpB;//, tmpB2, tmpB3, tmpB4, tmpB5; // out var for the betas and standard deviation
     arma::mat betaSD_out = arma::zeros<arma::mat>(chainData.surData.nFixedPredictors+chainData.surData.nVSPredictors,chainData.surData.nOutcomes); // out var for the betas SD
+    //arma::mat y0 = chainData.surData.data->cols( *chainData.surData.outcomesIdx );
+    //arma::mat x0 = chainData.surData.data->cols( arma::join_vert( *chainData.surData.fixedPredictorsIdx , *chainData.surData.VSPredictorsIdx ) );
+    
     arma::mat sigmaRho_out; // out var for the sigmas and rhos
     arma::vec tmpVec; // temporary to store the pi parameter vector
     arma::vec pi_out;
@@ -294,7 +300,8 @@ int drive_SUR( Chain_Data& chainData )
     for(unsigned int i=1; i < chainData.nIter ; ++i)
     {
         sampler.step();
-       
+        
+        
         // #################### END LOCAL MOVES
         
         // ## Global moves
@@ -350,6 +357,13 @@ int drive_SUR( Chain_Data& chainData )
         }else{
             if ( chainData.covariance_type == Covariance_Type::HIW && chainData.output_Gy )
                 tmpG = arma::umat( sampler[0] -> getGAdjMat() );
+            
+            // Update parameters in burn-in period
+            sampler[0] -> getGamma();
+            sampler[0] -> getGAdjMat();
+            tmpB = sampler[0] -> getBeta();
+            sampler[0] -> getSigmaRho();
+            sampler[0] -> getPi();
         }
         
         if ( chainData.output_model_visit )
@@ -364,7 +378,20 @@ int drive_SUR( Chain_Data& chainData )
         // Print something on how the chain is going
         if( (i+1) % tick == 0 )
         {
-            Rcout << " Running iteration " << i+1 << " ... local Acc Rate: ~ gamma: " << Utils::round( sampler[0] -> getGammaAccRate() , 3 );
+            /*tmpB2 = sampler[1] -> getBeta();
+            tmpB3 = sampler[2] -> getBeta();
+            tmpB4 = sampler[3] -> getBeta();
+            tmpB5 = sampler[4] -> getBeta();
+            //  debug why too large RMSE by SSUR-MRF
+            Rcout << "SSE1=" << arma::accu(arma::square(y0 - x0 * tmpB))
+            << "  SSE2=" << arma::accu(arma::square(y0 - x0 * tmpB2))
+            << "  SSE3=" << arma::accu(arma::square(y0 - x0 * tmpB3))
+            << "  SSE4=" << arma::accu(arma::square(y0 - x0 * tmpB4))
+            << "  SSE5=" << arma::accu(arma::square(y0 - x0 * tmpB5)) << "\n";
+            
+            Rcout << " Running iteration " << i+1 << " ... local Acc Rate: ~ gamma: " << Utils::round( sampler[0] -> getGammaAccRate() , 3 )
+            << "; " << Utils::round( sampler[1] -> getGammaAccRate() , 3 )  << "; " << Utils::round( sampler[2] -> getGammaAccRate() , 3 )  << "; " << Utils::round( sampler[3] -> getGammaAccRate() , 3 )  << "; " << Utils::round( sampler[4] -> getGammaAccRate() , 3 );*/
+            
             Rcout << " -- JT: " << Utils::round( sampler[0] -> getJTAccRate() , 3 ) ;
             
             if( chainData.nChains > 1){
@@ -373,9 +400,9 @@ int drive_SUR( Chain_Data& chainData )
                 Rcout << '\n';
             }
             
-#ifndef CCODE
-            Rcpp::checkUserInterrupt(); // this checks for interrupts from R
-#endif
+//#ifndef CCODE
+//            Rcpp::checkUserInterrupt(); // this checks for interrupts from R
+//#endif
             
             // Output to files every now and then
             
@@ -443,6 +470,8 @@ int drive_SUR( Chain_Data& chainData )
                     
                     ModelSizeOutFile << sampler[0]->getModelSize() << " ";
                     ModelSizeOutFile << '\n';
+                    
+                    Rcout << "Model sizes of chains: " << arma::accu(sampler[0]->getModelSize()) << "; " << arma::accu(sampler[1]->getModelSize()) << "; " << arma::accu(sampler[2]->getModelSize()) << "; " << arma::accu(sampler[3]->getModelSize()) << "; " << arma::accu(sampler[4]->getModelSize()) << "\n";
                 }
             }
         }
@@ -823,9 +852,9 @@ int drive_HRR( Chain_Data& chainData )
                 Rcout << '\n';
             
             
-#ifndef CCODE
-            Rcpp::checkUserInterrupt(); // this checks for interrupts from R ... or does it?
-#endif
+//#ifndef CCODE
+//            Rcpp::checkUserInterrupt(); // this checks for interrupts from R ... or does it?
+//#endif
             
             // Output to files every now and then
             if( (i >= chainData.burnin) && ( (i-chainData.burnin+1) % (tick*1) == 0 ) )
@@ -1145,8 +1174,8 @@ int drive( const std::string& dataFile, const std::string& mrfGFile, const std::
             omp_set_nested(1); // 1=enable, 0=disable nested parallelism (run chains in parallel + compute likelihoods in parallel at least wrt to outcomes + wrt to individuals)
             // MOST OF THE PARALLELISATION IMPROVEMENTS COME FROM OPENBLAS ANYWAY .. I WONDER IF ACCELERATING LA THOURGH GPU WOULD CHANGE THAT ..
             
-            //nThreads = std::min( omp_get_max_threads()-1, maxThreads );
-            omp_set_num_threads(  std::min( omp_get_max_threads()-1, maxThreads ) );
+            // omp_set_num_threads(  std::min( omp_get_max_threads()-1, maxThreads ) );
+            omp_set_num_threads( maxThreads );
     #endif
     
     // ###################################

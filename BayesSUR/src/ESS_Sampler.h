@@ -23,6 +23,7 @@ using Rcpp::Rcerr;
 #include "HRR_Chain.h"
 #include "SUR_Chain.h"
 
+
 template<typename T>  //  the template here should be a class derived from ESS_Atom
 class ESS_Sampler{
     
@@ -239,14 +240,21 @@ void ESS_Sampler<T>::updateTemperatures()
     
     if( getGlobalAccRate() > 0.3 )
     {
-        tempRatio *= 1.1 ;
+        // tempRatio *= 1.1 ;
+        tempRatio = std::min( 100., tempRatio * 1.1 ) ;
         
         for( unsigned int i=1; i < nChains ; ++i )
         {
             chain[i]->setTemperature( tempRatio * chain[i-1]->getTemperature() );
         }
         
-        Rcout << "Temperature ladder updated, new temperature ratio : " << tempRatio << std::endl;
+        Rcout << "Temperature ladder updated, new temperature ratio : " << tempRatio;// << std::endl;
+        
+        /*for( unsigned int i=2; i < nChains ; ++i )
+        {
+            Rcout << " -- ratio" << i << ": " << chain[i]->getTemperature();
+        }
+        Rcout  << std::endl;*/
         
     }else if( getGlobalAccRate() < 0.05 )
     {
@@ -257,8 +265,15 @@ void ESS_Sampler<T>::updateTemperatures()
             chain[i]->setTemperature( tempRatio * chain[i-1]->getTemperature() );
         }
         
-        Rcout << "Temperature ladder updated, new temperature ratio : " << tempRatio << std::endl;
+        Rcout << "Temperature ladder updated, new temperature ratio : " << tempRatio;// << std::endl;
+        
+        /*for( unsigned int i=2; i < nChains ; ++i )
+        {
+            Rcout << " ratio" << i << ": " << chain[i]->getTemperature();
+        }
+        Rcout  << std::endl;*/
     }
+    
     
     // I want to maintain a sort-of-moving avaerage acceptance count for the global moves, so that
     // when we check if we should update the temperatures we only check in the near-past

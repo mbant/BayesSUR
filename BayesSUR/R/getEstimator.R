@@ -55,7 +55,7 @@ getEstimator <- function(object, estimator = "gamma", Pmax = 0, beta.type = "mar
           gammas <- as.matrix( read.table(object$output$gamma) )
           
           if("X0" %in% names(object$output) ){
-            X0 <- as.matrix( read.table(object$output$X0) )
+            X0 <- as.matrix( read.table(object$output$X0,header=T) )
             ret$beta[-c(1:ncol(X0)),] <- (gammas>=Pmax)*ret$beta[-c(1:ncol(X0)),]/gammas
           }else{
             ret$beta <- (gammas>=Pmax)*ret$beta/gammas
