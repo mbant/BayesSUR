@@ -10,6 +10,7 @@
 #' @importFrom utils head tail read.table write.table
 #' @importFrom Rcpp sourceCpp
 #' @importFrom xml2 as_xml_document write_xml
+#' @importFrom parallel detectCores
 #' 
 #' @name BayesSUR
 #' @param data a numeric matrix with variables on the columns and observations on the rows, if arguments \code{Y} and \code{X} (and possibly \code{X_0}) are vectors. Can be \code{NULL} if arguments \code{Y} and \code{X} (and possibly \code{X_0}) are numeric matrices.
@@ -24,7 +25,7 @@
 #' @param nChains number of parallel tempered chains to run (default 2). The temperature is adapted during the burnin phase.
 #' @param outFilePath path to where the output files are to be written. 
 #' @param gammaSampler string indicating the type of sampler for gamma, either \code{bandit} for the Thompson sampling inspired samper or \code{MC3} for the usual MC^3 sampler.  See Russo et al.(2018) or Madigan and York (1995) for details.
-#' @param gammaInit gamma initialisation to either all-zeros (\code{"0"}), all ones (\code{"1"}), MLE-informed (\code{"MLE"}) or (default) randomly (\code{"R"}).
+#' @param gammaInit gamma initialisation to either all-zeros (\code{0}), all ones (\code{1}), MLE-informed (\code{MLE}) or (default) randomly (\code{R}).
 #' @param mrfG either a matrix or a path to the file containing (the edge list of) the G matrix for the MRF prior on gamma (if necessary)
 #' @param standardize logical flag for X variable standardization. Default is \code{standardize=TRUE}. The coefficients are returned on the standardized scale.
 #' @param standardize.response logical flag for Y standardization. Default is \code{standardize.response=TRUE}.
@@ -82,8 +83,8 @@
 #' 
 #' @references Russo D, Van Roy B, Kazerouni A, Osband I, Wen Z (2018). \emph{A tutorial on Thompson sampling.} Foundations and Trends in Machine Learning, 11: 1-96.
 #' @references Madigan D, York J (1995). \emph{Bayesian graphical models for discrete data.} International Statistical Review, 63: 215–232.
-#' @references Banterle M, Bottolo L, Richardson S, Ala-Korpela M, Jarvelin MR, Lewin A (2018). \emph{Sparse variable and covariance selection for high-dimensional seemingly unrelated Bayesian regression.} bioRxiv: 467019.
-#' @references Banterle M#, Zhao Z#, Bottolo L, Richardson S, Lewin A, Zucknick M (2019). \emph{BayesSUR: An R package for high-dimensional multivariate Bayesian variable and covariance selection in linear regression.} URL: https://cran.r-project.org/web/packages/BayesSUR/vignettes/BayesSUR.pdf
+#' @references Bottolo L, Banterle M, Richardson S, Ala-Korpela M, Jarvelin MR, Lewin A (2020). \emph{A computationally efficient Bayesian seemingly unrelated regressions model for high-dimensional quantitative trait loci discovery.} Journal of Royal Statistical Society: Series C, 70: 886-908.
+#' @references Zhao Z, Banterle M, Bottolo L, Richardson S, Lewin A, Zucknick M (2021). \emph{BayesVAR: An R package for high-dimensional multivariate Bayesian variable and covariance selection in linear regression.} Journal of Statistical Software, 100: 1–32.
 #' 
 #' @examples
 #' data("exampleEQTL", package = "BayesSUR")
@@ -479,6 +480,10 @@ BayesSUR <- function(data = NULL, Y, X, X_0 = NULL,
   #seed = as.integer(.GlobalEnv$.Random.seed[length(.GlobalEnv$.Random.seed)])
   #set.seed(seed)
   #betaPrior="independent"
+  
+  # set number of threads
+  maxThreads <- min(maxThreads, detectCores())
+  
   ret$status = BayesSUR_internal(data, mrfG, blockList, structureGraph, hyperParFile, outFilePath, 
                                  nIter, burnin, nChains, 
                                  covariancePrior, gammaPrior, gammaSampler, gammaInit, betaPrior, maxThreads,

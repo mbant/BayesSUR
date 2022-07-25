@@ -62,7 +62,7 @@ BayesSUR(
 
 \item{gammaSampler}{string indicating the type of sampler for gamma, either \code{bandit} for the Thompson sampling inspired samper or \code{MC3} for the usual MC^3 sampler.  See Russo et al.(2018) or Madigan and York (1995) for details.}
 
-\item{gammaInit}{gamma initialisation to either all-zeros (\code{"0"}), all ones (\code{"1"}), MLE-informed (\code{"MLE"}) or (default) randomly (\code{"R"}).}
+\item{gammaInit}{gamma initialisation to either all-zeros (\code{0}), all ones (\code{1}), MLE-informed (\code{MLE}) or (default) randomly (\code{R}).}
 
 \item{mrfG}{either a matrix or a path to the file containing (the edge list of) the G matrix for the MRF prior on gamma (if necessary)}
 
@@ -178,7 +178,7 @@ Russo D, Van Roy B, Kazerouni A, Osband I, Wen Z (2018). \emph{A tutorial on Tho
 
 Madigan D, York J (1995). \emph{Bayesian graphical models for discrete data.} International Statistical Review, 63: 215–232.
 
-Banterle M, Bottolo L, Richardson S, Ala-Korpela M, Jarvelin MR, Lewin A (2018). \emph{Sparse variable and covariance selection for high-dimensional seemingly unrelated Bayesian regression.} bioRxiv: 467019.
+Bottolo L, Banterle M, Richardson S, Ala-Korpela M, Jarvelin MR, Lewin A (2020). \emph{A computationally efficient Bayesian seemingly unrelated regressions model for high-dimensional quantitative trait loci discovery.} Journal of Royal Statistical Society: Series C, 70: 886-908.
 
-Banterle M#, Zhao Z#, Bottolo L, Richardson S, Lewin A, Zucknick M (2019). \emph{BayesSUR: An R package for high-dimensional multivariate Bayesian variable and covariance selection in linear regression.} URL: https://cran.r-project.org/web/packages/BayesSUR/vignettes/BayesSUR.pdf
+Zhao Z, Banterle M, Bottolo L, Richardson S, Lewin A, Zucknick M (2021). \emph{BayesVAR: An R package for high-dimensional multivariate Bayesian variable and covariance selection in linear regression.} Journal of Statistical Software, 100: 1–32.
 }

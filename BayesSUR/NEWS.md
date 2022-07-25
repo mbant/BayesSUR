@@ -1,3 +1,7 @@
+# BayesSUR 2.1-1
+
+* Fixed R session aborted fatal error
+
 # BayesSUR 2.1-0
 
 * Fixed an issue with `omp_set_num_threads` that did not work
