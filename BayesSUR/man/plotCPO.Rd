@@ -76,7 +76,7 @@ plotCPO(fit)
 \references{
 Statisticat, LLC (2013). \emph{Bayesian Inference.} Farmington, CT: Statisticat, LLC.
 
-Gelfand A. (1996). \emph{Model Determination Using Sampling Based Methods}. In Gilks W., Richardson S., Spiegelhalter D. (eds.), Markov Chain Monte Carlo in Practice, pp. 145–161. Chapman \& Hall, Boca Raton, FL.
+Gelfand A. (1996). \emph{Model Determination Using Sampling Based Methods}. In Gilks W., Richardson S., Spiegelhalter D. (eds.), Markov Chain Monte Carlo in Practice, pp. 145–161. Chapman & Hall, Boca Raton, FL.
 
-Congdon P. (2005). \emph{Bayesian Models for Categorical Data}. John Wiley \& Sons, West Sussex, England.
+Congdon P. (2005). \emph{Bayesian Models for Categorical Data}. John Wiley & Sons, West Sussex, England.
 }
