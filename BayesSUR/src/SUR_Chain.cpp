@@ -3810,7 +3810,7 @@ arma::mat SUR_Chain::createXB( const arma::umat&  externalGammaMask , const arma
     arma::uvec singleIdx_k(1), VS_IN_k;
     arma::mat externalXB = arma::zeros<arma::mat>(nObservations,nOutcomes);
     
-    if(gammaMask.n_rows > 0)
+    if(externalGammaMask.n_rows > 0)
     {
         for(unsigned int k=0; k<nOutcomes; ++k)
         {

@@ -1,3 +1,7 @@
+# BayesSUR 2.1-2
+
+* Fixed gcc-UBSAN error `reference binding to null pointer` in SUR_Chain.cpp:3818
+
 # BayesSUR 2.1-1
 
 * Fixed R session aborted fatal error
