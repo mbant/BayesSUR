@@ -9,29 +9,39 @@
 \arguments{
 \item{object}{an object of class \code{BayesSUR}}
 
-\item{Pmax}{threshold that truncates the estimated coefficients based on thresholding the estimated latent indicator variable. Default is 0.5}
+\item{Pmax}{threshold that truncates the estimated coefficients based on 
+thresholding the estimated latent indicator variable. Default is 0.5}
 
 \item{...}{other arguments}
 }
 \value{
-Return a result summary from an object of class \code{BayesSUR}, including the CPOs, number of selected predictors with mPIP>\code{Pmax}, top 10 predictors on average mPIP across all responses,
-top 10 responses on average mPIP across all predictors, Expected log pointwise predictive density (elpd) estimates, MCMC specification, model specification (i.e., covariance prior and gamma prior) and hyper-parameters.
+Return a result summary from an object of class \code{BayesSUR}, 
+including the CPOs, number of selected predictors with mPIP>\code{Pmax}, 
+top 10 predictors on average mPIP across all responses, top 10 responses on 
+average mPIP across all predictors, Expected log pointwise predictive 
+density (elpd) estimates, MCMC specification, model specification (i.e., 
+covariance prior and gamma prior) and hyper-parameters.
 }
 \description{
-Summary method for class \code{BayesSUR}. It includes the argument matching information, Top predictors/responses on average mPIP across all responses/predictors, 
-elpd estimates, MCMC specification, model specification and hyper-parameters. The summarized number of the selected variable corresponds to the posterior 
-mean of the latent indicator variable thresholding at 0.5 by default.
+Summary method for class \code{BayesSUR}. It includes the argument matching 
+information, Top predictors/responses on average mPIP across all 
+responses/predictors, elpd estimates, MCMC specification, model 
+specification and hyper-parameters. The summarized number of the selected 
+variable corresponds to the posterior mean of the latent indicator variable 
+thresholding at 0.5 by default.
 }
 \examples{
 data(exampleEQTL, package = "BayesSUR")
-hyperpar = list( a_w = 2 , b_w = 5 )
+hyperpar <- list(a_w = 2, b_w = 5)
 
 set.seed(9173)
-fit <- BayesSUR(Y = exampleEQTL[["blockList"]][[1]], 
-                X = exampleEQTL[["blockList"]][[2]],
-                data = exampleEQTL[["data"]], outFilePath = tempdir(),
-                nIter = 100, burnin = 50, nChains = 2, gammaPrior = "hotspot",
-                hyperpar = hyperpar, tmpFolder = "tmp/", output_CPO=TRUE)
+fit <- BayesSUR(
+  Y = exampleEQTL[["blockList"]][[1]],
+  X = exampleEQTL[["blockList"]][[2]],
+  data = exampleEQTL[["data"]], outFilePath = tempdir(),
+  nIter = 100, burnin = 50, nChains = 2, gammaPrior = "hotspot",
+  hyperpar = hyperpar, tmpFolder = "tmp/", output_CPO = TRUE
+)
 
 ## check output
 # show the summary information

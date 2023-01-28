@@ -2,35 +2,45 @@
 % Please edit documentation in R/fitted.BayesSUR.R
 \name{fitted.BayesSUR}
 \alias{fitted.BayesSUR}
-\title{get fitted responses from a \code{BayesSUR} object}
+\title{get fitted responses}
 \usage{
 \method{fitted}{BayesSUR}(object, Pmax = 0, beta.type = "marginal", ...)
 }
 \arguments{
 \item{object}{an object of class \code{BayesSUR}}
 
-\item{Pmax}{valid if \code{beta.type="conditional"}. If \code{beta.type="conditional"} and \code{Pmax=0.5}, it gives median probability model betas. Default is 0}
+\item{Pmax}{valid if \code{beta.type="conditional"}. If 
+\code{beta.type="conditional"} and \code{Pmax=0.5}, it gives median 
+probability model betas. Default is 0}
 
-\item{beta.type}{type of estimated beta for the fitted model. Default is \code{marginal}, giving marginal beta estimation. If \code{beta.type="conditional"}, it gives beta estimation conditional on gamma=1}
+\item{beta.type}{type of estimated beta for the fitted model. Default is 
+\code{marginal}, giving marginal beta estimation. If 
+\code{beta.type="conditional"}, it gives beta estimation conditional 
+on gamma=1}
 
 \item{...}{other arguments}
 }
 \value{
-Fitted values extracted from an object of class \code{BayesSUR}. If the \code{BayesSUR} specified data standardization, the fitted values are base based on standardized data.
+Fitted values extracted from an object of class \code{BayesSUR}. If 
+the \code{BayesSUR} specified data standardization, the fitted values are 
+base based on standardized data.
 }
 \description{
-Return the fitted response values that correspond to the posterior mean estimates from a \code{BayesSUR} class object.
+Return the fitted response values that correspond to the posterior mean 
+estimates from a \code{BayesSUR} class object.
 }
 \examples{
 data("exampleEQTL", package = "BayesSUR")
-hyperpar <- list( a_w = 2 , b_w = 5 )
+hyperpar <- list(a_w = 2, b_w = 5)
 
 set.seed(9173)
-fit <- BayesSUR(Y = exampleEQTL[["blockList"]][[1]], 
-                X = exampleEQTL[["blockList"]][[2]],
-                data = exampleEQTL[["data"]], outFilePath = tempdir(),
-                nIter = 100, burnin = 50, nChains = 2, gammaPrior = "hotspot",
-                hyperpar = hyperpar, tmpFolder = "tmp/" )
+fit <- BayesSUR(
+  Y = exampleEQTL[["blockList"]][[1]],
+  X = exampleEQTL[["blockList"]][[2]],
+  data = exampleEQTL[["data"]], outFilePath = tempdir(),
+  nIter = 100, burnin = 50, nChains = 2, gammaPrior = "hotspot",
+  hyperpar = hyperpar, tmpFolder = "tmp/"
+)
 
 ## check fitted values
 fitted.val <- fitted(fit)

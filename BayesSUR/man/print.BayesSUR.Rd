@@ -9,27 +9,35 @@
 \arguments{
 \item{x}{an object of class \code{BayesSUR}}
 
-\item{Pmax}{threshold that truncates the estimated coefficients based on thresholding the estimated latent indicator variable. Default is 0.5}
+\item{Pmax}{threshold that truncates the estimated coefficients based on 
+thresholding the estimated latent indicator variable. Default is 0.5}
 
 \item{...}{other arguments}
 }
 \value{
-Return a short summary from an object of class \code{BayesSUR}, including the number of selected predictors with mPIP>\code{Pmax} and the expected log pointwise predictive density estimates (i.e., elpd.LOO and elpd.WAIC).
+Return a short summary from an object of class \code{BayesSUR}, 
+including the number of selected predictors with mPIP>\code{Pmax} and the 
+expected log pointwise predictive density estimates (i.e., elpd.LOO and 
+elpd.WAIC).
 }
 \description{
-Print a short summary of a \code{BayesSUR} class object. It includes the argument matching information, 
-number of selected predictors based on thresholding the posterior mean of the latent indicator variable at 0.5 by default.
+Print a short summary of a \code{BayesSUR} class object. It includes the 
+argument matching information, number of selected predictors based on 
+thresholding the posterior mean of the latent indicator variable at 0.5 
+by default.
 }
 \examples{
 data("exampleEQTL", package = "BayesSUR")
-hyperpar = list( a_w = 2 , b_w = 5 )
+hyperpar <- list(a_w = 2, b_w = 5)
 
 set.seed(9173)
-fit <- BayesSUR(Y = exampleEQTL[["blockList"]][[1]], 
-                X = exampleEQTL[["blockList"]][[2]],
-                data = exampleEQTL[["data"]], outFilePath = tempdir(),
-                nIter = 100, burnin = 50, nChains = 2, gammaPrior = "hotspot",
-                hyperpar = hyperpar, tmpFolder = "tmp/", output_CPO=TRUE)
+fit <- BayesSUR(
+  Y = exampleEQTL[["blockList"]][[1]],
+  X = exampleEQTL[["blockList"]][[2]],
+  data = exampleEQTL[["data"]], outFilePath = tempdir(),
+  nIter = 100, burnin = 50, nChains = 2, gammaPrior = "hotspot",
+  hyperpar = hyperpar, tmpFolder = "tmp/", output_CPO = TRUE
+)
 
 ## check output
 # show the print information

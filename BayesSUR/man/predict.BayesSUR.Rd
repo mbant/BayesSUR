@@ -9,35 +9,50 @@
 \arguments{
 \item{object}{an object of class \code{BayesSUR}}
 
-\item{newx}{Matrix of new values for x at which predictions are to be made. Must be a matrix}
+\item{newx}{Matrix of new values for x at which predictions are to be made}
 
-\item{type}{Type of prediction required. \code{type="response"} gives the fitted responses; \code{type="coefficients"} returns the estimated coefficients depending on the arguments \code{beta.type} and \code{Pmax}.
-\code{type="nonzero"} returns a list of the indices of the nonzero coefficients corresponding to the estimated latent indicator variable thresholding at \code{Pmax}}
+\item{type}{Type of prediction required. \code{type="response"} gives the 
+fitted responses; \code{type="coefficients"} returns the estimated 
+coefficients depending on the arguments \code{beta.type} and \code{Pmax}.
+\code{type="nonzero"} returns a list of the indices of the nonzero 
+coefficients corresponding to the estimated latent indicator variable 
+thresholding at \code{Pmax}}
 
-\item{beta.type}{the type of estimated coefficients beta for prediction. Default is \code{marginal}, giving marginal beta estimation. If \code{beta.type="conditional"}, it gives conditional beta estimation}
+\item{beta.type}{the type of estimated coefficients beta for prediction. 
+Default is \code{marginal}, giving marginal beta estimation. If 
+\code{beta.type="conditional"}, it gives conditional beta estimation}
 
-\item{Pmax}{If \code{type="nonzero"}, it is a threshold for the estimated latent indicator variable. If \code{type="coefficients"}, \code{beta.type="conditional"} and \code{Pmax=0.5}, it gives median probability model betas. Default is 0}
+\item{Pmax}{If \code{type="nonzero"}, it is a threshold for the estimated 
+latent indicator variable. If \code{type="coefficients"}, 
+\code{beta.type="conditional"} and \code{Pmax=0.5}, it gives median 
+probability model betas. Default is 0}
 
 \item{...}{other arguments}
 }
 \value{
-Predicted values extracted from an object of class \code{BayesSUR}. If the \code{BayesSUR} specified data standardization, the fitted values are base based on standardized data.
+Predicted values extracted from an object of class \code{BayesSUR}. 
+If the \code{BayesSUR} specified data standardization, the fitted values 
+are base based on standardized data.
 }
 \description{
-Predict responses corresponding to the posterior mean of the coefficients, return posterior mean of coefficients or indices of nonzero coefficients of a \code{BayesSUR} class object.
+Predict responses corresponding to the posterior mean of the coefficients, 
+return posterior mean of coefficients or indices of nonzero coefficients of 
+a \code{BayesSUR} class object.
 }
 \examples{
 data("exampleEQTL", package = "BayesSUR")
-hyperpar <- list( a_w = 2 , b_w = 5 )
+hyperpar <- list(a_w = 2, b_w = 5)
 
 set.seed(9173)
-fit <- BayesSUR(Y = exampleEQTL[["blockList"]][[1]], 
-                X = exampleEQTL[["blockList"]][[2]],
-                data = exampleEQTL[["data"]], outFilePath = tempdir(),
-                nIter = 100, burnin = 50, nChains = 2, gammaPrior = "hotspot",
-                hyperpar = hyperpar, tmpFolder = "tmp/" )
+fit <- BayesSUR(
+  Y = exampleEQTL[["blockList"]][[1]],
+  X = exampleEQTL[["blockList"]][[2]],
+  data = exampleEQTL[["data"]], outFilePath = tempdir(),
+  nIter = 100, burnin = 50, nChains = 2, gammaPrior = "hotspot",
+  hyperpar = hyperpar, tmpFolder = "tmp/"
+)
 
 ## check prediction
-predict.val <- predict(fit, newx=exampleEQTL[["blockList"]][[2]])
+predict.val <- predict(fit, newx = exampleEQTL[["blockList"]][[2]])
 
 }

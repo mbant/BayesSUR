@@ -2,39 +2,51 @@
 % Please edit documentation in R/getEstimator.R
 \name{getEstimator}
 \alias{getEstimator}
-\title{extract the posterior mean of the parameters}
+\title{extract the posterior mean of parameters}
 \usage{
 getEstimator(object, estimator = "gamma", Pmax = 0, beta.type = "marginal")
 }
 \arguments{
 \item{object}{an object of class \code{BayesSUR}}
 
-\item{estimator}{the name of one estimator. Default is the latent indicator estimator "\code{gamma}". Other options "\code{beta}", "\code{Gy}", "\code{CPO}" and "\code{logP}" 
-correspond the marginal (conditional) coefficient matrix if \code{beta.type="marginal"}(\code{"conditional"}), response graph and conditional predictive ordinate (CPO) respectively}
+\item{estimator}{the name of one estimator. Default is the latent indicator 
+estimator "\code{gamma}". Other options "\code{beta}", "\code{Gy}", 
+"\code{CPO}" and "\code{logP}"
+correspond the marginal (conditional) coefficient matrix if 
+\code{beta.type="marginal"}(\code{"conditional"}), response graph and 
+conditional predictive ordinate (CPO) respectively}
 
-\item{Pmax}{threshold that truncate the estimator "\code{gamma}" or "\code{Gy}". Default is \code{0}. If \code{Pmax=0.5} and \code{beta.type="conditional"}, it gives median probability model betas}
+\item{Pmax}{threshold that truncate the estimator "\code{gamma}" or 
+"\code{Gy}". Default is \code{0}. If \code{Pmax=0.5} and 
+\code{beta.type="conditional"}, it gives median probability model betas}
 
-\item{beta.type}{the type of output beta. Default is \code{marginal}, giving marginal beta estimation. If \code{beta.type="conditional"}, it gives beta estimation conditional on gamma=1}
+\item{beta.type}{the type of output beta. Default is \code{marginal}, giving 
+marginal beta estimation. If \code{beta.type="conditional"}, it gives beta 
+estimation conditional on gamma=1}
 }
 \value{
-Return the estimator from an object of class \code{BayesSUR}. It is a matrix if the length of argument \code{marginal} is greater than 1. Otherwise, it is a list
+Return the estimator from an object of class \code{BayesSUR}. It is 
+a matrix if the length of argument \code{marginal} is greater than 1. 
+Otherwise, it is a list
 }
 \description{
 Extract the posterior mean of the parameters of a \code{BayesSUR} class object.
 }
 \examples{
 data("exampleEQTL", package = "BayesSUR")
-hyperpar <- list( a_w = 2 , b_w = 5 )
+hyperpar <- list(a_w = 2, b_w = 5)
 
 set.seed(9173)
-fit <- BayesSUR(Y = exampleEQTL[["blockList"]][[1]], 
-                X = exampleEQTL[["blockList"]][[2]],
-                data = exampleEQTL[["data"]], outFilePath = tempdir(),
-                nIter = 100, burnin = 50, nChains = 2, gammaPrior = "hotspot",
-                hyperpar = hyperpar, tmpFolder = "tmp/" )
+fit <- BayesSUR(
+  Y = exampleEQTL[["blockList"]][[1]],
+  X = exampleEQTL[["blockList"]][[2]],
+  data = exampleEQTL[["data"]], outFilePath = tempdir(),
+  nIter = 100, burnin = 50, nChains = 2, gammaPrior = "hotspot",
+  hyperpar = hyperpar, tmpFolder = "tmp/"
+)
 
 ## check output
 # extract the posterior mean of the coefficients matrix
-beta_hat <- getEstimator(fit, estimator="beta")
+beta_hat <- getEstimator(fit, estimator = "beta")
 
 }

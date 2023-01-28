@@ -2,7 +2,7 @@
 % Please edit documentation in R/plotEstimator.R
 \name{plotEstimator}
 \alias{plotEstimator}
-\title{plot the estimators}
+\title{plot heatmap of estimators}
 \usage{
 plotEstimator(
   x,
@@ -20,17 +20,19 @@ plotEstimator(
   header.cex = 2,
   tick = FALSE,
   mgp = c(2.5, 1, 0),
+  cex.main = 1.5,
   title.beta = NA,
   title.gamma = NA,
   title.Gy = NA,
-  cex.main = 1.5,
   ...
 )
 }
 \arguments{
 \item{x}{an object of class \code{BayesSUR}}
 
-\item{estimator}{print the heatmap of estimators. The value "beta" is for the estimated coefficients matrix, "gamma" for the latent indicator matrix and "Gy" for the graph of responses}
+\item{estimator}{print the heatmap of estimators. The value "beta" is for 
+the estimated coefficients matrix, "gamma" for the latent indicator matrix 
+and "Gy" for the graph of responses}
 
 \item{colorScale.gamma}{value palette for gamma}
 
@@ -38,15 +40,19 @@ plotEstimator(
 
 \item{legend.cex.axis}{magnification of axis annotation relative to cex}
 
-\item{name.responses}{a vector of the response names. The default is "NA" only to show the locations. The value "auto" show the response names from the orginal data.}
+\item{name.responses}{a vector of the response names. The default is 
+\code{NA} only to show the locations. The value \code{"auto"} show the 
+response names from the orginal data.}
 
-\item{name.predictors}{a vector of the predictor names. The default is "NA" only to show the locations. The value "auto" show the predictor names from the orginal data.}
+\item{name.predictors}{a vector of the predictor names. The default is 
+\code{NA} only to show the locations. The value \code{"auto"} show the 
+predictor names from the orginal data.}
 
 \item{xlab}{a title for the x axis}
 
 \item{ylab}{a title for the y axis}
 
-\item{fig.tex}{print the figure through LaTex. Default is "FALSE"}
+\item{fig.tex}{print the figure through LaTex. Default is \code{FALSE}}
 
 \item{output}{the file name of printed figure}
 
@@ -54,9 +60,13 @@ plotEstimator(
 
 \item{header.cex}{size of the main title for all estimators}
 
-\item{tick}{a logical value specifying whether tickmarks and an axis line should be drawn. Default is "FALSE"}
+\item{tick}{a logical value specifying whether tickmarks and an axis line 
+should be drawn. Default is \code{FALSE}}
 
-\item{mgp}{the margin line (in mex units) for the axis title, axis labels and axis line}
+\item{mgp}{the margin line (in mex units) for the axis title, axis labels 
+and axis line}
+
+\item{cex.main}{size of the title for each estimator}
 
 \item{title.beta}{a title for the printed "beta"}
 
@@ -64,36 +74,38 @@ plotEstimator(
 
 \item{title.Gy}{a title for the printed "Gy"}
 
-\item{cex.main}{size of the title for each estimator}
-
 \item{...}{other arguments}
 }
 \description{
-Plot the posterior mean estimators from a \code{BayesSUR} class object, including the coefficients beta, latent indicator variable gamma and graph of responses.
+Plot the posterior mean estimators from a \code{BayesSUR} class object, 
+including the coefficients beta, latent indicator variable gamma and 
+graph of responses.
 }
 \examples{
 data("exampleEQTL", package = "BayesSUR")
-hyperpar <- list( a_w = 2 , b_w = 5 )
+hyperpar <- list(a_w = 2, b_w = 5)
 
 set.seed(9173)
-fit <- BayesSUR(Y = exampleEQTL[["blockList"]][[1]], 
-                X = exampleEQTL[["blockList"]][[2]],
-                data = exampleEQTL[["data"]], outFilePath = tempdir(),
-                nIter = 100, burnin = 50, nChains = 2, gammaPrior = "hotspot",
-                hyperpar = hyperpar, tmpFolder = "tmp/" )
+fit <- BayesSUR(
+  Y = exampleEQTL[["blockList"]][[1]],
+  X = exampleEQTL[["blockList"]][[2]],
+  data = exampleEQTL[["data"]], outFilePath = tempdir(),
+  nIter = 100, burnin = 50, nChains = 2, gammaPrior = "hotspot",
+  hyperpar = hyperpar, tmpFolder = "tmp/"
+)
 
 ## check output
 # Plot the estimators from the fitted object
-plotEstimator(fit, estimator=c("beta","gamma","Gy"))
+plotEstimator(fit, estimator = c("beta", "gamma", "Gy"))
 
 \dontrun{
-#Set up temporary work directory for saving a pdf figure
+# Set up temporary work directory for saving a pdf figure
 td <- tempdir()
 oldwd <- getwd()
 setwd(td)
 
 # Produce authentic math formulas in the graph
-plotEstimator(fit, estimator=c("beta","gamma","Gy"), fig.tex = TRUE)
+plotEstimator(fit, estimator = c("beta", "gamma", "Gy"), fig.tex = TRUE)
 system(paste(getOption("pdfviewer"), "ParamEstimator.pdf"))
 setwd(oldwd)
 }

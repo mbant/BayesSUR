@@ -2,11 +2,11 @@
 % Please edit documentation in R/plotManhattan.R
 \name{plotManhattan}
 \alias{plotManhattan}
-\title{plot Manhattan-like plots for marginal posterior inclusion probabilities (mPIP) and numbers of responses of association for predictors}
+\title{plot Manhattan-like plots}
 \usage{
 plotManhattan(
   x,
-  which = c(1, 2),
+  manhattan = c("mPIP", "numResponse"),
   x.loc = FALSE,
   axis.label = "auto",
   mark.responses = NULL,
@@ -27,13 +27,20 @@ plotManhattan(
 \arguments{
 \item{x}{an object of class \code{BayesSUR}}
 
-\item{which}{if it's value "1" showing the Manhattan-like plot of the marginal posterior inclusion probabilities (mPIP). If it's value "2" showing the Manhattan-like plot of the number of responses. The default is to show both figures.}
+\item{manhattan}{value(s) in \code{c('mPIP', 'numResponse')}. 
+\code{manhattan='mPIP'} shows the Manhattan-like plot of the marginal 
+posterior inclusion probabilities (mPIP). \code{manhattan='numResponse'} 
+shows the Manhattan-like plot of the number of responses. The default is 
+to show both figures.}
 
 \item{x.loc}{a vector of features distance}
 
-\item{axis.label}{a vector of predictor names which are shown in the Manhattan-like plot. The value "NULL" only showing the indices. The default "auto" show the predictor names from the orginal data.}
+\item{axis.label}{a vector of predictor names which are shown in the 
+Manhattan-like plot. The value \code{"NULL"} only showing the indices. The 
+default \code{"auto"} show the predictor names from the original data.}
 
-\item{mark.responses}{a vector of response names which are shown in the Manhattan-like plot for the mPIP}
+\item{mark.responses}{a vector of response names which are shown in the 
+Manhattan-like plot for the mPIP}
 
 \item{xlab1}{a title for the x axis of Manhattan-like plot for the mPIP}
 
@@ -43,7 +50,8 @@ plotManhattan(
 
 \item{ylab2}{a title for the y axis of Manhattan-like plot for the numbers of responses}
 
-\item{threshold}{threshold for showing number of response variables significantly associated with each feature}
+\item{threshold}{threshold for showing number of response variables 
+significantly associated with each feature}
 
 \item{las}{graphical parameter of plot.default}
 
@@ -53,25 +61,29 @@ plotManhattan(
 
 \item{mark.color}{the color of the marked text. The default color is red.}
 
-\item{mark.cex}{the fontsize of the marked text. The default fontsize is 0.8.}
+\item{mark.cex}{the fontsize of the marked text. The default fontsize is 0.8}
 
 \item{header}{the main title}
 
 \item{...}{other arguments}
 }
 \description{
-Plot Manhattan-like plots for marginal posterior inclusion probabilities (mPIP) and numbers of responses of association for predictors of a "BayesSUR" class object.
+Plot Manhattan-like plots for marginal posterior inclusion probabilities 
+(mPIP) and numbers of responses of association for predictors of a 
+\code{BayesSUR} class object.
 }
 \examples{
 data("exampleEQTL", package = "BayesSUR")
-hyperpar <- list( a_w = 2 , b_w = 5 )
+hyperpar <- list(a_w = 2, b_w = 5)
 
 set.seed(9173)
-fit <- BayesSUR(Y = exampleEQTL[["blockList"]][[1]], 
-                X = exampleEQTL[["blockList"]][[2]],
-                data = exampleEQTL[["data"]], outFilePath = tempdir(),
-                nIter = 100, burnin = 50, nChains = 2, gammaPrior = "hotspot",
-                hyperpar = hyperpar, tmpFolder = "tmp/" )
+fit <- BayesSUR(
+  Y = exampleEQTL[["blockList"]][[1]],
+  X = exampleEQTL[["blockList"]][[2]],
+  data = exampleEQTL[["data"]], outFilePath = tempdir(),
+  nIter = 100, burnin = 50, nChains = 2, gammaPrior = "hotspot",
+  hyperpar = hyperpar, tmpFolder = "tmp/"
+)
 
 ## check output
 # show the Manhattan-like plots

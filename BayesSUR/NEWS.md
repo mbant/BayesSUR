@@ -1,3 +1,8 @@
+# BayesSUR 2.1-3
+
+* Updated C++11 specification to current default of C++17
+* Cleaned R scripts
+
 # BayesSUR 2.1-2
 
 * Fixed gcc-UBSAN error `reference binding to null pointer` in SUR_Chain.cpp:3818

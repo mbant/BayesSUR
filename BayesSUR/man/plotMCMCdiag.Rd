@@ -9,28 +9,34 @@ plotMCMCdiag(x, nbloc = 3, HIWg = NULL, header = "", ...)
 \arguments{
 \item{x}{an object of class \code{BayesSUR}}
 
-\item{nbloc}{number of splits for the last half iterations after substracting burn-in length}
+\item{nbloc}{number of splits for the last half iterations after substracting 
+burn-in length}
 
-\item{HIWg}{diagnostic plot of the response graph. Default is \code{NULL}. \code{HIW="degree"} prints the diagnostic of the degrees of response nodes. \code{HIW="edges"} prints the diagnostic 
-of every edge between two responses. \code{HIW="lik"} prints the diagnostic of the posterior likelihoods of the hyperparameters related to the response relationships}
+\item{HIWg}{diagnostic plot of the response graph. Default is \code{NULL}. 
+\code{HIW="degree"} prints the diagnostic of the degrees of response nodes. 
+\code{HIW="edges"} prints the diagnostic of every edge between two responses. 
+\code{HIW="lik"} prints the diagnostic of the posterior likelihoods of the 
+hyperparameters related to the response relationships}
 
 \item{header}{the main title}
 
 \item{...}{other arguments for the plots of the log-likelihood and model size}
 }
 \description{
-Show trace plots and diagnostic density plots of a fitted model object of class "BayesSUR".
+Show trace plots and diagnostic density plots of a fitted model object of class \code{BayesSUR}.
 }
 \examples{
 data("exampleEQTL", package = "BayesSUR")
-hyperpar <- list( a_w = 2 , b_w = 5 )
+hyperpar <- list(a_w = 2, b_w = 5)
 
 set.seed(9173)
-fit <- BayesSUR(Y = exampleEQTL[["blockList"]][[1]], 
-                X = exampleEQTL[["blockList"]][[2]],
-                data = exampleEQTL[["data"]], outFilePath = tempdir(),
-                nIter = 100, burnin = 50, nChains = 2, gammaPrior = "hotspot",
-                hyperpar = hyperpar, tmpFolder = "tmp/" )
+fit <- BayesSUR(
+  Y = exampleEQTL[["blockList"]][[1]],
+  X = exampleEQTL[["blockList"]][[2]],
+  data = exampleEQTL[["data"]], outFilePath = tempdir(),
+  nIter = 100, burnin = 50, nChains = 2, gammaPrior = "hotspot",
+  hyperpar = hyperpar, tmpFolder = "tmp/"
+)
 
 ## check output
 plotMCMCdiag(fit)

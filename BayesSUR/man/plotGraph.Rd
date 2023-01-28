@@ -2,7 +2,7 @@
 % Please edit documentation in R/plotGraph.R
 \name{plotGraph}
 \alias{plotGraph}
-\title{plot the estimated graph for multiple response variables}
+\title{plot graph for response variables}
 \usage{
 plotGraph(
   x,
@@ -19,16 +19,20 @@ plotGraph(
 )
 }
 \arguments{
-\item{x}{either an object of class \code{BayesSUR} (default) or a symmetric numeric matrix representing an adjacency matrix for a given graph structure. 
-If x is an adjacency matrix, argument \code{main="Given graph of responses"} by default.}
+\item{x}{either an object of class \code{BayesSUR} (default) or a symmetric 
+numeric matrix representing an adjacency matrix for a given graph structure.
+If x is an adjacency matrix, argument \code{main="Given graph of responses"} 
+by default.}
 
-\item{Pmax}{a value for thresholding the learning structure matrix of multiple response variables. Default is 0.5}
+\item{Pmax}{a value for thresholding the learning structure matrix of 
+multiple response variables. Default is 0.5}
 
 \item{main}{an overall title for the plot}
 
 \item{edge.width}{edge width. Default is 2}
 
-\item{edge.weight}{draw weighted edges after thresholding at 0.5. The default value \code{FALSE} is not to draw weighted edges}
+\item{edge.weight}{draw weighted edges after thresholding at 0.5. The 
+default value \code{FALSE} is not to draw weighted edges}
 
 \item{vertex.label}{character vector used to label the nodes}
 
@@ -43,18 +47,21 @@ If x is an adjacency matrix, argument \code{main="Given graph of responses"} by 
 \item{...}{other arguments}
 }
 \description{
-Plot the estimated graph for multiple response variables from a \code{BayesSUR} class object.
+Plot the estimated graph for multiple response variables from a 
+\code{BayesSUR} class object.
 }
 \examples{
 data("exampleEQTL", package = "BayesSUR")
-hyperpar <- list( a_w = 2 , b_w = 5 )
+hyperpar <- list(a_w = 2, b_w = 5)
 
 set.seed(9173)
-fit <- BayesSUR(Y = exampleEQTL[["blockList"]][[1]], 
-                X = exampleEQTL[["blockList"]][[2]],
-                data = exampleEQTL[["data"]], outFilePath = tempdir(),
-                nIter = 100, burnin = 50, nChains = 2, gammaPrior = "hotspot",
-                hyperpar = hyperpar, tmpFolder = "tmp/" )
+fit <- BayesSUR(
+  Y = exampleEQTL[["blockList"]][[1]],
+  X = exampleEQTL[["blockList"]][[2]],
+  data = exampleEQTL[["data"]], outFilePath = tempdir(),
+  nIter = 100, burnin = 50, nChains = 2, gammaPrior = "hotspot",
+  hyperpar = hyperpar, tmpFolder = "tmp/"
+)
 
 ## check output
 # show the graph relationship between responses
