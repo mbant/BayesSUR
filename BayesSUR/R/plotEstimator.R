@@ -46,7 +46,7 @@
 #'   Y = exampleEQTL[["blockList"]][[1]],
 #'   X = exampleEQTL[["blockList"]][[2]],
 #'   data = exampleEQTL[["data"]], outFilePath = tempdir(),
-#'   nIter = 100, burnin = 50, nChains = 2, gammaPrior = "hotspot",
+#'   nIter = 10, burnin = 0, nChains = 1, gammaPrior = "hotspot",
 #'   hyperpar = hyperpar, tmpFolder = "tmp/"
 #' )
 #'
@@ -55,15 +55,15 @@
 #' plotEstimator(fit, estimator = c("beta", "gamma", "Gy"))
 #'
 #' \dontrun{
-#' # Set up temporary work directory for saving a pdf figure
-#' td <- tempdir()
-#' oldwd <- getwd()
-#' setwd(td)
+#' ## Set up temporary work directory for saving a pdf figure
+#' # td <- tempdir()
+#' # oldwd <- getwd()
+#' # setwd(td)
 #'
-#' # Produce authentic math formulas in the graph
-#' plotEstimator(fit, estimator = c("beta", "gamma", "Gy"), fig.tex = TRUE)
-#' system(paste(getOption("pdfviewer"), "ParamEstimator.pdf"))
-#' setwd(oldwd)
+#' ## Produce authentic math formulas in the graph
+#' # plotEstimator(fit, estimator = c("beta", "gamma", "Gy"), fig.tex = TRUE)
+#' # system(paste(getOption("pdfviewer"), "ParamEstimator.pdf"))
+#' # setwd(oldwd)
 #' }
 #'
 #' @export
@@ -105,6 +105,7 @@ plotEstimator <- function(x, estimator = NULL,
       colnames(read.table(x$output$Y, header = TRUE))
   }
 
+  ## BUG TO BE FIXED!!!
   # specify the labels of axes
   if (is.na(name.responses)[1]) name.responses <- response_idx
   if (name.responses[1] == "auto") name.responses <- colnames(beta_hat)

@@ -48,7 +48,7 @@ fit <- BayesSUR(
   Y = exampleEQTL[["blockList"]][[1]],
   X = exampleEQTL[["blockList"]][[2]],
   data = exampleEQTL[["data"]], outFilePath = tempdir(),
-  nIter = 100, burnin = 50, nChains = 2, gammaPrior = "hotspot",
+  nIter = 20, burnin = 10, nChains = 1, gammaPrior = "hotspot",
   hyperpar = hyperpar, tmpFolder = "tmp/"
 )
 

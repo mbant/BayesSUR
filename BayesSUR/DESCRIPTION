@@ -1,8 +1,8 @@
 Package: BayesSUR
 Type: Package
 Title: Bayesian Seemingly Unrelated Regression
-Version: 2.1-3
-Date: 2023-01-28
+Version: 2.1-4
+Date: 2023-08-24
 Authors@R: c(person("Marco", "Banterle", email = "marco.banterle@gmail.com", role = c("aut")),
              person("Zhi", "Zhao", email = "zhi.zhao@medisin.uio.no", role = c("aut", "cre")),
              person("Leonardo", "Bottolo", email = "lb664@cam.ac.uk", role = c("ctb")),
@@ -18,7 +18,7 @@ Copyright: The C++ files pugixml.cpp, pugixml.hpp and pugiconfig.hpp
         vertical.image.legend() is used with Copyright (C) 2013 from
         Jenise Swall.
 VignetteBuilder: R.rsp
-RoxygenNote: 7.2.1
+RoxygenNote: 7.2.3
 Depends: R (>= 3.5.0)
 Encoding: UTF-8
 LinkingTo: Rcpp, RcppArmadillo (>= 0.9.000)
@@ -28,7 +28,7 @@ Suggests: R.rsp, BDgraph, data.table, plyr, scrime
 LazyData: true
 NeedsCompilation: yes
 SystemRequirements: C++17
-Packaged: 2023-01-28 16:31:08 UTC; zhiz
+Packaged: 2023-08-24 16:22:48 UTC; zhiz
 Author: Marco Banterle [aut],
   Zhi Zhao [aut, cre],
   Leonardo Bottolo [ctb],

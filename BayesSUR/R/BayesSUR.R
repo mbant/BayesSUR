@@ -10,6 +10,7 @@
 #'
 #' @docType package
 #' @useDynLib BayesSUR
+#' @aliases BayesSUR-package
 #' @importFrom utils head tail read.table write.table
 #' @importFrom Rcpp sourceCpp
 #' @importFrom xml2 as_xml_document write_xml
@@ -158,7 +159,7 @@
 #'   Y = exampleEQTL[["blockList"]][[1]],
 #'   X = exampleEQTL[["blockList"]][[2]],
 #'   data = exampleEQTL[["data"]], outFilePath = tempdir(),
-#'   nIter = 100, burnin = 50, nChains = 2, gammaPrior = "hotspot",
+#'   nIter = 10, burnin = 0, nChains = 1, gammaPrior = "hotspot",
 #'   hyperpar = hyperpar, tmpFolder = "tmp/", output_CPO = TRUE
 #' )
 #'
@@ -170,15 +171,15 @@
 #' plot(fit, estimator = c("beta", "gamma", "Gy"), type = "heatmap")
 #'
 #' \dontrun{
-#' # Set up temporary work directory for saving a pdf figure
-#' td <- tempdir()
-#' oldwd <- getwd()
-#' setwd(td)
+#' ## Set up temporary work directory for saving a pdf figure
+#' # td <- tempdir()
+#' # oldwd <- getwd()
+#' # setwd(td)
 #'
-#' # Produce authentic math formulas in the graph
-#' plot(fit, estimator = c("beta", "gamma", "Gy"), type = "heatmap", fig.tex = TRUE)
-#' system(paste(getOption("pdfviewer"), "ParamEstimator.pdf"))
-#' setwd(oldwd)
+#' ## Produce authentic math formulas in the graph
+#' # plot(fit, estimator = c("beta", "gamma", "Gy"), type = "heatmap", fig.tex = TRUE)
+#' # system(paste(getOption("pdfviewer"), "ParamEstimator.pdf"))
+#' # setwd(oldwd)
 #' }
 #'
 #' @export

@@ -1,3 +1,7 @@
+# BayesSUR 2.1-4
+
+* Fixed a documentation issue by adding `@alias BayesSUR-package`
+
 # BayesSUR 2.1-3
 
 * Updated C++11 specification to current default of C++17
