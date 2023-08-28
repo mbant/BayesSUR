@@ -64,7 +64,7 @@ fit <- BayesSUR(
   Y = exampleEQTL[["blockList"]][[1]],
   X = exampleEQTL[["blockList"]][[2]],
   data = exampleEQTL[["data"]], outFilePath = tempdir(),
-  nIter = 10, burnin = 0, nChains = 1, gammaPrior = "hotspot",
+  nIter = 2, burnin = 0, nChains = 1, gammaPrior = "hotspot",
   hyperpar = hyperpar, tmpFolder = "tmp/"
 )
 
@@ -88,6 +88,6 @@ plot(fit, estimator = c("gamma", "Gy"), type = "network")
 plot(fit, estimator = "gamma", type = "Manhattan")
 
 ## print MCMC diagnostic plots
-plot(fit, estimator = "logP", type = "diagnostics")
+#plot(fit, estimator = "logP", type = "diagnostics")
 
 }

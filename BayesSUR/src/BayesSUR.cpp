@@ -26,7 +26,7 @@ int BayesSUR_internal(const std::string& dataFile, const std::string& mrfGFile, 
                     const std::string& covariancePrior="HIW", 
                     const std::string& gammaPrior="hotspot", const std::string& gammaSampler="bandit", 
                     const std::string& gammaInit = "MLE",
-                    const std::string& betaPrior="independent", const int maxThreads=2,
+                    const std::string& betaPrior="independent", const int maxThreads=1,
                     bool output_gamma = true, bool output_beta = true, bool output_Gy = true, bool output_sigmaRho = true, 
                     bool output_pi = true, bool output_tail = true, bool output_model_size = true, bool output_CPO = true, bool output_model_visit = false )
 {

@@ -969,7 +969,10 @@ int drive( const std::string& dataFile, const std::string& mrfGFile, const std::
     Rcout << "BayesSUR -- Bayesian Seemingly Unrelated Regression Modelling" << '\n';
 
     #ifdef _OPENMP
-        if( maxThreads > 1 ){
+    if( maxThreads == 1 ){
+        omp_set_nested( 0 );
+        omp_set_num_threads( 1 );
+    } else {
             Rcout << "Using OpenMP: " << maxThreads << " threads \n";
             omp_init_lock(&RNGlock);  // init RNG lock for the parallel part
         

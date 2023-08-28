@@ -159,7 +159,7 @@
 #'   Y = exampleEQTL[["blockList"]][[1]],
 #'   X = exampleEQTL[["blockList"]][[2]],
 #'   data = exampleEQTL[["data"]], outFilePath = tempdir(),
-#'   nIter = 10, burnin = 0, nChains = 1, gammaPrior = "hotspot",
+#'   nIter = 5, burnin = 0, nChains = 1, gammaPrior = "hotspot",
 #'   hyperpar = hyperpar, tmpFolder = "tmp/", output_CPO = TRUE
 #' )
 #'
