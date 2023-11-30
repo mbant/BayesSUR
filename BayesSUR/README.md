@@ -1,12 +1,4 @@
-<style type="text/css">
-pre {
-  overflow-y: auto;
-}
 
-pre[class] {
-  max-height: 350px;
-}
-</style>
 [![CRAN_Status_Badge](http://www.r-pkg.org/badges/version/BayesSUR)](https://cran.r-project.org/package=BayesSUR)
 
 # BayesSUR
