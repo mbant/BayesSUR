@@ -35,7 +35,7 @@
 #' has to be either \code{independent} for independent spike-and-slab priors 
 #' (only slab part for \code{X_0} if specified), or \code{reGroup} for weakly 
 #' normal priors for mandatory variables (random effects) and spike-and-slab 
-#' priors for other variables of Zhao (2021b)
+#' priors for other variables of Zhao (2023)
 #' @param covariancePrior string indicating the prior for the covariance $C$; 
 #' it has to be either \code{HIW} for the hyper-inverse-Wishar (which will 
 #' result in a sparse covariance matrix), \code{IW} for the inverse-Wishart 
@@ -148,8 +148,8 @@
 #' @references Russo D, Van Roy B, Kazerouni A, Osband I, Wen Z (2018). \emph{A tutorial on Thompson sampling.} Foundations and Trends in Machine Learning, 11: 1-96.
 #' @references Madigan D, York J (1995). \emph{Bayesian graphical models for discrete data.} International Statistical Review, 63: 215–232.
 #' @references Bottolo L, Banterle M, Richardson S, Ala-Korpela M, Jarvelin MR, Lewin A (2020). \emph{A computationally efficient Bayesian seemingly unrelated regressions model for high-dimensional quantitative trait loci discovery.} Journal of Royal Statistical Society: Series C, 70: 886-908.
-#' @references Zhao Z, Banterle M, Bottolo L, Richardson S, Lewin A, Zucknick M (2021a). \emph{BayesSUR: An R package for high-dimensional multivariate Bayesian variable and covariance selection in linear regression.} Journal of Statistical Software, 100: 1–32.
-#' @references Zhao Z, Banterle M, Lewin A, Zucknick M (2021b). \emph{Structured Bayesian variable selection for multiple correlated response variables and high-dimensional predictors.} arXiv:2101.05899.
+#' @references Zhao Z, Banterle M, Bottolo L, Richardson S, Lewin A, Zucknick M (2021). \emph{BayesSUR: An R package for high-dimensional multivariate Bayesian variable and covariance selection in linear regression.} Journal of Statistical Software, 100: 1–32.
+#' @references Zhao Z, Banterle M, Lewin A, Zucknick M (2023). \emph{Multivariate Bayesian structured variable selection for pharmacogenomic studies.} Journal of the Royal Statistical Society: Series C (Applied Statistics), qlad102.
 #'
 #' @examples
 #' data("exampleEQTL", package = "BayesSUR")

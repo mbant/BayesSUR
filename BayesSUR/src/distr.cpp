@@ -444,7 +444,6 @@ namespace Distributions{
 
 		arma::uvec current_permutation;
 		arma::vec current_weights;
-	 	unsigned int i = 0;
 
 	    do {
 	        current_permutation = arma::conv_to<arma::uvec>::from(v);
@@ -458,7 +457,6 @@ namespace Distributions{
 			   current_weights = current_weights/arma::sum(current_weights(current_permutation));   // this will gets array weights that do not sum to 1 in total, but will only use relevant elements
     		}
 
-			++i;
 			logP_permutation = Utils::logspace_add(logP_permutation,tmp);
 
 	    } while (std::next_permutation(v.begin(), v.end()));

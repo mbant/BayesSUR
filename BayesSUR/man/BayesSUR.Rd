@@ -73,7 +73,7 @@ hierarchical prior. See the details for the model specification}
 has to be either \code{independent} for independent spike-and-slab priors 
 (only slab part for \code{X_0} if specified), or \code{reGroup} for weakly 
 normal priors for mandatory variables (random effects) and spike-and-slab 
-priors for other variables of Zhao (2021b)}
+priors for other variables of Zhao (2023)}
 
 \item{nIter}{number of iterations for the MCMC procedure. Default 10000}
 
@@ -246,7 +246,7 @@ Madigan D, York J (1995). \emph{Bayesian graphical models for discrete data.} In
 
 Bottolo L, Banterle M, Richardson S, Ala-Korpela M, Jarvelin MR, Lewin A (2020). \emph{A computationally efficient Bayesian seemingly unrelated regressions model for high-dimensional quantitative trait loci discovery.} Journal of Royal Statistical Society: Series C, 70: 886-908.
 
-Zhao Z, Banterle M, Bottolo L, Richardson S, Lewin A, Zucknick M (2021a). \emph{BayesSUR: An R package for high-dimensional multivariate Bayesian variable and covariance selection in linear regression.} Journal of Statistical Software, 100: 1–32.
+Zhao Z, Banterle M, Bottolo L, Richardson S, Lewin A, Zucknick M (2021). \emph{BayesSUR: An R package for high-dimensional multivariate Bayesian variable and covariance selection in linear regression.} Journal of Statistical Software, 100: 1–32.
 
-Zhao Z, Banterle M, Lewin A, Zucknick M (2021b). \emph{Structured Bayesian variable selection for multiple correlated response variables and high-dimensional predictors.} arXiv:2101.05899.
+Zhao Z, Banterle M, Lewin A, Zucknick M (2023). \emph{Multivariate Bayesian structured variable selection for pharmacogenomic studies.} Journal of the Royal Statistical Society: Series C (Applied Statistics), qlad102.
 }

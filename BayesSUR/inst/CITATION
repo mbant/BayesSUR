@@ -27,3 +27,26 @@ bibentry(bibtype = "Article",
   header       = "To cite BayesSUR in publications use:"
 )
 
+bibentry(bibtype = "Article",
+  title        = "Multivariate Bayesian structured variable selection for pharmacogenomic studies",
+  author       = c(person(given = "Zhi",
+                          family = "Zhao",
+                          email = "zhi.zhao@medisin.uio.no"),
+                   person(given = "Marco",
+                          family = "Banterle",
+                          email = "marco.banterle@gmail.com"),
+                   person(given = "Alex",
+                          family = "Lewin",
+                          email = "alex.lewin@lshtm.ac.uk"),
+                   person(given = "Manuela",
+                          family = "Zucknick",
+                          email = "manuela.zucknick@medisin.uio.no")),
+  journal      = "Journal of the Royal Statistical Society Series C: Applied Statistics",
+  year         = "2023",
+  volume       = "75",
+  number       = "2",
+  pages        = "0--0",
+  doi          = "10.1093/jrsssc/qlad102",
+  header       = "If BayesSUR with mandatory variables (random effects) is used, please also cite:"
+)
+
