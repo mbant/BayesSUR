@@ -46,7 +46,7 @@ Black blocks indicate correlated residuals of the corresponding response variabl
 
 Load the simulation function `sim.ssur()` as follows.
 
-```{r, warning=FALSE}
+```{r}
 sim.ssur <- function(n, s, p, t0 = 0, seed = 123, mv = TRUE,
                      t.df = Inf, random.intercept = 0, intercept = TRUE) {
   # set seed to fix coefficients
