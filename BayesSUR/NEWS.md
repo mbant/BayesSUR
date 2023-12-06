@@ -1,3 +1,7 @@
+# BayesSUR 2.1-5
+
+* Updated citation, added README and one more vignette
+
 # BayesSUR 2.1-4
 
 * Fixed a documentation issue by adding `@alias BayesSUR-package`
