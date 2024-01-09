@@ -1,3 +1,7 @@
+# BayesSUR 2.1-6
+
+* Fixed issues of knitr VignetteBuilder and README
+
 # BayesSUR 2.1-5
 
 * Updated citation, added README and one more vignette

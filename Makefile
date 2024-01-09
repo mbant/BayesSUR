@@ -1,3 +1,5 @@
+# Warning: To compile C++ manually, all Rcpp random number generation in BayesSUR/src/distr.cpp need to be adapted
+
 SOURCE_DIR=BayesSUR/src
 VPATH=$(SOURCE_DIR)
 

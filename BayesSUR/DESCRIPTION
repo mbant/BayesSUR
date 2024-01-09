@@ -2,7 +2,9 @@ Package: BayesSUR
 Type: Package
 Title: Bayesian Seemingly Unrelated Regression
 Version: 2.1-6
-Date: 2023-12-06
+Date: 2024-01-09
+URL: https://github.com/mbant/BayesSUR
+BugReports: https://github.com/mbant/BayesSUR/issues
 Authors@R: c(person("Marco", "Banterle", email = "marco.banterle@gmail.com", role = c("aut")),
              person("Zhi", "Zhao", email = "zhi.zhao@medisin.uio.no", role = c("aut", "cre")),
              person("Leonardo", "Bottolo", email = "lb664@cam.ac.uk", role = c("ctb")),
