@@ -21,6 +21,7 @@ VignetteBuilder: R.rsp, knitr
 RoxygenNote: 7.2.3
 Depends: R (>= 3.5.0)
 Encoding: UTF-8
+BugReports: https://github.com/mbant/BayesSUR/issues
 LinkingTo: Rcpp, RcppArmadillo (>= 0.9.000)
 Imports: Rcpp, xml2, igraph, Matrix, tikzDevice, stats, utils,
         grDevices, graphics
