@@ -7,11 +7,12 @@
 
 <!-- badges: end -->
 
-This repository contains a [new and improved](inst/doc/BayesSUR.pdf) R package for high-dimensional multivariate Bayesian variable and covariance selection in linear regression, started as an interface to the [Bayesian SSUR](https://github.com/mbant/Bayesian_SSUR) C++-only, UNIX-specific, code.
+This R package is for high-dimensional multivariate Bayesian variable and covariance selection in linear regression, including methods in [Bottolo et al. (2021)](https://doi.org/10.1111/rssc.12490), [Zhao et al. (2021)](https://doi.org/10.18637/jss.v100.i11) and [Zhao et al. (2024)](https://doi.org/10.1093/jrsssc/qlad102). 
+See the package vignettes [`BayesSUR.pdf`](inst/doc/BayesSUR.pdf) for more information and an additional example below for the BayesSUR model with random effects.
 
 ## Installation
 
-See the package vignettes [`BayesSUR.pdf`](inst/doc/BayesSUR.pdf) for more information.
+Install the latest released version from [CRAN](https://CRAN.R-project.org/package=BayesSUR)
 
 ```r
 install.packages("BayesSUR")
@@ -24,7 +25,7 @@ Install the latest development version from GitHub
 remotes::install_github("mbant/BayesSUR/BayesSUR")
 ```
 
-## Examples
+## Additional example
 
 The BayesSUR model has been extended to include mandatory variables by assigning Gaussian priors as random effects rather than spike-and-slab priors, named as **SSUR-MRF with random effects** in [Zhao et al. 2023](https://doi.org/10.1093/jrsssc/qlad102).
 The R code for the simulated data and real data analyses in [Zhao et al. 2023](https://doi.org/10.1093/jrsssc/qlad102) can be found at the GitHub repository [BayesSUR-RE](https://github.com/zhizuio/BayesSUR-RE).
@@ -406,10 +407,14 @@ g.re <- getEstimator(fit2, estimator = "Gy")
 
 ## References
 
+> Leonardo Bottolo, Marco Banterle, Sylvia Richardson, Mika Ala-Korpela, Marjo-Riitta Järvelin, Alex Lewin (2021).
+> A computationally efficient Bayesian seemingly unrelated regressions model for high-dimensional quantitative trait loci discovery.
+> _Journal of the Royal Statistical Society: Series C (Applied Statistics)_, 70(4):886-908. DOI: [10.1111/rssc.12490](https://doi.org/10.1111/rssc.12490).
+
 > Zhi Zhao, Marco Banterle, Leonardo Bottolo, Sylvia Richardson, Alex Lewin, Manuela Zucknick (2021).
 > BayesSUR: An R package for high-dimensional multivariate Bayesian variable and covariance selection in linear regression.
 > _Journal of Statistical Software_, 100(11):1-32. DOI: [10.18637/jss.v100.i11](https://doi.org/10.18637/jss.v100.i11).
 
 > Zhi Zhao, Marco Banterle, Alex Lewin, Manuela Zucknick (2023).
 > Multivariate Bayesian structured variable selection for pharmacogenomic studies.
-> _Journal of the Royal Statistical Society: Series C (Applied Statistics)_, qlad102. DOI: [10.1093/jrsssc/qlad102](https://doi.org/10.1093/jrsssc/qlad102).
+> _Journal of the Royal Statistical Society: Series C (Applied Statistics)_, 73(2):420-443 qlad102. DOI: [10.1093/jrsssc/qlad102](https://doi.org/10.1093/jrsssc/qlad102).
