@@ -7,7 +7,8 @@
 
 <!-- badges: end -->
 
-This R package is for high-dimensional multivariate Bayesian variable and covariance selection in linear regression, including methods in [Bottolo et al. (2021)](https://doi.org/10.1111/rssc.12490), [Zhao et al. (2021)](https://doi.org/10.18637/jss.v100.i11) and [Zhao et al. (2024)](https://doi.org/10.1093/jrsssc/qlad102). 
+This repository contains a [new and improved](inst/doc/BayesSUR.pdf) R package for high-dimensional multivariate Bayesian variable and covariance selection in linear regression, started as an interface to the [Bayesian SSUR](https://github.com/mbant/Bayesian_SSUR) C++-only, UNIX-specific, code. 
+This R package include methods from [Bottolo et al. (2021)](https://doi.org/10.1111/rssc.12490), [Zhao et al. (2021)](https://doi.org/10.18637/jss.v100.i11) and [Zhao et al. (2024)](https://doi.org/10.1093/jrsssc/qlad102). 
 See the package vignettes [`BayesSUR.pdf`](inst/doc/BayesSUR.pdf) for more information and an additional example below for the BayesSUR model with random effects.
 
 ## Installation
@@ -37,7 +38,7 @@ Here, we show a simulation example to run the BayesSUR mdoel with random effects
 We design a network as the following figure (a) to construct a complex structure between $20$ response variables and $300$ predictors.
 It assumes that the responses are divided into six groups, and the first $120$ predictors are divided into nine groups.
 
-<img src="man/figures/figure2.png" width="90%" />
+<img src="BayesSUR/man/figures/figure2.png" width="90%" />
 
 _**Figure**: True relationships between response variables and predictors.
 (a) Network structure between $\mathbf Y$ and $\mathbf X$.
