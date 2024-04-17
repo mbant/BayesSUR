@@ -1,3 +1,8 @@
+# BayesSUR 2.1-7
+
+* Increased the threshold of predictor dimension to 100000 (previously 5000) when pre-computing XtX
+* Minor changes of the parameter updates of the HRR models, especially in function `step()`
+
 # BayesSUR 2.1-6
 
 * Fixed issues of knitr VignetteBuilder and README

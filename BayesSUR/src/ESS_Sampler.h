@@ -30,7 +30,8 @@ public:
     
     // Constructor - nChains and type of MCMC
     ESS_Sampler( Utils::SUR_Data& surData , unsigned int nChains_ , double temperatureRatio ,
-                Gamma_Sampler_Type gamma_sampler_type, Gamma_Type gamma_type, Beta_Type beta_type, Covariance_Type covariance_type, bool output_CPO , int maxThreads , unsigned int burnin_ );
+                Gamma_Sampler_Type gamma_sampler_type, Gamma_Type gamma_type, Beta_Type beta_type, Covariance_Type covariance_type, 
+                bool output_CPO , int maxThreads , int tick , unsigned int burnin_ );
     
     ESS_Sampler( Utils::SUR_Data& surData , unsigned int nChains_ , double temperatureRatio ) :
     ESS_Sampler( surData , nChains_ , temperatureRatio ,
@@ -77,6 +78,7 @@ private:
     unsigned int nChains;
     unsigned int burnin;
     int maxThreads;
+    int tick;
     
     // Pointer to chains -
     // we use pointers so that the client can ask for the original object and manipulate them as he wish
@@ -95,7 +97,8 @@ private:
 
 template<typename T>
 ESS_Sampler<T>::ESS_Sampler( Utils::SUR_Data& surData , unsigned int nChains_ , double temperatureRatio ,
-                            Gamma_Sampler_Type gamma_sampler_type, Gamma_Type gamma_type, Beta_Type beta_type, Covariance_Type covariance_type, bool output_CPO , int maxThreads, unsigned int burnin_ ):
+                            Gamma_Sampler_Type gamma_sampler_type, Gamma_Type gamma_type, Beta_Type beta_type, Covariance_Type covariance_type, 
+                            bool output_CPO , int maxThreads , int tick, unsigned int burnin_ ):
 nChains(nChains_),
 burnin(burnin_),
 chain(std::vector<std::shared_ptr<T>>(nChains)),
@@ -111,7 +114,7 @@ global_count(0)
     
     for( unsigned int i=0; i<nChains; ++i )
         chain[i] = std::make_shared<T>( surData ,
-                                       gamma_sampler_type, gamma_type, beta_type, covariance_type, output_CPO, maxThreads ,
+                                       gamma_sampler_type, gamma_type, beta_type, covariance_type, output_CPO, maxThreads, tick,
                                        std::pow( temperatureRatio , (double)i ) );  // default init for now
 }
 

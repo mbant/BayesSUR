@@ -28,7 +28,8 @@ int drive_SUR( Chain_Data& chainData )
     Rcout << "Initialising the (SUR) MCMC Chain";
     
     ESS_Sampler<SUR_Chain> sampler( chainData.surData , chainData.nChains , 1.2 ,
-                                   chainData.gamma_sampler_type, chainData.gamma_type, chainData.beta_type, chainData.covariance_type, chainData.output_CPO, chainData.maxThreads, chainData.burnin );
+                                   chainData.gamma_sampler_type, chainData.gamma_type, chainData.beta_type, chainData.covariance_type, 
+                                   chainData.output_CPO, chainData.maxThreads, chainData.tick, chainData.burnin );
     
     Rcout << " ... ";
     
@@ -289,7 +290,7 @@ int drive_SUR( Chain_Data& chainData )
     
     Rcout << "DONE! \n\nStarting "<< chainData.nChains <<" (parallel) chain(s) for " << chainData.nIter << " iterations:" << '\n';
     
-    unsigned int tick = 1000; // how many iter for each print?
+    //unsigned int tick = 1000; // how many iter for each print?
     
     for(unsigned int i=1; i < chainData.nIter ; ++i)
     {
@@ -362,7 +363,7 @@ int drive_SUR( Chain_Data& chainData )
         }
         
         // Print something on how the chain is going
-        if( (i+1) % tick == 0 )
+        if( (i+1) % chainData.tick == 0 )
         {
             Rcout << " Running iteration " << i+1 << " ... local Acc Rate: ~ gamma: " << Utils::round( sampler[0] -> getGammaAccRate() , 3 );
             Rcout << " -- JT: " << Utils::round( sampler[0] -> getJTAccRate() , 3 ) ;
@@ -379,7 +380,7 @@ int drive_SUR( Chain_Data& chainData )
             
             // Output to files every now and then
             
-            if( (i >= chainData.burnin) && ( (i-chainData.burnin+1) % (tick*1) == 0 ) )
+            if( (i >= chainData.burnin) && ( (i-chainData.burnin+1) % (chainData.tick*1) == 0 ) )
             {
                 
                 if ( chainData.output_gamma )
@@ -413,7 +414,7 @@ int drive_SUR( Chain_Data& chainData )
             }
             
             //if( (i-chainData.burnin+1) % (tick*1) == 0 )
-            if( (i+1) % (tick*1) == 0 )
+            if( (i+1) % (chainData.tick*1) == 0 )
             {
                 logPOutFile <<     sampler[0] -> getLogPTau() << " ";
                 logPOutFile <<     sampler[0] -> getLogPEta() <<  " ";
@@ -565,7 +566,8 @@ int drive_HRR( Chain_Data& chainData )
     Rcout << "Initialising the (HRR) MCMC Chain ";
     
     ESS_Sampler<HRR_Chain> sampler( chainData.surData , chainData.nChains , 1.2 ,
-                                   chainData.gamma_sampler_type, chainData.gamma_type, chainData.beta_type, chainData.covariance_type, chainData.output_CPO, chainData.maxThreads, chainData.burnin );
+                                   chainData.gamma_sampler_type, chainData.gamma_type, chainData.beta_type, chainData.covariance_type, 
+                                   chainData.output_CPO, chainData.maxThreads, chainData.tick, chainData.burnin );
     
     Rcout << " ... ";
     // *****************************
@@ -755,7 +757,7 @@ int drive_HRR( Chain_Data& chainData )
     
     Rcout << "DONE! \n\nStarting "<< chainData.nChains <<" (parallel) chain(s) for " << chainData.nIter << " iterations:" << '\n';
     
-    unsigned int tick = 1000; // how many iter for each print?
+    //unsigned int tick = 1000; // how many iter for each print?
     
     for(unsigned int i=1; i < chainData.nIter ; ++i)
     {
@@ -812,7 +814,7 @@ int drive_HRR( Chain_Data& chainData )
         }
         
         // Print something on how the chain is going
-        if( (i+1) % tick == 0 )
+        if( (i+1) % chainData.tick == 0 )
         {
             
             Rcout << " Running iteration " << i+1 << " ... local Acc Rate: ~ gamma: " << Utils::round( sampler[0] -> getGammaAccRate() , 3 );
@@ -828,7 +830,7 @@ int drive_HRR( Chain_Data& chainData )
 #endif
             
             // Output to files every now and then
-            if( (i >= chainData.burnin) && ( (i-chainData.burnin+1) % (tick*1) == 0 ) )
+            if( (i >= chainData.burnin) && ( (i-chainData.burnin+1) % (chainData.tick*1) == 0 ) )
             {
                 
                 if ( chainData.output_gamma )
@@ -855,7 +857,7 @@ int drive_HRR( Chain_Data& chainData )
                 
             }
             
-            if( (i+1) % (tick*1) == 0 )
+            if( (i+1) % (chainData.tick*1) == 0 )
             {
                 logPOutFile <<     sampler[0] -> getLogPO() <<  " ";
                 logPOutFile <<     sampler[0] -> getLogPPi() <<  " ";
@@ -962,7 +964,7 @@ int drive( const std::string& dataFile, const std::string& mrfGFile, const std::
           unsigned int nIter, unsigned int burnin, unsigned int nChains,
           const std::string& covariancePrior,
           const std::string& gammaPrior, const std::string& gammaSampler, const std::string& gammaInit,
-          const std::string& betaPrior, const int maxThreads,
+          const std::string& betaPrior, const int maxThreads, const int tick, 
           bool output_gamma, bool output_beta, bool output_Gy, bool output_sigmaRho, bool output_pi, bool output_tail, bool output_model_size, bool output_CPO, bool output_model_visit )
 {
     
@@ -1085,6 +1087,7 @@ int drive( const std::string& dataFile, const std::string& mrfGFile, const std::
     chainData.output_model_size = output_model_size;
     chainData.output_CPO = output_CPO;
     chainData.maxThreads = maxThreads;
+    chainData.tick = tick;
     chainData.output_model_visit = output_model_visit;
     
     // ***********************************

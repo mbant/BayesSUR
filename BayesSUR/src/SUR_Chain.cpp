@@ -10,7 +10,7 @@ SUR_Chain::SUR_Chain( std::shared_ptr<arma::mat> data_, std::shared_ptr<arma::ma
                      std::shared_ptr<arma::uvec> outcomesIdx_, std::shared_ptr<arma::uvec> VSPredictorsIdx_,
                      std::shared_ptr<arma::uvec> fixedPredictorsIdx_, std::shared_ptr<arma::umat> missingDataArrayIdx_, std::shared_ptr<arma::uvec> completeCases_,
                      Gamma_Sampler_Type gamma_sampler_type_ , Gamma_Type gamma_type_ ,
-                     Beta_Type beta_type_ , Covariance_Type covariance_type_ , bool output_CPO , int maxThreads ,
+                     Beta_Type beta_type_ , Covariance_Type covariance_type_ , bool output_CPO , int maxThreads , int tick, 
                      double externalTemperature ):
 data(data_), mrfG(mrfG_), outcomesIdx(outcomesIdx_), VSPredictorsIdx(VSPredictorsIdx_), fixedPredictorsIdx(fixedPredictorsIdx_),
 missingDataArrayIdx(missingDataArrayIdx_), completeCases(completeCases_),
@@ -83,11 +83,11 @@ covariance_type(covariance_type_), gamma_type(gamma_type_),beta_type(beta_type_)
 
 SUR_Chain::SUR_Chain( Utils::SUR_Data& surData,
                      Gamma_Sampler_Type gamma_sampler_type_ , Gamma_Type gamma_type_ ,
-                     Beta_Type beta_type_ , Covariance_Type covariance_type_  , bool output_CPO , int maxThreads ,
+                     Beta_Type beta_type_ , Covariance_Type covariance_type_  , bool output_CPO , int maxThreads , int tick, 
                      double externalTemperature ):
 SUR_Chain(surData.data,surData.mrfG,surData.nObservations,surData.nOutcomes,surData.nVSPredictors,surData.nFixedPredictors,
 surData.outcomesIdx,surData.VSPredictorsIdx,surData.fixedPredictorsIdx,surData.missingDataArrayIdx,surData.completeCases,
-          gamma_sampler_type_,gamma_type_,beta_type_,covariance_type_,output_CPO,maxThreads,externalTemperature){ }
+          gamma_sampler_type_,gamma_type_,beta_type_,covariance_type_,output_CPO,maxThreads,tick,externalTemperature){ }
 
 SUR_Chain::SUR_Chain( Utils::SUR_Data& surData, double externalTemperature ):
 SUR_Chain(surData.data,surData.mrfG,surData.nObservations,surData.nOutcomes,surData.nVSPredictors,surData.nFixedPredictors,
@@ -104,7 +104,7 @@ void SUR_Chain::setXtX()
 {
     
     // Compute XtX
-    if( (nFixedPredictors+nVSPredictors) < 5000 )  // kinda arbitrary value, how can we assess a more sensible one?
+    if( (nFixedPredictors+nVSPredictors) < 100000 )  // kinda arbitrary value, how can we assess a more sensible one?
     {
         preComputedXtX = true;
         XtX = data->cols( *predictorsIdx ).t() * data->cols( *predictorsIdx );
@@ -2947,7 +2947,7 @@ void SUR_Chain::step()
 {
     updateGammaMask();
     // update logP_gamma
-    logPGamma();
+    //logPGamma(); 
     
     // Update HyperParameters
     stepTau();
@@ -2976,7 +2976,7 @@ void SUR_Chain::step()
     }
     
     // update log_likelihood
-    logLikelihood();
+    //logLikelihood();
     
     if ( covariance_type == Covariance_Type::HIW )
     {
@@ -2988,7 +2988,9 @@ void SUR_Chain::step()
      
     // Update Sigmas, Rhos and Betas given all rest
     stepSigmaRhoAndBeta();
-     
+    
+    // update logP_gamma; this might be redundant?
+    logPGamma();
     // update gamma
     stepGamma();
      
@@ -3751,12 +3753,15 @@ arma::umat SUR_Chain::createGammaMask( const arma::umat& gamma )
     // CREATE HERE THE GAMMA "MASK"
     // INITIALISE THE INDEXES FOR THE GAMMA MASK
     arma::umat mask = arma::zeros<arma::umat>(nFixedPredictors*nOutcomes,2); //this is just an initialisation
-    for( unsigned int j=0; j<nFixedPredictors; ++j)
+    if( nFixedPredictors )
     {
+      for( unsigned int j=0; j<nFixedPredictors; ++j)
+      {
         for(unsigned int k=0 ; k<nOutcomes ; ++k)  //add gammas for the fixed variables
         {
-            mask(j*nOutcomes+k,0) = j; mask(j*nOutcomes+k,1) = k;
+          mask(j*nOutcomes+k,0) = j; mask(j*nOutcomes+k,1) = k;
         }
+      }
     }
     
     for(unsigned int k=0 ; k<nOutcomes ; ++k)  //add the other gammas
@@ -3782,12 +3787,15 @@ void SUR_Chain::updateGammaMask()
     // CREATE HERE THE GAMMA "MASK"
     // INITIALISE THE INDEXES FOR THE GAMMA MASK
     gammaMask.zeros(nFixedPredictors*nOutcomes,2); //this is just an initialisation
-    for( unsigned int j=0; j<nFixedPredictors; ++j)
+    if( nFixedPredictors )
     {
+      for( unsigned int j=0; j<nFixedPredictors; ++j)
+      {
         for(unsigned int k=0 ; k<nOutcomes ; ++k)  //add gammas for the fixed variables
         {
-            gammaMask(j*nOutcomes+k,0) = j; gammaMask(j*nOutcomes+k,1) = k;
+          gammaMask(j*nOutcomes+k,0) = j; gammaMask(j*nOutcomes+k,1) = k;
         }
+      }
     }
     
     for(unsigned int k=0 ; k<nOutcomes ; ++k)   //add the other gammas

@@ -17,7 +17,7 @@ HRR_Chain::HRR_Chain( std::shared_ptr<arma::mat> data_, std::shared_ptr<arma::ma
                      std::shared_ptr<arma::uvec> outcomesIdx_, std::shared_ptr<arma::uvec> VSPredictorsIdx_,
                      std::shared_ptr<arma::uvec> fixedPredictorsIdx_, std::shared_ptr<arma::umat> missingDataArrayIdx_, std::shared_ptr<arma::uvec> completeCases_,
                      Gamma_Sampler_Type gamma_sampler_type_ , Gamma_Type gamma_type_ ,
-                     Beta_Type beta_type_ , Covariance_Type covariance_type_ , bool output_CPO , int maxThreads ,
+                     Beta_Type beta_type_ , Covariance_Type covariance_type_ , bool output_CPO , int maxThreads , int tick ,
                      double externalTemperature ):
 data(data_), mrfG(mrfG_), outcomesIdx(outcomesIdx_), VSPredictorsIdx(VSPredictorsIdx_), fixedPredictorsIdx(fixedPredictorsIdx_),
 missingDataArrayIdx(missingDataArrayIdx_), completeCases(completeCases_),
@@ -83,11 +83,11 @@ covariance_type(covariance_type_),gamma_type(gamma_type_),beta_type(beta_type_),
 
 HRR_Chain::HRR_Chain( Utils::SUR_Data& surData,
                      Gamma_Sampler_Type gamma_sampler_type_ , Gamma_Type gamma_type_ ,
-                     Beta_Type beta_type_ , Covariance_Type covariance_type_ , bool output_CPO , int maxThreads ,
+                     Beta_Type beta_type_ , Covariance_Type covariance_type_ , bool output_CPO , int maxThreads , int tick ,
                      double externalTemperature ):
 HRR_Chain(surData.data,surData.mrfG,surData.nObservations,surData.nOutcomes,surData.nVSPredictors,surData.nFixedPredictors,
 surData.outcomesIdx,surData.VSPredictorsIdx,surData.fixedPredictorsIdx,surData.missingDataArrayIdx,surData.completeCases,
-          gamma_sampler_type_,gamma_type_,beta_type_,covariance_type_,output_CPO,maxThreads,externalTemperature){ }
+          gamma_sampler_type_,gamma_type_,beta_type_,covariance_type_,output_CPO,maxThreads,tick,externalTemperature){ }
 
 HRR_Chain::HRR_Chain( Utils::SUR_Data& surData, double externalTemperature ):
 HRR_Chain(surData.data,surData.mrfG,surData.nObservations,surData.nOutcomes,surData.nVSPredictors,surData.nFixedPredictors,
@@ -104,7 +104,7 @@ void HRR_Chain::setXtX()
 {
     
     // Compute XtX
-    if( (nFixedPredictors+nVSPredictors) < 5000 )  // kinda arbitrary value, how can we assess a more sensible one?
+    if( (nFixedPredictors+nVSPredictors) < 100000 )  // kinda arbitrary value, how can we assess a more sensible one?
     {
         preComputedXtX = true;
         XtX = data->cols( *predictorsIdx ).t() * data->cols( *predictorsIdx );
@@ -605,7 +605,7 @@ void HRR_Chain::oInit()
         throw Bad_Gamma_Type ( gamma_type );
     
     arma::vec init = arma::ones<arma::vec>(nOutcomes) / std::max( 500. , (double)nVSPredictors ) ;
-    oInit( init , 2. , (double)nVSPredictors-2. , 0.005 );
+    oInit( init , 2. , std::max(500., (double)nVSPredictors)-2. , 0.005 );
 }
 
 void HRR_Chain::oInit( arma::vec& o_init )
@@ -613,7 +613,7 @@ void HRR_Chain::oInit( arma::vec& o_init )
     if( gamma_type != Gamma_Type::hotspot )
         throw Bad_Gamma_Type ( gamma_type );
     
-    oInit( o_init , 2. , (double)nVSPredictors-2. , 0.005 );
+    oInit( o_init , 2. , std::max(500., (double)nVSPredictors)-2. , 0.005 );
 }
 
 
@@ -1022,7 +1022,7 @@ double HRR_Chain::logLikelihood( )
     double logP {0};
     predLik.set_size(nObservations, nOutcomes);
     
-    // yMean is needed if y is not standardized
+    // yMean is needed if y is not standardized. This might cause MCMC stopped
     arma::mat yMean = data->cols( *outcomesIdx );
     for( unsigned k=0; k<nOutcomes; k++)
     {
@@ -1096,9 +1096,11 @@ double HRR_Chain::logLikelihood( )
         }
         
         arma::vec mu_k = W_k * ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * (data->col( (*outcomesIdx)(k) ) - yMean.col(k)) ); // we divide by temp later
-               
+        //arma::vec mu_k = W_k * ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * (data->col( (*outcomesIdx)(k) )) ); // we divide by temp later
+        
         double a_sigma_k = a_sigma + 0.5*(double)nObservations/temperature;
         double b_sigma_k = b_sigma + 0.5* arma::as_scalar( (( data->col((*outcomesIdx)(k)) - yMean.col(k) ).t() * (data->col((*outcomesIdx)(k)) - yMean.col(k) )) - ( mu_k.t() * data->cols( (*predictorsIdx)(VS_IN_k) ).t() * ( data->col((*outcomesIdx)(k)) - yMean.col(k) ) ) )/temperature;
+        //double b_sigma_k = b_sigma + 0.5* arma::as_scalar( (( data->col((*outcomesIdx)(k)) ).t() * (data->col((*outcomesIdx)(k)) )) - ( mu_k.t() * data->cols( (*predictorsIdx)(VS_IN_k) ).t() * ( data->col((*outcomesIdx)(k)) ) ) )/temperature;
         
         double sign, tmp;
         arma::log_det(tmp, sign, W_k );
@@ -1213,9 +1215,11 @@ double HRR_Chain::logLikelihood( const arma::umat&  externalGammaMask )
         }
                
         arma::vec mu_k = W_k * ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * (data->col( (*outcomesIdx)(k) ) - yMean.col(k)) ); // we divide by temp later
-               
+        //arma::vec mu_k = W_k * ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * (data->col( (*outcomesIdx)(k) )) ); // we divide by temp later
+        
         double a_sigma_k = a_sigma + 0.5*(double)nObservations/temperature;
         double b_sigma_k = b_sigma + 0.5* arma::as_scalar( (( data->col((*outcomesIdx)(k)) - yMean.col(k) ).t() * (data->col((*outcomesIdx)(k)) - yMean.col(k) )) - ( mu_k.t() * data->cols( (*predictorsIdx)(VS_IN_k) ).t() * ( data->col((*outcomesIdx)(k)) - yMean.col(k) ) ) )/temperature;
+        //double b_sigma_k = b_sigma + 0.5* arma::as_scalar( (( data->col((*outcomesIdx)(k)) ).t() * (data->col((*outcomesIdx)(k)) )) - ( mu_k.t() * data->cols( (*predictorsIdx)(VS_IN_k) ).t() * ( data->col((*outcomesIdx)(k)) ) ) )/temperature;
         
         double sign, tmp; //sign is needed for the implementation, but we 'assume' that all the matrices are (semi-)positive-definite (-> det>=0)
         arma::log_det(tmp, sign, W_k );
@@ -1314,9 +1318,11 @@ double HRR_Chain::logLikelihood( arma::umat& externalGammaMask , const arma::uma
         }
                
         arma::vec mu_k = W_k * ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * (data->col( (*outcomesIdx)(k) ) - yMean.col(k)) ); // we divide by temp later
-               
+        //arma::vec mu_k = W_k * ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * (data->col( (*outcomesIdx)(k) )) ); // we divide by temp later
+        
         double a_sigma_k = a_sigma + 0.5*(double)nObservations/temperature;
         double b_sigma_k = b_sigma + 0.5* arma::as_scalar( (( data->col((*outcomesIdx)(k)) - yMean.col(k) ).t() * (data->col((*outcomesIdx)(k)) - yMean.col(k) )) - ( mu_k.t() * data->cols( (*predictorsIdx)(VS_IN_k) ).t() * ( data->col((*outcomesIdx)(k)) - yMean.col(k) ) ) )/temperature;
+        //double b_sigma_k = b_sigma + 0.5* arma::as_scalar( (( data->col((*outcomesIdx)(k)) ).t() * (data->col((*outcomesIdx)(k)) )) - ( mu_k.t() * data->cols( (*predictorsIdx)(VS_IN_k) ).t() * ( data->col((*outcomesIdx)(k)) ) ) )/temperature;
         
         double sign, tmp; //sign is needed for the implementation, but we 'assume' that all the matrices are (semi-)positive-definite (-> det>=0)
         arma::log_det(tmp, sign, W_k );
@@ -1414,9 +1420,11 @@ double HRR_Chain::logLikelihood( const arma::umat& externalGammaMask , const dou
         }
                
         arma::vec mu_k = W_k * ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * (data->col( (*outcomesIdx)(k) ) - yMean.col(k)) ); // we divide by temp later
-               
+        //arma::vec mu_k = W_k * ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * (data->col( (*outcomesIdx)(k) )) ); // we divide by temp later
+        
         double a_sigma_k = externalA_sigma + 0.5*(double)nObservations/temperature;
         double b_sigma_k = externalB_sigma + 0.5* arma::as_scalar( (( data->col((*outcomesIdx)(k)) - yMean.col(k) ).t() * (data->col((*outcomesIdx)(k)) - yMean.col(k) )) - ( mu_k.t() * data->cols( (*predictorsIdx)(VS_IN_k) ).t() * ( data->col((*outcomesIdx)(k)) - yMean.col(k) ) ) )/temperature;
+        //double b_sigma_k = externalB_sigma + 0.5* arma::as_scalar( (( data->col((*outcomesIdx)(k)) ).t() * (data->col((*outcomesIdx)(k)) )) - ( mu_k.t() * data->cols( (*predictorsIdx)(VS_IN_k) ).t() * ( data->col((*outcomesIdx)(k)) ) ) )/temperature;
         
         double sign, tmp; //sign is needed for the implementation, but we 'assume' that all the matrices are (semi-)positive-definite (-> det>=0)
         arma::log_det(tmp, sign, W_k );
@@ -1836,8 +1844,8 @@ void HRR_Chain::step()
 {
     updateGammaMask();
     
-    // update the logP_gamma
-    logPGamma();
+    // update logP_gamma
+    //logPGamma();
     
     // Update HyperParameters
     stepW();
@@ -1864,8 +1872,10 @@ void HRR_Chain::step()
             throw Bad_Gamma_Type ( gamma_type );
     }
     
-    // update the log_likelihood
-    logLikelihood();
+    // update log_likelihood; this might be redundant?
+    //logLikelihood();
+    // update logP_gamma; this might be redundant?
+    logPGamma();
     
     // update gamma
     stepGamma();
@@ -2332,12 +2342,15 @@ arma::umat HRR_Chain::createGammaMask( const arma::umat& gamma )
     // CREATE HERE THE GAMMA "MASK"
     // INITIALISE THE INDEXES FOR THE GAMMA MASK
     arma::umat mask = arma::zeros<arma::umat>(nFixedPredictors*nOutcomes,2); //this is just an initialisation
-    for( unsigned int j=0; j<nFixedPredictors; ++j)
+    if( nFixedPredictors )
     {
+      for( unsigned int j=0; j<nFixedPredictors; ++j)
+      {
         for(unsigned int k=0 ; k<nOutcomes ; ++k)  //add gammas for the fixed variables
         {
-            mask(j*nOutcomes+k,0) = j; mask(j*nOutcomes+k,1) = k;
+          mask(j*nOutcomes+k,0) = j; mask(j*nOutcomes+k,1) = k;
         }
+      }
     }
     
     for(unsigned int k=0 ; k<nOutcomes ; ++k)  //add the other gammas
@@ -2364,12 +2377,16 @@ void HRR_Chain::updateGammaMask()
     // CREATE HERE THE GAMMA "MASK"
     // INITIALISE THE INDEXES FOR THE GAMMA MASK
     gammaMask.zeros(nFixedPredictors*nOutcomes,2); //this is just an initialisation
-    for( unsigned int j=0; j<nFixedPredictors; ++j)
+  
+    if( nFixedPredictors )
     {
+      for( unsigned int j=0; j<nFixedPredictors; ++j)
+      {
         for(unsigned int k=0 ; k<nOutcomes ; ++k)  //add gammas for the fixed variables
         {
-            gammaMask(j*nOutcomes+k,0) = j; gammaMask(j*nOutcomes+k,1) = k;
+          gammaMask(j*nOutcomes+k,0) = j; gammaMask(j*nOutcomes+k,1) = k;
         }
+      }
     }
     
     for(unsigned int k=0 ; k<nOutcomes ; ++k)   //add the other gammas

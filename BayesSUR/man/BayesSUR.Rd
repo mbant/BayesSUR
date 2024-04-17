@@ -2,6 +2,7 @@
 % Please edit documentation in R/BayesSUR.R
 \docType{package}
 \name{BayesSUR}
+\alias{-package}
 \alias{BayesSUR}
 \alias{BayesSUR-package}
 \title{Fitting BayesSUR models}
@@ -24,6 +25,7 @@ BayesSUR(
   standardize = TRUE,
   standardize.response = TRUE,
   maxThreads = 1,
+  tick = 1000,
   output_gamma = TRUE,
   output_beta = TRUE,
   output_Gy = TRUE,
@@ -105,6 +107,9 @@ of) the G matrix for the MRF prior on gamma (if necessary)}
 \item{maxThreads}{maximum threads used for parallelization. Default is 1. 
 Reproducibility of results with \code{set.seed()} is only guaranteed if 
 \code{maxThreads=1}}
+
+\item{tick}{an integer used for printing the iteration index and some updated 
+parameters every tick-th iteration. Default is 1000}
 
 \item{output_gamma}{allow (\code{TRUE}) or suppress (\code{FALSE}) the 
 output for  gamma. See the return value below for more information}

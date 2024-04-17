@@ -54,6 +54,7 @@ namespace Utils{
 		unsigned int nChains = 1 , nIter = 10 , burnin = 0;
         
         int maxThreads = 1 ;
+        int tick = 1000 ;
 		
 		// Parameter and sampler types
 		Covariance_Type covariance_type;

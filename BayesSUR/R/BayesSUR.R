@@ -73,6 +73,8 @@
 #' @param maxThreads maximum threads used for parallelization. Default is 1. 
 #' Reproducibility of results with \code{set.seed()} is only guaranteed if 
 #' \code{maxThreads=1}
+#' @param tick an integer used for printing the iteration index and some updated 
+#' parameters every tick-th iteration. Default is 1000 
 #' @param output_gamma allow (\code{TRUE}) or suppress (\code{FALSE}) the 
 #' output for  gamma. See the return value below for more information
 #' @param output_beta allow (\code{TRUE}) or suppress (\code{FALSE}) the output 
@@ -190,7 +192,7 @@ BayesSUR <- function(data = NULL, Y, X, X_0 = NULL,
                      outFilePath = "", 
                      gammaSampler = "bandit", gammaInit = "R", mrfG = NULL,
                      standardize = TRUE, standardize.response = TRUE, 
-                     maxThreads = 1,
+                     maxThreads = 1, tick = 1000, 
                      output_gamma = TRUE, output_beta = TRUE, output_Gy = TRUE, 
                      output_sigmaRho = TRUE, output_pi = TRUE, 
                      output_tail = TRUE, output_model_size = TRUE, 
@@ -632,7 +634,7 @@ BayesSUR <- function(data = NULL, Y, X, X_0 = NULL,
                                   hyperParFile, outFilePath, nIter, burnin, 
                                   nChains, covariancePrior, gammaPrior, 
                                   gammaSampler, gammaInit, betaPrior, 
-                                  maxThreads, output_gamma, output_beta, 
+                                  maxThreads, tick, output_gamma, output_beta, 
                                   output_Gy, output_sigmaRho, output_pi, 
                                   output_tail, output_model_size, output_CPO, 
                                   output_model_visit)
