@@ -24,6 +24,8 @@ plotEstimator(
   title.beta = NA,
   title.gamma = NA,
   title.Gy = NA,
+  beta.type = "marginal",
+  Pmax = 0,
   ...
 )
 }
@@ -73,6 +75,14 @@ and axis line}
 \item{title.gamma}{a title for the printed "gamma"}
 
 \item{title.Gy}{a title for the printed "Gy"}
+
+\item{beta.type}{the type of output beta. Default is \code{marginal}, giving 
+marginal beta estimation. If \code{beta.type="conditional"}, it gives beta 
+estimation conditional on gamma=1}
+
+\item{Pmax}{threshold that truncate the estimator "\code{gamma}" or 
+"\code{Gy}". Default is \code{0}. If \code{Pmax=0.5} and 
+\code{beta.type="conditional"}, it gives median probability model betas}
 
 \item{...}{other arguments}
 }

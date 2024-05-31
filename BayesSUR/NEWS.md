@@ -1,3 +1,7 @@
+# BayesSUR 2.1-8
+
+* Added argument `beta.type` in function `plotEstimator()` to plot MPM coefficient estimates
+
 # BayesSUR 2.1-7
 
 * Increased the threshold of predictor dimension to 100000 (previously 5000) when pre-computing XtX
