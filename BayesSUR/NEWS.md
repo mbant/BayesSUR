@@ -1,6 +1,7 @@
 # BayesSUR 2.1-8
 
 * Added argument `beta.type` in function `plotEstimator()` to plot MPM coefficient estimates
+* Fixed argument `mrfG` index issue (-1) in function `BayesSUR()`
 
 # BayesSUR 2.1-7
 
