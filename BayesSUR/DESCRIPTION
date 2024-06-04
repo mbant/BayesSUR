@@ -30,7 +30,7 @@ Suggests: R.rsp, knitr, BDgraph, data.table, plyr, scrime
 LazyData: true
 NeedsCompilation: yes
 SystemRequirements: C++17
-Packaged: 2024-06-04 09:47:19 UTC; zhiz
+Packaged: 2024-06-04 11:29:55 UTC; zhiz
 Author: Marco Banterle [aut],
   Zhi Zhao [aut, cre],
   Leonardo Bottolo [ctb],

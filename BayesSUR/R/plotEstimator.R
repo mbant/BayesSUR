@@ -138,9 +138,13 @@ plotEstimator <- function(x, estimator = NULL,
 
     if ("beta" %in% estimator) {
       # floor(100*constant)+100-1 colours that your want in the legend bar which has the white middle color
-      colorbar <- c(colorRampPalette(c(colorScale.beta[1], colorScale.beta[2]))(
-        floor(1000 / (-(max(beta_hat) - min(beta_hat)) / min(beta_hat) - 1))), 
-        colorRampPalette(c(colorScale.beta[2], colorScale.beta[3]))(1000)[-1])
+      if (sd(beta_hat) == 0) {
+        colorbar <- colorRampPalette(c(colorScale.beta[2], colorScale.beta[2]))(1000)
+      } else {
+        colorbar <- c(colorRampPalette(c(colorScale.beta[1], colorScale.beta[2]))(
+          floor(1000 / (-(max(beta_hat) - min(beta_hat)) / min(beta_hat) - 1))), 
+          colorRampPalette(c(colorScale.beta[2], colorScale.beta[3]))(1000)[-1])
+      }
       if (is.na(title.beta)) title.beta <- expression(hat(bold(B)))
 
       image(
