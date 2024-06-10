@@ -1,7 +1,11 @@
+# BayesSUR 2.1-9 (or BayesSUR 2.2-0 for CRAN)
+
+* Fixed a bug about the use of temperature parameter in `HRR_Chain.cpp`, also minor update in `SUR_Chain.cpp`
+
 # BayesSUR 2.1-8
 
 * Added argument `beta.type` in function `plotEstimator()` to plot MPM coefficient estimates
-* Fixed argument `mrfG` index issue (-1) in function `BayesSUR()`
+* Fixed argument `mrfG` index issue in function `BayesSUR()`
 
 # BayesSUR 2.1-7
 

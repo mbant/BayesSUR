@@ -203,7 +203,7 @@ BayesSUR <- function(data = NULL, Y, X, X_0 = NULL,
   if (outFilePath == "") {
     stop("Please specify a directory to save all output files!")
   }
-
+  
   outFilePathLength <- nchar(outFilePath)
   if (substr(outFilePath, outFilePathLength, outFilePathLength) != "/") {
     outFilePath <- paste(outFilePath, "/", sep = "")
@@ -211,7 +211,7 @@ BayesSUR <- function(data = NULL, Y, X, X_0 = NULL,
   if (!file.exists(outFilePath)) {
     dir.create(outFilePath)
   }
-
+  
   # Create temporary directory
   tmpFolderLength <- nchar(tmpFolder)
   if (substr(tmpFolder, tmpFolderLength, tmpFolderLength) != "/") {
@@ -221,17 +221,17 @@ BayesSUR <- function(data = NULL, Y, X, X_0 = NULL,
   if (!file.exists(tmpFolder)) {
     dir.create(tmpFolder)
   }
-
+  
   ## Check the input: reasoning is that the user provides either
   # a data matrix or a data path-to-file
   #     - in this case Y, X (and X_0) need to be provided as vectors of indexes
   # if the data matrix is not provided, the user will give 2/3 matrices for Y, X (and X_0)
   #     - in which case we write those in order into a new joint file
   # everything else throws an error
-
+  
   # check the formula
   cl <- match.call()
-
+  
   # we'll check in reverse order, is data NULL?
   if (is.null(data)) {
     # Y,X (and if there X_0) need to be valid numeric matrices then
@@ -240,13 +240,13 @@ BayesSUR <- function(data = NULL, Y, X, X_0 = NULL,
     if ((!is.numeric(Y)) || is.null(npY)) {
       my_stop("If 'data' is NULL, Y should be a numeric matrix", tmpFolder)
     }
-
+    
     npX <- dim(X)
     if ((!is.numeric(X)) || is.null(npX) || (npX[1] != npY[1])) {
       my_stop("If 'data' is NULL, X should be a numeric matrix and the same 
               number of rows of Y", tmpFolder)
     }
-
+    
     if (is.null(X_0)) {
       X_0 <- matrix(NA, nrow = npY[1], ncol = 0)
     } else {
@@ -256,21 +256,21 @@ BayesSUR <- function(data = NULL, Y, X, X_0 = NULL,
                 matrix and the same number of rows of Y", tmpFolder)
       }
     }
-
+    
     # Standarize the data
     if (standardize) {
       X <- scale(X)
       X_0 <- scale(X_0)
     }
     if (standardize.response) Y <- scale(Y)
-
+    
     # Write the three down in a single data file
     write.table(cbind(Y, X, X_0), paste(sep = "", tmpFolder, "data.txt"), 
                 row.names = FALSE, col.names = FALSE)
     data <- paste(sep = "", tmpFolder, "data.txt")
-
+    
     blockLabels <- c(rep(0, ncol(Y)), rep(1, ncol(X)), rep(2, ncol(X_0)))
-
+    
     # Write the data in a output file
     write.table(Y, paste(sep = "", outFilePath, "data_Y.txt"), 
                 row.names = FALSE, col.names = TRUE)
@@ -279,10 +279,10 @@ BayesSUR <- function(data = NULL, Y, X, X_0 = NULL,
     write.table(X_0, paste(sep = "", outFilePath, "data_X0.txt"), 
                 row.names = FALSE, col.names = TRUE)
   } else { # data is not null, so the user wants to use it to input the data
-
+    
     # is the data given as matrix?
     ## If it's valid matrix, simply write it and re-assign the variable data to hold its path
-
+    
     npData <- dim(data)
     if (is.numeric(data) || (!is.null(npData)) || (npData[2] >= 2)) {
       # Standarize the data
@@ -291,7 +291,7 @@ BayesSUR <- function(data = NULL, Y, X, X_0 = NULL,
         data[, X_0] <- scale(data[, X_0])
       }
       if (standardize.response) data[, Y] <- scale(data[, Y])
-
+      
       # Write the Y and X data in a output file
       write.table(data[, Y], paste(sep = "", outFilePath, "data_Y.txt"), 
                   row.names = FALSE, col.names = TRUE)
@@ -299,50 +299,50 @@ BayesSUR <- function(data = NULL, Y, X, X_0 = NULL,
                   row.names = FALSE, col.names = TRUE)
       write.table(data[, X_0], paste(sep = "", outFilePath, "data_X0.txt"), 
                   row.names = FALSE, col.names = TRUE)
-
+      
       write.table(data, paste(sep = "", tmpFolder, "data.txt"), 
                   row.names = FALSE, col.names = FALSE)
       data <- paste(sep = "", tmpFolder, "data.txt")
     } else {
       my_stop("Y should be NULL or a numeric matrix with 2 or more columns!")
     }
-
+    
     # is the data given as a string?
     if (is.character(data) && length(data) == 1) {
       if (substr(data, 1, 1) == "~") {
         data <- path.expand(data)
       }
     }
-
+    
     ## at this point data contains the path to a file that exists
     # try and read one line to check dimensions
     dataHeader <- read.table(data, header = FALSE, nrows = 1)
     nVariables <- ncol(dataHeader)
-
+    
     ## Y, X (and X_0) should be some fixed variables that needs to be included in the model
     if (is.null(X_0)) {
       X_0 <- as.numeric(c())
     }
-
+    
     # be sure that they are vectors
     if (!(is.vector(Y, "numeric") && is.vector(X, "numeric") && 
           is.vector(X_0, "numeric"))) {
       my_stop("When the 'data' argument is set, Y,X and X_0 need to be 
               corresponding index vectors!", tmpFolder)
     }
-
+    
     # check thay do not overlap
     if (length(c(intersect(Y, X), intersect(Y, X_0), intersect(X_0, X))) != 0) {
       my_stop("Y, X and X_0 need to be distinct index vectors!", tmpFolder)
     }
-
+    
     # check if dimensions correspond -- higher dimensions gets an error
     if (length(c(Y, X, X_0)) > nVariables) {
       my_stop("When the 'data' argument is set, Y,X and X_0 need to be 
               corresponding index vectors!", tmpFolder)
     }
     # equal dimensions are ok, but lower dimensions means some columns of the data will be disregarded ( set to -1  )
-
+    
     # We can now init the blockList
     blockLabels <- rep(NA, nVariables)
     blockLabels[Y] <- 0
@@ -350,21 +350,21 @@ BayesSUR <- function(data = NULL, Y, X, X_0 = NULL,
     if (length(X_0) > 0) {
       blockLabels[X_0] <- 2
     }
-
+    
     blockLabels[is.na(blockLabels)] <- -1
   }
-
+  
   # cleanup file PATHS
   dataLength <- nchar(data)
   if (dataLength == 0) {
     my_stop("Please provide a correct path to a plain-text (.txt) file", 
             tmpFolder)
   }
-
+  
   # magicly strip '/' from the start and '.txt' from the end of the data file name
   dataString <- 
     head(strsplit(tail(strsplit(data, split = c("/"))[[1]], 1), ".txt")[[1]], 1)
-
+  
   ## Then init the structure graph
   # Consider that the indexes are written so that Y is 0 , X is 1 and (if there) X_0 is 2
   if (length(X_0) > 0) {
@@ -374,7 +374,7 @@ BayesSUR <- function(data = NULL, Y, X, X_0 = NULL,
     structureGraph <- structureGraph <- matrix(c(0, 0, 1, 0), 2, 2, 
                                                byrow = TRUE)
   }
-
+  
   ## Finally write blockLabels and structureGraph to a file
   write.table(blockLabels, paste(sep = "", tmpFolder, "blockLabels.txt"), 
               row.names = FALSE, col.names = FALSE)
@@ -382,7 +382,7 @@ BayesSUR <- function(data = NULL, Y, X, X_0 = NULL,
   write.table(structureGraph, paste(sep = "", tmpFolder, "structureGraph.txt"), 
               row.names = FALSE, col.names = FALSE)
   structureGraph <- paste(sep = "", tmpFolder, "structureGraph.txt")
-
+  
   # check how burnin was given
   if (burnin < 0) {
     my_stop("Burnin must be positive or 0", tmpFolder)
@@ -395,7 +395,7 @@ BayesSUR <- function(data = NULL, Y, X, X_0 = NULL,
       }
     }
   } # else assume is given as an absolute number
-
+  
   ###############################
   ## prepare the print of hyperparameters corresponding the specified model
   hyperpar.all <- list(a_w = 2, b_w = 5, 
@@ -409,7 +409,7 @@ BayesSUR <- function(data = NULL, Y, X, X_0 = NULL,
   if (toupper(gammaPrior) %in% c("HOTSPOT", "HOTSPOTS", "HS")) {
     hyperpar.all$a_pi <- 2
     hyperpar.all$b_pi <- 1
-
+    
     if (toupper(covariancePrior) %in% c("INDEPENDENT", "INDEP", "IG")) {
       hyperpar.all <- hyperpar.all[-c(7:11, 14:15)]
     }
@@ -423,23 +423,22 @@ BayesSUR <- function(data = NULL, Y, X, X_0 = NULL,
   if (toupper(gammaPrior) %in% c("HIERARCHICAL", "H")) {
     hyperpar.all$a_pi <- 1
     hyperpar.all$b_pi <- sum(blockLabels == 0) - 1
-
+    
     if (toupper(covariancePrior) %in% c("INDEPENDENT", "INDEP", "IG")) {
-      hyperpar.all <- hyperpar.all[-c(3:4, 7:11, 14:15)]
+      hyperpar.all <- hyperpar.all[-c(3:6, 7:11, 14:15)]
     }
     if (toupper(covariancePrior) %in% c("DENSE", "IW")) {
-      hyperpar.all <- hyperpar.all[-c(3:4, 10:11, 12:15)]
+      hyperpar.all <- hyperpar.all[-c(3:6, 10:11, 12:15)]
     }
     if (toupper(covariancePrior) %in% c("SPARSE", "HIW")) {
-      hyperpar.all <- hyperpar.all[-c(3:4, 12:15)]
+      hyperpar.all <- hyperpar.all[-c(3:6, 12:15)]
     }
   }
-
   if (toupper(gammaPrior) %in% c("MRF", "MARKOV RANDOM FIELD")) {
     if (is.null(mrfG)) {
       my_stop("Argument 'mrfG' was specified!", tmpFolder)
     }
-
+    
     if (toupper(covariancePrior) %in% c("INDEPENDENT", "INDEP", "IG")) {
       hyperpar.all <- hyperpar.all[-c(3:6, 7:13)]
     }
@@ -454,18 +453,27 @@ BayesSUR <- function(data = NULL, Y, X, X_0 = NULL,
     hyperpar.all$a_w0 <- hyperpar.all$a_w
     hyperpar.all$b_w0 <- hyperpar.all$b_w
   }
-
+  
   if (length(hyperpar) > 0) {
     for (i in seq_along(hyperpar)) {
       if (names(hyperpar)[[i]] %in% names(hyperpar.all)) {
         hyperpar.all[[which(names(hyperpar.all) == names(hyperpar)[[i]])]] <- 
           hyperpar[[i]]
       }
-      if (!is.null(hyperpar$a_omega)) hyperpar.all$a_pi <- hyperpar$a_omega
-      if (!is.null(hyperpar$b_omega)) hyperpar.all$b_pi <- hyperpar$b_omega
+      #if (!is.null(hyperpar$a_omega)) hyperpar.all$a_pi <- hyperpar$a_omega
+      #if (!is.null(hyperpar$b_omega)) hyperpar.all$b_pi <- hyperpar$b_omega
     }
   }
-
+  
+  if (toupper(gammaPrior) %in% c("HIERARCHICAL", "H")) {
+    ## re-use the hyperparameter names a_pi and b_pi for 
+    ## Bernoulli prior's hyperparameters a_omega and b_omega
+    #names(hyperpar.all)[names(hyperpar.all) == "a_pi"] <- "a_omega"
+    #names(hyperpar.all)[names(hyperpar.all) == "b_pi"] <- "b_omega"
+    if (!is.null(hyperpar$a_omega)) hyperpar.all$a_pi <- hyperpar$a_omega
+    if (!is.null(hyperpar$b_omega)) hyperpar.all$b_pi <- hyperpar$b_omega
+  }
+  
   # method to use
   if (toupper(covariancePrior) %in% c("SPARSE", "HIW")) {
     covariancePrior <- "HIW"
@@ -477,7 +485,7 @@ BayesSUR <- function(data = NULL, Y, X, X_0 = NULL,
     my_stop("Unknown covariancePrior argument: only sparse (HIW), dense(IW) or 
             independent (IG) are available", tmpFolder)
   }
-
+  
   # mrfG and gammaPrior
   if (gammaPrior == "") {
     if (is.null(mrfG)) {
@@ -501,12 +509,11 @@ BayesSUR <- function(data = NULL, Y, X, X_0 = NULL,
               are available", tmpFolder)
     }
   }
-
+  
   # if mrfG is not a string
   if (!(is.character(mrfG) && length(mrfG) == 1)) {
     # if it's a matrix
     if ((is.numeric(mrfG) || is.data.frame(mrfG)) && !is.null(dim(mrfG))) {
-      mrfG <- mrfG - 1 # due to C++ indexing from 0
       if (ncol(mrfG) == 2) {
         mrfG <- cbind(mrfG, rep(1, nrow(mrfG)))
       }
@@ -524,20 +531,20 @@ BayesSUR <- function(data = NULL, Y, X, X_0 = NULL,
               values", tmpFolder)
     }
   }
-
+  
   ## Set up the XML file for hyperparameters
   xml <- as_xml_document(
     list(hyperparameters = list(
-      lapply(hyperpar, function(x) list(x)) # every element in the list should be a list
+      lapply(hyperpar.all, function(x) list(x)) # every element in the list should be a list
     ))
   )
   hyperParFile <- paste(sep = "", tmpFolder, "hyperpar.xml")
   write_xml(xml, file = hyperParFile)
-
+  
   ## Create the return object
   ret <- list(status = 1, input = list(), output = list())
   class(ret) <- "BayesSUR"
-
+  
   # Copy the inputs
   ret$input["nIter"] <- nIter
   ret$input["burnin"] <- burnin
@@ -547,65 +554,61 @@ BayesSUR <- function(data = NULL, Y, X, X_0 = NULL,
   ret$input["gammaSampler"] <- gammaSampler
   ret$input["gammaInit"] <- gammaInit
   ret$input["mrfG"] <- mrfG
-
-  if (toupper(gammaPrior) %in% c("HIERARCHICAL", "H")) {
-    names(hyperpar.all)[names(hyperpar.all) == "a_pi"] <- "a_omega"
-    names(hyperpar.all)[names(hyperpar.all) == "b_pi"] <- "b_omega"
-  }
+  
   ret$input$hyperParameters <- hyperpar.all
-
+  
   methodString <-
     switch(covariancePrior,
-      "HIW" = "SSUR",
-      "IW"  = "dSUR",
-      "IG"  = "HRR"
+           "HIW" = "SSUR",
+           "IW"  = "dSUR",
+           "IG"  = "HRR"
     )
-
+  
   ret$call <- cl
-
+  
   # Prepare path to outputs
   ret$output["outFilePath"] <- outFilePath
-
+  
   ret$output["logP"] <- 
     paste(sep = "", dataString, "_", methodString, "_logP_out.txt")
-
+  
   if (output_gamma) {
     ret$output["gamma"] <- 
       paste(sep = "", dataString, "_", methodString, "_gamma_out.txt")
   }
-
+  
   if (gammaPrior %in% c("hierarchical", "hotspot") && output_pi) {
     ret$output["pi"] <- 
       paste(sep = "", dataString, "_", methodString, "_pi_out.txt")
   }
-
+  
   if (gammaPrior == "hotspot" && output_tail) {
     ret$output["tail"] <- 
       paste(sep = "", dataString, "_", methodString, "_hotspot_tail_p_out.txt")
   }
-
+  
   if (output_beta) {
     ret$output["beta"] <- 
       paste(sep = "", dataString, "_", methodString, "_beta_out.txt")
   }
-
+  
   if (covariancePrior == "HIW" && output_Gy) {
     ret$output["Gy"] <- 
       paste(sep = "", dataString, "_", methodString, "_Gy_out.txt")
     ret$output["Gvisit"] <- 
       paste(sep = "", dataString, "_", methodString, "_Gy_visit.txt")
   }
-
+  
   if (covariancePrior %in% c("HIW", "IW") && output_sigmaRho) {
     ret$output["sigmaRho"] <- 
       paste(sep = "", dataString, "_", methodString, "_sigmaRho_out.txt")
   }
-
+  
   if (output_model_size) {
     ret$output["model_size"] <- 
       paste(sep = "", dataString, "_", methodString, "_model_size_out.txt")
   }
-
+  
   if (output_CPO) {
     ret$output["CPO"] <- 
       paste(sep = "", dataString, "_", methodString, "_CPO_out.txt")
@@ -614,24 +617,24 @@ BayesSUR <- function(data = NULL, Y, X, X_0 = NULL,
     ret$output["WAIC"] <- 
       paste(sep = "", dataString, "_", methodString, "_WAIC_out.txt")
   }
-
+  
   if (output_Y) {
     ret$output["Y"] <- paste(sep = "", "data_Y.txt")
   }
-
+  
   if (output_X) {
     ret$output["X"] <- paste(sep = "", "data_X.txt")
     if (length(X_0) > 0) {
       ret$output["X0"] <- paste(sep = "", "data_X0.txt")
     }
   }
-
+  
   # set.seed(seed)
   # betaPrior="independent"
-
+  
   # set number of threads
   maxThreads <- min(maxThreads, detectCores())
-
+  
   ret$status <- BayesSUR_internal(data, mrfG, blockList, structureGraph, 
                                   hyperParFile, outFilePath, nIter, burnin, 
                                   nChains, covariancePrior, gammaPrior, 
@@ -640,7 +643,13 @@ BayesSUR <- function(data = NULL, Y, X, X_0 = NULL,
                                   output_Gy, output_sigmaRho, output_pi, 
                                   output_tail, output_model_size, output_CPO, 
                                   output_model_visit)
-
+  
+  if (toupper(gammaPrior) %in% c("HIERARCHICAL", "H")) {
+    ## bring back the re-used hyperparameter names a_pi and b_pi for 
+    ## Bernoulli prior's hyperparameters a_omega and b_omega
+    names(ret$input$hyperParameters)[names(ret$input$hyperParameters) == "a_pi"] <- "a_omega"
+    names(ret$input$hyperParameters)[names(ret$input$hyperParameters) == "b_pi"] <- "b_omega"
+  }
   ## save fitted object
   obj_BayesSUR <- list(status = ret$status, input = ret$input, 
                        output = ret$output, call = ret$call)
