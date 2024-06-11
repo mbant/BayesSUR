@@ -19,14 +19,14 @@ Copyright: The C++ files pugixml.cpp, pugixml.hpp and pugiconfig.hpp
         and Copyright (C) 2003 from Kristen Wegner. The R function
         vertical.image.legend() is used with Copyright (C) 2013 from
         Jenise Swall.
-VignetteBuilder: R.rsp, knitr
+VignetteBuilder: R.rsp, knitr, rmarkdown
 RoxygenNote: 7.3.1
 Depends: R (>= 3.5.0)
 Encoding: UTF-8
 LinkingTo: Rcpp, RcppArmadillo (>= 0.9.000)
 Imports: Rcpp, xml2, igraph, Matrix, tikzDevice, stats, utils,
         grDevices, graphics
-Suggests: R.rsp, knitr, BDgraph, data.table, plyr, scrime
+Suggests: R.rsp, knitr, BDgraph, data.table, plyr, scrime, rmarkdown
 LazyData: true
 NeedsCompilation: yes
 SystemRequirements: C++17
