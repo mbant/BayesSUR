@@ -5,6 +5,7 @@
 #' graph of responses.
 #' @importFrom graphics axis box text mtext par image
 #' @importFrom grDevices colorRampPalette dev.off grey
+#' @importFrom stats sd
 #' @importFrom tikzDevice tikz
 #' @name plotEstimator
 #' 
@@ -138,7 +139,7 @@ plotEstimator <- function(x, estimator = NULL,
 
     if ("beta" %in% estimator) {
       # floor(100*constant)+100-1 colours that your want in the legend bar which has the white middle color
-      if (sd(beta_hat) == 0) {
+      if (stats::sd(beta_hat) == 0) {
         colorbar <- colorRampPalette(c(colorScale.beta[2], colorScale.beta[2]))(1000)
       } else {
         colorbar <- c(colorRampPalette(c(colorScale.beta[1], colorScale.beta[2]))(

@@ -543,7 +543,9 @@ int drive_SUR( Chain_Data& chainData )
     // -----
     
     Rcout << "Saved to :   "+outFilePrefix+"****_out.txt" << '\n';
-    Rcout << "Final w : " << sampler[0] -> getW() <<  '\n';
+    if( chainData.surData.nFixedPredictors > 0 )
+        Rcout << "Final w0  : " << sampler[0] -> getW0() <<  '\n';
+    Rcout << "Final w   : " << sampler[0] -> getW() <<  '\n';
     Rcout << "Final tau : " << sampler[0] -> getTau() << "    w/ proposal variance: " << sampler[0] -> getVarTauProposal() << '\n';
     if ( chainData.covariance_type == Covariance_Type::HIW )
         Rcout << "Final eta : " << sampler[0] -> getEta() <<  '\n';
@@ -940,7 +942,9 @@ int drive_HRR( Chain_Data& chainData )
     }
     // -----
     Rcout << "Saved to :   "+outFilePrefix+"****_out.txt" << '\n';
-    Rcout << "Final w : " << sampler[0] -> getW() << "       w/ proposal variance: " << sampler[0] -> getVarWProposal() << '\n';
+    if( chainData.surData.nFixedPredictors > 0 )
+        Rcout << "Final w0 : " << sampler[0] -> getW0() <<  '\n';
+    Rcout << "Final w  : " << sampler[0] -> getW() << "       w/ proposal variance: " << sampler[0] -> getVarWProposal() << '\n';
     // Rcout << "Final o : " << sampler[0] -> getO().t() << "       w/ proposal variance: " << sampler[0] -> getVarOProposal() << '\n';
     // Rcout << "Final pi : " << sampler[0] -> getPi().t() << "       w/ proposal variance: " << sampler[0] -> getVarPiProposal() << '\n';
     Rcout << "  -- Average Omega : " << arma::accu( sampler[0] -> getO() * sampler[0] -> getPi().t() )/((double)(sampler[0]->getP()*sampler[0]->getS())) <<  '\n';

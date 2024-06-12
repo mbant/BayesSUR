@@ -1,6 +1,7 @@
 # BayesSUR 2.1-9 (or BayesSUR 2.2-0 for CRAN)
 
 * Fixed a bug about the use of temperature parameter in `HRR_Chain.cpp`, also minor update in `SUR_Chain.cpp`
+* Fixed random effects' sampler `HRR_Chain::stepW0()`
 
 # BayesSUR 2.1-8
 

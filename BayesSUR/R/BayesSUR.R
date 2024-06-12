@@ -8,7 +8,6 @@
 #' indicator variable (i.e., independent Bernoulli, hotspot and Markov random 
 #' field). So there are nine models in total. See details for their combinations.
 #'
-#' @docType package
 #' @useDynLib BayesSUR
 #' @aliases BayesSUR-package
 #' @importFrom utils head tail read.table write.table

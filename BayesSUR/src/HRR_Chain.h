@@ -358,7 +358,7 @@ class HRR_Chain : public ESS_Atom<HRR_Chain>
         void stepOnePi();
         void stepPi();
         void stepW();
-        void stepW0();
+        //void stepW0();
 
         void stepGamma();
 

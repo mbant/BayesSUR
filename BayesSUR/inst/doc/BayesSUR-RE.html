@@ -594,9 +594,10 @@ simulation <code>sim2$mrfG</code>.</p>
 ## Temperature ladder updated, new temperature ratio : 1.1
 ##  MCMC ends.   --- Saving results and exiting
 ## Saved to :   sim2_mrf_re1/data_SSUR_****_out.txt
-## Final w : 0.148291
-## Final tau : 1.84125    w/ proposal variance: 0.408163
-## Final eta : 0.0355005
+## Final w0  : 5.43872
+## Final w   : 0.151529
+## Final tau : 5.03502    w/ proposal variance: 1.25175
+## Final eta : 0.0404965
 ##   -- Average Omega : 0
 ## Final temperature ratio : 1.1
 ##
@@ -608,71 +609,67 @@ simulation <code>sim2$mrfG</code>.</p>
 ##
 ## CPOs:
 ##         Min.      1st Qu.       Median      3rd Qu.         Max.
-## 0.0001118321 0.0241323466 0.0349716031 0.0456556652 0.2321280902
-##
-## Number of selected predictors (mPIP &gt; 0.5): 2843 of 20x300
-##
+## 0.0001880944 0.0242389626 0.0347986252 0.0465162558 0.1307315429 
+## 
+## Number of selected predictors (mPIP &gt; 0.5): 2823 of 20x300
+## 
 ## Top 10 predictors on average mPIP across all responses:
-##    X.130     X.54    X.249     X.56     X.77    X.253    X.281     X.80
-## 0.720640 0.706705 0.652730 0.650985 0.643780 0.640780 0.639045 0.636565
-##    X.260    X.297
-## 0.634820 0.629595
-##
+##    X.251     X.27    X.296    X.196    X.285    X.130     X.32    X.104     X.58     X.10 
+## 0.729580 0.702225 0.695755 0.672865 0.656705 0.653220 0.651730 0.643770 0.638795 0.635315 
+## 
 ## Top 10 responses on average mPIP across all predictors:
-##       X.8       X.5      X.12       X.6      X.18       X.4      X.14       X.1
-## 0.4957363 0.4879933 0.4873303 0.4860670 0.4846080 0.4828333 0.4784240 0.4773090
-##      X.19       X.2
-## 0.4756350 0.4742257
-##
+##       X.5       X.8      X.19      X.12       X.4      X.11      X.10      X.14      X.16       X.9 
+## 0.5099717 0.4958283 0.4896067 0.4811993 0.4784647 0.4766230 0.4744843 0.4743030 0.4742693 0.4740880 
+## 
 ## Expected log pointwise predictive density (elpd) estimates:
-##   elpd.LOO = -16437.89,  elpd.WAIC = -16470.16
-##
+##   elpd.LOO = -16836.31,  elpd.WAIC = -16834.33
+## 
 ## MCMC specification:
 ##   iterations = 300,  burn-in = 100,  chains = 2
 ##   gamma local move sampler: bandit
 ##   gamma initialisation: 0
-##
+## 
 ## Model specification:
 ##   covariance prior: HIW
 ##   gamma prior: MRF
-##
+## 
 ## Hyper-parameters:
-##   a_w   b_w    nu a_tau b_tau a_eta b_eta mrf_d mrf_e  a_w0  b_w0
-##  15.0  60.0  22.0   0.1  10.0   0.1   1.0  -2.0   1.6 100.0 500.0</code></pre>
+##   a_w   b_w    nu a_tau b_tau a_eta b_eta mrf_d mrf_e  a_w0  b_w0 
+##  15.0  60.0  22.0   0.1  10.0   0.1   1.0  -2.0   1.6 100.0 500.0 </code></pre>
 <p>Compute the model performance with respect to <strong>variable
 selection</strong></p>
 <div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a><span class="co"># compute accuracy, sensitivity, specificity of variable selection</span></span>
 <span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a>gamma <span class="ot">&lt;-</span> <span class="fu">getEstimator</span>(fit2)</span>
 <span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a>(accuracy <span class="ot">&lt;-</span> <span class="fu">sum</span>(<span class="fu">data.matrix</span>(gamma <span class="sc">&gt;</span> <span class="fl">0.5</span>) <span class="sc">==</span> sim2<span class="sc">$</span>gamma) <span class="sc">/</span> <span class="fu">prod</span>(<span class="fu">dim</span>(gamma)))</span></code></pre></div>
-<pre><code>## [1] 0.5358333</code></pre>
+<pre><code>## [1] 0.5371667</code></pre>
 <div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a>(sensitivity <span class="ot">&lt;-</span> <span class="fu">sum</span>((<span class="fu">data.matrix</span>(gamma <span class="sc">&gt;</span> <span class="fl">0.5</span>) <span class="sc">==</span> <span class="dv">1</span>) <span class="sc">&amp;</span> (sim2<span class="sc">$</span>gamma <span class="sc">==</span> <span class="dv">1</span>)) <span class="sc">/</span> <span class="fu">sum</span>(sim2<span class="sc">$</span>gamma <span class="sc">==</span> <span class="dv">1</span>))</span></code></pre></div>
-<pre><code>## [1] 0.5376623</code></pre>
+<pre><code>## [1] 0.5298701</code></pre>
 <div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a>(specificity <span class="ot">&lt;-</span> <span class="fu">sum</span>((<span class="fu">data.matrix</span>(gamma <span class="sc">&gt;</span> <span class="fl">0.5</span>) <span class="sc">==</span> <span class="dv">0</span>) <span class="sc">&amp;</span> (sim2<span class="sc">$</span>gamma <span class="sc">==</span> <span class="dv">0</span>)) <span class="sc">/</span> <span class="fu">sum</span>(sim2<span class="sc">$</span>gamma <span class="sc">==</span> <span class="dv">0</span>))</span></code></pre></div>
-<pre><code>## [1] 0.5355641</code></pre>
+<pre><code>## [1] 0.5382409</code></pre>
 <p>Compute the model performance with respect to <strong>response
 prediction</strong></p>
 <div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" tabindex="-1"></a><span class="co"># compute RMSE and RMSPE for prediction performance</span></span>
 <span id="cb15-2"><a href="#cb15-2" tabindex="-1"></a>beta <span class="ot">&lt;-</span> <span class="fu">getEstimator</span>(fit2, <span class="at">estimator =</span> <span class="st">&quot;beta&quot;</span>, <span class="at">Pmax =</span> .<span class="dv">5</span>, <span class="at">beta.type =</span> <span class="st">&quot;conditional&quot;</span>)</span>
 <span id="cb15-3"><a href="#cb15-3" tabindex="-1"></a>(RMSE <span class="ot">&lt;-</span> <span class="fu">sqrt</span>(<span class="fu">sum</span>((sim2<span class="sc">$</span>y <span class="sc">-</span> <span class="fu">cbind</span>(sim2<span class="sc">$</span>z, sim2<span class="sc">$</span>x) <span class="sc">%*%</span> beta)<span class="sc">^</span><span class="dv">2</span>) <span class="sc">/</span> <span class="fu">prod</span>(<span class="fu">dim</span>(sim2<span class="sc">$</span>y))))</span></code></pre></div>
-<pre><code>## [1] 7.025327</code></pre>
+<pre><code>## [1] 7.134064</code></pre>
 <div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" tabindex="-1"></a>(RMSPE <span class="ot">&lt;-</span> <span class="fu">sqrt</span>(<span class="fu">sum</span>((sim2.val<span class="sc">$</span>y <span class="sc">-</span> <span class="fu">cbind</span>(sim2.val<span class="sc">$</span>z, sim2.val<span class="sc">$</span>x) <span class="sc">%*%</span> beta)<span class="sc">^</span><span class="dv">2</span>) <span class="sc">/</span> <span class="fu">prod</span>(<span class="fu">dim</span>(sim2.val<span class="sc">$</span>y))))</span></code></pre></div>
-<pre><code>## [1] 8.084381</code></pre>
+<pre><code>## [1] 8.269975</code></pre>
 <p>Compute the model performance with respect to <strong>coefficient
 bias</strong></p>
 <div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" tabindex="-1"></a><span class="co"># compute bias of beta estimates</span></span>
 <span id="cb19-2"><a href="#cb19-2" tabindex="-1"></a>b <span class="ot">&lt;-</span> sim2<span class="sc">$</span>b</span>
 <span id="cb19-3"><a href="#cb19-3" tabindex="-1"></a>b[sim2<span class="sc">$</span>gamma <span class="sc">==</span> <span class="dv">0</span>] <span class="ot">&lt;-</span> <span class="dv">0</span></span>
 <span id="cb19-4"><a href="#cb19-4" tabindex="-1"></a>(beta.l2 <span class="ot">&lt;-</span> <span class="fu">sqrt</span>(<span class="fu">sum</span>((beta[<span class="sc">-</span><span class="fu">c</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">4</span>), ] <span class="sc">-</span> b)<span class="sc">^</span><span class="dv">2</span>) <span class="sc">/</span> <span class="fu">prod</span>(<span class="fu">dim</span>(b))))</span></code></pre></div>
-<pre><code>## [1] 0.4530592</code></pre>
+<pre><code>## [1] 0.4617231</code></pre>
 <p>Compute the model performance with respect to <strong>covariance
 selection</strong></p>
 <div class="sourceCode" id="cb21"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" tabindex="-1"></a>g.re <span class="ot">&lt;-</span> <span class="fu">getEstimator</span>(fit2, <span class="at">estimator =</span> <span class="st">&quot;Gy&quot;</span>)</span>
 <span id="cb21-2"><a href="#cb21-2" tabindex="-1"></a>(g.accuracy <span class="ot">&lt;-</span> <span class="fu">sum</span>((g.re <span class="sc">&gt;</span> <span class="fl">0.5</span>) <span class="sc">==</span> sim2<span class="sc">$</span>Gy) <span class="sc">/</span> <span class="fu">prod</span>(<span class="fu">dim</span>(g.re)))</span></code></pre></div>
-<pre><code>## [1] 0.545</code></pre>
+<pre><code>## [1] 0.51</code></pre>
 <div class="sourceCode" id="cb23"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" tabindex="-1"></a>(g.sensitivity <span class="ot">&lt;-</span> <span class="fu">sum</span>(((g.re <span class="sc">&gt;</span> <span class="fl">0.5</span>) <span class="sc">==</span> sim2<span class="sc">$</span>Gy)[sim2<span class="sc">$</span>Gy <span class="sc">==</span> <span class="dv">1</span>]) <span class="sc">/</span> <span class="fu">sum</span>(sim2<span class="sc">$</span>Gy <span class="sc">==</span> <span class="dv">1</span>))</span></code></pre></div>
-<pre><code>## [1] 0.1287129</code></pre>
+<pre><code>## [1] 0.1089109</code></pre>
 <div class="sourceCode" id="cb25"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" tabindex="-1"></a>(g.specificity <span class="ot">&lt;-</span> <span class="fu">sum</span>(((g.re <span class="sc">&gt;</span> <span class="fl">0.5</span>) <span class="sc">==</span> sim2<span class="sc">$</span>Gy)[sim2<span class="sc">$</span>Gy <span class="sc">==</span> <span class="dv">0</span>]) <span class="sc">/</span> <span class="fu">sum</span>(sim2<span class="sc">$</span>Gy <span class="sc">==</span> <span class="dv">0</span>))</span></code></pre></div>
-<pre><code>## [1] 0.969697</code></pre>
+<pre><code>## [1] 0.9191919</code></pre>
 </div>
 <div id="referrence" class="section level2">
 <h2>Referrence</h2>
