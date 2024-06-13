@@ -37,7 +37,7 @@ Here, we show a simulation example to run the BayesSUR mdoel with random effects
 We design a network as the following figure (a) to construct a complex structure between $20$ response variables and $300$ predictors.
 It assumes that the responses are divided into six groups, and the first $120$ predictors are divided into nine groups.
 
-<img src="man/figures/figure2.png" width="90%" />
+<img src="BayesSUR/man/figures/figure2.png" width="90%" />
 
 _**Figure**: True relationships between response variables and predictors.
 (a) Network structure between $\mathbf Y$ and $\mathbf X$.
