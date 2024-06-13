@@ -7,8 +7,7 @@
 
 <!-- badges: end -->
 
-This repository contains a [new and improved](inst/doc/BayesSUR.pdf) R package for high-dimensional multivariate Bayesian variable and covariance selection in linear regression, started as an interface to the [Bayesian SSUR](https://github.com/mbant/Bayesian_SSUR) C++-only, UNIX-specific, code. 
-This R package includes high-dimensional Bayesian SUR models from [Bottolo et al. (2021)](https://doi.org/10.1111/rssc.12490), [Zhao et al. (2021)](https://doi.org/10.18637/jss.v100.i11) and [Zhao et al. (2024)](https://doi.org/10.1093/jrsssc/qlad102). 
+This R package is for high-dimensional multivariate Bayesian variable and covariance selection in linear regression, including methods in [Bottolo et al. (2021)](https://doi.org/10.1111/rssc.12490), [Zhao et al. (2021)](https://doi.org/10.18637/jss.v100.i11) and [Zhao et al. (2024)](https://doi.org/10.1093/jrsssc/qlad102). 
 See the package vignettes [`BayesSUR.pdf`](inst/doc/BayesSUR.pdf) for more information and an additional example below for the BayesSUR model with random effects.
 
 ## Installation
@@ -38,7 +37,7 @@ Here, we show a simulation example to run the BayesSUR mdoel with random effects
 We design a network as the following figure (a) to construct a complex structure between $20$ response variables and $300$ predictors.
 It assumes that the responses are divided into six groups, and the first $120$ predictors are divided into nine groups.
 
-<img src="BayesSUR/man/figures/figure2.png" width="90%" />
+<img src="man/figures/figure2.png" width="90%" />
 
 _**Figure**: True relationships between response variables and predictors.
 (a) Network structure between $\mathbf Y$ and $\mathbf X$.
@@ -263,9 +262,10 @@ fit2 <- BayesSUR(
 ## Temperature ladder updated, new temperature ratio : 1.1
 ##  MCMC ends.   --- Saving results and exiting
 ## Saved to :   sim2_mrf_re1/data_SSUR_****_out.txt
-## Final w : 0.148291
-## Final tau : 1.84125    w/ proposal variance: 0.408163
-## Final eta : 0.0355005
+## Final w0  : 5.43872
+## Final w   : 0.151529
+## Final tau : 5.03502    w/ proposal variance: 1.25175
+## Final eta : 0.0404965
 ##   -- Average Omega : 0
 ## Final temperature ratio : 1.1
 ##
@@ -279,43 +279,38 @@ summary(fit2)
 ```
 
 ```
-##
 ## Call:
 ##   BayesSUR(data = cbind(sim2$y, sim2$z, sim2$x), ...)
 ##
 ## CPOs:
 ##         Min.      1st Qu.       Median      3rd Qu.         Max.
-## 0.0001118321 0.0241323466 0.0349716031 0.0456556652 0.2321280902
-##
-## Number of selected predictors (mPIP > 0.5): 2843 of 20x300
-##
+## 0.0001880944 0.0242389626 0.0347986252 0.0465162558 0.1307315429 
+## 
+## Number of selected predictors (mPIP > 0.5): 2823 of 20x300
+## 
 ## Top 10 predictors on average mPIP across all responses:
-##    X.130     X.54    X.249     X.56     X.77    X.253    X.281     X.80
-## 0.720640 0.706705 0.652730 0.650985 0.643780 0.640780 0.639045 0.636565
-##    X.260    X.297
-## 0.634820 0.629595
-##
+##    X.251     X.27    X.296    X.196    X.285    X.130     X.32    X.104     X.58     X.10 
+## 0.729580 0.702225 0.695755 0.672865 0.656705 0.653220 0.651730 0.643770 0.638795 0.635315 
+## 
 ## Top 10 responses on average mPIP across all predictors:
-##       X.8       X.5      X.12       X.6      X.18       X.4      X.14       X.1
-## 0.4957363 0.4879933 0.4873303 0.4860670 0.4846080 0.4828333 0.4784240 0.4773090
-##      X.19       X.2
-## 0.4756350 0.4742257
-##
+##       X.5       X.8      X.19      X.12       X.4      X.11      X.10      X.14      X.16       X.9 
+## 0.5099717 0.4958283 0.4896067 0.4811993 0.4784647 0.4766230 0.4744843 0.4743030 0.4742693 0.4740880 
+## 
 ## Expected log pointwise predictive density (elpd) estimates:
-##   elpd.LOO = -16437.89,  elpd.WAIC = -16470.16
-##
+##   elpd.LOO = -16836.31,  elpd.WAIC = -16834.33
+## 
 ## MCMC specification:
 ##   iterations = 300,  burn-in = 100,  chains = 2
 ##   gamma local move sampler: bandit
 ##   gamma initialisation: 0
-##
+## 
 ## Model specification:
 ##   covariance prior: HIW
 ##   gamma prior: MRF
-##
+## 
 ## Hyper-parameters:
-##   a_w   b_w    nu a_tau b_tau a_eta b_eta mrf_d mrf_e  a_w0  b_w0
-##  15.0  60.0  22.0   0.1  10.0   0.1   1.0  -2.0   1.6 100.0 500.0
+##   a_w   b_w    nu a_tau b_tau a_eta b_eta mrf_d mrf_e  a_w0  b_w0 
+##  15.0  60.0  22.0   0.1  10.0   0.1   1.0  -2.0   1.6 100.0 500.0 
 ```
 
 Compute the model performace with respect to **variable selection**
@@ -327,7 +322,7 @@ gamma <- getEstimator(fit2)
 ```
 
 ```
-## [1] 0.5358333
+## [1] 0.5371667
 ```
 
 ```{r}
@@ -335,7 +330,7 @@ gamma <- getEstimator(fit2)
 ```
 
 ```
-## [1] 0.5376623
+## [1] 0.5298701
 ```
 
 ```{r}
@@ -343,7 +338,7 @@ gamma <- getEstimator(fit2)
 ```
 
 ```
-## [1] 0.5355641
+## [1] 0.5382409
 ```
 
 Compute the model performance with respect to **response prediction**
@@ -355,7 +350,7 @@ beta <- getEstimator(fit2, estimator = "beta", Pmax = .5, beta.type = "condition
 ```
 
 ```
-## [1] 7.025327
+## [1] 7.134064
 ```
 
 ```{r}
@@ -363,7 +358,7 @@ beta <- getEstimator(fit2, estimator = "beta", Pmax = .5, beta.type = "condition
 ```
 
 ```
-## [1] 8.084381
+## [1] 8.269975
 ```
 
 Compute the model performance with respect to **coefficient bias**
@@ -376,7 +371,7 @@ b[sim2$gamma == 0] <- 0
 ```
 
 ```
-## [1] 0.4530592
+## [1] 0.4617231
 ```
 
 Compute the model performance with respect to **covariance selection**
@@ -387,7 +382,7 @@ g.re <- getEstimator(fit2, estimator = "Gy")
 ```
 
 ```
-## [1] 0.545
+## [1] 0.51
 ```
 
 ```{r}
@@ -395,7 +390,7 @@ g.re <- getEstimator(fit2, estimator = "Gy")
 ```
 
 ```
-## [1] 0.1287129
+## [1] 0.1089109
 ```
 
 ```{r}
@@ -403,7 +398,7 @@ g.re <- getEstimator(fit2, estimator = "Gy")
 ```
 
 ```
-## [1] 0.969697
+## [1] 0.9191919
 ```
 
 ## References
