@@ -513,6 +513,7 @@ BayesSUR <- function(data = NULL, Y, X, X_0 = NULL,
   if (!(is.character(mrfG) && length(mrfG) == 1)) {
     # if it's a matrix
     if ((is.numeric(mrfG) || is.data.frame(mrfG)) && !is.null(dim(mrfG))) {
+      mrfG <- mrfG - 1 # due to C++ indexing from 0
       if (ncol(mrfG) == 2) {
         mrfG <- cbind(mrfG, rep(1, nrow(mrfG)))
       }

@@ -1,3 +1,8 @@
+# BayesSUR 2.2-1
+
+* Fixed a bug about `SUR_Chain.cpp` introduced in version 2.2-0
+* Fixed argument mrfG index issue in function `BayesSUR()`
+
 # BayesSUR 2.2-0
 
 * Fixed a bug about the use of temperature parameter in `HRR_Chain.cpp`, also minor update in `SUR_Chain.cpp`

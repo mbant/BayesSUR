@@ -2,8 +2,9 @@ Package: BayesSUR
 Type: Package
 Title: Bayesian Seemingly Unrelated Regression Models in
         High-Dimensional Settings
-Version: 2.2-0
-Date: 2024-06-13
+Version: 2.2-1
+Date: 2024-06-28
+DOI: 10.32614/CRAN.package.BayesSUR
 URL: https://github.com/mbant/BayesSUR
 BugReports: https://github.com/mbant/BayesSUR/issues
 Authors@R: c(person("Marco", "Banterle", email = "marco.banterle@gmail.com", role = c("aut")),
@@ -24,14 +25,14 @@ VignetteBuilder: R.rsp, knitr, rmarkdown
 RoxygenNote: 7.3.1
 Depends: R (>= 3.5.0)
 Encoding: UTF-8
-LinkingTo: Rcpp, RcppArmadillo (>= 0.9.000)
+LinkingTo: Rcpp, RcppArmadillo
 Imports: Rcpp, xml2, igraph, Matrix, tikzDevice, stats, utils,
         grDevices, graphics
 Suggests: R.rsp, knitr, rmarkdown, BDgraph, data.table, plyr, scrime
 LazyData: true
 NeedsCompilation: yes
 SystemRequirements: C++17
-Packaged: 2024-06-13 19:43:59 UTC; zhiz
+Packaged: 2024-06-28 15:57:26 UTC; zhiz
 Author: Marco Banterle [aut],
   Zhi Zhao [aut, cre],
   Leonardo Bottolo [ctb],
