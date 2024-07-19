@@ -1,3 +1,23 @@
+bibentry("Manual",
+  title = "{BayesSUR}: {B}ayesian Seemingly Unrelated Regression Models in High-Dimensional Settings",
+  author = c(person(given = "Marco",
+                          family = "Banterle",
+                          email = "marco.banterle@gmail.com"),
+                   person(given = "Zhi",
+                          family = "Zhao",
+                          email = "zhi.zhao@medisin.uio.no"),
+                   person(given = "Alex",
+                          family = "Lewin",
+                          email = "alex.lewin@lshtm.ac.uk"),
+                   person(given = "Manuela",
+                          family = "Zucknick",
+                          email = "manuela.zucknick@medisin.uio.no")),
+  year = 2024,
+  note = " R package version 2.2-0",
+  doi = "10.32614/CRAN.package.BayesSUR",
+  header       = "To cite BayesSUR in publications use:"
+)
+
 bibentry(bibtype = "Article",
   title        = "{BayesSUR}: An {R} Package for High-Dimensional Multivariate {B}ayesian Variable and Covariance Selection in Linear Regression",
   author       = c(person(given = "Zhi",

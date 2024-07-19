@@ -424,13 +424,13 @@ BayesSUR <- function(data = NULL, Y, X, X_0 = NULL,
     hyperpar.all$b_pi <- sum(blockLabels == 0) - 1
     
     if (toupper(covariancePrior) %in% c("INDEPENDENT", "INDEP", "IG")) {
-      hyperpar.all <- hyperpar.all[-c(3:6, 7:11, 14:15)]
+      hyperpar.all <- hyperpar.all[-c(3:4, 7:11, 14:15)]
     }
     if (toupper(covariancePrior) %in% c("DENSE", "IW")) {
-      hyperpar.all <- hyperpar.all[-c(3:6, 10:11, 12:15)]
+      hyperpar.all <- hyperpar.all[-c(3:4, 10:11, 12:15)]
     }
     if (toupper(covariancePrior) %in% c("SPARSE", "HIW")) {
-      hyperpar.all <- hyperpar.all[-c(3:6, 12:15)]
+      hyperpar.all <- hyperpar.all[-c(3:4, 12:15)]
     }
   }
   if (toupper(gammaPrior) %in% c("MRF", "MARKOV RANDOM FIELD")) {

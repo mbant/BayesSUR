@@ -1,3 +1,7 @@
+# BayesSUR 2.2-2
+
+* Fixed a bug about HRR model introduced in v2.2-0 by bringing back the control of `a_omega` and `b_omega` in function `BayesSUR()`
+
 # BayesSUR 2.2-1
 
 * Fixed a bug about `SUR_Chain.cpp` introduced in version 2.2-0

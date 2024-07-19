@@ -1,11 +1,14 @@
-
 # BayesSUR
 
 <!-- badges: start -->
 
-[![CRAN_Status_Badge](http://www.r-pkg.org/badges/version/BayesSUR)](https://cran.r-project.org/package=BayesSUR)
+[![CRAN](http://www.r-pkg.org/badges/version/BayesSUR)](https://cran.r-project.org/package=BayesSUR)
+[![r-universe](https://mbant.r-universe.dev/badges/BayesSUR)](https://mbant.r-universe.dev/BayesSUR)
+[![R-CMD-check](https://github.com/zhizuio/BayesSUR/workflows/R-CMD-check/badge.svg)](https://github.com/zhizuio/BayesSUR/actions)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 
 <!-- badges: end -->
+
 
 This R package is for high-dimensional multivariate Bayesian variable and covariance selection in linear regression, including methods in [Bottolo et al. (2021)](https://doi.org/10.1111/rssc.12490), [Zhao et al. (2021)](https://doi.org/10.18637/jss.v100.i11) and [Zhao et al. (2024)](https://doi.org/10.1093/jrsssc/qlad102). 
 See the package vignettes [`BayesSUR.pdf`](inst/doc/BayesSUR.pdf) for more information and an additional example below for the BayesSUR model with random effects.
