@@ -1,6 +1,8 @@
 # BayesSUR 2.2-2
 
 * Fixed a bug about HRR model introduced in v2.2-0 by bringing back the control of `a_omega` and `b_omega` in function `BayesSUR()`
+* Fixed a bug in function `SUR_Chain::stepWGibbs()` for extracting a submatrix
+* Simplified the calculation in function `SUR_Chain::logPGamma`
 
 # BayesSUR 2.2-1
 

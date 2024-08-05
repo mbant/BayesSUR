@@ -108,7 +108,8 @@ void HRR_Chain::setXtX()
     {
         preComputedXtX = true;
         XtX = data->cols( *predictorsIdx ).t() * data->cols( *predictorsIdx );
-        corrMatX = arma::cor( data->submat(arma::regspace<arma::uvec>(0,nObservations-1), *VSPredictorsIdx ) );  // this is only for values to be selected
+        //corrMatX = arma::cor( data->submat(arma::regspace<arma::uvec>(0,nObservations-1), *VSPredictorsIdx ) );  // this is only for values to be selected
+        corrMatX = arma::cor( data->cols( *VSPredictorsIdx ) );
     }else{
         
         preComputedXtX = false;
@@ -906,26 +907,28 @@ double HRR_Chain::logPGamma( const arma::umat& externalGamma , double d , double
     if( gamma_type != Gamma_Type::mrf )
         throw Bad_Gamma_Type ( gamma_type );
     
-    arma::mat externalMRFG = mrfG->cols( arma::linspace<arma::uvec>(0,2,3) );
+    //arma::mat externalMRFG = mrfG->cols( arma::linspace<arma::uvec>(0,2,3) );
     
     double logP = 0.;
     // calculate the linear and quadratic parts in MRF by using all edges of G
     arma::vec gammaVec = arma::conv_to< arma::vec >::from(arma::vectorise(externalGamma));
     double quad_mrf = 0.;
     double linear_mrf = 0.;
-    int count_linear_mrf = 0;
-    for( unsigned i=0; i < (externalMRFG).n_rows; ++i )
+    //int count_linear_mrf = 0; // If the MRF graph matrix has diagonals 0, count_linear_mrf is always 0.
+    for( unsigned i=0; i < mrfG->n_rows; ++i )
     {
-        if( (externalMRFG)(i,0) != (externalMRFG)(i,1) ){
-            quad_mrf += e * 2.0 * gammaVec( (externalMRFG)(i,0) ) * gammaVec( (externalMRFG)(i,1) ) * (externalMRFG)(i,2);
+        if( (*mrfG)(i,0) != (*mrfG)(i,1) ){
+            quad_mrf += 2.0 * gammaVec( (*mrfG)(i,0) ) * gammaVec( (*mrfG)(i,1) ) * (*mrfG)(i,2);
         }else{
-                if( gammaVec( (externalMRFG)(i,0) ) == 1 ){
-                    linear_mrf += d * gammaVec( (externalMRFG)(i,0) ) * (externalMRFG)(i,2);
-                    count_linear_mrf ++;
+                if( gammaVec( (*mrfG)(i,0) ) == 1 ){
+                    linear_mrf += (*mrfG)(i,2); // should this be 'linear_mrf += e * (externalMRFG)(i,2)'?
+                    //count_linear_mrf ++;
                 }
         }
     }
-    logP = arma::as_scalar( linear_mrf + d * (arma::accu( externalGamma ) - count_linear_mrf) + e * 2.0 * quad_mrf );
+    //logP = arma::as_scalar( linear_mrf + d * (arma::accu( externalGamma ) - count_linear_mrf) + e * 2.0 * quad_mrf );
+    // Should logP be the following?
+    logP = arma::as_scalar( d * arma::accu( externalGamma ) + e * (linear_mrf + quad_mrf) );
     
     return logP;
 }

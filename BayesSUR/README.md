@@ -6,6 +6,7 @@
 [![r-universe](https://mbant.r-universe.dev/badges/BayesSUR)](https://mbant.r-universe.dev/BayesSUR)
 [![R-CMD-check](https://github.com/zhizuio/BayesSUR/workflows/R-CMD-check/badge.svg)](https://github.com/zhizuio/BayesSUR/actions)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
+[![DOI](https://img.shields.io/badge/doi-10.32614%2FCRAN.package.BayesSUR-brightgreen)](https://doi.org/10.32614/CRAN.package.BayesSUR)
 
 <!-- badges: end -->
 
@@ -21,7 +22,7 @@ Install the latest released version from [CRAN](https://CRAN.R-project.org/packa
 install.packages("BayesSUR")
 ```
 
-Install the latest development version from GitHub
+Install the latest development version from [GitHub](https://github.com/mbant/BayesSUR)
 
 ```r
 #install.packages("remotes")
@@ -257,21 +258,21 @@ fit2 <- BayesSUR(
 ```
 ## BayesSUR -- Bayesian Seemingly Unrelated Regression Modelling
 ## Reading input files ... ... successfull!
-## Clearing and initialising output files
+## Clearing and initialising output files 
 ## Initialising the (SUR) MCMC Chain ...  ...  DONE!
-## Drafting the output files with the start of the chain ... DONE!
-##
+## Drafting the output files with the start of the chain ... DONE! 
+## 
 ## Starting 2 (parallel) chain(s) for 300 iterations:
 ## Temperature ladder updated, new temperature ratio : 1.1
 ##  MCMC ends.   --- Saving results and exiting
-## Saved to :   sim2_mrf_re1/data_SSUR_****_out.txt
-## Final w0  : 5.43872
-## Final w   : 0.151529
-## Final tau : 5.03502    w/ proposal variance: 1.25175
-## Final eta : 0.0404965
+## Saved to :   sim2_mrf_re/data_SSUR_****_out.txt
+## Final w0  : 4.9971
+## Final w   : 2.29497
+## Final tau : 0.293487    w/ proposal variance: 1.2229
+## Final eta : 0.0471505
 ##   -- Average Omega : 0
 ## Final temperature ratio : 1.1
-##
+## 
 ## DONE, exiting!
 ```
 
@@ -284,23 +285,27 @@ summary(fit2)
 ```
 ## Call:
 ##   BayesSUR(data = cbind(sim2$y, sim2$z, sim2$x), ...)
-##
-## CPOs:
-##         Min.      1st Qu.       Median      3rd Qu.         Max.
-## 0.0001880944 0.0242389626 0.0347986252 0.0465162558 0.1307315429 
 ## 
-## Number of selected predictors (mPIP > 0.5): 2823 of 20x300
+## CPOs:
+##         Min.      1st Qu.       Median      3rd Qu.         Max. 
+## 0.0001896996 0.0242732651 0.0348570615 0.0465600279 0.1312571329 
+## 
+## Number of selected predictors (mPIP > 0.5): 19 of 20x300
 ## 
 ## Top 10 predictors on average mPIP across all responses:
-##    X.251     X.27    X.296    X.196    X.285    X.130     X.32    X.104     X.58     X.10 
-## 0.729580 0.702225 0.695755 0.672865 0.656705 0.653220 0.651730 0.643770 0.638795 0.635315 
+##     X.74     X.69     X.77     X.82    X.114    X.116    X.122    X.157    X.265 
+## 0.081840 0.049500 0.049500 0.049500 0.049500 0.049500 0.049500 0.049500 0.049500 
+##     X.16 
+## 0.047015 
 ## 
 ## Top 10 responses on average mPIP across all predictors:
-##       X.5       X.8      X.19      X.12       X.4      X.11      X.10      X.14      X.16       X.9 
-## 0.5099717 0.4958283 0.4896067 0.4811993 0.4784647 0.4766230 0.4744843 0.4743030 0.4742693 0.4740880 
+##         X.8        X.10         X.5        X.19        X.11         X.9         X.6 
+## 0.012703000 0.010049000 0.007943333 0.006600000 0.005522333 0.004029667 0.003001667 
+##        X.12         X.2         X.4 
+## 0.002852333 0.002769667 0.002404667 
 ## 
 ## Expected log pointwise predictive density (elpd) estimates:
-##   elpd.LOO = -16836.31,  elpd.WAIC = -16834.33
+##   elpd.LOO = -16803.49,  elpd.WAIC = -16799.94
 ## 
 ## MCMC specification:
 ##   iterations = 300,  burn-in = 100,  chains = 2
@@ -313,8 +318,16 @@ summary(fit2)
 ## 
 ## Hyper-parameters:
 ##   a_w   b_w    nu a_tau b_tau a_eta b_eta mrf_d mrf_e  a_w0  b_w0 
-##  15.0  60.0  22.0   0.1  10.0   0.1   1.0  -2.0   1.6 100.0 500.0 
+##  15.0  60.0  22.0   0.1  10.0   0.1   1.0  -2.0   1.6 100.0 500.0
 ```
+
+Show the estimates of regression coefficients, variable selection indicators and residual graph
+
+```{r}
+# show estimates
+plot(fit2, estimator=c("beta","gamma","Gy"), type="heatmap", name.predictors = "auto")
+```
+![<font size="2">_Simulation result: Estimates of regression coefficients, variable selection indicators and residual graph._</font>](man/figures/figureS.png){width=100%}
 
 Compute the model performace with respect to **variable selection**
 
@@ -325,7 +338,7 @@ gamma <- getEstimator(fit2)
 ```
 
 ```
-## [1] 0.5371667
+## [1] 0.8725
 ```
 
 ```{r}
@@ -333,7 +346,7 @@ gamma <- getEstimator(fit2)
 ```
 
 ```
-## [1] 0.5298701
+## [1] 0.01558442
 ```
 
 ```{r}
@@ -341,7 +354,7 @@ gamma <- getEstimator(fit2)
 ```
 
 ```
-## [1] 0.5382409
+## [1] 0.9986616
 ```
 
 Compute the model performance with respect to **response prediction**
@@ -353,7 +366,7 @@ beta <- getEstimator(fit2, estimator = "beta", Pmax = .5, beta.type = "condition
 ```
 
 ```
-## [1] 7.134064
+## [1] 8.723454
 ```
 
 ```{r}
@@ -361,7 +374,7 @@ beta <- getEstimator(fit2, estimator = "beta", Pmax = .5, beta.type = "condition
 ```
 
 ```
-## [1] 8.269975
+## [1] 8.859939
 ```
 
 Compute the model performance with respect to **coefficient bias**
@@ -374,7 +387,7 @@ b[sim2$gamma == 0] <- 0
 ```
 
 ```
-## [1] 0.4617231
+## [1] 0.5039502
 ```
 
 Compute the model performance with respect to **covariance selection**
@@ -385,7 +398,7 @@ g.re <- getEstimator(fit2, estimator = "Gy")
 ```
 
 ```
-## [1] 0.51
+## [1] 0.585
 ```
 
 ```{r}
@@ -393,7 +406,7 @@ g.re <- getEstimator(fit2, estimator = "Gy")
 ```
 
 ```
-## [1] 0.1089109
+## [1] 0.2475248
 ```
 
 ```{r}
@@ -401,7 +414,7 @@ g.re <- getEstimator(fit2, estimator = "Gy")
 ```
 
 ```
-## [1] 0.9191919
+## [1] 0.9292929
 ```
 
 ## References

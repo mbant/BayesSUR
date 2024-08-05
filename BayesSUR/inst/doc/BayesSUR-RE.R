@@ -196,6 +196,10 @@ library("BayesSUR")
 #  summary(fit2)
 
 ## -----------------------------------------------------------------------------
+#  # show estimates
+#  plot(fit2, estimator=c("beta","gamma","Gy"), type="heatmap", name.predictors = "auto")
+
+## -----------------------------------------------------------------------------
 #  # compute accuracy, sensitivity, specificity of variable selection
 #  gamma <- getEstimator(fit2)
 #  (accuracy <- sum(data.matrix(gamma > 0.5) == sim2$gamma) / prod(dim(gamma)))

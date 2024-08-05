@@ -366,7 +366,8 @@ int drive_SUR( Chain_Data& chainData )
         if( (i+1) % chainData.tick == 0 )
         {
             Rcout << " Running iteration " << i+1 << " ... local Acc Rate: ~ gamma: " << Utils::round( sampler[0] -> getGammaAccRate() , 3 );
-            Rcout << " -- JT: " << Utils::round( sampler[0] -> getJTAccRate() , 3 ) ;
+            if( chainData.covariance_type == Covariance_Type::HIW )
+                Rcout << " -- JT: " << Utils::round( sampler[0] -> getJTAccRate() , 3 ) ;
             
             if( chainData.nChains > 1){
                 Rcout << " -- Global: " << Utils::round( sampler.getGlobalAccRate() , 3 ) << '\n';

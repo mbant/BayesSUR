@@ -108,7 +108,8 @@ void SUR_Chain::setXtX()
     {
         preComputedXtX = true;
         XtX = data->cols( *predictorsIdx ).t() * data->cols( *predictorsIdx );
-        corrMatX = arma::cor( data->submat(arma::regspace<arma::uvec>(0,nObservations-1), *VSPredictorsIdx ) );  // this is only for values to be selected
+        //corrMatX = arma::cor( data->submat(arma::regspace<arma::uvec>(0,nObservations-1), *VSPredictorsIdx ) );  // this is only for values to be selected
+        corrMatX = arma::cor( data->cols( *VSPredictorsIdx ) );
     }else{
         
         preComputedXtX = false;
@@ -1215,27 +1216,28 @@ double SUR_Chain::logPGamma( const arma::umat& externalGamma , double d, double 
     if( gamma_type != Gamma_Type::mrf )
         throw Bad_Gamma_Type ( gamma_type );
     
-    arma::mat externalMRFG = mrfG->cols( arma::linspace<arma::uvec>(0,2,3) );
+    //arma::mat externalMRFG = mrfG->cols( arma::linspace<arma::uvec>(0,2,3) );
     
     double logP = 0.;
     // calculate the linear and quadratic parts in MRF by using all edges of G
     arma::vec gammaVec = arma::conv_to< arma::vec >::from(arma::vectorise(externalGamma));
     double quad_mrf = 0.;
     double linear_mrf = 0.;
-    int count_linear_mrf = 0;
-    for( unsigned i=0; i < (externalMRFG).n_rows; ++i )
+    //int count_linear_mrf = 0; // If the MRF graph matrix has diagonals 0, count_linear_mrf is always 0.
+    for( unsigned i=0; i < mrfG->n_rows; ++i )
     {
-        if( (externalMRFG)(i,0) != (externalMRFG)(i,1) ){
-            quad_mrf += e * 2.0 * gammaVec( (externalMRFG)(i,0) ) * gammaVec( (externalMRFG)(i,1) ) * (externalMRFG)(i,2);
+        if( (*mrfG)(i,0) != (*mrfG)(i,1) ){
+            quad_mrf += 2.0 * gammaVec( (*mrfG)(i,0) ) * gammaVec( (*mrfG)(i,1) ) * (*mrfG)(i,2);
         }else{
-            if( gammaVec( (externalMRFG)(i,0) ) == 1 ){
-                linear_mrf += d * gammaVec( (externalMRFG)(i,0) ) * (externalMRFG)(i,2);
-                count_linear_mrf ++;
-            }
+                if( gammaVec( (*mrfG)(i,0) ) == 1 ){
+                    linear_mrf += (*mrfG)(i,2); // should this be 'linear_mrf += e * (externalMRFG)(i,2)'?
+                    //count_linear_mrf ++;
+                }
         }
-        
     }
-    logP = arma::as_scalar( linear_mrf + d * (arma::accu( externalGamma ) - count_linear_mrf) + e * 2.0 * quad_mrf );
+    //logP = arma::as_scalar( linear_mrf + d * (arma::accu( externalGamma ) - count_linear_mrf) + e * 2.0 * quad_mrf );
+    // Should logP be the following?
+    logP = arma::as_scalar( d * arma::accu( externalGamma ) + e * (linear_mrf + quad_mrf) );
     
     return logP;
 }
@@ -2795,8 +2797,8 @@ void SUR_Chain::stepWGibbs()
 
 void SUR_Chain::stepW0Gibbs()
 {
-    double a = a_w + 0.5*( /*arma::accu(gamma) + intercept */ /*or*/ gammaMask.n_rows ); // divide by temperature if the prior on gamma is tempered
-    double b = b_w + 0.5*( arma::accu( arma::square(arma::nonzeros(beta.submat(nFixedPredictors,0,nObservations-1,nOutcomes-1))) ) );   // all the beta_jk w/ gamma_jk=0 are 0 already // /temperature
+    double a = a_w + 0.5*( gammaMask.n_rows - nFixedPredictors*nOutcomes ); // divide by temperature if the prior on gamma is tempered
+    double b = b_w + 0.5*( arma::accu( arma::square(beta.rows(nFixedPredictors,nFixedPredictors+nVSPredictors-1)) ) );   // all the beta_jk w/ gamma_jk=0 are 0 already // /temperature
 
     // std::cout << a_w << " -> " << a << "   ---   "<< b_w << " -> " << b << std::endl;
     // std::cout << arma::nonzeros(beta).t() << std::endl; std::cin >> w;
@@ -2805,7 +2807,7 @@ void SUR_Chain::stepW0Gibbs()
     logPW(); // update its prior value
     
     double a0 = a_w0 + 0.5*( nFixedPredictors*nOutcomes ); // divide by temperature if the prior on gamma is tempered
-    double b0 = b_w0 + 0.5*( arma::accu( arma::square(arma::nonzeros(beta.submat(0,0,nFixedPredictors-1,nOutcomes-1))) ) );   // all the beta_jk w/ gamma_jk=0 are 0 already // /temperature
+    double b0 = b_w0 + 0.5*( arma::accu( arma::square(beta.rows(0,nFixedPredictors-1)) ) );   // all the beta_jk w/ gamma_jk=0 are 0 already // /temperature
     w0 = randIGamma( a0 , b0 );
     logPW0(); // update its prior value
 
