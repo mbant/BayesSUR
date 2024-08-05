@@ -327,7 +327,7 @@ Show the estimates of regression coefficients, variable selection indicators and
 # show estimates
 plot(fit2, estimator=c("beta","gamma","Gy"), type="heatmap", name.predictors = "auto")
 ```
-![<font size="2">_Simulation result: Estimates of regression coefficients, variable selection indicators and residual graph._</font>](BayesSUR/man/figures/figureS.png){width=100%}
+![<font size="2">_Simulation result: Estimates of regression coefficients, variable selection indicators and residual graph._</font>](BayesSUR/man/figures/figureS.png)
 
 Compute the model performace with respect to **variable selection**
 
