@@ -12,8 +12,8 @@ bibentry("Manual",
                    person(given = "Manuela",
                           family = "Zucknick",
                           email = "manuela.zucknick@medisin.uio.no")),
-  year = 2024,
-  note = " R package version 2.2-0",
+  year = 2025,
+  note = " R package version 2.3-0",
   doi = "10.32614/CRAN.package.BayesSUR",
   header       = "To cite BayesSUR in publications use:"
 )
@@ -91,6 +91,6 @@ bibentry(bibtype = "Article",
   number       = "2",
   pages        = "420--443",
   doi          = "10.1093/jrsssc/qlad102",
-  header       = "If BayesSUR with mandatory variables (random effects) is used, please also cite:"
+  header       = "If BayesSUR with MRF prior is used, please also cite:"
 )
 
