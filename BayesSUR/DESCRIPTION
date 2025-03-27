@@ -2,8 +2,8 @@ Package: BayesSUR
 Type: Package
 Title: Bayesian Seemingly Unrelated Regression Models in
         High-Dimensional Settings
-Version: 2.2-2
-Date: 2024-08-5
+Version: 2.3-0
+Date: 2025-03-26
 URL: https://github.com/mbant/BayesSUR
 BugReports: https://github.com/mbant/BayesSUR/issues
 Authors@R: c(person("Marco", "Banterle", email = "marco.banterle@gmail.com", role = c("aut")),
@@ -21,7 +21,7 @@ Copyright: The C++ files pugixml.cpp, pugixml.hpp and pugiconfig.hpp
         vertical.image.legend() is used with Copyright (C) 2013 from
         Jenise Swall.
 VignetteBuilder: R.rsp, knitr, rmarkdown
-RoxygenNote: 7.3.1
+RoxygenNote: 7.3.2
 Depends: R (>= 3.5.0)
 Encoding: UTF-8
 LinkingTo: Rcpp, RcppArmadillo
@@ -31,7 +31,7 @@ Suggests: R.rsp, knitr, rmarkdown, BDgraph, data.table, plyr, scrime
 LazyData: true
 NeedsCompilation: yes
 SystemRequirements: C++17
-Packaged: 2024-08-05 13:10:39 UTC; zhiz
+Packaged: 2025-03-26 12:41:40 UTC; zhiz
 Author: Marco Banterle [aut],
   Zhi Zhao [aut, cre],
   Leonardo Bottolo [ctb],

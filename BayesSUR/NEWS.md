@@ -1,5 +1,6 @@
-# BayesSUR 2.2-2
+# BayesSUR 2.3-0
 
+* Make `arma::inv` as an alternative to `arma::inv_sympd` in the case of a matrix is singular or not positive definite
 * Fixed a bug about HRR model introduced in v2.2-0 by bringing back the control of `a_omega` and `b_omega` in function `BayesSUR()`
 * Fixed a bug in function `SUR_Chain::stepWGibbs()` for extracting a submatrix
 * Simplified the calculation in function `SUR_Chain::logPGamma`

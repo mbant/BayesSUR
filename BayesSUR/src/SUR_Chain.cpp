@@ -1371,12 +1371,25 @@ double SUR_Chain::logPBetaMask( const arma::mat&  externalBeta , const arma::uma
                     VS_IN_k = mask_( arma::find( mask_.col(1) == k ) , arma::zeros<arma::uvec>(1) );
                     
                     if( preComputedXtX )
+                    {
+                        arma::mat tmpInvCov;
+                        if( !arma::inv_sympd(tmpInvCov, XtX(VS_IN_k,VS_IN_k)) )
+                        {
+                            arma::inv(tmpInvCov, XtX(VS_IN_k,VS_IN_k), arma::inv_opts::allow_approx);
+                        }
                         logP += logPBetaMaskgPriorK( externalBeta(VS_IN_k,singleIdx_k) , w_ ,
-                                                    arma::inv_sympd( XtX(VS_IN_k,VS_IN_k) ) , ( 1./ sigmaRho(k,k) + xtxMultiplier(k) ) );
-                    else
+                                                    tmpInvCov , ( 1./ sigmaRho(k,k) + xtxMultiplier(k) ) );
+                    }else{
+                        arma::mat tmpCov = data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) );
+                        arma::mat tmpInvCov;
+                        if( !arma::inv_sympd( tmpInvCov, tmpCov ) )
+                        {
+                            arma::inv(tmpInvCov,tmpCov, arma::inv_opts::allow_approx);
+                        }
                         logP += logPBetaMaskgPriorK( externalBeta(VS_IN_k,singleIdx_k) , w_ ,
-                                                    arma::inv_sympd( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) ,
+                                                    tmpInvCov ,
                                                     ( 1./ sigmaRho(k,k) + xtxMultiplier(k) ) );
+                    }
                 }
                 break;
             }
@@ -1574,7 +1587,11 @@ double SUR_Chain::sampleSigmaRhoGivenBeta( const arma::mat&  externalBeta , arma
                         {
                             conditioninIndexes( Sep_q.size() + inner_l ) = Res_q[inner_l];
                         }
-                        /*test = */arma::inv_sympd( rhoVar , Sigma(conditioninIndexes,conditioninIndexes) ) ;
+                        // arma::inv_sympd( rhoVar , Sigma(conditioninIndexes,conditioninIndexes) ) ;
+                        if( !arma::inv_sympd( rhoVar, Sigma(conditioninIndexes,conditioninIndexes) ) )
+                        {
+                            arma::inv(rhoVar, Sigma(conditioninIndexes,conditioninIndexes), arma::inv_opts::allow_approx);
+                        }
                         rhoMean = Sigma( singleIdx_l , conditioninIndexes ) * rhoVar ;
                         thisSigmaTT -= arma::as_scalar( rhoMean * Sigma( conditioninIndexes , singleIdx_l ) );
                     }
@@ -1628,7 +1645,11 @@ double SUR_Chain::sampleSigmaRhoGivenBeta( const arma::mat&  externalBeta , arma
                 {
                     conditioninIndexes = arma::regspace<arma::uvec>(0, k-1);
                     
-                    /*test = */arma::inv_sympd( rhoVar , Sigma(conditioninIndexes,conditioninIndexes) ) ;
+                    // arma::inv_sympd( rhoVar , Sigma(conditioninIndexes,conditioninIndexes) ) ;
+                    if( !arma::inv_sympd( rhoVar, Sigma(conditioninIndexes,conditioninIndexes) ) )
+                    {
+                        arma::inv(rhoVar, Sigma(conditioninIndexes,conditioninIndexes), arma::inv_opts::allow_approx);
+                    }
                     rhoMean = Sigma( singleIdx_k , conditioninIndexes ) * rhoVar ;
                     thisSigmaTT -= arma::as_scalar( rhoMean * Sigma( conditioninIndexes , singleIdx_k ) );
                 }
@@ -1743,10 +1764,19 @@ double SUR_Chain::sampleBetaGivenSigmaRho( arma::mat& mutantBeta , const arma::m
                         
                         if( preComputedXtX )
                         {
-                            arma::inv_sympd( iXtX , XtX(VS_IN_k,VS_IN_k) );
+                            // arma::inv_sympd( iXtX , XtX(VS_IN_k,VS_IN_k) );
+                            if( !arma::inv_sympd( iXtX,  XtX(VS_IN_k,VS_IN_k) ) )
+                            {
+                                arma::inv(iXtX, XtX(VS_IN_k,VS_IN_k), arma::inv_opts::allow_approx);
+                            }
                             // W_k = iXtX * ( (w*temperature)/(w + temperature) ) / varianceFactor;
                         }else{
-                            arma::inv_sympd( iXtX , data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) );
+                            // arma::inv_sympd( iXtX , data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) );
+                            arma::mat tmpCov =  data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) );
+                            if( !arma::inv_sympd( iXtX,  tmpCov ) )
+                            {
+                                arma::inv(iXtX, tmpCov, arma::inv_opts::allow_approx);
+                            }
                             // W_k = iXtX * ( (w*temperature)/(w + temperature) ) / varianceFactor;
                         }
                         
@@ -1765,10 +1795,22 @@ double SUR_Chain::sampleBetaGivenSigmaRho( arma::mat& mutantBeta , const arma::m
                     {
                         
                         if( preComputedXtX )
-                            arma::inv_sympd( W_k ,  ( XtX(VS_IN_k,VS_IN_k) / temperature ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier(k) ) + (1./w)*arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
-                        else
-                            arma::inv_sympd( W_k ,  ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier(k) ) + (1./w)*arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
-                        
+                        {
+                            // arma::inv_sympd( W_k ,  ( XtX(VS_IN_k,VS_IN_k) / temperature ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier(k) ) + (1./w)*arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
+                            arma::mat tmpCov = ( XtX(VS_IN_k,VS_IN_k) / temperature ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier(k) ) + (1./w)*arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem);
+                            if( !arma::inv_sympd( W_k,  tmpCov ) )
+                            {
+                                arma::inv(W_k, tmpCov, arma::inv_opts::allow_approx);
+                            }
+                        } else {
+                            // arma::inv_sympd( W_k ,  ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier(k) ) + (1./w)*arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
+                            arma::mat tmpCov = ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier(k) ) + (1./w)*arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem);
+                            if( !arma::inv_sympd( W_k,  tmpCov ) )
+                            {
+                                arma::inv(W_k, tmpCov, arma::inv_opts::allow_approx);
+                            }
+                                
+                        }
                         mu_k = W_k * ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * y_tilde.col(k) / temperature ) ;
                         
                         tmpVec = Distributions::randMvNormal( mu_k , W_k );
@@ -1781,11 +1823,23 @@ double SUR_Chain::sampleBetaGivenSigmaRho( arma::mat& mutantBeta , const arma::m
                     {
                         
                         if( preComputedXtX )
+                        {
                             //arma::inv_sympd( W_k ,  ( XtX(VS_IN_k,VS_IN_k) / temperature ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier(k) ) + (1./w)*arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
-                            arma::inv_sympd( W_k ,  ( XtX(VS_IN_k,VS_IN_k) / temperature ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier(k) ) + arma::diagmat( arma::join_cols((1./w0)*arma::ones(nFixedPredictors),(1./w)*arma::ones(VS_IN_k.n_elem-nFixedPredictors)) ) );
-                        else
-                          //arma::inv_sympd( W_k ,  ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier(k) ) + (1./w)*arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
-                          arma::inv_sympd( W_k ,  ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier(k) ) +  arma::diagmat( arma::join_cols((1./w0)*arma::ones(nFixedPredictors),(1./w)*arma::ones(VS_IN_k.n_elem-nFixedPredictors)) ) );
+                            // arma::inv_sympd( W_k ,  ( XtX(VS_IN_k,VS_IN_k) / temperature ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier(k) ) + arma::diagmat( arma::join_cols((1./w0)*arma::ones(nFixedPredictors),(1./w)*arma::ones(VS_IN_k.n_elem-nFixedPredictors)) ) );
+                            arma::mat tmpCov = ( XtX(VS_IN_k,VS_IN_k) / temperature ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier(k) ) + arma::diagmat( arma::join_cols((1./w0)*arma::ones(nFixedPredictors),(1./w)*arma::ones(VS_IN_k.n_elem-nFixedPredictors)) );
+                            if( !arma::inv_sympd( W_k,  tmpCov ) )
+                            {
+                                arma::inv(W_k, tmpCov, arma::inv_opts::allow_approx);
+                            }
+                        } else {
+                            //arma::inv_sympd( W_k ,  ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier(k) ) + (1./w)*arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
+                            // arma::inv_sympd( W_k ,  ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier(k) ) +  arma::diagmat( arma::join_cols((1./w0)*arma::ones(nFixedPredictors),(1./w)*arma::ones(VS_IN_k.n_elem-nFixedPredictors)) ) );
+                            arma::mat tmpCov = ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier(k) ) +  arma::diagmat( arma::join_cols((1./w0)*arma::ones(nFixedPredictors),(1./w)*arma::ones(VS_IN_k.n_elem-nFixedPredictors)) );
+                            if( !arma::inv_sympd( W_k,  tmpCov ) )
+                            {
+                                arma::inv(W_k, tmpCov, arma::inv_opts::allow_approx);
+                            }
+                        }
 
                         mu_k = W_k * ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * y_tilde.col(k) / temperature ) ;
                         /*
@@ -1875,20 +1929,36 @@ double SUR_Chain::sampleBetaKGivenSigmaRho( const unsigned int k , arma::mat& mu
                 {
                     case Beta_Type::gprior :
                     {
-                        W_k = (w*temperature)/(w + temperature) * arma::inv_sympd( XtX(VS_IN_k,VS_IN_k) ) / ( 1./ externalSigmaRho(k,k) + xtxMultiplier );
+                        arma::mat tmpInvCov;
+                        if( !arma::inv_sympd( tmpInvCov,  XtX(VS_IN_k,VS_IN_k) ) )
+                        {
+                            arma::inv(tmpInvCov, XtX(VS_IN_k,VS_IN_k), arma::inv_opts::allow_approx);
+                        }
+                        
+                        W_k = (w*temperature)/(w + temperature) * tmpInvCov / ( 1./ externalSigmaRho(k,k) + xtxMultiplier );
                         break;
                     }
                         
                     case Beta_Type::independent :
                     {
-                        arma::inv_sympd( W_k ,  ( XtX(VS_IN_k,VS_IN_k) / temperature ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier ) + (1./w)*arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
+                        // arma::inv_sympd( W_k ,  ( XtX(VS_IN_k,VS_IN_k) / temperature ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier ) + (1./w)*arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
+                        arma::mat tmpCov = ( XtX(VS_IN_k,VS_IN_k) / temperature ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier ) + (1./w)*arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem);
+                        if( !arma::inv_sympd( W_k,  tmpCov ) )
+                        {
+                            arma::inv(W_k, tmpCov, arma::inv_opts::allow_approx);
+                        }
                         break;
                     }
                         
                     case Beta_Type::reGroup :
                     {
                       //arma::inv_sympd( W_k ,  ( XtX(VS_IN_k,VS_IN_k) / temperature ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier ) + (1./w)*arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
-                      arma::inv_sympd( W_k ,  ( XtX(VS_IN_k,VS_IN_k) / temperature ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier ) + arma::diagmat( arma::join_cols((1./w0)*arma::ones(nFixedPredictors),(1./w)*arma::ones(VS_IN_k.n_elem-nFixedPredictors)) ) );
+                      // arma::inv_sympd( W_k ,  ( XtX(VS_IN_k,VS_IN_k) / temperature ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier ) + arma::diagmat( arma::join_cols((1./w0)*arma::ones(nFixedPredictors),(1./w)*arma::ones(VS_IN_k.n_elem-nFixedPredictors)) ) );
+                        arma::mat tmpCov = ( XtX(VS_IN_k,VS_IN_k) / temperature ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier ) + arma::diagmat( arma::join_cols((1./w0)*arma::ones(nFixedPredictors),(1./w)*arma::ones(VS_IN_k.n_elem-nFixedPredictors)) );
+                        if( !arma::inv_sympd( W_k,  tmpCov ) )
+                        {
+                            arma::inv(W_k, tmpCov, arma::inv_opts::allow_approx);
+                        }
                       break;
                     }
                         
@@ -1902,20 +1972,36 @@ double SUR_Chain::sampleBetaKGivenSigmaRho( const unsigned int k , arma::mat& mu
                 {
                     case Beta_Type::gprior :
                     {
-                        W_k = (w*temperature)/(w + temperature) * arma::inv_sympd( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) / ( 1./ externalSigmaRho(k,k) + xtxMultiplier );
+                        arma::mat tmpCov = data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) );
+                        arma::mat tmpInvCov;
+                        if( !arma::inv_sympd( tmpInvCov,  tmpCov ) )
+                        {
+                            arma::inv(tmpInvCov, tmpCov, arma::inv_opts::allow_approx);
+                        }
+                        W_k = (w*temperature)/(w + temperature) * tmpInvCov / ( 1./ externalSigmaRho(k,k) + xtxMultiplier );
                         break;
                     }
                         
                     case Beta_Type::independent :
                     {
-                        arma::inv_sympd( W_k ,  ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier ) + (1./w)*arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
+                        // arma::inv_sympd( W_k ,  ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier ) + (1./w)*arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
+                        arma::mat tmpCov = ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier ) + (1./w)*arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem);
+                        if( !arma::inv_sympd( W_k,  tmpCov ) )
+                        {
+                            arma::inv(W_k, tmpCov, arma::inv_opts::allow_approx);
+                        }
                         break;
                     }
 
                     case Beta_Type::reGroup :
                     {
                         //arma::inv_sympd( W_k ,  ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier ) + (1./w)*arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
-                        arma::inv_sympd( W_k ,  ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier ) + arma::diagmat( arma::join_cols((1./w0)*arma::ones(nFixedPredictors),(1./w)*arma::ones(VS_IN_k.n_elem-nFixedPredictors)) ) );
+                        // arma::inv_sympd( W_k ,  ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier ) + arma::diagmat( arma::join_cols((1./w0)*arma::ones(nFixedPredictors),(1./w)*arma::ones(VS_IN_k.n_elem-nFixedPredictors)) ) );
+                        arma::mat tmpCov = ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier ) + arma::diagmat( arma::join_cols((1./w0)*arma::ones(nFixedPredictors),(1./w)*arma::ones(VS_IN_k.n_elem-nFixedPredictors)) );
+                        if( !arma::inv_sympd( W_k, tmpCov ) )
+                        {
+                            arma::inv(W_k, tmpCov, arma::inv_opts::allow_approx);
+                        }
                         break;
                     }
                         
@@ -1999,7 +2085,11 @@ double SUR_Chain::logPSigmaRhoGivenBeta( const arma::mat&  externalBeta , const 
                         {
                             conditioninIndexes( Sep_q.size() + inner_l ) = Res_q[inner_l];
                         }
-                        /*test = */arma::inv_sympd( rhoVar , Sigma(conditioninIndexes,conditioninIndexes) ) ;
+                        // arma::inv_sympd( rhoVar , Sigma(conditioninIndexes,conditioninIndexes) ) ;
+                        if( !arma::inv_sympd( rhoVar, Sigma(conditioninIndexes,conditioninIndexes) ) )
+                        {
+                            arma::inv(rhoVar, Sigma(conditioninIndexes,conditioninIndexes), arma::inv_opts::allow_approx);
+                        }
                         rhoMean = Sigma( singleIdx_l , conditioninIndexes ) * rhoVar ;
                         thisSigmaTT -= arma::as_scalar( rhoMean * Sigma( conditioninIndexes , singleIdx_l ) );
                     }
@@ -2045,7 +2135,11 @@ double SUR_Chain::logPSigmaRhoGivenBeta( const arma::mat&  externalBeta , const 
                     
                     conditioninIndexes = arma::regspace<arma::uvec>(0,k-1);
                     
-                    /*test = */arma::inv_sympd( rhoVar , Sigma(conditioninIndexes,conditioninIndexes) ) ;
+                    // arma::inv_sympd( rhoVar , Sigma(conditioninIndexes,conditioninIndexes) ) ;
+                    if( !arma::inv_sympd( rhoVar, Sigma(conditioninIndexes,conditioninIndexes) ) )
+                    {
+                        arma::inv(rhoVar, Sigma(conditioninIndexes,conditioninIndexes), arma::inv_opts::allow_approx);
+                    }
                     rhoMean = Sigma( singleIdx_k , conditioninIndexes ) * rhoVar ;
                     thisSigmaTT -= arma::as_scalar( rhoMean * Sigma( conditioninIndexes , singleIdx_k ) );
                 }
@@ -2130,20 +2224,35 @@ double SUR_Chain::logPBetaGivenSigmaRho( const arma::mat& mutantBeta , const arm
                     {
                         case Beta_Type::gprior :
                         {
-                            W_k = (w*temperature)/(w + temperature) * arma::inv_sympd( XtX(VS_IN_k,VS_IN_k) ) / ( 1./ externalSigmaRho(k,k) + xtxMultiplier(k) );
+                            arma::mat tmpInvCov;
+                            if( !arma::inv_sympd( tmpInvCov, XtX(VS_IN_k,VS_IN_k) ) )
+                            {
+                                arma::inv(tmpInvCov, XtX(VS_IN_k,VS_IN_k), arma::inv_opts::allow_approx);
+                            }
+                            W_k = (w*temperature)/(w + temperature) *tmpInvCov / ( 1./ externalSigmaRho(k,k) + xtxMultiplier(k) );
                             break;
                         }
                             
                         case Beta_Type::independent :
                         {
-                            arma::inv_sympd( W_k ,  ( XtX(VS_IN_k,VS_IN_k) / temperature ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier(k) ) + (1./w)*arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
+                            // arma::inv_sympd( W_k ,  ( XtX(VS_IN_k,VS_IN_k) / temperature ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier(k) ) + (1./w)*arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
+                            arma::mat tmpCov = ( XtX(VS_IN_k,VS_IN_k) / temperature ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier(k) ) + (1./w)*arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem);
+                            if( !arma::inv_sympd( W_k, XtX(VS_IN_k,VS_IN_k) ) )
+                            {
+                                arma::inv(W_k, XtX(VS_IN_k,VS_IN_k), arma::inv_opts::allow_approx);
+                            }
                             break;
                         }
                             
                         case Beta_Type::reGroup :
                         {
                           //arma::inv_sympd( W_k ,  ( XtX(VS_IN_k,VS_IN_k) / temperature ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier(k) ) + (1./w)*arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
-                          arma::inv_sympd( W_k ,  ( XtX(VS_IN_k,VS_IN_k) / temperature ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier(k) ) + arma::diagmat( arma::join_cols((1./w0)*arma::ones(nFixedPredictors),(1./w)*arma::ones(VS_IN_k.n_elem-nFixedPredictors)) ) );
+                          // arma::inv_sympd( W_k ,  ( XtX(VS_IN_k,VS_IN_k) / temperature ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier(k) ) + arma::diagmat( arma::join_cols((1./w0)*arma::ones(nFixedPredictors),(1./w)*arma::ones(VS_IN_k.n_elem-nFixedPredictors)) ) );
+                            arma::mat tmpCov = ( XtX(VS_IN_k,VS_IN_k) / temperature ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier(k) ) + arma::diagmat( arma::join_cols((1./w0)*arma::ones(nFixedPredictors),(1./w)*arma::ones(VS_IN_k.n_elem-nFixedPredictors)) );
+                            if( !arma::inv_sympd( W_k, tmpCov ) )
+                            {
+                                arma::inv(W_k, tmpCov, arma::inv_opts::allow_approx);
+                            }
                               
                           break;
                         }
@@ -2158,20 +2267,36 @@ double SUR_Chain::logPBetaGivenSigmaRho( const arma::mat& mutantBeta , const arm
                     {
                         case Beta_Type::gprior :
                         {
-                            W_k = (w*temperature)/(w + temperature) * arma::inv_sympd( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) / ( 1./ externalSigmaRho(k,k) + xtxMultiplier(k) );
+                            arma::mat tmpCov = data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) );
+                            arma::mat tmpInvCov;
+                            if( !arma::inv_sympd( tmpInvCov, tmpCov ) )
+                            {
+                                arma::inv(tmpInvCov, tmpCov, arma::inv_opts::allow_approx);
+                            }
+                            W_k = (w*temperature)/(w + temperature) * tmpInvCov / ( 1./ externalSigmaRho(k,k) + xtxMultiplier(k) );
                             break;
                         }
                             
                         case Beta_Type::independent :
                         {
-                            arma::inv_sympd( W_k ,  ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier(k) ) + (1./w)*arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
+                            // arma::inv_sympd( W_k ,  ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier(k) ) + (1./w)*arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
+                            arma::mat tmpCov = ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier(k) ) + (1./w)*arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem);
+                            if( !arma::inv_sympd( W_k, XtX(VS_IN_k,VS_IN_k) ) )
+                            {
+                                arma::inv(W_k, XtX(VS_IN_k,VS_IN_k), arma::inv_opts::allow_approx);
+                            }
                             break;
                         }
                             
                         case Beta_Type::reGroup :
                         {
                           //arma::inv_sympd( W_k ,  ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier(k) ) + (1./w)*arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
-                          arma::inv_sympd( W_k ,  ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier(k) ) + arma::diagmat( arma::join_cols((1./w0)*arma::ones(nFixedPredictors),(1./w)*arma::ones(VS_IN_k.n_elem-nFixedPredictors)) ) );
+                          // arma::inv_sympd( W_k ,  ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier(k) ) + arma::diagmat( arma::join_cols((1./w0)*arma::ones(nFixedPredictors),(1./w)*arma::ones(VS_IN_k.n_elem-nFixedPredictors)) ) );
+                            arma::mat tmpCov = ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier(k) ) + arma::diagmat( arma::join_cols((1./w0)*arma::ones(nFixedPredictors),(1./w)*arma::ones(VS_IN_k.n_elem-nFixedPredictors)) );
+                            if( !arma::inv_sympd( W_k, tmpCov ) )
+                            {
+                                arma::inv(W_k, tmpCov, arma::inv_opts::allow_approx);
+                            }
                           break;
                         }
                             
@@ -2233,20 +2358,35 @@ double SUR_Chain::logPBetaKGivenSigmaRho( const unsigned int k , const arma::mat
                 {
                     case Beta_Type::gprior :
                     {
-                        W_k = (w*temperature)/(w + temperature) * arma::inv_sympd( XtX(VS_IN_k,VS_IN_k) ) / ( 1./ externalSigmaRho(k,k) + xtxMultiplier );
+                          arma::mat tmpInvCov;
+                          if( !arma::inv_sympd( tmpInvCov, XtX(VS_IN_k,VS_IN_k) ) )
+                          {
+                              arma::inv(tmpInvCov, XtX(VS_IN_k,VS_IN_k), arma::inv_opts::allow_approx);
+                          }
+                        W_k = (w*temperature)/(w + temperature) * tmpInvCov / ( 1./ externalSigmaRho(k,k) + xtxMultiplier );
                         break;
                     }
                         
                     case Beta_Type::independent :
                     {
-                        arma::inv_sympd( W_k ,  ( XtX(VS_IN_k,VS_IN_k) / temperature ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier ) + (1./w)*arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
+                        // arma::inv_sympd( W_k ,  ( XtX(VS_IN_k,VS_IN_k) / temperature ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier ) + (1./w)*arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
+                        arma::mat tmpCov = ( XtX(VS_IN_k,VS_IN_k) / temperature ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier ) + (1./w)*arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem);
+                        if( !arma::inv_sympd( W_k, tmpCov ) )
+                        {
+                            arma::inv(W_k, tmpCov, arma::inv_opts::allow_approx);
+                        }
                         break;
                     }
                     
                     case Beta_Type::reGroup :
                     {
                       //arma::inv_sympd( W_k ,  ( XtX(VS_IN_k,VS_IN_k) / temperature ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier ) + (1./w)*arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
-                      arma::inv_sympd( W_k ,  ( XtX(VS_IN_k,VS_IN_k) / temperature ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier ) + arma::diagmat( arma::join_cols((1./w0)*arma::ones(nFixedPredictors),(1./w)*arma::ones(VS_IN_k.n_elem-nFixedPredictors)) ) );
+                      // arma::inv_sympd( W_k ,  ( XtX(VS_IN_k,VS_IN_k) / temperature ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier ) + arma::diagmat( arma::join_cols((1./w0)*arma::ones(nFixedPredictors),(1./w)*arma::ones(VS_IN_k.n_elem-nFixedPredictors)) ) );
+                        arma::mat tmpCov = ( XtX(VS_IN_k,VS_IN_k) / temperature ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier ) + arma::diagmat( arma::join_cols((1./w0)*arma::ones(nFixedPredictors),(1./w)*arma::ones(VS_IN_k.n_elem-nFixedPredictors)) );
+                        if( !arma::inv_sympd( W_k, tmpCov ) )
+                        {
+                            arma::inv(W_k, tmpCov, arma::inv_opts::allow_approx);
+                        }
 
                       break;
                     }
@@ -2261,20 +2401,36 @@ double SUR_Chain::logPBetaKGivenSigmaRho( const unsigned int k , const arma::mat
                 {
                     case Beta_Type::gprior :
                     {
-                        W_k = (w*temperature)/(w + temperature) * arma::inv_sympd( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) / ( 1./ externalSigmaRho(k,k) + xtxMultiplier );
+                        arma::mat tmpCov = data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) );
+                        arma::mat tmpInvCov;
+                        if( !arma::inv_sympd( tmpInvCov, tmpCov ) )
+                        {
+                            arma::inv(tmpInvCov, tmpCov, arma::inv_opts::allow_approx);
+                        }
+                        W_k = (w*temperature)/(w + temperature) * tmpInvCov / ( 1./ externalSigmaRho(k,k) + xtxMultiplier );
                         break;
                     }
                         
                     case Beta_Type::independent :
                     {
-                        arma::inv_sympd( W_k ,  ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier ) + (1./w)*arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
+                        // arma::inv_sympd( W_k ,  ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier ) + (1./w)*arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
+                        arma::mat tmpCov = ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier ) + (1./w)*arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem);
+                        if( !arma::inv_sympd( W_k, tmpCov ) )
+                        {
+                            arma::inv(W_k, tmpCov, arma::inv_opts::allow_approx);
+                        }
                         break;
                     }
                         
                     case Beta_Type::reGroup :
                     {
                       //arma::inv_sympd( W_k ,  ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier ) + (1./w)*arma::eye<arma::mat>(VS_IN_k.n_elem,VS_IN_k.n_elem) );
-                      arma::inv_sympd( W_k ,  ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier ) +  arma::diagmat( arma::join_cols((1./w0)*arma::ones(nFixedPredictors),(1./w)*arma::ones(VS_IN_k.n_elem-nFixedPredictors)) ) );
+                      // arma::inv_sympd( W_k ,  ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier ) +  arma::diagmat( arma::join_cols((1./w0)*arma::ones(nFixedPredictors),(1./w)*arma::ones(VS_IN_k.n_elem-nFixedPredictors)) ) );
+                        arma::mat tmpCov = ( data->cols( (*predictorsIdx)(VS_IN_k) ).t() * data->cols( (*predictorsIdx)(VS_IN_k) ) ) * ( 1./ externalSigmaRho(k,k) + xtxMultiplier ) +  arma::diagmat( arma::join_cols((1./w0)*arma::ones(nFixedPredictors),(1./w)*arma::ones(VS_IN_k.n_elem-nFixedPredictors)) );
+                        if( !arma::inv_sympd( W_k, tmpCov ) )
+                        {
+                            arma::inv(W_k, tmpCov, arma::inv_opts::allow_approx);
+                        }
                       break;
                     }
                         
