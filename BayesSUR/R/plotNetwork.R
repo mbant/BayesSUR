@@ -5,10 +5,10 @@
 #' from a "BayesSUR" class object.
 #' 
 #' @importFrom graphics text
-#' @importFrom grDevices gray
+#' @importFrom grDevices gray adjustcolor
 #' @importFrom igraph V E gsize layout_in_circle plot.igraph degree 
 #' @importFrom igraph layout.fruchterman.reingold delete.vertices 
-#' @importFrom igraph graph.adjacency delete.edges ecount V<-
+#' @importFrom igraph graph_from_adjacency_matrix delete.edges ecount V<-
 #' @name plotNetwork
 #' @param x an object of class \code{BayesSUR}
 #' @param includeResponse A vector of the response names which are shown in the network
@@ -40,6 +40,10 @@
 #' @param color.response color of the response nodes
 #' @param name.predictors A subtitle for the predictors
 #' @param name.responses A subtitle for the responses
+#' @param color.edge.positive color of the edges corresponding to estimated 
+#' positive regression coefficients
+#' @param color.edge.negative color of the edges corresponding to estimated 
+#' negative regression coefficients
 #' @param vertex.frame.color color of the frame of the vertices. If you don't 
 #' want vertices to have a frame, supply NA as the color name
 #' @param layoutInCircle place vertices on a circle, in the order of their 
@@ -75,19 +79,20 @@ plotNetwork <- function(x, includeResponse = NULL, excludeResponse = NULL,
                         label.predictor = NULL, label.response = NULL, 
                         color.predictor = NULL, color.response = NULL, 
                         name.predictors = NULL, name.responses = NULL,
+                        color.edge.positive = "gray", color.edge.negative = "gray",
                         vertex.frame.color = NA, layoutInCircle = FALSE, 
                         header = "", ...) {
   if (!inherits(x, "BayesSUR")) {
     stop("Use only with a \"BayesSUR\" object")
   }
-
+  
   if (PmaxPredictor < 0 || PmaxPredictor > 1) {
     stop("Please specify correct argument 'PmaxPredictor' in [0,1]!")
   }
   if (PmaxResponse < 0 || PmaxResponse > 1) {
     stop("Please specify correct argument 'PmaxResponse' in [0,1]!")
   }
-
+  
   x$output[-1] <- paste(x$output$outFilePath, x$output[-1], sep = "")
   covariancePrior <- x$input$covariancePrior
   if (covariancePrior == "HIW") {
@@ -96,10 +101,11 @@ plotNetwork <- function(x, includeResponse = NULL, excludeResponse = NULL,
     stop("Gy is only estimated with hyper-inverse Wishart prior for the 
          covariance matrix of responses!")
   }
+  beta_hat <- as.matrix(read.table(x$output$beta))
   gamma_hat <- as.matrix(read.table(x$output$gamma))
   colnames(gamma_hat) <- names(read.table(x$output$Y, header = TRUE))
   rownames(gamma_hat) <- colnames(read.table(x$output$X, header = TRUE))
-
+  
   if (sum(colnames(gamma_hat) == 
           paste("V", seq_len(ncol(gamma_hat)), sep = "")) == ncol(gamma_hat)) {
     colnames(gamma_hat) <- paste("Y", seq_len(ncol(gamma_hat)), sep = "")
@@ -108,7 +114,7 @@ plotNetwork <- function(x, includeResponse = NULL, excludeResponse = NULL,
           paste("V", seq_len(nrow(gamma_hat)), sep = "")) == nrow(gamma_hat)) {
     rownames(gamma_hat) <- paste("X", seq_len(nrow(gamma_hat)), sep = "")
   }
-
+  
   # select the required resposes and predictors to plot the network
   excludeResponse.idx <- rep(FALSE, ncol(gamma_hat))
   excludePredictor.idx <- rep(FALSE, nrow(gamma_hat))
@@ -126,36 +132,40 @@ plotNetwork <- function(x, includeResponse = NULL, excludeResponse = NULL,
     excludePredictor.idx <- c(excludePredictor.idx | 
                                 c(rownames(gamma_hat) %in% excludePredictor))
   }
-
+  
   gamma_hat <- gamma_hat[!excludePredictor.idx, !excludeResponse.idx]
-
+  beta_hat <- beta_hat[!excludePredictor.idx, !excludeResponse.idx]
+  
   Gy_hat <- Gy_hat[!excludeResponse.idx, !excludeResponse.idx]
-
+  
   if (edge.weight) {
     Gy_thresh <- Gy_hat
     Gy_thresh[Gy_hat <= PmaxResponse] <- 0
-
+    
     gamma_thresh <- gamma_hat
     gamma_thresh[gamma_hat <= PmaxPredictor] <- 0
   } else {
     Gy_thresh <- as.matrix(Gy_hat > PmaxResponse)
     gamma_thresh <- as.matrix(gamma_hat > PmaxPredictor)
   }
-
+  
   if (sum(rowSums(gamma_thresh) != 0) == 0) {
     stop(paste("There were no predictors with mPIP gamma > ", PmaxPredictor, 
                ". Not able to draw a network!", sep = ""))
   }
-
+  
+  beta_thresh <- 
+    matrix(beta_hat[rowSums(gamma_thresh) != 0, ], ncol = ncol(gamma_hat))
   gamma_thresh <- 
     matrix(gamma_thresh[rowSums(gamma_thresh) != 0, ], ncol = ncol(gamma_hat))
   colnames(gamma_thresh) <- colnames(gamma_hat)
   rownames(gamma_thresh) <- 
     rownames(gamma_hat)[rowSums(gamma_hat > PmaxPredictor) != 0]
   rownames(Gy_thresh) <- colnames(Gy_thresh) <- colnames(gamma_hat)
-
+  
   plotSEMgraph(Gy_thresh, 
                t(gamma_thresh), 
+               t(beta_thresh),
                nodesizeSNP = nodesizePredictor, 
                nodesizeMET = nodesizeResponse, 
                no.isolates = no.isolates,  
@@ -168,12 +178,15 @@ plotNetwork <- function(x, includeResponse = NULL, excludeResponse = NULL,
                color.response = color.response,
                name.predictors = name.predictors, 
                name.responses = name.responses, 
+               color.edge.positive = color.edge.positive, 
+               color.edge.negative = color.edge.negative,
                vertex.frame.color = vertex.frame.color, 
                layoutInCircle = layoutInCircle, ...)
   title(paste("\n\n", header, sep = ""), outer = TRUE)
 }
 plotSEMgraph <- function(ADJmatrix, 
                          GAMmatrix, 
+                         BETAmatrix,
                          nodesizeSNP = 2, 
                          nodesizeMET = 25, 
                          no.isolates = FALSE,
@@ -187,6 +200,8 @@ plotSEMgraph <- function(ADJmatrix,
                          color.response = NULL,
                          name.predictors = NULL, 
                          name.responses = NULL, 
+                         color.edge.positive = "gray", 
+                         color.edge.negative = "gray", 
                          edge.weight = FALSE, 
                          vertex.frame.color = NA, 
                          layoutInCircle = FALSE, ...) {
@@ -198,32 +213,32 @@ plotSEMgraph <- function(ADJmatrix,
     warning("Argument 'edge.color' cannot be changed  in this function!")
   if (exists("edge.arrow.size")) 
     warning("Argument 'edge.arrow.size' cannot be changed in this function!")
-
+  
   # ADJmatrix must be a square qxq adjacency matrix (or data frame)
   qq <- dim(ADJmatrix)[1]
   if (dim(ADJmatrix)[2] != qq) stop("adjacency matrix not square")
-
+  
   # GAMmatrix must be a qxp binary matrix (or data frame)
   pp <- dim(GAMmatrix)[2]
   if (dim(GAMmatrix)[1] != qq) stop("Gamma and Adjacency have different no. q")
-
+  
   # join mets block (adjency) and lower triangle (gamma)
   semgraph <- rbind(ADJmatrix, t(GAMmatrix))
-
+  
   # add zero blocks for lower triangle and snp block
   zeroblock <- matrix(rep(0, pp * (pp + qq)), nrow = qq + pp, ncol = pp)
   zeroblock <- data.frame(zeroblock)
   colnames(zeroblock) <- colnames(GAMmatrix)
   rownames(zeroblock) <- rownames(semgraph)
-
+  
   semgraph <- cbind(semgraph, zeroblock)
-
+  
   # igraph objects
-  graphADJ <- graph.adjacency(as.matrix(ADJmatrix), weighted = TRUE, 
-                              diag = FALSE, mode = "undirected")
-  graphSEM <- graph.adjacency(as.matrix(semgraph), weighted = TRUE, 
-                              diag = FALSE, mode = "directed")
-
+  graphADJ <- graph_from_adjacency_matrix(as.matrix(ADJmatrix), weighted = TRUE, 
+                                          diag = FALSE, mode = "undirected")
+  graphSEM <- graph_from_adjacency_matrix(as.matrix(semgraph), weighted = TRUE, 
+                                          diag = FALSE, mode = "directed")
+  
   # don't plot isolated nodes?
   if (no.isolates) {
     graphADJ <- delete.vertices(graphADJ, degree(graphADJ) == 0)
@@ -231,7 +246,7 @@ plotSEMgraph <- function(ADJmatrix,
     message("Removing isolated nodes from Adjacency and Full SEM, may get 
             problem if there are also isolated SNPs.")
   }
-
+  
   # get co-ords for undirected edges using layout function (scaled)
   lladj <- layout.fruchterman.reingold(graphADJ)
   lmax <- max(lladj[, 1])
@@ -240,10 +255,10 @@ plotSEMgraph <- function(ADJmatrix,
   lmax <- max(lladj[, 2])
   lmin <- min(lladj[, 2])
   lladj[, 2] <- (lladj[, 2] - lmin) / (lmax - lmin)
-
+  
   # plot adjacency only
   # plot(graphADJ,vertex.size=15,edge.width=2,edge.color="black",layout=lladj)
-
+  
   # line up snps
   lymax <- max(lladj[, 2]) + (max(lladj[, 2]) - 
                                 min(lladj[, 2])) * (lineup - 1) / 2
@@ -251,46 +266,46 @@ plotSEMgraph <- function(ADJmatrix,
                                 min(lladj[, 2])) * (1 - lineup) / 2
   llsnps <- matrix(c(rep(-0.5, pp), lymin + (1:pp) * 1.0 * 
                        (lymax - lymin) / pp), nrow = pp, ncol = 2)
-
+  
   llsem <- rbind(lladj, llsnps)
-
+  
   ### plot SEM
-
+  
   # plot snps and mets nodes differently
   # set node sizes directly in graph object
   V(graphSEM)$size <- c(rep(nodesizeMET, qq), rep(nodesizeSNP, pp))
-
+  
   n.edgeADJ <- gsize(graphADJ)
   n.edgeGAM <- gsize(graphSEM) - n.edgeADJ
-
+  
   V(graphSEM)$label.color <- "black"
-
+  
   V(graphSEM)$color <- c(rep("dodgerblue", nrow(GAMmatrix)), 
                          rep("red", ncol(GAMmatrix)))
   if (!is.null(color.predictor)) 
     V(graphSEM)$color[-c(seq_len(nrow(GAMmatrix)))] <- color.predictor
   if (!is.null(color.response)) 
     V(graphSEM)$color[seq_len(nrow(GAMmatrix))] <- color.response
-
+  
   V(graphSEM)$label <- c(rownames(GAMmatrix), colnames(GAMmatrix))
   if (!is.null(label.predictor)) 
     V(graphSEM)$label[-c(seq_len(nrow(GAMmatrix)))] <- label.predictor
   if (!is.null(label.response)) 
     V(graphSEM)$label[seq_len(nrow(GAMmatrix))] <- label.response
-
+  
   if (edge.weight) {
     edge.width <- E(graphSEM)$weight * ifelse(edge.weight, 5, 1)
   } else {
     edge.width <- c(rep(edgewith.response, 2 * n.edgeADJ), 
                     rep(edgewith.predictor, 2 * n.edgeGAM))
   }
-
+  
   if (!layoutInCircle) {
     layoutSEM <- llsem
   } else {
     layoutSEM <- layout_in_circle(graphSEM)
   }
-
+  
   # plot undirected graph between response variables
   graphSEMresponses <- delete.edges(
     graphSEM, E(graphSEM)[(1:ecount(graphSEM))[-c(1:(2 * n.edgeADJ))]])
@@ -305,13 +320,18 @@ plotSEMgraph <- function(ADJmatrix,
   graphSEMpredictor2responses <- 
     delete.edges(graphSEM, 
                  E(graphSEM)[(1:ecount(graphSEM))[c(1:(2 * n.edgeADJ))]])
+  edge.colors <- matrix("white", nrow = nrow(BETAmatrix), ncol = ncol(BETAmatrix))
+  edge.colors[BETAmatrix < 0] <- color.edge.negative
+  edge.colors[BETAmatrix > 0] <- color.edge.positive
+  edge.colors <- as.vector(edge.colors[edge.colors != "white"])
   plot.igraph(graphSEMpredictor2responses, 
               edge.arrow.size = 0.5, 
               edge.width = edge.width[-c(1:(2 * n.edgeADJ))], 
               vertex.frame.color = vertex.frame.color, 
-              edge.color = rep(gray(0.7, alpha = gray.alpha), 2 * n.edgeGAM), 
+              # edge.color = rep(gray(0.7, alpha = gray.alpha), 2 * n.edgeGAM), 
+              edge.color = adjustcolor(edge.colors, gray.alpha), 
               layout = layoutSEM, add = TRUE, ...)
-
+  
   if (!is.null(name.predictors)) text(-1, -1.3, name.predictors, cex = 1.2)
   if (!is.null(name.responses)) text(0.4, -1.3, name.responses, cex = 1.2)
 }

@@ -27,6 +27,8 @@ plotNetwork(
   color.response = NULL,
   name.predictors = NULL,
   name.responses = NULL,
+  color.edge.positive = "gray",
+  color.edge.negative = "gray",
   vertex.frame.color = NA,
   layoutInCircle = FALSE,
   header = "",
@@ -85,6 +87,12 @@ default value \code{FALSE} is not to draw weighted edges}
 \item{name.predictors}{A subtitle for the predictors}
 
 \item{name.responses}{A subtitle for the responses}
+
+\item{color.edge.positive}{color of the edges corresponding to estimated 
+positive regression coefficients}
+
+\item{color.edge.negative}{color of the edges corresponding to estimated 
+negative regression coefficients}
 
 \item{vertex.frame.color}{color of the frame of the vertices. If you don't 
 want vertices to have a frame, supply NA as the color name}
