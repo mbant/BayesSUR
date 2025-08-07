@@ -49,6 +49,9 @@
 #' @param layoutInCircle place vertices on a circle, in the order of their 
 #' vertex ids. The default is \code{FALSE}
 #' @param header the main title
+#' @param beta.type the type of output beta. Default is \code{marginal}, giving 
+#' marginal beta estimation. If \code{beta.type="conditional"}, it gives beta 
+#' estimation conditional on gamma=1
 #' @param ... other arguments
 #'
 #' @examples
@@ -81,7 +84,7 @@ plotNetwork <- function(x, includeResponse = NULL, excludeResponse = NULL,
                         name.predictors = NULL, name.responses = NULL,
                         color.edge.positive = "gray", color.edge.negative = "gray",
                         vertex.frame.color = NA, layoutInCircle = FALSE, 
-                        header = "", ...) {
+                        header = "", beta.type = "conditional", ...) {
   if (!inherits(x, "BayesSUR")) {
     stop("Use only with a \"BayesSUR\" object")
   }
@@ -93,18 +96,27 @@ plotNetwork <- function(x, includeResponse = NULL, excludeResponse = NULL,
     stop("Please specify correct argument 'PmaxResponse' in [0,1]!")
   }
   
-  x$output[-1] <- paste(x$output$outFilePath, x$output[-1], sep = "")
-  covariancePrior <- x$input$covariancePrior
-  if (covariancePrior == "HIW") {
-    Gy_hat <- as.matrix(read.table(x$output$Gy))
+  # x$output[-1] <- paste(x$output$outFilePath, x$output[-1], sep = "")
+  # beta_hat <- as.matrix(read.table(x$output$beta))
+  # gamma_hat <- as.matrix(read.table(x$output$gamma))
+  beta_hat <- getEstimator(x, estimator = "beta", 
+                           Pmax = PmaxPredictor, beta.type = beta.type)
+  if ("X0" %in% names(x$output)) {
+    beta_hat <- beta_hat[-seq_len(ncol(as.matrix(read.table(
+      paste0(x$output$outFilePath, x$output$X0)
+    )))),]
+  }
+  gamma_hat <- getEstimator(x, estimator = "gamma", Pmax = PmaxPredictor)
+  # colnames(gamma_hat) <- names(read.table(x$output$Y, header = TRUE))
+  # rownames(gamma_hat) <- colnames(read.table(x$output$X, header = TRUE))
+  # covariancePrior <- x$input$covariancePrior
+  if (x$input$covariancePrior == "HIW") {
+    # Gy_hat <- as.matrix(read.table(x$output$Gy))
+    Gy_hat <- getEstimator(x, estimator = "Gy", Pmax = PmaxResponse)
   } else {
     stop("Gy is only estimated with hyper-inverse Wishart prior for the 
          covariance matrix of responses!")
   }
-  beta_hat <- as.matrix(read.table(x$output$beta))
-  gamma_hat <- as.matrix(read.table(x$output$gamma))
-  colnames(gamma_hat) <- names(read.table(x$output$Y, header = TRUE))
-  rownames(gamma_hat) <- colnames(read.table(x$output$X, header = TRUE))
   
   if (sum(colnames(gamma_hat) == 
           paste("V", seq_len(ncol(gamma_hat)), sep = "")) == ncol(gamma_hat)) {
@@ -133,35 +145,43 @@ plotNetwork <- function(x, includeResponse = NULL, excludeResponse = NULL,
                                 c(rownames(gamma_hat) %in% excludePredictor))
   }
   
-  gamma_hat <- gamma_hat[!excludePredictor.idx, !excludeResponse.idx]
-  beta_hat <- beta_hat[!excludePredictor.idx, !excludeResponse.idx]
+  Gy_thresh <- Gy_hat[!excludeResponse.idx, !excludeResponse.idx]
   
-  Gy_hat <- Gy_hat[!excludeResponse.idx, !excludeResponse.idx]
+  # gamma_hat <- gamma_hat[!excludePredictor.idx, !excludeResponse.idx]
+  # beta_hat <- beta_hat[!excludePredictor.idx, !excludeResponse.idx]
+  exclude.row.idx <- c((rowSums(gamma_hat) == 0) | excludePredictor.idx)
+  gamma_thresh <- gamma_hat[!exclude.row.idx, !excludeResponse.idx]
+  gamma_thresh <- matrix(gamma_thresh, nrow = sum(!exclude.row.idx), 
+                         ncol = sum(!excludeResponse.idx))
+  beta_thresh <- beta_hat[!exclude.row.idx, !excludeResponse.idx]
+  beta_thresh <- matrix(beta_thresh, nrow = sum(!exclude.row.idx), 
+                        ncol = sum(!excludeResponse.idx))
+  colnames(gamma_thresh) <- colnames(gamma_hat)[!excludeResponse.idx]
+  rownames(gamma_thresh) <- rownames(gamma_hat)[!exclude.row.idx]
+  rownames(Gy_thresh) <- colnames(Gy_thresh) <- colnames(gamma_thresh)
   
+  # if (edge.weight) {
+  #   Gy_thresh <- Gy_hat
+  #   Gy_thresh[Gy_hat <= PmaxResponse] <- 0
+  #   
+  #   gamma_thresh <- gamma_hat
+  #   gamma_thresh[gamma_hat <= PmaxPredictor] <- 0
+  # } else {
+  #   Gy_thresh <- as.matrix(Gy_hat > PmaxResponse)
+  #   gamma_thresh <- as.matrix(gamma_hat > PmaxPredictor)
+  # }
   if (edge.weight) {
-    Gy_thresh <- Gy_hat
-    Gy_thresh[Gy_hat <= PmaxResponse] <- 0
-    
-    gamma_thresh <- gamma_hat
-    gamma_thresh[gamma_hat <= PmaxPredictor] <- 0
-  } else {
-    Gy_thresh <- as.matrix(Gy_hat > PmaxResponse)
-    gamma_thresh <- as.matrix(gamma_hat > PmaxPredictor)
+    Gy_thresh <- matrix(as.numeric(Gy_thresh != 0), nrow = nrow(Gy_thresh) , 
+                        ncol = ncol(Gy_thresh) )
+    gamma_hat <- matrix(as.numeric(gamma_hat != 0), 
+                        nrow = nrow(gamma_hat) , 
+                        ncol = ncol(gamma_hat) )
   }
   
-  if (sum(rowSums(gamma_thresh) != 0) == 0) {
+  if (sum(rowSums(gamma_hat) != 0) == 0) {
     stop(paste("There were no predictors with mPIP gamma > ", PmaxPredictor, 
                ". Not able to draw a network!", sep = ""))
   }
-  
-  beta_thresh <- 
-    matrix(beta_hat[rowSums(gamma_thresh) != 0, ], ncol = ncol(gamma_hat))
-  gamma_thresh <- 
-    matrix(gamma_thresh[rowSums(gamma_thresh) != 0, ], ncol = ncol(gamma_hat))
-  colnames(gamma_thresh) <- colnames(gamma_hat)
-  rownames(gamma_thresh) <- 
-    rownames(gamma_hat)[rowSums(gamma_hat > PmaxPredictor) != 0]
-  rownames(Gy_thresh) <- colnames(Gy_thresh) <- colnames(gamma_hat)
   
   plotSEMgraph(Gy_thresh, 
                t(gamma_thresh), 
@@ -306,9 +326,17 @@ plotSEMgraph <- function(ADJmatrix,
     layoutSEM <- layout_in_circle(graphSEM)
   }
   
+  if (n.edgeADJ > 0) {
+    graphSEMresponses <- delete.edges(
+      graphSEM, E(graphSEM)[(1:ecount(graphSEM))[-c(1:(2 * n.edgeADJ))]])
+    graphSEMpredictor2responses <- 
+      delete.edges(graphSEM, 
+                   E(graphSEM)[(1:ecount(graphSEM))[c(1:(2 * n.edgeADJ))]])
+  } else {
+    graphSEMresponses <- graphSEM
+    graphSEMpredictor2responses <- graphSEM
+  }
   # plot undirected graph between response variables
-  graphSEMresponses <- delete.edges(
-    graphSEM, E(graphSEM)[(1:ecount(graphSEM))[-c(1:(2 * n.edgeADJ))]])
   plot.igraph(graphSEMresponses, 
               edge.arrow.size = 0, 
               edge.width = edge.width[1:(2 * n.edgeADJ)], 
@@ -317,13 +345,11 @@ plotSEMgraph <- function(ADJmatrix,
               layout = layoutSEM, ...)
   
   # plot directed graph between predictors and response variables
-  graphSEMpredictor2responses <- 
-    delete.edges(graphSEM, 
-                 E(graphSEM)[(1:ecount(graphSEM))[c(1:(2 * n.edgeADJ))]])
   edge.colors <- matrix("white", nrow = nrow(BETAmatrix), ncol = ncol(BETAmatrix))
   edge.colors[BETAmatrix < 0] <- color.edge.negative
   edge.colors[BETAmatrix > 0] <- color.edge.positive
   edge.colors <- as.vector(edge.colors[edge.colors != "white"])
+  
   plot.igraph(graphSEMpredictor2responses, 
               edge.arrow.size = 0.5, 
               edge.width = edge.width[-c(1:(2 * n.edgeADJ))], 

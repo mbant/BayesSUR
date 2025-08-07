@@ -32,6 +32,7 @@ plotNetwork(
   vertex.frame.color = NA,
   layoutInCircle = FALSE,
   header = "",
+  beta.type = "conditional",
   ...
 )
 }
@@ -101,6 +102,10 @@ want vertices to have a frame, supply NA as the color name}
 vertex ids. The default is \code{FALSE}}
 
 \item{header}{the main title}
+
+\item{beta.type}{the type of output beta. Default is \code{marginal}, giving 
+marginal beta estimation. If \code{beta.type="conditional"}, it gives beta 
+estimation conditional on gamma=1}
 
 \item{...}{other arguments}
 }

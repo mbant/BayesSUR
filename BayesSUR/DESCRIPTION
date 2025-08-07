@@ -31,7 +31,7 @@ Suggests: R.rsp, knitr, rmarkdown, BDgraph, data.table, plyr, scrime
 LazyData: true
 NeedsCompilation: yes
 SystemRequirements: C++17
-Packaged: 2025-08-06 13:05:33 UTC; zhiz
+Packaged: 2025-08-07 10:32:45 UTC; zhiz
 Author: Marco Banterle [aut],
   Zhi Zhao [aut, cre],
   Leonardo Bottolo [ctb],
