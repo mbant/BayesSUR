@@ -20,6 +20,7 @@ BayesSUR/build
 
 ParamTrue*
 
+test_build.R
 results/*
 tmp/*
 .vscode/*

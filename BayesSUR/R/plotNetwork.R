@@ -289,7 +289,7 @@ plotSEMgraph <- function(ADJmatrix,
   }
 
   # get co-ords for undirected edges using layout function (scaled)
-  lladj <- layout_with_fr(graphADJ)
+  lladj <- igraph::layout_with_fr(graphADJ)
   lmax <- max(lladj[, 1])
   lmin <- min(lladj[, 1])
   lladj[, 1] <- (lladj[, 1] - lmin) / (lmax - lmin)

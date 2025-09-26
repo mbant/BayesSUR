@@ -47,23 +47,23 @@ plotNetwork(
 
 \item{excludePredictor}{A vector of the predictor names which are not shown in the network}
 
-\item{MatrixGamma}{A matrix or dataframe of the latent indicator variable. 
-Default is \code{NULL} and to extrate it from object of class inheriting 
+\item{MatrixGamma}{A matrix or dataframe of the latent indicator variable.
+Default is \code{NULL} and to extrate it from object of class inheriting
 from an object of class \code{BayesSUR}}
 
-\item{PmaxPredictor}{cutpoint for thresholding the estimated latent 
+\item{PmaxPredictor}{cutpoint for thresholding the estimated latent
 indicator variable. Default is 0.5}
 
-\item{PmaxResponse}{cutpoint for thresholding the learning structure matrix 
+\item{PmaxResponse}{cutpoint for thresholding the learning structure matrix
 of multiple response variables. Default is 0.5}
 
-\item{nodesizePredictor}{node size of Predictors in the output graph. 
+\item{nodesizePredictor}{node size of Predictors in the output graph.
 Default is 15}
 
-\item{nodesizeResponse}{node size of response variables in the output graph. 
+\item{nodesizeResponse}{node size of response variables in the output graph.
 Default is 25}
 
-\item{no.isolates}{remove isolated nodes from responses graph and full 
+\item{no.isolates}{remove isolated nodes from responses graph and full
 graph, may get problem if there are also isolated Predictors}
 
 \item{lineup}{A ratio of the heights between responses' area and predictors'}
@@ -74,7 +74,7 @@ graph, may get problem if there are also isolated Predictors}
 
 \item{edgewith.predictor}{the edge width between the predictor and response node}
 
-\item{edge.weight}{draw weighted edges after thresholding at 0.5. The 
+\item{edge.weight}{draw weighted edges after thresholding at 0.5. The
 default value \code{FALSE} is not to draw weighted edges}
 
 \item{label.predictor}{A vector of the names of predictors}
@@ -89,29 +89,29 @@ default value \code{FALSE} is not to draw weighted edges}
 
 \item{name.responses}{A subtitle for the responses}
 
-\item{color.edge.positive}{color of the edges corresponding to estimated 
+\item{color.edge.positive}{color of the edges corresponding to estimated
 positive regression coefficients}
 
-\item{color.edge.negative}{color of the edges corresponding to estimated 
+\item{color.edge.negative}{color of the edges corresponding to estimated
 negative regression coefficients}
 
-\item{vertex.frame.color}{color of the frame of the vertices. If you don't 
+\item{vertex.frame.color}{color of the frame of the vertices. If you don't
 want vertices to have a frame, supply NA as the color name}
 
-\item{layoutInCircle}{place vertices on a circle, in the order of their 
+\item{layoutInCircle}{place vertices on a circle, in the order of their
 vertex ids. The default is \code{FALSE}}
 
 \item{header}{the main title}
 
-\item{beta.type}{the type of output beta. Default is \code{marginal}, giving 
-marginal beta estimation. If \code{beta.type="conditional"}, it gives beta 
+\item{beta.type}{the type of output beta. Default is \code{marginal}, giving
+marginal beta estimation. If \code{beta.type="conditional"}, it gives beta
 estimation conditional on gamma=1}
 
 \item{...}{other arguments}
 }
 \description{
-Plot the network representation of the associations between responses and 
-predictors, based on the estimated gamma matrix and graph of responses 
+Plot the network representation of the associations between responses and
+predictors, based on the estimated gamma matrix and graph of responses
 from a "BayesSUR" class object.
 }
 \examples{
