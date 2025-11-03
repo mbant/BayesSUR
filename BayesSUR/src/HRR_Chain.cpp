@@ -1037,7 +1037,7 @@ double HRR_Chain::logLikelihood( )
     
     // yMean is needed if y is not standardized. This might cause MCMC stopped
     arma::mat yMean = data->cols( *outcomesIdx );
-    for( unsigned k=0; k<nOutcomes; k++)
+    for( unsigned int k=0; k<nOutcomes; k++)
     {
         yMean.col(k) = arma::mean(yMean.col(k)) * arma::ones(nObservations);
     }
@@ -1165,7 +1165,7 @@ double HRR_Chain::logLikelihood( const arma::umat&  externalGammaMask )
     
     // yMean is needed if y is not standardized
     arma::mat yMean = data->cols( *outcomesIdx );
-    for( unsigned k=0; k<nOutcomes; k++)
+    for( unsigned int k=0; k<nOutcomes; k++)
     {
         yMean.col(k) = arma::mean(yMean.col(k)) * arma::ones(nObservations);
     }
@@ -1291,7 +1291,7 @@ double HRR_Chain::logLikelihood( arma::umat& externalGammaMask , const arma::uma
     
     // yMean is needed if y is not standardized
     arma::mat yMean = data->cols( *outcomesIdx );
-    for( unsigned k=0; k<nOutcomes; k++)
+    for( unsigned int k=0; k<nOutcomes; k++)
     {
         yMean.col(k) = arma::mean(yMean.col(k)) * arma::ones(nObservations);
     }
@@ -1403,7 +1403,7 @@ double HRR_Chain::logLikelihood( const arma::umat& externalGammaMask , const dou
     
     // yMean is needed if y is not standardized
     arma::mat yMean = data->cols( *outcomesIdx );
-    for( unsigned k=0; k<nOutcomes; k++)
+    for( unsigned int k=0; k<nOutcomes; k++)
     {
         yMean.col(k) = arma::mean(yMean.col(k)) * arma::ones(nObservations);
     }
