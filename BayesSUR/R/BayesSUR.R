@@ -259,7 +259,8 @@ BayesSUR <- function(data = NULL, Y, X, X_0 = NULL,
     # Standarize the data
     if (standardize) {
       X <- scale(X)
-      X_0 <- scale(X_0)
+      sd_X0 <- apply(X_0, 2, sd)
+      X_0[, sd_X0 != 0] <- scale(X_0[, sd_X0 != 0])
     }
     if (standardize.response) Y <- scale(Y)
     

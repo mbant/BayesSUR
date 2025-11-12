@@ -1,6 +1,7 @@
 # BayesSUR 2.3-1
 
 * Add color options in `plotNetwork()` corresponding to positive and negative regression coefficients
+* If `standardize = TRUE` in main function `BayesSUR()`, the columns of `X_0` without variation will not be scaled
 
 # BayesSUR 2.3-0
 
