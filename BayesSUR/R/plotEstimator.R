@@ -118,19 +118,22 @@ plotEstimator <- function(x, estimator = NULL,
       colnames(read.table(x$output$Y, header = TRUE))
   }
   
-  ## BUG TO BE FIXED!!!
   # specify the labels of axes
-  if (is.na(name.responses)[1]) name.responses <- response_idx
-  if (name.responses[1] == "auto") name.responses <- colnames(beta_hat)
-  if (is.character(name.responses)) {
+  if (is.na(name.responses)[1]) {
+    name.responses <- response_idx
+  } else if (name.responses[1] == "auto") {
+    name.responses <- colnames(beta_hat)
+  } else if (is.character(name.responses)) {
     if (length(name.responses) != ncol(beta_hat)) {
       stop("The length of the given response names are not consistent with the data!")
     }
   }
   
-  if (is.na(name.predictors)) name.predictors <- predictor_idx
-  if (name.predictors[1] == "auto") name.predictors <- rownames(beta_hat)
-  if (is.character(name.predictors)) {
+  if (is.na(name.predictors)) {
+    name.predictors <- predictor_idx0
+  } else if (name.predictors[1] == "auto") {
+    name.predictors <- rownames(beta_hat)
+  } else if (is.character(name.predictors)) {
     if (length(name.predictors) != nrow(beta_hat)) {
       stop("The length of the given predictor names are not consistent with the data!")
     }
