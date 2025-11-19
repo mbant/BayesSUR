@@ -48,17 +48,18 @@ plotMCMCdiag <- function(x, nbloc = 3, HIWg = NULL, header = "", ...) {
   if (covariancePrior == "HIW" && is.null(x$output$Gvisit)) {
     Gvisit <- as.matrix(read.table(x$output$Gvisit))
   }
-
+  
+  tick <- x$input$tick
   if (nIter <= 1) {
     stop("The diagosis only shows results from more than one MCMC iteration!")
   }
-  if (nIter < 4000) {
-    message("NOTE: The diagosis only shows results of two iteration points due 
-            to less than 4000 MCMC iterations!")
+  if (nIter < 4 * tick) {
+    message(paste("NOTE: The diagosis only shows results of two iteration points due 
+            to less than", 4*tick, "MCMC iterations!"))
   }
 
-  if (nIter >= 4000) {
-    logP <- logP[, ncol(logP) - floor(nIter / 1000) - 1 + 1:floor(nIter / 1000)]
+  if (nIter >= 4 * tick) {
+    logP <- logP[, ncol(logP) - floor(nIter / tick) - 1 + 1:floor(nIter / tick)]
   } else {
     logP <- logP[, c(1, ncol(logP))]
   }
@@ -67,9 +68,9 @@ plotMCMCdiag <- function(x, nbloc = 3, HIWg = NULL, header = "", ...) {
     Plik.indx <- ifelse(covariancePrior != "IG", 10, 5)
     
     model_size <- model_size
-    if (nIter >= 4000) {
-      model_size <- rowSums(model_size[nrow(model_size) - floor(nIter / 1000) - 
-                                         1 + 1:floor(nIter / 1000), ])
+    if (nIter >= 4 * tick) {
+      model_size <- rowSums(model_size[nrow(model_size) - floor(nIter / tick) - 
+                                         1 + 1:floor(nIter / tick), ])
     } else {
       model_size <- rowSums(model_size[c(1, nrow(model_size)), ])
     }
@@ -111,7 +112,7 @@ plotMCMCdiag <- function(x, nbloc = 3, HIWg = NULL, header = "", ...) {
     par(mfrow = c(2, 2))
 
     if (nbloc > 1) {
-      plot.default(logP[Plik.indx, ], xlab = "Iterations (*1000)", 
+      plot.default(logP[Plik.indx, ], xlab = paste0("Iterations (*",tick, ")"), 
                    ylab = "Log likelihood (posterior)", type = "l", lty = 1, ...)
     } else {
       plot.default(logP[Plik.indx, ] ~ c(1, nIter), xlab = "Iterations", 
@@ -119,7 +120,7 @@ plotMCMCdiag <- function(x, nbloc = 3, HIWg = NULL, header = "", ...) {
     }
 
     if (nbloc > 1) {
-      plot.default(model_size, xlab = "Iterations (*1000)", 
+      plot.default(model_size, xlab = paste0("Iterations (*",tick, ")"), 
                    ylab = "Model size", type = "l", lty = 1, ...)
     } else {
       plot.default(model_size ~ c(1, nIter), xlab = "Iterations", 
@@ -143,9 +144,9 @@ plotMCMCdiag <- function(x, nbloc = 3, HIWg = NULL, header = "", ...) {
       if (nbloc > 1) {
         legend("topleft", title = "iteration", 
                legend = paste0(c("ALL", "First half", "Last half"), " = [", 
-                              c(1, 1, floor(ncol(logP) / 2) * 1000 + 1), ":", 
+                              c(1, 1, floor(ncol(logP) / 2) * tick + 1), ":", 
                               c(ncol(logP), floor((ncol(logP)) / 2), 
-                                ncol(logP)) * 1000, "]"), 
+                                ncol(logP)) * tick, "]"), 
                col = 1:3, lty = 1, text.col = 1:3, cex = 0.8)
       }
     }
@@ -160,7 +161,7 @@ plotMCMCdiag <- function(x, nbloc = 3, HIWg = NULL, header = "", ...) {
       legend("topleft", title = "moving window", 
              legend = paste0("set ", 1:nbloc, " = [", 
                              (floor((ncol(logP)) / 2) + mid * (nbloc:1 - 1)) * 
-                               1000 + 1, ":", (ncol(logP)) * 1000, "]"), 
+                               tick + 1, ":", (ncol(logP)) * tick, "]"), 
              col = 1:nbloc, lty = 1, text.col = 1:nbloc, cex = 0.8)
     }
   } else {
@@ -184,7 +185,7 @@ plotMCMCdiag <- function(x, nbloc = 3, HIWg = NULL, header = "", ...) {
       }
 
       matplot(node.degree, type = "l", lty = 1, col = hcl.colors(m), 
-              xlab = "Iterations (*1000)", ylab = "degree", 
+              xlab = paste0("Iterations (*",tick, ")"), ylab = "degree", 
               main = "Response degrees", xlim = c(1, nrow(Gvisit) * 1.1))
       legend("topright", legend = 1:m, col = hcl.colors(m), lty = 1, 
              text.col = hcl.colors(m), cex = 1 / m * 4)
@@ -200,7 +201,7 @@ plotMCMCdiag <- function(x, nbloc = 3, HIWg = NULL, header = "", ...) {
 
       if (HIWg == "edge") {
         matplot(Gvisit, type = "l", lty = 1, col = hcl.colors(ncol(Gvisit)), 
-                xlab = "Iterations (*1000)", ylab = "", 
+                xlab = paste0("Iterations (*",tick, ")"), ylab = "", 
                 main = "Edges selection", xlim = c(1, nrow(Gvisit) * 1.1))
         legend("topright", legend = paste0(node1, "-", node2), 
                col = hcl.colors(ncol(Gvisit)), lty = 1,
@@ -208,7 +209,7 @@ plotMCMCdiag <- function(x, nbloc = 3, HIWg = NULL, header = "", ...) {
       } else {
         plot.default(
           Gvisit[, which(paste0(node1, node2) == substr(HIWg, 5, nchar(HIWg)))], 
-          type = "l", lty = 1, xlab = "Iterations (*1000)", ylab = "", 
+          type = "l", lty = 1, xlab = paste0("Iterations (*",tick, ")"), ylab = "", 
           main = paste0("Edge-", substr(HIWg, 5, nchar(HIWg)), " selection"))
       }
     }
@@ -216,7 +217,7 @@ plotMCMCdiag <- function(x, nbloc = 3, HIWg = NULL, header = "", ...) {
     if (HIWg == "lik") {
       Gvisit <- t(logP[1:4, ])
       matplot(Gvisit, type = "l", lty = 1, col = seq_len(ncol(Gvisit)), 
-              xlab = "Iterations (*1000)", ylab = "Log likelihood (posterior)", 
+              xlab = paste0("Iterations (*",tick, ")"), ylab = "Log likelihood (posterior)", 
               main = "Likelihoods of graph learning")
       legend("topright", legend = c("tau", "eta", "JT", "SigmaRho"), 
              col = seq_len(ncol(Gvisit)), lty = 1, 

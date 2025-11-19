@@ -1,3 +1,7 @@
+# BayesSUR 2.3-2
+
+* Save `tick` in `BayesSUR()` returned object and use it in `plotMCMCdiag()`
+
 # BayesSUR 2.3-1
 
 * Add color options in `plotNetwork()` corresponding to positive and negative regression coefficients

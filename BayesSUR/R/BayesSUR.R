@@ -549,6 +549,7 @@ BayesSUR <- function(data = NULL, Y, X, X_0 = NULL,
   # Copy the inputs
   ret$input["nIter"] <- nIter
   ret$input["burnin"] <- burnin
+  ret$input["tick"] <- tick
   ret$input["nChains"] <- nChains
   ret$input["covariancePrior"] <- covariancePrior
   ret$input["gammaPrior"] <- gammaPrior
