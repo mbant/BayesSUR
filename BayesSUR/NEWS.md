@@ -1,6 +1,7 @@
 # BayesSUR 2.3-2
 
 * Save `tick` in `BayesSUR()` returned object and use it in `plotMCMCdiag()`
+* Fix CRAN warnings about deprecated `void omp_set_nested(int)` and pugixml uninitialization
 
 # BayesSUR 2.3-1
 

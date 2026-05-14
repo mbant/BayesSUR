@@ -33,6 +33,9 @@ AC_COMPILE_IFELSE(
 		AC_MSG_ERROR([Compiler not supported])])
 CXXFLAGS="$saved_cxxflags"
 
+# Suppress the false-positive pugixml uninitialized warning
+CXXFLAGS="$CXXFLAGS -Wno-uninitialized"
+
 # Check for OMP support
 AC_OPENMP
 

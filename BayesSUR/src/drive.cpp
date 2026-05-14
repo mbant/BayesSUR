@@ -977,13 +977,13 @@ int drive( const std::string& dataFile, const std::string& mrfGFile, const std::
 
     #ifdef _OPENMP
     if( maxThreads == 1 ){
-        omp_set_nested( 0 );
+        omp_set_max_active_levels( 1 );
         omp_set_num_threads( 1 );
     } else {
             Rcout << "Using OpenMP: " << maxThreads << " threads \n";
             omp_init_lock(&RNGlock);  // init RNG lock for the parallel part
         
-            omp_set_nested(1); // 1=enable, 0=disable nested parallelism (run chains in parallel + compute likelihoods in parallel at least wrt to outcomes + wrt to individuals)
+            omp_set_max_active_levels(2); // 1=enable, 0=disable nested parallelism (run chains in parallel + compute likelihoods in parallel at least wrt to outcomes + wrt to individuals)
             // MOST OF THE PARALLELISATION IMPROVEMENTS COME FROM OPENBLAS ANYWAY .. I WONDER IF ACCELERATING LA THOURGH GPU WOULD CHANGE THAT ..
             
             // int nThreads = std::min( omp_get_max_threads()-1, maxThreads );

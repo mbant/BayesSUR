@@ -20,7 +20,6 @@ Copyright: The C++ files pugixml.cpp, pugixml.hpp and pugiconfig.hpp
         vertical.image.legend() is used with Copyright (C) 2013 from
         Jenise Swall.
 VignetteBuilder: R.rsp, knitr, rmarkdown
-RoxygenNote: 7.3.2
 Depends: R (>= 3.5.0)
 Encoding: UTF-8
 LinkingTo: Rcpp, RcppArmadillo
@@ -30,3 +29,4 @@ Suggests: R.rsp, knitr, rmarkdown, BDgraph, data.table, plyr, scrime
 LazyData: true
 NeedsCompilation: yes
 SystemRequirements: C++17
+Config/roxygen2/version: 8.0.0
