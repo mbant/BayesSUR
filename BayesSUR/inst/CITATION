@@ -12,8 +12,8 @@ bibentry("Manual",
                    person(given = "Manuela",
                           family = "Zucknick",
                           email = "manuela.zucknick@medisin.uio.no")),
-  year = 2025,
-  note = " R package version 2.3-0",
+  year = 2026,
+  note = " R package version 2.3-2",
   doi = "10.32614/CRAN.package.BayesSUR",
   header       = "To cite BayesSUR in publications use:"
 )
