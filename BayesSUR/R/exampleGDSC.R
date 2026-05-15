@@ -22,7 +22,7 @@
 #' # ===============
 #' # This code below is to do preprocessing of GDSC data and obtain the complete dataset
 #' # "exampleGDSC.rda" above. The user needs load the datasets from
-#' # https://www.cancerrxgene.org release 5.
+#' # https://cellmodelpassports.sanger.ac.uk/downloads.
 #' # But downloading and transforming the three used datasets below to *.csv files first.
 #' # ===============
 #'
