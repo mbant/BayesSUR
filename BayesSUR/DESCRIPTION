@@ -14,11 +14,7 @@ Authors@R: c(person("Marco", "Banterle", email = "marco.banterle@gmail.com", rol
              person("Manuela", "Zucknick", email = "manuela.zucknick@medisin.uio.no", role = c("aut")))
 Description: Bayesian seemingly unrelated regression with general variable selection and dense/sparse covariance matrix. The sparse seemingly unrelated regression is described in Bottolo et al. (2021) <doi:10.1111/rssc.12490>, the software paper is in Zhao et al. (2021) <doi:10.18637/jss.v100.i11>, and the model with random effects is described in Zhao et al. (2024) <doi:10.1093/jrsssc/qlad102>.
 License: MIT + file LICENSE
-Copyright: The C++ files pugixml.cpp, pugixml.hpp and pugiconfig.hpp
-        are used with Copyright (C) 2006-2018 from Arseny Kapoulkine
-        and Copyright (C) 2003 from Kristen Wegner. The R function
-        vertical.image.legend() is used with Copyright (C) 2013 from
-        Jenise Swall.
+Copyright: R function vertical.image.legend() is slightly modified from R package aqfig by Jenise Swall.
 VignetteBuilder: R.rsp, knitr, rmarkdown
 Depends: R (>= 3.5.0)
 Encoding: UTF-8
