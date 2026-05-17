@@ -33,11 +33,11 @@ int drive_SUR( Chain_Data& chainData );
 
 int drive_HRR( Chain_Data& chainData );
 
-int drive( const std::string& dataFile, const std::string& mrfGFile, const std::string& blockFile, const std::string& structureGraphFile, const std::string& hyperParFile, const std::string& outFilePath,  
+int drive( const std::string& dataFile, const std::string& mrfGFile, const std::string& blockFile, const std::string& structureGraphFile, const std::string& outFilePath,  
 			unsigned int nIter, unsigned int burnin, unsigned int nChains,
 			const std::string& covariancePrior, 
 			const std::string& gammaPrior, const std::string& gammaSampler, const std::string& gammaInit,
-			const std::string& betaPrior, const int maxThreads, const int tick,
+			const std::string& betaPrior, const double* hyperparameters, const int maxThreads, const int tick,
 			bool output_gamma, bool output_beta, bool output_Gy, bool output_sigmaRho, bool output_pi, bool output_tail, bool output_model_size,
             bool output_CPO, bool output_model_visit );
 

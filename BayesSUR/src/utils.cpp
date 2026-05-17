@@ -217,6 +217,7 @@ namespace Utils{
 
 	}
 
+	/*
 	void readHyperPar(const std::string& hyperParFile, Chain_Data& chainData )
 	{
 		pugi::xml_document doc;
@@ -308,6 +309,7 @@ namespace Utils{
 		}
 
 	}
+	*/
 
 
 	// sgn is defined in the header in order for it to be visible

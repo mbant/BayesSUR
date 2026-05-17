@@ -15,7 +15,6 @@
 
 #include "global.h"
 #include "Parameter_types.h"
-#include "pugixml.hpp"
 
 namespace Utils{
 
@@ -154,7 +153,7 @@ namespace Utils{
 	void formatData(const std::string& dataFileName, const std::string& mrfGFileName, const std::string& blockFileName, const std::string& structureGraphFileName, 
 					SUR_Data& surData );
 
-	void readHyperPar(const std::string& hyperParFile, Chain_Data& chainData );
+	// void readHyperPar(const std::string& hyperParFile, Chain_Data& chainData );
 
 	template <typename T> int sgn(T val)
 	{

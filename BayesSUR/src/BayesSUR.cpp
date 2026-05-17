@@ -21,21 +21,27 @@ using Rcpp::Rcerr;
 
 
 // [[Rcpp::export]]
-int BayesSUR_internal(const std::string& dataFile, const std::string& mrfGFile, const std::string& blockFile, const std::string& structureGraphFile, const std::string& hyperParFile, const std::string& outFilePath,
+int BayesSUR_internal(const std::string& dataFile, const std::string& mrfGFile, const std::string& blockFile, const std::string& structureGraphFile, const std::string& outFilePath,
                     unsigned int nIter=10, unsigned int burnin=0, unsigned int nChains=1,
                     const std::string& covariancePrior="HIW", 
                     const std::string& gammaPrior="hotspot", const std::string& gammaSampler="bandit", 
                     const std::string& gammaInit = "MLE",
-                    const std::string& betaPrior="independent", const int maxThreads=1, const int tick=1000,
+                    const std::string& betaPrior="independent", 
+                    Rcpp::NumericVector hyperparameters0 = Rcpp::NumericVector::create(), const int maxThreads=1, const int tick=1000,
                     bool output_gamma = true, bool output_beta = true, bool output_Gy = true, bool output_sigmaRho = true, 
                     bool output_pi = true, bool output_tail = true, bool output_model_size = true, bool output_CPO = true, bool output_model_visit = false )
 {
   int status {1};
+
+  // // use std::array and kopy hyperparameters
+  // std::array<double, 17> hyperparameters;
+  // std::copy(hyperparameters0.begin(), hyperparameters0.end(), hyperparameters.begin());
+  const double* hyperparameters = &hyperparameters0[0]; 
   
   try
   {
-    status =  drive(dataFile,mrfGFile,blockFile,structureGraphFile,hyperParFile,outFilePath,nIter,burnin,nChains,
-                    covariancePrior,gammaPrior,gammaSampler,gammaInit,betaPrior,maxThreads,tick,output_gamma, output_beta,
+    status =  drive(dataFile,mrfGFile,blockFile,structureGraphFile,outFilePath,nIter,burnin,nChains,
+                    covariancePrior,gammaPrior,gammaSampler,gammaInit,betaPrior,hyperparameters,maxThreads,tick,output_gamma, output_beta,
                     output_Gy, output_sigmaRho, output_pi, output_tail, output_model_size, output_CPO, output_model_visit);
   }
   catch(const std::exception& e)

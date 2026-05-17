@@ -12,7 +12,6 @@
 #' @aliases BayesSUR-package
 #' @importFrom utils head tail read.table write.table
 #' @importFrom Rcpp sourceCpp
-#' @importFrom xml2 as_xml_document write_xml
 #' @importFrom parallel detectCores
 #'
 #' @name BayesSUR
@@ -400,12 +399,14 @@ BayesSUR <- function(data = NULL, Y, X, X_0 = NULL,
   ## prepare the print of hyperparameters corresponding the specified model
   hyperpar.all <- list(a_w = 2, b_w = 5, 
                        a_o = 2, b_o = sum(blockLabels == 1) - 2, 
-                       a_pi = NA, b_pi = NA, 
+                       a_pi = 2, b_pi = 1, 
                        nu = sum(blockLabels == 0) + 2, 
                        a_tau = 0.1, b_tau = 10, 
                        a_eta = 0.1, b_eta = 1, 
                        a_sigma = 1, b_sigma = 1, 
-                       mrf_d = -3, mrf_e = 0.03)
+                       mrf_d = -3, mrf_e = 0.03,
+                       a_w0 = 2, b_w0 = 5)
+  hyperpar.all.orig <- hyperpar.all
   if (toupper(gammaPrior) %in% c("HOTSPOT", "HOTSPOTS", "HS")) {
     hyperpar.all$a_pi <- 2
     hyperpar.all$b_pi <- 1
@@ -423,6 +424,8 @@ BayesSUR <- function(data = NULL, Y, X, X_0 = NULL,
   if (toupper(gammaPrior) %in% c("HIERARCHICAL", "H")) {
     hyperpar.all$a_pi <- 1
     hyperpar.all$b_pi <- sum(blockLabels == 0) - 1
+    hyperpar.all.orig$a_pi <- 1
+    hyperpar.all.orig$b_pi <- sum(blockLabels == 0) - 1
     
     if (toupper(covariancePrior) %in% c("INDEPENDENT", "INDEP", "IG")) {
       hyperpar.all <- hyperpar.all[-c(3:4, 7:11, 14:15)]
@@ -533,14 +536,14 @@ BayesSUR <- function(data = NULL, Y, X, X_0 = NULL,
     }
   }
   
-  ## Set up the XML file for hyperparameters
-  xml <- as_xml_document(
-    list(hyperparameters = list(
-      lapply(hyperpar.all, function(x) list(x)) # every element in the list should be a list
-    ))
-  )
-  hyperParFile <- paste(sep = "", tmpFolder, "hyperpar.xml")
-  write_xml(xml, file = hyperParFile)
+  # ## Set up the XML file for hyperparameters
+  # xml <- as_xml_document(
+  #   list(hyperparameters = list(
+  #     lapply(hyperpar.all, function(x) list(x)) # every element in the list should be a list
+  #   ))
+  # )
+  # hyperParFile <- paste(sep = "", tmpFolder, "hyperpar.xml")
+  # write_xml(xml, file = hyperParFile)
   
   ## Create the return object
   ret <- list(status = 1, input = list(), output = list())
@@ -633,14 +636,15 @@ BayesSUR <- function(data = NULL, Y, X, X_0 = NULL,
   
   # set.seed(seed)
   # betaPrior="independent"
+  hyperpar.all.orig <- unlist(hyperpar.all.orig)
   
   # set number of threads
   maxThreads <- min(maxThreads, detectCores())
-  
   ret$status <- BayesSUR_internal(data, mrfG, blockList, structureGraph, 
-                                  hyperParFile, outFilePath, nIter, burnin, 
+                                  outFilePath, nIter, burnin, 
                                   nChains, covariancePrior, gammaPrior, 
                                   gammaSampler, gammaInit, betaPrior, 
+                                  hyperpar.all.orig,
                                   maxThreads, tick, output_gamma, output_beta, 
                                   output_Gy, output_sigmaRho, output_pi, 
                                   output_tail, output_model_size, output_CPO, 

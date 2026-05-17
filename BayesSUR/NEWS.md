@@ -1,3 +1,7 @@
+# BayesSUR 2.3-3
+
+* Use raw pointer to pass hyperparamters instead of using `pugixml`
+
 # BayesSUR 2.3-2
 
 * Save `tick` in `BayesSUR()` returned object and use it in `plotMCMCdiag()`

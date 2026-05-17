@@ -7,7 +7,7 @@
 #endif
 
 // redeclare the drive funciton
-int drive( const std::string& dataFile, const std::string& mrfGFile, const std::string& blockFile, const std::string& structureGraphFile, const std::string& hyperParFile, const std::string& outFilePath,  
+int drive( const std::string& dataFile, const std::string& mrfGFile, const std::string& blockFile, const std::string& structureGraphFile, const std::string& outFilePath,  
 			unsigned int nIter, unsigned int burnin, unsigned int nChains,
 			const std::string& covariancePrior, 
 			const std::string& gammaPrior, const std::string& gammaSampler, const std::string& gammaInit,
@@ -174,12 +174,12 @@ int main(int argc, char* argv[])
 			if (na+1==argc) break; // in case it's last, break
 			++na; // otherwise augment counter
 		}
-		else if ( 0 == std::string{argv[na]}.compare(std::string{"--parFile"}) || 0 == std::string{argv[na]}.compare(std::string{"--hyperparFile"}) )
+		/*else if ( 0 == std::string{argv[na]}.compare(std::string{"--parFile"}) || 0 == std::string{argv[na]}.compare(std::string{"--hyperparFile"}) )
 		{
 			hpFile = ""+std::string(argv[++na]); // use the next
 			if (na+1==argc) break; // in case it's last, break
 			++na; // otherwise augment counter
-		}
+		}*/
 		else if ( 0 == std::string{argv[na]}.compare(std::string{"--outFilePath"}) )
 		{
 			outFilePath = std::string(argv[++na]); // use the next

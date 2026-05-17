@@ -12,8 +12,8 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
 // BayesSUR_internal
-int BayesSUR_internal(const std::string& dataFile, const std::string& mrfGFile, const std::string& blockFile, const std::string& structureGraphFile, const std::string& hyperParFile, const std::string& outFilePath, unsigned int nIter, unsigned int burnin, unsigned int nChains, const std::string& covariancePrior, const std::string& gammaPrior, const std::string& gammaSampler, const std::string& gammaInit, const std::string& betaPrior, const int maxThreads, const int tick, bool output_gamma, bool output_beta, bool output_Gy, bool output_sigmaRho, bool output_pi, bool output_tail, bool output_model_size, bool output_CPO, bool output_model_visit);
-RcppExport SEXP _BayesSUR_BayesSUR_internal(SEXP dataFileSEXP, SEXP mrfGFileSEXP, SEXP blockFileSEXP, SEXP structureGraphFileSEXP, SEXP hyperParFileSEXP, SEXP outFilePathSEXP, SEXP nIterSEXP, SEXP burninSEXP, SEXP nChainsSEXP, SEXP covariancePriorSEXP, SEXP gammaPriorSEXP, SEXP gammaSamplerSEXP, SEXP gammaInitSEXP, SEXP betaPriorSEXP, SEXP maxThreadsSEXP, SEXP tickSEXP, SEXP output_gammaSEXP, SEXP output_betaSEXP, SEXP output_GySEXP, SEXP output_sigmaRhoSEXP, SEXP output_piSEXP, SEXP output_tailSEXP, SEXP output_model_sizeSEXP, SEXP output_CPOSEXP, SEXP output_model_visitSEXP) {
+int BayesSUR_internal(const std::string& dataFile, const std::string& mrfGFile, const std::string& blockFile, const std::string& structureGraphFile, const std::string& outFilePath, unsigned int nIter, unsigned int burnin, unsigned int nChains, const std::string& covariancePrior, const std::string& gammaPrior, const std::string& gammaSampler, const std::string& gammaInit, const std::string& betaPrior, Rcpp::NumericVector hyperparameters0, const int maxThreads, const int tick, bool output_gamma, bool output_beta, bool output_Gy, bool output_sigmaRho, bool output_pi, bool output_tail, bool output_model_size, bool output_CPO, bool output_model_visit);
+RcppExport SEXP _BayesSUR_BayesSUR_internal(SEXP dataFileSEXP, SEXP mrfGFileSEXP, SEXP blockFileSEXP, SEXP structureGraphFileSEXP, SEXP outFilePathSEXP, SEXP nIterSEXP, SEXP burninSEXP, SEXP nChainsSEXP, SEXP covariancePriorSEXP, SEXP gammaPriorSEXP, SEXP gammaSamplerSEXP, SEXP gammaInitSEXP, SEXP betaPriorSEXP, SEXP hyperparameters0SEXP, SEXP maxThreadsSEXP, SEXP tickSEXP, SEXP output_gammaSEXP, SEXP output_betaSEXP, SEXP output_GySEXP, SEXP output_sigmaRhoSEXP, SEXP output_piSEXP, SEXP output_tailSEXP, SEXP output_model_sizeSEXP, SEXP output_CPOSEXP, SEXP output_model_visitSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -21,7 +21,6 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const std::string& >::type mrfGFile(mrfGFileSEXP);
     Rcpp::traits::input_parameter< const std::string& >::type blockFile(blockFileSEXP);
     Rcpp::traits::input_parameter< const std::string& >::type structureGraphFile(structureGraphFileSEXP);
-    Rcpp::traits::input_parameter< const std::string& >::type hyperParFile(hyperParFileSEXP);
     Rcpp::traits::input_parameter< const std::string& >::type outFilePath(outFilePathSEXP);
     Rcpp::traits::input_parameter< unsigned int >::type nIter(nIterSEXP);
     Rcpp::traits::input_parameter< unsigned int >::type burnin(burninSEXP);
@@ -31,6 +30,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const std::string& >::type gammaSampler(gammaSamplerSEXP);
     Rcpp::traits::input_parameter< const std::string& >::type gammaInit(gammaInitSEXP);
     Rcpp::traits::input_parameter< const std::string& >::type betaPrior(betaPriorSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type hyperparameters0(hyperparameters0SEXP);
     Rcpp::traits::input_parameter< const int >::type maxThreads(maxThreadsSEXP);
     Rcpp::traits::input_parameter< const int >::type tick(tickSEXP);
     Rcpp::traits::input_parameter< bool >::type output_gamma(output_gammaSEXP);
@@ -42,7 +42,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< bool >::type output_model_size(output_model_sizeSEXP);
     Rcpp::traits::input_parameter< bool >::type output_CPO(output_CPOSEXP);
     Rcpp::traits::input_parameter< bool >::type output_model_visit(output_model_visitSEXP);
-    rcpp_result_gen = Rcpp::wrap(BayesSUR_internal(dataFile, mrfGFile, blockFile, structureGraphFile, hyperParFile, outFilePath, nIter, burnin, nChains, covariancePrior, gammaPrior, gammaSampler, gammaInit, betaPrior, maxThreads, tick, output_gamma, output_beta, output_Gy, output_sigmaRho, output_pi, output_tail, output_model_size, output_CPO, output_model_visit));
+    rcpp_result_gen = Rcpp::wrap(BayesSUR_internal(dataFile, mrfGFile, blockFile, structureGraphFile, outFilePath, nIter, burnin, nChains, covariancePrior, gammaPrior, gammaSampler, gammaInit, betaPrior, hyperparameters0, maxThreads, tick, output_gamma, output_beta, output_Gy, output_sigmaRho, output_pi, output_tail, output_model_size, output_CPO, output_model_visit));
     return rcpp_result_gen;
 END_RCPP
 }

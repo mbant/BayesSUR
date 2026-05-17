@@ -965,11 +965,11 @@ int drive_HRR( Chain_Data& chainData )
 // *******************************************************************************
 
 
-int drive( const std::string& dataFile, const std::string& mrfGFile, const std::string& blockFile, const std::string& structureGraphFile, const std::string& hyperParFile, const std::string& outFilePath,
+int drive( const std::string& dataFile, const std::string& mrfGFile, const std::string& blockFile, const std::string& structureGraphFile, const std::string& outFilePath,
           unsigned int nIter, unsigned int burnin, unsigned int nChains,
           const std::string& covariancePrior,
           const std::string& gammaPrior, const std::string& gammaSampler, const std::string& gammaInit,
-          const std::string& betaPrior, const int maxThreads, const int tick, 
+          const std::string& betaPrior, const double* hyperparameters, const int maxThreads, const int tick, 
           bool output_gamma, bool output_beta, bool output_Gy, bool output_sigmaRho, bool output_pi, bool output_tail, bool output_model_size, bool output_CPO, bool output_model_visit )
 {
     
@@ -1094,6 +1094,26 @@ int drive( const std::string& dataFile, const std::string& mrfGFile, const std::
     chainData.maxThreads = maxThreads;
     chainData.tick = tick;
     chainData.output_model_visit = output_model_visit;
+
+    // get hyperparameters
+    chainData.wA  = hyperparameters[0];
+    chainData.wB = hyperparameters[1];
+    chainData.oA  = hyperparameters[2];
+    chainData.oB = hyperparameters[3];
+    chainData.piA  = hyperparameters[4];
+    chainData.piB = hyperparameters[5];
+    chainData.nu = hyperparameters[6];
+    chainData.tauA = hyperparameters[7];
+    chainData.tauB = hyperparameters[8];
+    chainData.etaA = hyperparameters[9];
+    chainData.etaB = hyperparameters[10];
+    chainData.sigmaA = hyperparameters[11];
+    chainData.sigmaB = hyperparameters[12];
+    chainData.mrfD = hyperparameters[13];
+    chainData.mrfE = hyperparameters[14];
+    chainData.w0A  = hyperparameters[15];
+    chainData.w0B = hyperparameters[16];
+
     
     // ***********************************
     // ***********************************
@@ -1112,15 +1132,15 @@ int drive( const std::string& dataFile, const std::string& mrfGFile, const std::
         return 1;
     }
     
-    try
-    {
-        Utils::readHyperPar(hyperParFile, chainData );
-    }
-    catch(const std::exception& e)
-    {
-        Rcerr << e.what() << '\n';
-        return 1;
-    }
+    // try
+    // {
+    //     Utils::readHyperPar(hyperParFile, chainData );
+    // }
+    // catch(const std::exception& e)
+    // {
+    //     Rcerr << e.what() << '\n';
+    //     return 1;
+    // }
     
     Rcout << "... successfull!" << '\n';
     
